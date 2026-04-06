@@ -24,8 +24,6 @@ body {
   margin-bottom: 20px;
 }
 
-h3 { margin-top: 0; }
-
 input, select {
   width: 100%;
   padding: 12px;
@@ -43,13 +41,9 @@ button {
   border: none;
   border-radius: 10px;
   font-weight: bold;
-  margin-top: 10px;
 }
 
-#alerts {
-  color: red;
-  font-weight: bold;
-}
+#alerts { color: red; font-weight: bold; }
 </style>
 </head>
 
@@ -57,19 +51,25 @@ button {
 
 <div class="card">
 <h3>Overview</h3>
-<div>Jobs: <span id="jobs">0</span></div>
+<div>Jobs: <span id="jobsCount">0</span></div>
 <div>Revenue: $<span id="revenue">0</span></div>
 <div>Profit: $<span id="profit">0</span></div>
 </div>
 
 <div class="card">
 <h3>Log Job</h3>
+
 <input id="jobName" placeholder="Customer Name">
 
 <select id="jobSize">
 <option value="small">Small</option>
 <option value="medium">Medium</option>
 <option value="large">Large</option>
+</select>
+
+<select id="jobType">
+<option value="standard">Standard</option>
+<option value="premium">Premium</option>
 </select>
 
 <button onclick="logJob()">Log Job</button>
@@ -79,31 +79,21 @@ button {
 <h3>Inventory</h3>
 
 <input id="gci" placeholder="GCI TTTF">
-<input id="blue" placeholder="GCI Blue">
-<input id="basicMix" placeholder="Basic Mix">
-<input id="lebanon" placeholder="Lebanon">
-<input id="andersons" placeholder="Andersons">
-<input id="organic" placeholder="Organic">
-
 <input id="paperMulch" placeholder="Paper Mulch">
-<input id="bfm" placeholder="BFM Mulch">
-<input id="basicMulch" placeholder="Basic Mulch">
-
 <input id="tackifier" placeholder="Tackifier">
 <input id="compost" placeholder="Compost">
-<input id="biochar" placeholder="Biochar">
 
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
 
 <div class="card">
 <h3>Inventory Alerts</h3>
-<div id="alerts">Checking...</div>
+<div id="alerts"></div>
 </div>
 
 <div class="card">
 <h3>Reorder List</h3>
-<div id="reorder">None</div>
+<div id="reorder"></div>
 </div>
 
 <div class="card">
@@ -117,43 +107,33 @@ button {
 </div>
 
 <script>
+
 // ---------- HELPERS ----------
-function money(n){
-  return Math.round(n * 100) / 100;
-}
+function money(n){ return Math.round(n*100)/100; }
 
 // ---------- DATA ----------
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
 
 let inventory = JSON.parse(localStorage.getItem("inventory")) || {
-  gci:0, blue:0, basicMix:0, lebanon:0, andersons:0, organic:0,
-  paperMulch:0, bfm:0, basicMulch:0,
-  tackifier:0, compost:0, biochar:0
+  gci:0,
+  paperMulch:0,
+  tackifier:0,
+  compost:0
 };
 
 // ---------- MATERIAL USAGE ----------
-const MATERIAL_USAGE = {
-  small: { seed:1, mulch:1, tackifier:0.5, compost:0.5 },
-  medium:{ seed:2, mulch:2, tackifier:1, compost:1 },
-  large: { seed:3, mulch:3, tackifier:1.5, compost:1.5 }
+const USAGE = {
+  small:{ seed:1, mulch:1, tack:0.5, compost:0.5 },
+  medium:{ seed:2, mulch:2, tack:1, compost:1 },
+  large:{ seed:3, mulch:3, tack:1.5, compost:1.5 }
 };
 
 // ---------- SAVE INVENTORY ----------
 function saveInventory(){
   inventory.gci = +gci.value || 0;
-  inventory.blue = +blue.value || 0;
-  inventory.basicMix = +basicMix.value || 0;
-  inventory.lebanon = +lebanon.value || 0;
-  inventory.andersons = +andersons.value || 0;
-  inventory.organic = +organic.value || 0;
-
   inventory.paperMulch = +paperMulch.value || 0;
-  inventory.bfm = +bfm.value || 0;
-  inventory.basicMulch = +basicMulch.value || 0;
-
   inventory.tackifier = +tackifier.value || 0;
   inventory.compost = +compost.value || 0;
-  inventory.biochar = +biochar.value || 0;
 
   localStorage.setItem("inventory", JSON.stringify(inventory));
   updateAlerts();
@@ -161,18 +141,28 @@ function saveInventory(){
 
 // ---------- LOG JOB ----------
 function logJob(){
+
   const name = jobName.value;
   const size = jobSize.value;
+  const type = jobType.value;
 
-  const prices = { small:1500, medium:2000, large:3000 };
-  const revenue = prices[size];
+  const prices = {
+    small:1500,
+    medium:2000,
+    large:3000
+  };
 
-  const usage = MATERIAL_USAGE[size];
+  let revenue = prices[size];
 
-  // subtract inventory
+  // premium boost
+  if(type === "premium") revenue *= 1.4;
+
+  const usage = USAGE[size];
+
+  // deduct inventory
   inventory.gci -= usage.seed;
   inventory.paperMulch -= usage.mulch;
-  inventory.tackifier -= usage.tackifier;
+  inventory.tackifier -= usage.tack;
   inventory.compost -= usage.compost;
 
   for(let k in inventory){
@@ -183,13 +173,16 @@ function logJob(){
 
   const profit = revenue * 0.65;
 
-  jobs.push({
+  const job = {
     name,
     revenue,
     profit,
+    type,
+    size,
     date: new Date().toLocaleDateString()
-  });
+  };
 
+  jobs.push(job);
   localStorage.setItem("jobs", JSON.stringify(jobs));
 
   jobName.value = "";
@@ -209,28 +202,33 @@ function updateAlerts(){
     }
   }
 
-  if(low.length){
-    alerts.innerText = "LOW: " + low.join(", ");
-    reorder.innerText = low.join(", ");
-  } else {
-    alerts.innerText = "All inventory levels good";
-    reorder.innerText = "None";
-  }
+  alerts.innerText = low.length
+    ? "LOW: " + low.join(", ")
+    : "All inventory levels good";
+
+  reorder.innerText = low.length
+    ? low.join(", ")
+    : "None";
 }
 
 // ---------- RENDER ----------
 function render(){
-  jobsEl = jobs.length;
-  revenueEl = jobs.reduce((a,b)=>a+b.revenue,0);
-  profitEl = jobs.reduce((a,b)=>a+b.profit,0);
 
-  jobs.innerText = jobsEl;
-  revenue.innerText = money(revenueEl);
-  profit.innerText = money(profitEl);
+  const totalJobs = jobs.length;
+  const totalRevenue = jobs.reduce((a,b)=>a+b.revenue,0);
+  const totalProfit = jobs.reduce((a,b)=>a+b.profit,0);
 
-  history.innerHTML = jobs.map(j =>
-    `<div>${j.name} - $${money(j.revenue)}</div>`
-  ).join("");
+  document.getElementById("jobsCount").innerText = totalJobs;
+  document.getElementById("revenue").innerText = money(totalRevenue);
+  document.getElementById("profit").innerText = money(totalProfit);
+
+  // history
+  document.getElementById("history").innerHTML =
+    jobs.map(j => `
+      <div>
+        ${j.name} (${j.type}) - $${money(j.revenue)}
+      </div>
+    `).join("");
 
   renderChart();
 }
