@@ -2,20 +2,15 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body { background:#0d0d0d; color:white; font-family:Arial; padding:20px; }
 .card { background:#111; padding:20px; border-radius:12px; margin-bottom:20px; }
-input, select {
-  width:100%; padding:12px; margin:6px 0;
-  background:#1a1a1a; border:1px solid #333;
-  color:white; border-radius:8px;
-}
-button {
-  width:100%; padding:14px;
-  background:#d4af37; border:none; border-radius:10px;
-}
+input, select { width:100%; padding:12px; margin:6px 0; background:#1a1a1a; border:1px solid #333; color:white; border-radius:8px; }
+button { width:100%; padding:14px; background:#d4af37; border:none; border-radius:10px; margin-top:10px; }
 .job { border-left:4px solid #d4af37; padding:10px; margin-bottom:10px; }
+label { display:block; margin-top:8px; }
 </style>
 </head>
 
@@ -23,10 +18,10 @@ button {
 
 <div class="card">
 <h3>Overview</h3>
-Jobs: <span id="jobsCount">0</span><br>
+Jobs: <span id="jobs">0</span><br>
 Revenue: $<span id="rev">0</span><br>
 Profit: $<span id="profit">0</span><br>
-Avg Margin: <span id="margin">0</span>%
+Margin: <span id="margin">0</span>%
 </div>
 
 <div class="card">
@@ -45,48 +40,63 @@ Avg Margin: <span id="margin">0</span>%
 <option value="premium">Premium</option>
 </select>
 
-<!-- MATERIAL SELECTION -->
-<select id="seedType">
-<option value="gci">GCI TTTF</option>
-<option value="blue">GCI Blue</option>
-<option value="basicMix">Basic Mix</option>
-<option value="lebanon">Lebanon</option>
-<option value="andersons">Andersons</option>
-<option value="organic">Organic</option>
-</select>
-
-<select id="mulchType">
-<option value="paperMulch">Paper Mulch</option>
-<option value="bfm">BFM Mulch</option>
-<option value="basicMulch">Basic Mulch</option>
-</select>
+<h4>Add-ons</h4>
+<label><input type="checkbox" id="compostAdd"> Compost</label>
+<label><input type="checkbox" id="biocharAdd"> Biochar</label>
+<label><input type="checkbox" id="humicAdd"> Humic Acid</label>
 
 <button onclick="logJob()">Log Job</button>
 </div>
 
 <div class="card">
+<h3>Inventory</h3>
+
+<input id="tttf" placeholder="TTTF Blend">
+<input id="rye" placeholder="Annual Rye">
+<input id="elite" placeholder="Elite TTTF">
+<input id="kbg" placeholder="Kentucky Bluegrass">
+
+<input id="milo" placeholder="Milorganite">
+<input id="espoma" placeholder="Espoma">
+
+<input id="wood" placeholder="Wood Fiber">
+<input id="bfm" placeholder="BFM">
+
+<input id="tack" placeholder="Guar Tackifier">
+
+<input id="compost" placeholder="Compost">
+<input id="biochar" placeholder="Biochar">
+<input id="humic" placeholder="Humic Acid">
+
+<button onclick="saveInv()">Save Inventory</button>
+</div>
+
+<div class="card">
 <h3>Material Costs</h3>
 
-<input id="gciCost" placeholder="GCI Cost">
-<input id="blueCost" placeholder="Blue Cost">
-<input id="basicMixCost" placeholder="Basic Mix Cost">
-<input id="lebanonCost" placeholder="Lebanon Cost">
-<input id="andersonsCost" placeholder="Andersons Cost">
-<input id="organicCost" placeholder="Organic Cost">
+<input id="tttfCost" placeholder="TTTF Cost">
+<input id="ryeCost" placeholder="Rye Cost">
+<input id="eliteCost" placeholder="Elite Cost">
+<input id="kbgCost" placeholder="KBG Cost">
 
-<input id="paperMulchCost" placeholder="Paper Mulch Cost">
+<input id="miloCost" placeholder="Milorganite Cost">
+<input id="espomaCost" placeholder="Espoma Cost">
+
+<input id="woodCost" placeholder="Wood Fiber Cost">
 <input id="bfmCost" placeholder="BFM Cost">
-<input id="basicMulchCost" placeholder="Basic Mulch Cost">
 
 <input id="tackCost" placeholder="Tackifier Cost">
+
 <input id="compostCost" placeholder="Compost Cost">
 <input id="biocharCost" placeholder="Biochar Cost">
+<input id="humicCost" placeholder="Humic Cost">
 
 <button onclick="saveCosts()">Save Costs</button>
 </div>
 
 <div class="card">
 <h3>Job History</h3>
+<button onclick="clearJobs()">Clear History</button>
 <div id="history"></div>
 </div>
 
@@ -94,67 +104,108 @@ Avg Margin: <span id="margin">0</span>%
 
 const $ = id => document.getElementById(id);
 
-let jobs = JSON.parse(localStorage.getItem("jobs")) || {};
-let costs = JSON.parse(localStorage.getItem("costs")) || {};
+let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let inv = JSON.parse(localStorage.getItem("inv")) || {};
+let cost = JSON.parse(localStorage.getItem("cost")) || {};
 
 const USE = {
-small:{seed:1,mulch:1,tack:0.5,compost:0.5},
-medium:{seed:2,mulch:2,tack:1,compost:1},
-large:{seed:3,mulch:3,tack:1.5,compost:1.5}
+small:1,
+medium:2,
+large:3
 };
+
+function saveInv(){
+for(let k of ["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"]){
+inv[k] = +$(k).value || 0;
+}
+localStorage.setItem("inv", JSON.stringify(inv));
+}
 
 function saveCosts(){
-costs = {
-gci:+$("gciCost").value||0,
-blue:+$("blueCost").value||0,
-basicMix:+$("basicMixCost").value||0,
-lebanon:+$("lebanonCost").value||0,
-andersons:+$("andersonsCost").value||0,
-organic:+$("organicCost").value||0,
-paperMulch:+$("paperMulchCost").value||0,
-bfm:+$("bfmCost").value||0,
-basicMulch:+$("basicMulchCost").value||0,
-tack:+$("tackCost").value||0,
-compost:+$("compostCost").value||0
-};
-
-localStorage.setItem("costs", JSON.stringify(costs));
+for(let k of ["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"]){
+cost[k] = +$(k+"Cost").value || 0;
+}
+localStorage.setItem("cost", JSON.stringify(cost));
 }
 
 function logJob(){
 
-let size = $("size").value;
+let size = USE[$("size").value];
 let type = $("type").value;
-let seedType = $("seedType").value;
-let mulchType = $("mulchType").value;
 
-let base = {small:1500, medium:2000, large:3000}[size];
-if(type==="premium") base *= 1.4;
+let revenue = {small:1500,medium:2000,large:3000}[$("size").value];
+if(type==="premium") revenue*=1.4;
 
-let u = USE[size];
+let materials = {};
+let totalCost = 0;
 
-let cost =
-u.seed * (costs[seedType]||0) +
-u.mulch * (costs[mulchType]||0) +
-u.tack * (costs.tack||0) +
-u.compost * (costs.compost||0);
+// ---------- STANDARD ----------
+if(type==="standard"){
 
-let profit = base - cost;
-let margin = (profit/base)*100;
+materials = {
+tttf:0.8*size,
+rye:0.2*size,
+milo:size,
+wood:size,
+tack:0.5*size
+};
+
+if($("compostAdd").checked){
+materials.compost = size;
+}
+if($("biocharAdd").checked){
+materials.biochar = size;
+}
+if($("humicAdd").checked){
+materials.humic = size;
+}
+
+}
+
+// ---------- PREMIUM ----------
+if(type==="premium"){
+
+materials = {
+elite:0.8*size,
+kbg:0.2*size,
+espoma:size,
+bfm:size,
+tack:0.5*size,
+compost:size,
+biochar:0.5*size,
+humic:0.5*size
+};
+
+}
+
+// ---------- COST ----------
+for(let k in materials){
+totalCost += (cost[k]||0) * materials[k];
+inv[k] -= materials[k] || 0;
+if(inv[k] < 0) inv[k]=0;
+}
+
+let profit = revenue - totalCost;
+let margin = (profit/revenue)*100;
 
 jobs.push({
 name:$("name").value,
-type,size,
-seedType,mulchType,
-revenue:base,
-cost,
+type,
+revenue,
 profit,
 margin,
-materials:u
+materials
 });
 
 localStorage.setItem("jobs", JSON.stringify(jobs));
+localStorage.setItem("inv", JSON.stringify(inv));
 
+render();
+}
+
+function clearJobs(){
+jobs=[];
+localStorage.removeItem("jobs");
 render();
 }
 
@@ -168,7 +219,7 @@ p+=j.profit;
 m+=j.margin;
 });
 
-$("jobsCount").innerText = jobs.length;
+$("jobs").innerText = jobs.length;
 $("rev").innerText = Math.round(r);
 $("profit").innerText = Math.round(p);
 $("margin").innerText = jobs.length?(m/jobs.length).toFixed(1):0;
@@ -176,13 +227,12 @@ $("margin").innerText = jobs.length?(m/jobs.length).toFixed(1):0;
 history.innerHTML = jobs.map(j=>`
 <div class="job">
 <b>${j.name}</b> (${j.type})<br>
-Seed: ${j.seedType}<br>
-Mulch: ${j.mulchType}<br><br>
+Revenue: $${j.revenue}<br>
+Profit: $${j.profit}<br>
+Margin: ${j.margin.toFixed(1)}%<br><br>
 
-💰 Revenue: $${j.revenue}<br>
-💸 Cost: $${j.cost}<br>
-📈 Profit: $${j.profit}<br>
-📊 Margin: ${j.margin.toFixed(1)}%
+Materials:<br>
+${Object.entries(j.materials).map(([k,v])=>`${k}: ${v}`).join("<br>")}
 </div>
 `).join("");
 
