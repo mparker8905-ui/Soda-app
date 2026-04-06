@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- 🔥 REQUIRED FOR CHARTS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <title>Soda App</title>
@@ -25,9 +24,7 @@ body {
   margin-bottom: 20px;
 }
 
-h3 {
-  margin-top: 0;
-}
+h3 { margin-top: 0; }
 
 input, select {
   width: 100%;
@@ -49,10 +46,6 @@ button {
   margin-top: 10px;
 }
 
-.stat {
-  margin: 10px 0;
-}
-
 #alerts {
   color: red;
   font-weight: bold;
@@ -64,34 +57,43 @@ button {
 
 <div class="card">
 <h3>Overview</h3>
-<div class="stat">Jobs: <span id="jobs">0</span></div>
-<div class="stat">Revenue: $<span id="revenue">0</span></div>
-<div class="stat">Profit: $<span id="profit">0</span></div>
+<div>Jobs: <span id="jobs">0</span></div>
+<div>Revenue: $<span id="revenue">0</span></div>
+<div>Profit: $<span id="profit">0</span></div>
 </div>
 
 <div class="card">
 <h3>Log Job</h3>
 <input id="jobName" placeholder="Customer Name">
+
 <select id="jobSize">
-<option value="1000">Small</option>
-<option value="2000">Medium</option>
-<option value="3000">Large</option>
+<option value="small">Small</option>
+<option value="medium">Medium</option>
+<option value="large">Large</option>
 </select>
+
 <button onclick="logJob()">Log Job</button>
 </div>
 
 <div class="card">
 <h3>Inventory</h3>
-<input id="seed" placeholder="Seed">
-<input id="fert" placeholder="Fertilizer">
-<button onclick="saveInventory()">Save Inventory</button>
-</div>
 
-<div class="card">
-<h3>Material Costs</h3>
-<input id="seedCost" placeholder="Seed Cost">
-<input id="fertCost" placeholder="Fertilizer Cost">
-<button onclick="saveCosts()">Save Costs</button>
+<input id="gci" placeholder="GCI TTTF">
+<input id="blue" placeholder="GCI Blue">
+<input id="basicMix" placeholder="Basic Mix">
+<input id="lebanon" placeholder="Lebanon">
+<input id="andersons" placeholder="Andersons">
+<input id="organic" placeholder="Organic">
+
+<input id="paperMulch" placeholder="Paper Mulch">
+<input id="bfm" placeholder="BFM Mulch">
+<input id="basicMulch" placeholder="Basic Mulch">
+
+<input id="tackifier" placeholder="Tackifier">
+<input id="compost" placeholder="Compost">
+<input id="biochar" placeholder="Biochar">
+
+<button onclick="saveInventory()">Save Inventory</button>
 </div>
 
 <div class="card">
@@ -115,85 +117,156 @@ button {
 </div>
 
 <script>
-let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
-let inventory = JSON.parse(localStorage.getItem("inventory")) || {};
-let costs = JSON.parse(localStorage.getItem("costs")) || {};
+// ---------- HELPERS ----------
+function money(n){
+  return Math.round(n * 100) / 100;
+}
 
-function saveInventory() {
-  inventory.seed = Number(document.getElementById("seed").value);
-  inventory.fert = Number(document.getElementById("fert").value);
+// ---------- DATA ----------
+let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+
+let inventory = JSON.parse(localStorage.getItem("inventory")) || {
+  gci:0, blue:0, basicMix:0, lebanon:0, andersons:0, organic:0,
+  paperMulch:0, bfm:0, basicMulch:0,
+  tackifier:0, compost:0, biochar:0
+};
+
+// ---------- MATERIAL USAGE ----------
+const MATERIAL_USAGE = {
+  small: { seed:1, mulch:1, tackifier:0.5, compost:0.5 },
+  medium:{ seed:2, mulch:2, tackifier:1, compost:1 },
+  large: { seed:3, mulch:3, tackifier:1.5, compost:1.5 }
+};
+
+// ---------- SAVE INVENTORY ----------
+function saveInventory(){
+  inventory.gci = +gci.value || 0;
+  inventory.blue = +blue.value || 0;
+  inventory.basicMix = +basicMix.value || 0;
+  inventory.lebanon = +lebanon.value || 0;
+  inventory.andersons = +andersons.value || 0;
+  inventory.organic = +organic.value || 0;
+
+  inventory.paperMulch = +paperMulch.value || 0;
+  inventory.bfm = +bfm.value || 0;
+  inventory.basicMulch = +basicMulch.value || 0;
+
+  inventory.tackifier = +tackifier.value || 0;
+  inventory.compost = +compost.value || 0;
+  inventory.biochar = +biochar.value || 0;
+
   localStorage.setItem("inventory", JSON.stringify(inventory));
   updateAlerts();
 }
 
-function saveCosts() {
-  costs.seed = Number(document.getElementById("seedCost").value);
-  costs.fert = Number(document.getElementById("fertCost").value);
-  localStorage.setItem("costs", JSON.stringify(costs));
-}
+// ---------- LOG JOB ----------
+function logJob(){
+  const name = jobName.value;
+  const size = jobSize.value;
 
-function logJob() {
-  const name = document.getElementById("jobName").value;
-  const revenue = Number(document.getElementById("jobSize").value);
+  const prices = { small:1500, medium:2000, large:3000 };
+  const revenue = prices[size];
 
-  const job = {
+  const usage = MATERIAL_USAGE[size];
+
+  // subtract inventory
+  inventory.gci -= usage.seed;
+  inventory.paperMulch -= usage.mulch;
+  inventory.tackifier -= usage.tackifier;
+  inventory.compost -= usage.compost;
+
+  for(let k in inventory){
+    if(inventory[k] < 0) inventory[k] = 0;
+  }
+
+  localStorage.setItem("inventory", JSON.stringify(inventory));
+
+  const profit = revenue * 0.65;
+
+  jobs.push({
     name,
     revenue,
-    profit: revenue * 0.5,
+    profit,
     date: new Date().toLocaleDateString()
-  };
+  });
 
-  jobs.push(job);
   localStorage.setItem("jobs", JSON.stringify(jobs));
 
+  jobName.value = "";
+
+  updateAlerts();
   render();
 }
 
-function render() {
-  document.getElementById("jobs").innerText = jobs.length;
+// ---------- ALERTS ----------
+function updateAlerts(){
+  let low = [];
+  let threshold = 5;
 
-  let totalRevenue = jobs.reduce((a, b) => a + b.revenue, 0);
-  let totalProfit = jobs.reduce((a, b) => a + b.profit, 0);
+  for(let key in inventory){
+    if(inventory[key] < threshold){
+      low.push(key);
+    }
+  }
 
-  document.getElementById("revenue").innerText = totalRevenue;
-  document.getElementById("profit").innerText = totalProfit;
+  if(low.length){
+    alerts.innerText = "LOW: " + low.join(", ");
+    reorder.innerText = low.join(", ");
+  } else {
+    alerts.innerText = "All inventory levels good";
+    reorder.innerText = "None";
+  }
+}
 
-  let historyHTML = "";
-  jobs.forEach(j => {
-    historyHTML += `<div>${j.name} - $${j.revenue}</div>`;
-  });
-  document.getElementById("history").innerHTML = historyHTML;
+// ---------- RENDER ----------
+function render(){
+  jobsEl = jobs.length;
+  revenueEl = jobs.reduce((a,b)=>a+b.revenue,0);
+  profitEl = jobs.reduce((a,b)=>a+b.profit,0);
+
+  jobs.innerText = jobsEl;
+  revenue.innerText = money(revenueEl);
+  profit.innerText = money(profitEl);
+
+  history.innerHTML = jobs.map(j =>
+    `<div>${j.name} - $${money(j.revenue)}</div>`
+  ).join("");
 
   renderChart();
 }
 
-function updateAlerts() {
-  if (inventory.seed < 10) {
-    document.getElementById("alerts").innerText = "Low Seed!";
-    document.getElementById("reorder").innerText = "Seed";
-  } else {
-    document.getElementById("alerts").innerText = "All inventory levels good";
-    document.getElementById("reorder").innerText = "None";
-  }
-}
+// ---------- CHART ----------
+let chart;
 
-function renderChart() {
+function renderChart(){
   const ctx = document.getElementById("chart");
 
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: jobs.map(j => j.date),
-      datasets: [{
-        label: "Revenue",
-        data: jobs.map(j => j.revenue)
-      }]
+  if(chart) chart.destroy();
+
+  chart = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels: jobs.map(j=>j.date),
+      datasets:[
+        {
+          label:"Revenue",
+          data: jobs.map(j=>j.revenue),
+          backgroundColor:"#d4af37"
+        },
+        {
+          label:"Profit",
+          data: jobs.map(j=>j.profit),
+          backgroundColor:"#ffffff"
+        }
+      ]
     }
   });
 }
 
+// ---------- INIT ----------
 render();
 updateAlerts();
+
 </script>
 
 </body>
