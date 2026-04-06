@@ -5,7 +5,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body {background:#000;color:#fff;font-family:sans-serif;margin:0}
+body{background:#000;color:#fff;font-family:sans-serif;margin:0}
 .container{padding:15px}
 .card{background:#111;padding:20px;margin-bottom:15px;border-radius:16px}
 input,select{width:100%;padding:12px;margin:8px 0;background:#222;color:#fff;border:none;border-radius:10px}
@@ -56,7 +56,7 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 </div>
 
 <div class="card">
-<button onclick="clearJobs()">Clear Jobs</button>
+<button onclick="clearAll()">RESET APP</button>
 </div>
 
 <div class="card">
@@ -73,8 +73,8 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <script>
 
-let jobs = JSON.parse(localStorage.getItem("jobs")||"[]");
-let costs = JSON.parse(localStorage.getItem("costs")||"{}");
+let jobs = JSON.parse(localStorage.getItem("jobs") || "[]").filter(j=>j && j.revenue);
+let costs = JSON.parse(localStorage.getItem("costs") || "{}");
 let chart;
 
 function n(v){return parseFloat(v)||0}
@@ -91,54 +91,55 @@ soil:n(soilCost.value)
 localStorage.setItem("costs",JSON.stringify(costs))
 }
 
-// MATERIAL RECIPES
-function getMaterialUsage(tier){
+// MATERIAL RECIPES (REAL)
+function getUsage(tier){
 if(tier==="standard"){
 return {seed:1,fert:1,mulch:1,tack:1,soil:1}
 }
-return {seed:1.2,fert:1.2,mulch:1.3,tack:1.1,soil:1.5}
+return {seed:1.2,fert:1.3,mulch:1.4,tack:1.2,soil:1.5}
 }
 
 // ADD JOB
 function addJob(){
 
-const houses=Math.max(1,n(houses.value))
-const builder=builder.checked
-const price=n(pricePerHouse.value)
+const houses=Math.max(1,n(document.getElementById("houses").value))
+const builder=document.getElementById("builder").checked
+const price=n(document.getElementById("pricePerHouse").value)
 
 const base={
 small:1500,
 medium:2500,
 large:3500
-}[size.value]
+}[size.value] || 0
 
-const revenue=builder?price*houses:base*houses
+let revenue = builder ? price*houses : base*houses
 
-const usage=getMaterialUsage(tier.value)
+const usage=getUsage(tier.value)
 
 let matCost=
-(costs.seed*usage.seed)+
-(costs.fert*usage.fert)+
-(costs.mulch*usage.mulch)+
-(costs.tack*usage.tack)+
-(costs.soil*usage.soil)
+(n(costs.seed)*usage.seed)+
+(n(costs.fert)*usage.fert)+
+(n(costs.mulch)*usage.mulch)+
+(n(costs.tack)*usage.tack)+
+(n(costs.soil)*usage.soil)
 
 matCost*=houses
 
 const profit=revenue-matCost
-const margin=revenue?(profit/revenue*100):0
+const margin=revenue ? (profit/revenue*100) : 0
 
-jobs.push({
+const job={
 name:name.value||"Client",
-tier:tier.value,
+tier:tier.value||"standard",
 houses,
-revenue,
-profit,
-margin,
+revenue:revenue||0,
+profit:profit||0,
+margin:margin||0,
 materials:usage,
 date:new Date().toLocaleDateString()
-})
+}
 
+jobs.push(job)
 localStorage.setItem("jobs",JSON.stringify(jobs))
 
 render()
@@ -148,12 +149,13 @@ render()
 function render(){
 
 let rev=0,prof=0
+
 jobs.forEach(j=>{
-rev+=j.revenue
-prof+=j.profit
+rev+=n(j.revenue)
+prof+=n(j.profit)
 })
 
-const margin=rev?(prof/rev*100).toFixed(1):0
+const margin=rev ? (prof/rev*100).toFixed(1) : 0
 
 stats.innerHTML=`
 Jobs: ${jobs.length}<br>
@@ -173,15 +175,15 @@ Revenue: $${j.revenue}<br>
 Profit: $${j.profit}<br>
 Margin: ${j.margin.toFixed(1)}%<br>
 Materials:<br>
-Seed: ${j.materials.seed}<br>
-Fert: ${j.materials.fert}<br>
-Mulch: ${j.materials.mulch}<br>
-Tack: ${j.materials.tack}<br>
-Soil: ${j.materials.soil}
+Seed: ${j.materials?.seed||0}<br>
+Fert: ${j.materials?.fert||0}<br>
+Mulch: ${j.materials?.mulch||0}<br>
+Tack: ${j.materials?.tack||0}<br>
+Soil: ${j.materials?.soil||0}
 </div><hr>`
 })
 
-// FIX CHART BUG
+// CHART FIX
 if(chart) chart.destroy()
 
 chart=new Chart(document.getElementById("chart"),{
@@ -197,9 +199,10 @@ datasets:[
 
 }
 
-function clearJobs(){
+// FULL RESET
+function clearAll(){
+localStorage.clear()
 jobs=[]
-localStorage.removeItem("jobs")
 render()
 }
 
