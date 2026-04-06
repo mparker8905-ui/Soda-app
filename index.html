@@ -1,11 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -13,13 +9,12 @@
 <style>
 body { background:#0b0b0b; color:white; font-family:Arial; padding:20px; }
 .card { background:#121212; padding:20px; border-radius:12px; margin-bottom:20px; }
-button { background:#d4af37; padding:12px; border:none; border-radius:8px; width:100%; margin-top:10px; }
-input, select { width:100%; padding:10px; margin:5px 0; background:#1a1a1a; border:1px solid #333; color:white; }
+input, select { width:100%; padding:12px; margin:6px 0; background:#1a1a1a; border:1px solid #333; color:white; border-radius:8px; }
+button { width:100%; padding:14px; background:#d4af37; border:none; border-radius:10px; margin-top:10px; font-weight:bold; }
 .job { border-left:4px solid #d4af37; padding:10px; margin-bottom:10px; }
 .paid { color:#00ff99; }
 .unpaid { color:#ff4d4d; }
 </style>
-
 </head>
 
 <body>
@@ -29,11 +24,11 @@ input, select { width:100%; padding:10px; margin:5px 0; background:#1a1a1a; bord
 Jobs: <span id="jobs">0</span><br>
 Revenue: $<span id="rev">0</span><br>
 Profit: $<span id="profit">0</span><br>
-Margin: <span id="margin">0</span>%<br>
+Avg Margin: <span id="margin">0</span>%
 </div>
 
 <div class="card">
-<h3>Create Job</h3>
+<h3>Log Job</h3>
 
 <input id="name" placeholder="Customer Name">
 
@@ -48,80 +43,166 @@ Margin: <span id="margin">0</span>%<br>
 <option value="premium">Premium</option>
 </select>
 
-<button onclick="createJob()">Create Job</button>
+<label><input type="checkbox" id="compostAdd"> Compost</label>
+<label><input type="checkbox" id="biocharAdd"> Biochar</label>
+<label><input type="checkbox" id="humicAdd"> Humic Acid</label>
 
+<button onclick="logJob()">Log Job</button>
 </div>
 
 <div class="card">
-<h3>Jobs</h3>
-<div id="jobList"></div>
+<h3>Inventory</h3>
+
+<input id="tttf" placeholder="TTTF">
+<input id="rye" placeholder="Rye">
+<input id="elite" placeholder="Elite TTTF">
+<input id="kbg" placeholder="KBG">
+
+<input id="milo" placeholder="Milorganite">
+<input id="espoma" placeholder="Espoma">
+
+<input id="wood" placeholder="Wood Fiber">
+<input id="bfm" placeholder="BFM">
+
+<input id="tack" placeholder="Tackifier">
+
+<input id="compost" placeholder="Compost">
+<input id="biochar" placeholder="Biochar">
+<input id="humic" placeholder="Humic">
+
+<button onclick="saveInv()">Save Inventory</button>
+</div>
+
+<div class="card">
+<h3>Material Costs</h3>
+<input id="tttfCost" placeholder="TTTF Cost">
+<input id="ryeCost" placeholder="Rye Cost">
+<input id="eliteCost" placeholder="Elite Cost">
+<input id="kbgCost" placeholder="KBG Cost">
+<input id="miloCost" placeholder="Milorganite Cost">
+<input id="espomaCost" placeholder="Espoma Cost">
+<input id="woodCost" placeholder="Wood Fiber Cost">
+<input id="bfmCost" placeholder="BFM Cost">
+<input id="tackCost" placeholder="Tackifier Cost">
+<input id="compostCost" placeholder="Compost Cost">
+<input id="biocharCost" placeholder="Biochar Cost">
+<input id="humicCost" placeholder="Humic Cost">
+
+<button onclick="saveCosts()">Save Costs</button>
+</div>
+
+<div class="card">
+<h3>Job History</h3>
+<div id="history"></div>
+</div>
+
+<div class="card">
+<h3>Analytics</h3>
+<canvas id="chart"></canvas>
 </div>
 
 <script>
 
+const $ = id => document.getElementById(id);
 const { jsPDF } = window.jspdf;
 
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let inv = JSON.parse(localStorage.getItem("inv")) || {};
+let cost = JSON.parse(localStorage.getItem("cost")) || {};
 
-// ---------- CREATE JOB ----------
-function createJob(){
+const USE = { small:1, medium:2, large:3 };
 
-let name = document.getElementById("name").value || "Customer";
-let size = document.getElementById("size").value;
-let type = document.getElementById("type").value;
+// ---------- SAVE ----------
+function saveInv(){
+["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"].forEach(k=>{
+inv[k] = +$(k).value || 0;
+});
+localStorage.setItem("inv", JSON.stringify(inv));
+}
 
-let price = {small:1500,medium:2000,large:3000}[size];
-if(type==="premium") price*=1.4;
+function saveCosts(){
+["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"].forEach(k=>{
+cost[k] = +$(k+"Cost").value || 0;
+});
+localStorage.setItem("cost", JSON.stringify(cost));
+}
 
-let cost = price * 0.4; // simple model
-let profit = price - cost;
-let margin = (profit/price)*100;
+// ---------- LOG JOB ----------
+function logJob(){
+
+let size = USE[$("size").value];
+let type = $("type").value;
+
+let revenue = {small:1500,medium:2000,large:3000}[$("size").value];
+if(type==="premium") revenue*=1.4;
+
+let materials = {};
+let totalCost = 0;
+
+// STANDARD
+if(type==="standard"){
+materials = {
+tttf:0.8*size,
+rye:0.2*size,
+milo:size,
+wood:size,
+tack:0.5*size
+};
+
+if($("compostAdd").checked) materials.compost = size;
+if($("biocharAdd").checked) materials.biochar = size;
+if($("humicAdd").checked) materials.humic = size;
+}
+
+// PREMIUM
+if(type==="premium"){
+materials = {
+elite:0.8*size,
+kbg:0.2*size,
+espoma:size,
+bfm:size,
+tack:0.5*size,
+compost:size,
+biochar:0.5*size,
+humic:0.5*size
+};
+}
+
+for(let k in materials){
+let qty = materials[k] || 0;
+let c = cost[k] || 0;
+
+totalCost += qty * c;
+inv[k] = (inv[k] || 0) - qty;
+if(inv[k] < 0) inv[k] = 0;
+}
+
+let profit = revenue - totalCost;
+let margin = revenue ? (profit/revenue)*100 : 0;
 
 jobs.push({
-name, type, size,
-price, profit, margin,
+name:$("name").value || "Unnamed",
+type,
+revenue,
+profit,
+margin,
+materials,
 paid:false
 });
 
 localStorage.setItem("jobs", JSON.stringify(jobs));
+localStorage.setItem("inv", JSON.stringify(inv));
 
-render();
-}
-
-// ---------- TOGGLE PAYMENT ----------
-function togglePaid(i){
-jobs[i].paid = !jobs[i].paid;
-localStorage.setItem("jobs", JSON.stringify(jobs));
 render();
 }
 
 // ---------- PDF ----------
-function generatePDF(job){
-
+function pdf(j){
 const doc = new jsPDF();
-
-doc.setFontSize(18);
-doc.text("SoDa Outdoor Designs", 20, 20);
-
-doc.setFontSize(12);
-doc.text(`Customer: ${job.name}`, 20, 40);
-doc.text(`Package: ${job.type}`, 20, 50);
-doc.text(`Price: $${job.price}`, 20, 60);
-
-doc.text("Services:", 20, 80);
-
-if(job.type==="standard"){
-doc.text("- Hydroseeding (TTTF + Rye)", 20, 90);
-doc.text("- Organic Fertilization", 20, 100);
-}
-
-if(job.type==="premium"){
-doc.text("- Elite Hydroseed Blend", 20, 90);
-doc.text("- Organic Soil Program", 20, 100);
-doc.text("- Biochar + Humic Enhancement", 20, 110);
-}
-
-doc.save("SoDa_Quote.pdf");
+doc.text(`Customer: ${j.name}`,20,20);
+doc.text(`Type: ${j.type}`,20,30);
+doc.text(`Price: $${j.revenue}`,20,40);
+doc.save("quote.pdf");
 }
 
 // ---------- RENDER ----------
@@ -130,36 +211,52 @@ function render(){
 let rev=0,profit=0,margin=0;
 
 jobs.forEach(j=>{
-rev+=j.price;
+rev+=j.revenue;
 profit+=j.profit;
 margin+=j.margin;
 });
 
-document.getElementById("jobs").innerText = jobs.length;
-document.getElementById("rev").innerText = Math.round(rev);
-document.getElementById("profit").innerText = Math.round(profit);
-document.getElementById("margin").innerText = jobs.length?(margin/jobs.length).toFixed(1):0;
+$("jobs").innerText = jobs.length;
+$("rev").innerText = Math.round(rev);
+$("profit").innerText = Math.round(profit);
+$("margin").innerText = jobs.length?(margin/jobs.length).toFixed(1):0;
 
-document.getElementById("jobList").innerHTML = jobs.map((j,i)=>`
+$("history").innerHTML = jobs.map((j,i)=>`
 <div class="job">
 <b>${j.name}</b> (${j.type})<br>
-
-Price: $${j.price}<br>
-Profit: $${j.profit}<br>
+Profit: $${Math.round(j.profit)}<br>
 Margin: ${j.margin.toFixed(1)}%<br>
 
 <span class="${j.paid?'paid':'unpaid'}">
 ${j.paid?'PAID':'UNPAID'}
 </span>
 
-<button onclick="togglePaid(${i})">Toggle Paid</button>
-<button onclick='generatePDF(${JSON.stringify(j)})'>Download Quote</button>
+<button onclick="jobs[${i}].paid=!jobs[${i}].paid;localStorage.setItem('jobs',JSON.stringify(jobs));render()">Toggle Paid</button>
+<button onclick='pdf(${JSON.stringify(j)})'>PDF</button>
 
-${j.margin<30?"⚠️ Underpriced Job":""}
-
+${j.margin<30?"⚠️ Low Margin":""}
 </div>
 `).join("");
 
+drawChart();
+}
+
+// ---------- CHART ----------
+let chart;
+
+function drawChart(){
+if(chart) chart.destroy();
+
+chart = new Chart($("chart"),{
+type:"bar",
+data:{
+labels:jobs.map(j=>j.name),
+datasets:[
+{label:"Revenue",data:jobs.map(j=>j.revenue),backgroundColor:"#d4af37"},
+{label:"Profit",data:jobs.map(j=>j.profit),backgroundColor:"#fff"}
+]
+}
+});
 }
 
 render();
