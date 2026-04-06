@@ -15,6 +15,7 @@ input, select {
 button {
   width:100%; padding:14px;
   background:#d4af37; border:none; border-radius:10px;
+  margin-top:10px;
 }
 .job { border-left:4px solid #d4af37; padding:10px; margin-bottom:10px; }
 #alerts { color:red; font-weight:bold; }
@@ -54,9 +55,19 @@ button {
 <h3>Inventory</h3>
 
 <input id="gci" placeholder="GCI TTTF">
+<input id="blue" placeholder="GCI Blue">
+<input id="basicMix" placeholder="Basic Mix">
+<input id="lebanon" placeholder="Lebanon">
+<input id="andersons" placeholder="Andersons">
+<input id="organic" placeholder="Organic">
+
 <input id="paperMulch" placeholder="Paper Mulch">
+<input id="bfm" placeholder="BFM Mulch">
+<input id="basicMulch" placeholder="Basic Mulch">
+
 <input id="tackifier" placeholder="Tackifier">
 <input id="compost" placeholder="Compost">
+<input id="biochar" placeholder="Biochar">
 
 <button onclick="saveInv()">Save Inventory</button>
 </div>
@@ -67,30 +78,28 @@ button {
 </div>
 
 <div class="card">
-<h3>Reorder</h3>
+<h3>Reorder List</h3>
 <div id="reorder"></div>
 </div>
 
 <div class="card">
 <h3>Job History</h3>
+<button onclick="clearJobs()">Clear History</button>
 <div id="history"></div>
-</div>
-
-<div class="card">
-<h3>Analytics</h3>
-<canvas id="chart"></canvas>
 </div>
 
 <script>
 
-// ---------- SAFE GET ----------
+// ---------- HELPERS ----------
 const $ = id => document.getElementById(id);
 
 // ---------- DATA ----------
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
 
 let inventory = JSON.parse(localStorage.getItem("inv")) || {
-gci:0, paperMulch:0, tackifier:0, compost:0
+gci:0, blue:0, basicMix:0, lebanon:0, andersons:0, organic:0,
+paperMulch:0, bfm:0, basicMulch:0,
+tackifier:0, compost:0, biochar:0
 };
 
 // ---------- COST ----------
@@ -105,19 +114,15 @@ large:{seed:3,mulch:3,tack:1.5,compost:1.5}
 
 // ---------- SAVE INVENTORY ----------
 function saveInv(){
-inventory.gci = +$("gci").value || 0;
-inventory.paperMulch = +$("paperMulch").value || 0;
-inventory.tackifier = +$("tackifier").value || 0;
-inventory.compost = +$("compost").value || 0;
-
+for(let k in inventory){
+inventory[k] = +$(k).value || 0;
+}
 localStorage.setItem("inv", JSON.stringify(inventory));
 updateAlerts();
 }
 
 // ---------- LOG JOB ----------
 function logJob(){
-
-try {
 
 let name = $("name").value || "Unnamed";
 let size = $("size").value;
@@ -128,7 +133,6 @@ if(type==="premium") base *= 1.4;
 
 let u = USE[size];
 
-// material cost
 let cost =
 u.seed*COST.seed +
 u.mulch*COST.mulch +
@@ -150,7 +154,7 @@ if(inventory[k]<0) inventory[k]=0;
 
 localStorage.setItem("inv", JSON.stringify(inventory));
 
-// SAVE JOB
+// SAVE
 jobs.push({
 name, size, type,
 revenue:base,
@@ -167,11 +171,13 @@ $("name").value = "";
 
 render();
 updateAlerts();
-
-} catch(e){
-alert("Error logging job: "+e.message);
 }
 
+// ---------- CLEAR ----------
+function clearJobs(){
+localStorage.removeItem("jobs");
+jobs = [];
+render();
 }
 
 // ---------- ALERTS ----------
@@ -196,53 +202,35 @@ function render(){
 let totalRev=0,totalProfit=0,totalMargin=0;
 
 jobs.forEach(j=>{
-totalRev+=j.revenue;
-totalProfit+=j.profit;
-totalMargin+=j.margin;
+totalRev+=j.revenue||0;
+totalProfit+=j.profit||0;
+totalMargin+=j.margin||0;
 });
 
 $("jobsCount").innerText = jobs.length;
 $("rev").innerText = Math.round(totalRev);
 $("profit").innerText = Math.round(totalProfit);
+
 $("margin").innerText = jobs.length
 ? (totalMargin/jobs.length).toFixed(1)
 : 0;
 
-// HISTORY
+// SAFE history (fixes your crash)
 $("history").innerHTML = jobs.map(j=>`
 <div class="job">
-<b>${j.name}</b> (${j.type})<br>
-💰 Revenue: $${Math.round(j.revenue)}<br>
-💸 Material Cost: $${Math.round(j.cost)}<br>
-📈 Profit: $${Math.round(j.profit)}<br>
-📊 Margin: ${j.margin.toFixed(1)}%<br><br>
+<b>${j.name||"Unknown"}</b> (${j.type||"standard"})<br>
+💰 Revenue: $${Math.round(j.revenue||0)}<br>
+💸 Cost: $${Math.round(j.cost||0)}<br>
+📈 Profit: $${Math.round(j.profit||0)}<br>
+📊 Margin: ${j.margin ? j.margin.toFixed(1) : "0"}%<br><br>
 
-📦 Materials Used:<br>
-Seed: ${j.materials.seed}<br>
-Mulch: ${j.materials.mulch}<br>
-Tackifier: ${j.materials.tack}<br>
-Compost: ${j.materials.compost}
+📦 Materials:<br>
+Seed: ${j.materials?.seed||0}<br>
+Mulch: ${j.materials?.mulch||0}<br>
+Tackifier: ${j.materials?.tack||0}<br>
+Compost: ${j.materials?.compost||0}
 </div>
 `).join("");
-
-drawChart();
-}
-
-// ---------- CHART ----------
-let chart;
-function drawChart(){
-if(chart) chart.destroy();
-
-chart=new Chart($("chart"),{
-type:"bar",
-data:{
-labels:jobs.map(j=>j.date),
-datasets:[
-{label:"Revenue",data:jobs.map(j=>j.revenue),backgroundColor:"#d4af37"},
-{label:"Profit",data:jobs.map(j=>j.profit),backgroundColor:"#fff"}
-]
-}
-});
 }
 
 // ---------- INIT ----------
