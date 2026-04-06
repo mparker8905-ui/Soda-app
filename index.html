@@ -2,13 +2,12 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body { background:#0d0d0d; color:white; font-family:Arial; padding:20px; }
 .card { background:#111; padding:20px; border-radius:12px; margin-bottom:20px; }
 input, select { width:100%; padding:12px; margin:6px 0; background:#1a1a1a; border:1px solid #333; color:white; border-radius:8px; }
-button { width:100%; padding:14px; background:#d4af37; border:none; border-radius:10px; margin-top:10px; }
+button { width:100%; padding:14px; background:#d4af37; border:none; border-radius:10px; margin-top:10px; font-weight:bold; }
 .job { border-left:4px solid #d4af37; padding:10px; margin-bottom:10px; }
 label { display:block; margin-top:8px; }
 </style>
@@ -21,7 +20,7 @@ label { display:block; margin-top:8px; }
 Jobs: <span id="jobs">0</span><br>
 Revenue: $<span id="rev">0</span><br>
 Profit: $<span id="profit">0</span><br>
-Margin: <span id="margin">0</span>%
+Avg Margin: <span id="margin">0</span>%
 </div>
 
 <div class="card">
@@ -40,7 +39,7 @@ Margin: <span id="margin">0</span>%
 <option value="premium">Premium</option>
 </select>
 
-<h4>Add-ons</h4>
+<h4>Add-ons (Standard Only)</h4>
 <label><input type="checkbox" id="compostAdd"> Compost</label>
 <label><input type="checkbox" id="biocharAdd"> Biochar</label>
 <label><input type="checkbox" id="humicAdd"> Humic Acid</label>
@@ -57,10 +56,10 @@ Margin: <span id="margin">0</span>%
 <input id="kbg" placeholder="Kentucky Bluegrass">
 
 <input id="milo" placeholder="Milorganite">
-<input id="espoma" placeholder="Espoma">
+<input id="espoma" placeholder="Espoma Organic">
 
 <input id="wood" placeholder="Wood Fiber">
-<input id="bfm" placeholder="BFM">
+<input id="bfm" placeholder="Binder Fiber Matrix">
 
 <input id="tack" placeholder="Guar Tackifier">
 
@@ -76,7 +75,7 @@ Margin: <span id="margin">0</span>%
 
 <input id="tttfCost" placeholder="TTTF Cost">
 <input id="ryeCost" placeholder="Rye Cost">
-<input id="eliteCost" placeholder="Elite Cost">
+<input id="eliteCost" placeholder="Elite TTTF Cost">
 <input id="kbgCost" placeholder="KBG Cost">
 
 <input id="miloCost" placeholder="Milorganite Cost">
@@ -104,44 +103,47 @@ Margin: <span id="margin">0</span>%
 
 const $ = id => document.getElementById(id);
 
+// ---------- DATA ----------
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
 let inv = JSON.parse(localStorage.getItem("inv")) || {};
 let cost = JSON.parse(localStorage.getItem("cost")) || {};
 
-const USE = {
-small:1,
-medium:2,
-large:3
-};
+// ---------- SIZE MULTIPLIER ----------
+const USE = { small:1, medium:2, large:3 };
 
+// ---------- SAVE INVENTORY ----------
 function saveInv(){
-for(let k of ["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"]){
+["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"].forEach(k=>{
 inv[k] = +$(k).value || 0;
-}
+});
 localStorage.setItem("inv", JSON.stringify(inv));
+alert("Inventory Saved");
 }
 
+// ---------- SAVE COSTS ----------
 function saveCosts(){
-for(let k of ["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"]){
+["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"].forEach(k=>{
 cost[k] = +$(k+"Cost").value || 0;
-}
+});
 localStorage.setItem("cost", JSON.stringify(cost));
+alert("Costs Saved");
 }
 
+// ---------- LOG JOB ----------
 function logJob(){
 
-let size = USE[$("size").value];
+let sizeKey = $("size").value;
+let size = USE[sizeKey];
 let type = $("type").value;
 
-let revenue = {small:1500,medium:2000,large:3000}[$("size").value];
-if(type==="premium") revenue*=1.4;
+let revenue = {small:1500,medium:2000,large:3000}[sizeKey];
+if(type==="premium") revenue *= 1.4;
 
 let materials = {};
 let totalCost = 0;
 
-// ---------- STANDARD ----------
+// STANDARD
 if(type==="standard"){
-
 materials = {
 tttf:0.8*size,
 rye:0.2*size,
@@ -150,21 +152,13 @@ wood:size,
 tack:0.5*size
 };
 
-if($("compostAdd").checked){
-materials.compost = size;
-}
-if($("biocharAdd").checked){
-materials.biochar = size;
-}
-if($("humicAdd").checked){
-materials.humic = size;
+if($("compostAdd").checked) materials.compost = size;
+if($("biocharAdd").checked) materials.biochar = size;
+if($("humicAdd").checked) materials.humic = size;
 }
 
-}
-
-// ---------- PREMIUM ----------
+// PREMIUM
 if(type==="premium"){
-
 materials = {
 elite:0.8*size,
 kbg:0.2*size,
@@ -175,21 +169,25 @@ compost:size,
 biochar:0.5*size,
 humic:0.5*size
 };
-
 }
 
-// ---------- COST ----------
+// COST + INVENTORY
 for(let k in materials){
-totalCost += (cost[k]||0) * materials[k];
-inv[k] -= materials[k] || 0;
-if(inv[k] < 0) inv[k]=0;
+let matQty = materials[k] || 0;
+let matCost = cost[k] || 0;
+
+totalCost += matQty * matCost;
+
+inv[k] = (inv[k] || 0) - matQty;
+if(inv[k] < 0) inv[k] = 0;
 }
 
 let profit = revenue - totalCost;
-let margin = (profit/revenue)*100;
+let margin = revenue ? (profit / revenue) * 100 : 0;
 
+// SAVE JOB
 jobs.push({
-name:$("name").value,
+name: $("name").value || "Unnamed",
 type,
 revenue,
 profit,
@@ -200,44 +198,52 @@ materials
 localStorage.setItem("jobs", JSON.stringify(jobs));
 localStorage.setItem("inv", JSON.stringify(inv));
 
+// RESET INPUT
+$("name").value = "";
+
 render();
 }
 
+// ---------- CLEAR ----------
 function clearJobs(){
-jobs=[];
+jobs = [];
 localStorage.removeItem("jobs");
 render();
 }
 
+// ---------- RENDER ----------
 function render(){
 
-let r=0,p=0,m=0;
+let totalRev=0,totalProfit=0,totalMargin=0;
 
 jobs.forEach(j=>{
-r+=j.revenue;
-p+=j.profit;
-m+=j.margin;
+totalRev += j.revenue || 0;
+totalProfit += j.profit || 0;
+totalMargin += j.margin || 0;
 });
 
 $("jobs").innerText = jobs.length;
-$("rev").innerText = Math.round(r);
-$("profit").innerText = Math.round(p);
-$("margin").innerText = jobs.length?(m/jobs.length).toFixed(1):0;
+$("rev").innerText = Math.round(totalRev);
+$("profit").innerText = Math.round(totalProfit);
+$("margin").innerText = jobs.length ? (totalMargin/jobs.length).toFixed(1) : 0;
 
-history.innerHTML = jobs.map(j=>`
+// HISTORY
+$("history").innerHTML = jobs.map(j=>`
 <div class="job">
 <b>${j.name}</b> (${j.type})<br>
-Revenue: $${j.revenue}<br>
-Profit: $${j.profit}<br>
-Margin: ${j.margin.toFixed(1)}%<br><br>
+💰 Revenue: $${Math.round(j.revenue)}<br>
+📉 Cost: $${Math.round(j.revenue - j.profit)}<br>
+📈 Profit: $${Math.round(j.profit)}<br>
+📊 Margin: ${j.margin.toFixed(1)}%<br><br>
 
-Materials:<br>
+📦 Materials Used:<br>
 ${Object.entries(j.materials).map(([k,v])=>`${k}: ${v}`).join("<br>")}
 </div>
 `).join("");
 
 }
 
+// ---------- INIT ----------
 render();
 
 </script>
