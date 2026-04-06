@@ -3,39 +3,73 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>SoDa CRM</title>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body { background:#0b0b0b; color:white; font-family:Arial; padding:20px; }
-.card { background:#121212; padding:20px; border-radius:12px; margin-bottom:20px; }
-input, select { width:100%; padding:12px; margin:6px 0; background:#1a1a1a; border:1px solid #333; color:white; border-radius:8px; }
-button { width:100%; padding:14px; background:#d4af37; border:none; border-radius:10px; margin-top:10px; font-weight:bold; }
-.job { border-left:4px solid #d4af37; padding:10px; margin-bottom:10px; }
-.paid { color:#00ff99; }
-.unpaid { color:#ff4d4d; }
+body{
+background:#000;
+color:#fff;
+font-family:Arial;
+padding:20px;
+}
+
+.card{
+background:#111;
+padding:20px;
+border-radius:15px;
+margin-bottom:20px;
+}
+
+input,select{
+width:100%;
+padding:12px;
+margin:8px 0;
+background:#222;
+border:1px solid #333;
+color:#fff;
+border-radius:10px;
+}
+
+button{
+width:100%;
+padding:15px;
+margin-top:10px;
+background:#d4af37;
+border:none;
+border-radius:12px;
+font-weight:bold;
+}
+
+.job{
+border-left:4px solid gold;
+padding:10px;
+margin:10px 0;
+background:#111;
+}
+
+.unpaid{color:red;}
+.paid{color:lime;}
 </style>
 </head>
 
 <body>
 
 <div class="card">
-<h3>Dashboard</h3>
-Jobs: <span id="jobs">0</span><br>
-Revenue: $<span id="rev">0</span><br>
-Profit: $<span id="profit">0</span><br>
-Avg Margin: <span id="margin">0</span>%
+<h2>Dashboard</h2>
+<div id="stats"></div>
 </div>
 
 <div class="card">
-<h3>Log Job</h3>
-
+<h2>Create Job</h2>
 <input id="name" placeholder="Customer Name">
 
 <select id="size">
-<option value="small">Small</option>
-<option value="medium">Medium</option>
-<option value="large">Large</option>
+<option>Small</option>
+<option>Medium</option>
+<option>Large</option>
 </select>
 
 <select id="type">
@@ -43,189 +77,230 @@ Avg Margin: <span id="margin">0</span>%
 <option value="premium">Premium</option>
 </select>
 
-<label><input type="checkbox" id="compostAdd"> Compost</label>
-<label><input type="checkbox" id="biocharAdd"> Biochar</label>
-<label><input type="checkbox" id="humicAdd"> Humic Acid</label>
-
-<button onclick="logJob()">Log Job</button>
+<button onclick="logJob()">Create Job</button>
 </div>
 
 <div class="card">
-<h3>Inventory</h3>
-
-<input id="tttf" placeholder="TTTF">
-<input id="rye" placeholder="Rye">
-<input id="elite" placeholder="Elite TTTF">
-<input id="kbg" placeholder="KBG">
-
-<input id="milo" placeholder="Milorganite">
-<input id="espoma" placeholder="Espoma">
-
-<input id="wood" placeholder="Wood Fiber">
-<input id="bfm" placeholder="BFM">
-
-<input id="tack" placeholder="Tackifier">
-
-<input id="compost" placeholder="Compost">
-<input id="biochar" placeholder="Biochar">
-<input id="humic" placeholder="Humic">
-
-<button onclick="saveInv()">Save Inventory</button>
-</div>
-
-<div class="card">
-<h3>Material Costs</h3>
-<input id="tttfCost" placeholder="TTTF Cost">
-<input id="ryeCost" placeholder="Rye Cost">
-<input id="eliteCost" placeholder="Elite Cost">
-<input id="kbgCost" placeholder="KBG Cost">
-<input id="miloCost" placeholder="Milorganite Cost">
-<input id="espomaCost" placeholder="Espoma Cost">
-<input id="woodCost" placeholder="Wood Fiber Cost">
-<input id="bfmCost" placeholder="BFM Cost">
+<h2>Material Costs</h2>
+<input id="seedCost" placeholder="Seed Cost">
+<input id="fertCost" placeholder="Fertilizer Cost">
+<input id="mulchCost" placeholder="Mulch Cost">
 <input id="tackCost" placeholder="Tackifier Cost">
-<input id="compostCost" placeholder="Compost Cost">
-<input id="biocharCost" placeholder="Biochar Cost">
-<input id="humicCost" placeholder="Humic Cost">
-
+<input id="soilCost" placeholder="Soil Additives Cost">
 <button onclick="saveCosts()">Save Costs</button>
 </div>
 
 <div class="card">
-<h3>Job History</h3>
+<button onclick="toggleClient()">Toggle Client View</button>
+<button onclick="clearJobs()">Clear Job History</button>
+</div>
+
+<div class="card">
+<h2>Job History</h2>
 <div id="history"></div>
 </div>
 
 <div class="card">
-<h3>Analytics</h3>
+<h2>Analytics</h2>
 <canvas id="chart"></canvas>
 </div>
 
 <script>
-
-const $ = id => document.getElementById(id);
 const { jsPDF } = window.jspdf;
 
-let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
-let inv = JSON.parse(localStorage.getItem("inv")) || {};
-let cost = JSON.parse(localStorage.getItem("cost")) || {};
+let jobs = JSON.parse(localStorage.getItem("jobs")||"[]");
+let cost = JSON.parse(localStorage.getItem("cost")||"{}");
 
-const USE = { small:1, medium:2, large:3 };
+let clientMode = false;
 
-// ---------- SAVE ----------
-function saveInv(){
-["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"].forEach(k=>{
-inv[k] = +$(k).value || 0;
-});
-localStorage.setItem("inv", JSON.stringify(inv));
+// ---------- MATERIAL RECIPES ----------
+function getMaterials(type,size){
+
+let base = {small:1, medium:2, large:3}[size];
+
+if(type==="standard"){
+return {
+seed:base,
+fert:base,
+mulch:base,
+tack:base,
+soil:0
+};
 }
 
+if(type==="premium"){
+return {
+seed:base,
+fert:base,
+mulch:base,
+tack:base,
+soil:base
+};
+}
+
+}
+
+// ---------- SAVE COST ----------
 function saveCosts(){
-["tttf","rye","elite","kbg","milo","espoma","wood","bfm","tack","compost","biochar","humic"].forEach(k=>{
-cost[k] = +$(k+"Cost").value || 0;
-});
-localStorage.setItem("cost", JSON.stringify(cost));
+cost = {
+seed:+seedCost.value||0,
+fert:+fertCost.value||0,
+mulch:+mulchCost.value||0,
+tack:+tackCost.value||0,
+soil:+soilCost.value||0
+};
+
+localStorage.setItem("cost",JSON.stringify(cost));
+render();
 }
 
 // ---------- LOG JOB ----------
 function logJob(){
 
-let size = USE[$("size").value];
-let type = $("type").value;
+try{
 
-let revenue = {small:1500,medium:2000,large:3000}[$("size").value];
-if(type==="premium") revenue*=1.4;
+let name = document.getElementById("name").value;
+let size = document.getElementById("size").value;
+let type = document.getElementById("type").value;
 
-let materials = {};
-let totalCost = 0;
+let materials = getMaterials(type,size);
 
-// STANDARD
-if(type==="standard"){
-materials = {
-tttf:0.8*size,
-rye:0.2*size,
-milo:size,
-wood:size,
-tack:0.5*size
-};
+// revenue logic
+let revenue = {small:1500, medium:2500, large:3500}[size];
+if(type==="premium") revenue *= 1.4;
 
-if($("compostAdd").checked) materials.compost = size;
-if($("biocharAdd").checked) materials.biochar = size;
-if($("humicAdd").checked) materials.humic = size;
-}
-
-// PREMIUM
-if(type==="premium"){
-materials = {
-elite:0.8*size,
-kbg:0.2*size,
-espoma:size,
-bfm:size,
-tack:0.5*size,
-compost:size,
-biochar:0.5*size,
-humic:0.5*size
-};
-}
-
+// cost calc
+let materialCost = 0;
 for(let k in materials){
-let qty = materials[k] || 0;
-let c = cost[k] || 0;
-
-totalCost += qty * c;
-inv[k] = (inv[k] || 0) - qty;
-if(inv[k] < 0) inv[k] = 0;
+materialCost += (materials[k]||0)*(cost[k]||0);
 }
 
-let profit = revenue - totalCost;
-let margin = revenue ? (profit/revenue)*100 : 0;
+let profit = revenue - materialCost;
+let margin = revenue ? (profit/revenue*100) : 0;
 
-jobs.push({
-name:$("name").value || "Unnamed",
+let job = {
+name,
 type,
+size,
+materials,
 revenue,
 profit,
 margin,
-materials,
-paid:false
-});
+paid:false,
+date:new Date().toLocaleDateString()
+};
 
-localStorage.setItem("jobs", JSON.stringify(jobs));
-localStorage.setItem("inv", JSON.stringify(inv));
+jobs.push(job);
+localStorage.setItem("jobs",JSON.stringify(jobs));
 
 render();
+
+}catch(e){
+alert(e.message);
+}
+
+}
+
+// ---------- TOGGLE CLIENT ----------
+function toggleClient(){
+clientMode=!clientMode;
+render();
+}
+
+// ---------- CLEAR ----------
+function clearJobs(){
+if(confirm("Clear all jobs?")){
+jobs=[];
+localStorage.setItem("jobs","[]");
+render();
+}
 }
 
 // ---------- PDF ----------
 function pdf(j){
+
 const doc = new jsPDF();
-doc.text(`Customer: ${j.name}`,20,20);
-doc.text(`Type: ${j.type}`,20,30);
-doc.text(`Price: $${j.revenue}`,20,40);
-doc.save("quote.pdf");
+
+doc.setFontSize(18);
+doc.text("SoDa Outdoor Designs",20,20);
+
+doc.setFontSize(12);
+doc.text(`Customer: ${j.name}`,20,40);
+doc.text(`Package: ${j.type}`,20,50);
+
+let y=70;
+
+let services = j.type==="standard" ?
+["Hydroseed","Fertilize","Wood Mulch","Guar Tack"] :
+["Elite Seed","Organic Fert","BFM Mulch","Compost + Biochar"];
+
+services.forEach(s=>{
+doc.text("• "+s,25,y);
+y+=8;
+});
+
+y+=10;
+doc.text("Total: $"+Math.round(j.revenue),20,y);
+
+doc.save(j.name+".pdf");
 }
 
 // ---------- RENDER ----------
 function render(){
 
-let rev=0,profit=0,margin=0;
+// stats
+let rev=0, prof=0;
 
 jobs.forEach(j=>{
 rev+=j.revenue;
-profit+=j.profit;
-margin+=j.margin;
+prof+=j.profit;
 });
 
-$("jobs").innerText = jobs.length;
-$("rev").innerText = Math.round(rev);
-$("profit").innerText = Math.round(profit);
-$("margin").innerText = jobs.length?(margin/jobs.length).toFixed(1):0;
+let margin = rev ? (prof/rev*100).toFixed(1) : 0;
 
-$("history").innerHTML = jobs.map((j,i)=>`
+stats.innerHTML = `
+Jobs: ${jobs.length}<br>
+Revenue: $${rev}<br>
+Profit: $${prof}<br>
+Margin: ${margin}%
+`;
+
+// history
+history.innerHTML = jobs.map((j,i)=>{
+
+if(clientMode){
+return `
 <div class="job">
+<b>${j.name}</b><br>
+${j.type.toUpperCase()}<br>
+$${Math.round(j.revenue)}
+</div>
+`;
+}
+
+let matHTML="";
+let totalCost=0;
+
+for(let k in j.materials){
+let qty = j.materials[k];
+let c = cost[k]||0;
+let item = qty*c;
+totalCost+=item;
+
+matHTML += `${k}: ${qty} ($${item})<br>`;
+}
+
+return `
+<div class="job">
+
 <b>${j.name}</b> (${j.type})<br>
+Revenue: $${Math.round(j.revenue)}<br>
+Cost: $${Math.round(totalCost)}<br>
 Profit: $${Math.round(j.profit)}<br>
-Margin: ${j.margin.toFixed(1)}%<br>
+Margin: ${j.margin.toFixed(1)}%<br><br>
+
+<b>Materials</b><br>
+${matHTML}
 
 <span class="${j.paid?'paid':'unpaid'}">
 ${j.paid?'PAID':'UNPAID'}
@@ -234,33 +309,34 @@ ${j.paid?'PAID':'UNPAID'}
 <button onclick="jobs[${i}].paid=!jobs[${i}].paid;localStorage.setItem('jobs',JSON.stringify(jobs));render()">Toggle Paid</button>
 <button onclick='pdf(${JSON.stringify(j)})'>PDF</button>
 
-${j.margin<30?"⚠️ Low Margin":""}
 </div>
-`).join("");
+`;
 
-drawChart();
-}
+}).join("");
 
-// ---------- CHART ----------
-let chart;
+// chart
+let ctx = document.getElementById("chart");
 
-function drawChart(){
-if(chart) chart.destroy();
-
-chart = new Chart($("chart"),{
+new Chart(ctx,{
 type:"bar",
 data:{
-labels:jobs.map(j=>j.name),
+labels:jobs.map(j=>j.date),
 datasets:[
-{label:"Revenue",data:jobs.map(j=>j.revenue),backgroundColor:"#d4af37"},
-{label:"Profit",data:jobs.map(j=>j.profit),backgroundColor:"#fff"}
+{
+label:"Revenue",
+data:jobs.map(j=>j.revenue)
+},
+{
+label:"Profit",
+data:jobs.map(j=>j.profit)
+}
 ]
 }
 });
+
 }
 
 render();
-
 </script>
 
 </body>
