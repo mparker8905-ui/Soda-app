@@ -2,7 +2,6 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body { background:#0d0d0d; color:white; font-family:Arial; padding:20px; }
@@ -15,10 +14,8 @@ input, select {
 button {
   width:100%; padding:14px;
   background:#d4af37; border:none; border-radius:10px;
-  margin-top:10px;
 }
 .job { border-left:4px solid #d4af37; padding:10px; margin-bottom:10px; }
-#alerts { color:red; font-weight:bold; }
 </style>
 </head>
 
@@ -26,10 +23,10 @@ button {
 
 <div class="card">
 <h3>Overview</h3>
-<div>Jobs: <span id="jobsCount">0</span></div>
-<div>Revenue: $<span id="rev">0</span></div>
-<div>Profit: $<span id="profit">0</span></div>
-<div>Avg Margin: <span id="margin">0</span>%</div>
+Jobs: <span id="jobsCount">0</span><br>
+Revenue: $<span id="rev">0</span><br>
+Profit: $<span id="profit">0</span><br>
+Avg Margin: <span id="margin">0</span>%
 </div>
 
 <div class="card">
@@ -48,85 +45,88 @@ button {
 <option value="premium">Premium</option>
 </select>
 
+<!-- MATERIAL SELECTION -->
+<select id="seedType">
+<option value="gci">GCI TTTF</option>
+<option value="blue">GCI Blue</option>
+<option value="basicMix">Basic Mix</option>
+<option value="lebanon">Lebanon</option>
+<option value="andersons">Andersons</option>
+<option value="organic">Organic</option>
+</select>
+
+<select id="mulchType">
+<option value="paperMulch">Paper Mulch</option>
+<option value="bfm">BFM Mulch</option>
+<option value="basicMulch">Basic Mulch</option>
+</select>
+
 <button onclick="logJob()">Log Job</button>
 </div>
 
 <div class="card">
-<h3>Inventory</h3>
+<h3>Material Costs</h3>
 
-<input id="gci" placeholder="GCI TTTF">
-<input id="blue" placeholder="GCI Blue">
-<input id="basicMix" placeholder="Basic Mix">
-<input id="lebanon" placeholder="Lebanon">
-<input id="andersons" placeholder="Andersons">
-<input id="organic" placeholder="Organic">
+<input id="gciCost" placeholder="GCI Cost">
+<input id="blueCost" placeholder="Blue Cost">
+<input id="basicMixCost" placeholder="Basic Mix Cost">
+<input id="lebanonCost" placeholder="Lebanon Cost">
+<input id="andersonsCost" placeholder="Andersons Cost">
+<input id="organicCost" placeholder="Organic Cost">
 
-<input id="paperMulch" placeholder="Paper Mulch">
-<input id="bfm" placeholder="BFM Mulch">
-<input id="basicMulch" placeholder="Basic Mulch">
+<input id="paperMulchCost" placeholder="Paper Mulch Cost">
+<input id="bfmCost" placeholder="BFM Cost">
+<input id="basicMulchCost" placeholder="Basic Mulch Cost">
 
-<input id="tackifier" placeholder="Tackifier">
-<input id="compost" placeholder="Compost">
-<input id="biochar" placeholder="Biochar">
+<input id="tackCost" placeholder="Tackifier Cost">
+<input id="compostCost" placeholder="Compost Cost">
+<input id="biocharCost" placeholder="Biochar Cost">
 
-<button onclick="saveInv()">Save Inventory</button>
-</div>
-
-<div class="card">
-<h3>Inventory Alerts</h3>
-<div id="alerts"></div>
-</div>
-
-<div class="card">
-<h3>Reorder List</h3>
-<div id="reorder"></div>
+<button onclick="saveCosts()">Save Costs</button>
 </div>
 
 <div class="card">
 <h3>Job History</h3>
-<button onclick="clearJobs()">Clear History</button>
 <div id="history"></div>
 </div>
 
 <script>
 
-// ---------- HELPERS ----------
 const $ = id => document.getElementById(id);
 
-// ---------- DATA ----------
-let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let jobs = JSON.parse(localStorage.getItem("jobs")) || {};
+let costs = JSON.parse(localStorage.getItem("costs")) || {};
 
-let inventory = JSON.parse(localStorage.getItem("inv")) || {
-gci:0, blue:0, basicMix:0, lebanon:0, andersons:0, organic:0,
-paperMulch:0, bfm:0, basicMulch:0,
-tackifier:0, compost:0, biochar:0
-};
-
-// ---------- COST ----------
-const COST = { seed:80, mulch:60, tack:20, compost:40 };
-
-// ---------- USAGE ----------
 const USE = {
 small:{seed:1,mulch:1,tack:0.5,compost:0.5},
 medium:{seed:2,mulch:2,tack:1,compost:1},
 large:{seed:3,mulch:3,tack:1.5,compost:1.5}
 };
 
-// ---------- SAVE INVENTORY ----------
-function saveInv(){
-for(let k in inventory){
-inventory[k] = +$(k).value || 0;
-}
-localStorage.setItem("inv", JSON.stringify(inventory));
-updateAlerts();
+function saveCosts(){
+costs = {
+gci:+$("gciCost").value||0,
+blue:+$("blueCost").value||0,
+basicMix:+$("basicMixCost").value||0,
+lebanon:+$("lebanonCost").value||0,
+andersons:+$("andersonsCost").value||0,
+organic:+$("organicCost").value||0,
+paperMulch:+$("paperMulchCost").value||0,
+bfm:+$("bfmCost").value||0,
+basicMulch:+$("basicMulchCost").value||0,
+tack:+$("tackCost").value||0,
+compost:+$("compostCost").value||0
+};
+
+localStorage.setItem("costs", JSON.stringify(costs));
 }
 
-// ---------- LOG JOB ----------
 function logJob(){
 
-let name = $("name").value || "Unnamed";
 let size = $("size").value;
 let type = $("type").value;
+let seedType = $("seedType").value;
+let mulchType = $("mulchType").value;
 
 let base = {small:1500, medium:2000, large:3000}[size];
 if(type==="premium") base *= 1.4;
@@ -134,108 +134,61 @@ if(type==="premium") base *= 1.4;
 let u = USE[size];
 
 let cost =
-u.seed*COST.seed +
-u.mulch*COST.mulch +
-u.tack*COST.tack +
-u.compost*COST.compost;
+u.seed * (costs[seedType]||0) +
+u.mulch * (costs[mulchType]||0) +
+u.tack * (costs.tack||0) +
+u.compost * (costs.compost||0);
 
 let profit = base - cost;
 let margin = (profit/base)*100;
 
-// deduct inventory
-inventory.gci -= u.seed;
-inventory.paperMulch -= u.mulch;
-inventory.tackifier -= u.tack;
-inventory.compost -= u.compost;
-
-for(let k in inventory){
-if(inventory[k]<0) inventory[k]=0;
-}
-
-localStorage.setItem("inv", JSON.stringify(inventory));
-
-// SAVE
 jobs.push({
-name, size, type,
+name:$("name").value,
+type,size,
+seedType,mulchType,
 revenue:base,
 cost,
 profit,
 margin,
-materials:u,
-date:new Date().toLocaleDateString()
+materials:u
 });
 
 localStorage.setItem("jobs", JSON.stringify(jobs));
 
-$("name").value = "";
-
-render();
-updateAlerts();
-}
-
-// ---------- CLEAR ----------
-function clearJobs(){
-localStorage.removeItem("jobs");
-jobs = [];
 render();
 }
 
-// ---------- ALERTS ----------
-function updateAlerts(){
-let low=[];
-for(let k in inventory){
-if(inventory[k] < 5) low.push(k);
-}
-
-$("alerts").innerText = low.length
-? "LOW: " + low.join(", ")
-: "All inventory levels good";
-
-$("reorder").innerText = low.length
-? low.join(", ")
-: "None";
-}
-
-// ---------- RENDER ----------
 function render(){
 
-let totalRev=0,totalProfit=0,totalMargin=0;
+let r=0,p=0,m=0;
 
 jobs.forEach(j=>{
-totalRev+=j.revenue||0;
-totalProfit+=j.profit||0;
-totalMargin+=j.margin||0;
+r+=j.revenue;
+p+=j.profit;
+m+=j.margin;
 });
 
 $("jobsCount").innerText = jobs.length;
-$("rev").innerText = Math.round(totalRev);
-$("profit").innerText = Math.round(totalProfit);
+$("rev").innerText = Math.round(r);
+$("profit").innerText = Math.round(p);
+$("margin").innerText = jobs.length?(m/jobs.length).toFixed(1):0;
 
-$("margin").innerText = jobs.length
-? (totalMargin/jobs.length).toFixed(1)
-: 0;
-
-// SAFE history (fixes your crash)
-$("history").innerHTML = jobs.map(j=>`
+history.innerHTML = jobs.map(j=>`
 <div class="job">
-<b>${j.name||"Unknown"}</b> (${j.type||"standard"})<br>
-💰 Revenue: $${Math.round(j.revenue||0)}<br>
-💸 Cost: $${Math.round(j.cost||0)}<br>
-📈 Profit: $${Math.round(j.profit||0)}<br>
-📊 Margin: ${j.margin ? j.margin.toFixed(1) : "0"}%<br><br>
+<b>${j.name}</b> (${j.type})<br>
+Seed: ${j.seedType}<br>
+Mulch: ${j.mulchType}<br><br>
 
-📦 Materials:<br>
-Seed: ${j.materials?.seed||0}<br>
-Mulch: ${j.materials?.mulch||0}<br>
-Tackifier: ${j.materials?.tack||0}<br>
-Compost: ${j.materials?.compost||0}
+💰 Revenue: $${j.revenue}<br>
+💸 Cost: $${j.cost}<br>
+📈 Profit: $${j.profit}<br>
+📊 Margin: ${j.margin.toFixed(1)}%
 </div>
 `).join("");
+
 }
 
-// ---------- INIT ----------
 render();
-updateAlerts();
 
 </script>
 
