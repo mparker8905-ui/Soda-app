@@ -4,14 +4,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SoDa Operations</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-body{
+body {
   background:#0b0b0b;
   color:white;
-  font-family:'Inter',sans-serif;
+  font-family:Arial;
   margin:0;
   padding:20px;
 }
@@ -23,14 +20,11 @@ body{
 
 .logo{
   height:60px;
-  filter:drop-shadow(0 0 10px rgba(212,175,55,0.6));
 }
 
 .subtitle{
   color:#d4af37;
-  font-size:12px;
   margin-top:5px;
-  opacity:0.7;
 }
 
 .container{
@@ -64,12 +58,12 @@ body{
 
 input,select{
   width:100%;
-  padding:12px;
+  padding:10px;
   margin-top:8px;
   background:#1a1a1a;
   border:1px solid #333;
   color:white;
-  border-radius:10px;
+  border-radius:8px;
 }
 
 button{
@@ -78,7 +72,7 @@ button{
   padding:12px;
   background:#d4af37;
   border:none;
-  border-radius:10px;
+  border-radius:8px;
   font-weight:bold;
 }
 
@@ -106,184 +100,115 @@ button{
 
 <div class="container">
 
+<!-- DASHBOARD -->
 <div class="card">
-<h3>Overview</h3>
-<div class="stats">
-<div class="stat"><small>Jobs</small><h2 id="statJobs">0</h2></div>
-<div class="stat"><small>Revenue</small><h2 id="statRevenue">$0</h2></div>
-<div class="stat"><small>Profit</small><h2 id="statProfit">$0</h2></div>
-<div class="stat"><small>Avg Margin</small><h2 id="statMargin">0%</h2></div>
-</div>
-</div>
-
-<div class="card">
-<h3>Log Job</h3>
-<input id="jobName" placeholder="Customer Name">
-<select id="jobSize">
-<option value="5000">Small</option>
-<option value="10000">Medium</option>
-<option value="20000">Large</option>
-</select>
-<select id="jobPackage">
-<option value="standard">Standard</option>
-<option value="premium">Premium</option>
-</select>
-<button onclick="useMaterials()">Log Job</button>
+  <h3>Overview</h3>
+  <div class="stats">
+    <div class="stat"><small>Jobs</small><h2 id="statJobs">0</h2></div>
+    <div class="stat"><small>Revenue</small><h2 id="statRevenue">$0</h2></div>
+    <div class="stat"><small>Profit</small><h2 id="statProfit">$0</h2></div>
+    <div class="stat"><small>Avg Margin</small><h2 id="statMargin">0%</h2></div>
+  </div>
 </div>
 
+<!-- JOB -->
 <div class="card">
-<h3>Inventory Alerts</h3>
-<div id="alerts"></div>
+  <h3>Log Job</h3>
+  <input id="jobName" placeholder="Customer Name">
+
+  <select id="jobSize">
+    <option value="5000">Small</option>
+    <option value="10000">Medium</option>
+    <option value="20000">Large</option>
+  </select>
+
+  <select id="jobPackage">
+    <option value="standard">Standard</option>
+    <option value="premium">Premium</option>
+  </select>
+
+  <button onclick="useMaterials()">Log Job</button>
 </div>
 
+<!-- ALERTS -->
 <div class="card">
-<h3>Reorder List</h3>
-<div id="reorderList"></div>
+  <h3>Inventory Alerts</h3>
+  <div id="alerts"></div>
 </div>
 
+<!-- REORDER -->
 <div class="card">
-<h3>Inventory</h3>
-
-<input id="seed_gci_tttf" placeholder="GCI TTTF">
-<input id="seed_gci_blue" placeholder="GCI Blue">
-<input id="seed_basic" placeholder="Basic Mix">
-
-<input id="fert_lebanon" placeholder="Lebanon">
-<input id="fert_andersons" placeholder="Andersons">
-<input id="fert_organic" placeholder="Organic">
-
-<input id="mulch_paper" placeholder="Paper Mulch">
-<input id="mulch_bfm" placeholder="BFM Mulch">
-<input id="mulch_basic" placeholder="Basic Mulch">
-
-<input id="tack" placeholder="Tackifier">
-<input id="compost" placeholder="Compost">
-
-<button onclick="saveInventory()">Save Inventory</button>
+  <h3>Reorder List</h3>
+  <div id="reorderList"></div>
 </div>
 
+<!-- INVENTORY -->
 <div class="card">
-<h3>Material Costs</h3>
-<input id="seedCost" placeholder="Seed Cost">
-<input id="fertCost" placeholder="Fertilizer Cost">
-<input id="mulchCost" placeholder="Mulch Cost">
-<input id="tackCost" placeholder="Tackifier Cost">
-<input id="compostCostUnit" placeholder="Compost Cost">
-<button onclick="saveCosts()">Save Costs</button>
+  <h3>Inventory</h3>
+
+  <input id="seed_basic" placeholder="Basic Seed">
+  <input id="fert_lebanon" placeholder="Lebanon Fertilizer">
+  <input id="mulch_paper" placeholder="Paper Mulch">
+  <input id="tack" placeholder="Tackifier">
+  <input id="compost" placeholder="Compost">
+
+  <button onclick="saveInventory()">Save Inventory</button>
 </div>
 
+<!-- COSTS -->
 <div class="card">
-<h3>Job History</h3>
-<div id="jobHistory"></div>
-<button onclick="clearJobs()">Clear History</button>
+  <h3>Costs</h3>
+
+  <input id="seedCost" placeholder="Seed Cost">
+  <input id="fertCost" placeholder="Fertilizer Cost">
+  <input id="mulchCost" placeholder="Mulch Cost">
+  <input id="tackCost" placeholder="Tack Cost">
+  <input id="compostCostUnit" placeholder="Compost Cost">
+
+  <button onclick="saveCosts()">Save Costs</button>
 </div>
 
+<!-- HISTORY -->
 <div class="card">
-<h3>Analytics</h3>
-<canvas id="revenueChart"></canvas>
-<canvas id="monthlyChart"></canvas>
+  <h3>Job History</h3>
+  <div id="jobHistory"></div>
 </div>
 
 </div>
 
 <script>
-
 let inventory = JSON.parse(localStorage.getItem("inventory")) || {
-seed:{gci_tttf:10,gci_blue:10,basic:10},
-fert:{lebanon:10,andersons:10,organic:10},
-mulch:{paper:10,bfm:10,basic:10},
-tack:10,
-compost:10
+  seed:{basic:10},
+  fert:{lebanon:10},
+  mulch:{paper:10},
+  tack:10,
+  compost:10
 };
 
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
 
-function loadInventoryToInputs(){
-let inv = JSON.parse(localStorage.getItem("inventory")) || inventory;
-
-seed_gci_tttf.value = inv.seed.gci_tttf;
-seed_gci_blue.value = inv.seed.gci_blue;
-seed_basic.value = inv.seed.basic;
-
-fert_lebanon.value = inv.fert.lebanon;
-fert_andersons.value = inv.fert.andersons;
-fert_organic.value = inv.fert.organic;
-
-mulch_paper.value = inv.mulch.paper;
-mulch_bfm.value = inv.mulch.bfm;
-mulch_basic.value = inv.mulch.basic;
-
-tack.value = inv.tack;
-compost.value = inv.compost;
-}
-
-function saveInventory(){
-inventory = {
-seed:{
-gci_tttf:+seed_gci_tttf.value||0,
-gci_blue:+seed_gci_blue.value||0,
-basic:+seed_basic.value||0
-},
-fert:{
-lebanon:+fert_lebanon.value||0,
-andersons:+fert_andersons.value||0,
-organic:+fert_organic.value||0
-},
-mulch:{
-paper:+mulch_paper.value||0,
-bfm:+mulch_bfm.value||0,
-basic:+mulch_basic.value||0
-},
-tack:+tack.value||0,
-compost:+compost.value||0
-};
-
-localStorage.setItem("inventory",JSON.stringify(inventory));
-loadInventoryToInputs();
-checkLowInventory();
-alert("Saved");
-}
-
 function useMaterials(){
-let size=+jobSize.value;
-let factor=size/5000;
 
-inventory.seed.basic-=0.5*factor;
-inventory.fert.lebanon-=1*factor;
+  let size = Number(jobSize.value);
+  let pkg = jobPackage.value;
+  let name = jobName.value || "Customer";
 
-localStorage.setItem("inventory",JSON.stringify(inventory));
+  let factor = size / 5000;
 
-jobs.push({date:new Date().toLocaleDateString(),revenue:size*0.2});
-localStorage.setItem("jobs",JSON.stringify(jobs));
+  let used = {
+    seed:0.5*factor,
+    fert:1*factor,
+    mulch:1*factor,
+    tack:0.5*factor,
+    compost:pkg==="premium"?1*factor:0
+  };
 
-loadInventoryToInputs();
-updateDashboard();
-checkLowInventory();
-}
+  let costs = JSON.parse(localStorage.getItem("costs")) || {
+    seed:80,fert:40,mulch:60,tack:20,compost:50
+  };
 
-function checkLowInventory(){
-let alerts=[];
-if(inventory.seed.basic<3) alerts.push("Low Seed");
-if(inventory.fert.lebanon<3) alerts.push("Low Fertilizer");
-
-alerts.innerHTML=alerts.join("<br>");
-}
-
-function updateDashboard(){
-statJobs.innerText=jobs.length;
-}
-
-function clearJobs(){
-jobs=[];
-localStorage.removeItem("jobs");
-updateDashboard();
-}
-
-loadInventoryToInputs();
-updateDashboard();
-checkLowInventory();
-
-</script>
-
-</body>
-</html>
+  inventory.seed.basic -= used.seed;
+  inventory.fert.lebanon -= used.fert;
+  inventory.mulch.paper -= used.mulch;
+  inventory.tack -= used.tack;
+  inventory.compost -= used
