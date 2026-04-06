@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoDa CRM Pro</title>
+<title>SoDa Pro System</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -12,8 +12,8 @@ body{background:#000;color:#fff;font-family:Arial;padding:20px}
 .card{background:#111;padding:20px;border-radius:15px;margin-bottom:20px}
 input,select{width:100%;padding:12px;margin:8px 0;background:#222;border:1px solid #333;color:#fff;border-radius:10px}
 button{width:100%;padding:15px;margin-top:10px;background:#d4af37;border:none;border-radius:12px;font-weight:bold}
-.job{border-left:4px solid gold;padding:10px;margin:10px 0;background:#111}
-.unpaid{color:red}.paid{color:lime}
+.job{border-left:4px solid gold;padding:12px;margin:10px 0;background:#111}
+.paid{color:#00ff99}.unpaid{color:#ff4d4d}
 </style>
 </head>
 
@@ -26,12 +26,13 @@ button{width:100%;padding:15px;margin-top:10px;background:#d4af37;border:none;bo
 
 <div class="card">
 <h2>Create Job</h2>
+
 <input id="name" placeholder="Customer Name">
 
 <select id="size">
-<option>Small</option>
-<option>Medium</option>
-<option>Large</option>
+<option value="small">Small</option>
+<option value="medium">Medium</option>
+<option value="large">Large</option>
 </select>
 
 <select id="type">
@@ -39,28 +40,32 @@ button{width:100%;padding:15px;margin-top:10px;background:#d4af37;border:none;bo
 <option value="premium">Premium</option>
 </select>
 
-<input id="houses" type="number" value="1" placeholder="# of Houses">
+<input id="houses" type="number" value="1" placeholder="# Houses">
 
 <label><input type="checkbox" id="builderMode"> Builder Mode</label>
-
-<input id="pricePerHouse" type="number" placeholder="Price Per House">
+<input id="pricePerHouse" placeholder="Price Per House">
 
 <button onclick="logJob()">Create Job</button>
 </div>
 
 <div class="card">
 <h2>Material Costs</h2>
-<input id="seedCost" placeholder="Seed Cost">
-<input id="fertCost" placeholder="Fertilizer Cost">
-<input id="mulchCost" placeholder="Mulch Cost">
+<input id="tttfCost" placeholder="TTTF Cost">
+<input id="ryeCost" placeholder="Rye Cost">
+<input id="miloCost" placeholder="Milorganite Cost">
+<input id="espomaCost" placeholder="Espoma Cost">
+<input id="woodCost" placeholder="Wood Mulch Cost">
+<input id="bfmCost" placeholder="BFM Cost">
 <input id="tackCost" placeholder="Tackifier Cost">
-<input id="soilCost" placeholder="Soil Additives Cost">
+<input id="compostCost" placeholder="Compost Cost">
+<input id="biocharCost" placeholder="Biochar Cost">
+<input id="humicCost" placeholder="Humic Cost">
 <button onclick="saveCosts()">Save Costs</button>
 </div>
 
 <div class="card">
 <button onclick="toggleClient()">Toggle Client View</button>
-<button onclick="clearJobs()">Clear Job History</button>
+<button onclick="clearJobs()">Clear Jobs</button>
 </div>
 
 <div class="card">
@@ -71,113 +76,111 @@ button{width:100%;padding:15px;margin-top:10px;background:#d4af37;border:none;bo
 <div class="card">
 <h2>Analytics</h2>
 <canvas id="chartMain"></canvas>
-<br><br>
-<canvas id="chartType"></canvas>
-<br><br>
-<canvas id="chartMonthly"></canvas>
 </div>
 
 <script>
+
 const { jsPDF } = window.jspdf;
 
 let jobs = JSON.parse(localStorage.getItem("jobs")||"[]");
 let cost = JSON.parse(localStorage.getItem("cost")||"{}");
 let clientMode = false;
-let charts = {};
+let chart;
 
 // ---------- MATERIAL RECIPES ----------
 function getMaterials(type,size){
-let base = {small:1, medium:2, large:3}[size];
+
+let mult = {small:1, medium:2, large:3}[size];
 
 if(type==="standard"){
-return {seed:base,fert:base,mulch:base,tack:base,soil:0};
+return {
+tttf:0.8*mult,
+rye:0.2*mult,
+milo:mult,
+wood:mult,
+tack:0.5*mult
+};
 }
 
 if(type==="premium"){
-return {seed:base,fert:base,mulch:base,tack:base,soil:base};
+return {
+tttf:0.8*mult,
+rye:0.2*mult,
+espoma:mult,
+bfm:mult,
+tack:0.5*mult,
+compost:mult,
+biochar:0.5*mult,
+humic:0.5*mult
+};
 }
 }
 
 // ---------- SAVE COST ----------
 function saveCosts(){
-cost = {
-seed:+seedCost.value||0,
-fert:+fertCost.value||0,
-mulch:+mulchCost.value||0,
-tack:+tackCost.value||0,
-soil:+soilCost.value||0
-};
+["tttf","rye","milo","espoma","wood","bfm","tack","compost","biochar","humic"]
+.forEach(k=>{
+cost[k] = +document.getElementById(k+"Cost").value || 0;
+});
 localStorage.setItem("cost",JSON.stringify(cost));
-render();
 }
 
 // ---------- LOG JOB ----------
 function logJob(){
 
-try{
-
-let name = nameInput();
-let size = val("size");
-let type = val("type");
-let houses = parseInt(val("houses")) || 1;
+let name = document.getElementById("name").value || "Unnamed";
+let size = document.getElementById("size").value;
+let type = document.getElementById("type").value;
+let houses = parseInt(document.getElementById("houses").value)||1;
 let builder = document.getElementById("builderMode").checked;
-let priceInput = parseFloat(val("pricePerHouse")) || 0;
+let customPrice = parseFloat(document.getElementById("pricePerHouse").value)||0;
 
 let baseMaterials = getMaterials(type,size);
 let materials = {};
 
 for(let k in baseMaterials){
-materials[k] = baseMaterials[k] * houses;
+materials[k] = baseMaterials[k]*houses;
 }
 
 // revenue
-let baseRevenue = {small:1500, medium:2500, large:3500}[size];
-if(type==="premium") baseRevenue *= 1.4;
+let base = {small:1500,medium:2500,large:3500}[size];
+if(type==="premium") base*=1.4;
 
-let revenuePerHouse = builder && priceInput ? priceInput : baseRevenue;
-let revenue = revenuePerHouse * houses;
+let pricePerHouse = builder && customPrice ? customPrice : base;
+let revenue = pricePerHouse * houses;
 
 // cost
-let materialCost = 0;
+let totalCost=0;
 for(let k in materials){
-materialCost += (materials[k]||0)*(cost[k]||0);
+totalCost += (materials[k]||0)*(cost[k]||0);
 }
 
-let costPerHouse = materialCost / houses;
-let profit = revenue - materialCost;
-let profitPerHouse = profit / houses;
-let margin = revenue ? (profit/revenue*100) : 0;
+let profit = revenue-totalCost;
+let margin = revenue ? (profit/revenue*100):0;
 
-let job = {
-name,
-type,
-size,
-houses,
-builder,
-pricePerHouse: revenuePerHouse,
-materials,
-revenue,
-profit,
-margin,
-costPerHouse,
-profitPerHouse,
-paid:false,
-date:new Date().toLocaleDateString()
-};
+jobs.push({
+name,type,size,houses,
+pricePerHouse,revenue,profit,margin,
+materials,paid:false,date:new Date().toLocaleDateString()
+});
 
-jobs.push(job);
 localStorage.setItem("jobs",JSON.stringify(jobs));
 
 render();
-
-}catch(e){alert(e.message)}
 }
 
-// ---------- HELPERS ----------
-function val(id){return document.getElementById(id).value}
-function nameInput(){return document.getElementById("name").value}
+// ---------- PDF ----------
+function pdf(j){
+let doc = new jsPDF();
+doc.text("SoDa Outdoor Designs",20,20);
+doc.text(`Customer: ${j.name}`,20,40);
+doc.text(`Homes: ${j.houses}`,20,50);
+doc.text(`Price/Home: $${Math.round(j.pricePerHouse)}`,20,60);
+doc.text(`Total: $${Math.round(j.revenue)}`,20,70);
+doc.save(j.name+".pdf");
+}
 
-// ---------- CLIENT MODE ----------
+// ---------- TOGGLE ----------
 function toggleClient(){
 clientMode=!clientMode;
 render();
@@ -185,40 +188,22 @@ render();
 
 // ---------- CLEAR ----------
 function clearJobs(){
-if(confirm("Clear all jobs?")){
 jobs=[];
 localStorage.setItem("jobs","[]");
 render();
-}
-}
-
-// ---------- PDF ----------
-function pdf(j){
-const doc = new jsPDF();
-
-doc.text("SoDa Outdoor Designs",20,20);
-doc.text(`Customer: ${j.name}`,20,40);
-doc.text(`Homes: ${j.houses}`,20,50);
-doc.text(`Price/Home: $${Math.round(j.pricePerHouse)}`,20,60);
-doc.text(`Total: $${Math.round(j.revenue)}`,20,70);
-
-doc.save(j.name+".pdf");
 }
 
 // ---------- RENDER ----------
 function render(){
 
 // stats
-let rev=0, prof=0;
+let rev=0,prof=0;
 jobs.forEach(j=>{rev+=j.revenue;prof+=j.profit});
-
-let margin = rev ? (prof/rev*100).toFixed(1) : 0;
-
 stats.innerHTML = `
 Jobs: ${jobs.length}<br>
-Revenue: $${rev}<br>
-Profit: $${prof}<br>
-Margin: ${margin}%
+Revenue: $${Math.round(rev)}<br>
+Profit: $${Math.round(prof)}<br>
+Margin: ${(rev?prof/rev*100:0).toFixed(1)}%
 `;
 
 // history
@@ -235,37 +220,21 @@ Total: $${Math.round(j.revenue)}
 </div>`;
 }
 
-let matHTML="";
-let totalCost=0;
-
+let mat="";
 for(let k in j.materials){
-let qty = j.materials[k];
-let c = cost[k]||0;
-let item = qty*c;
-totalCost+=item;
-
-matHTML += `${k}: ${qty} ($${item})<br>`;
+let item = j.materials[k]*(cost[k]||0);
+mat += `${k}: ${j.materials[k]} ($${Math.round(item)})<br>`;
 }
 
 return `
 <div class="job">
-
 <b>${j.name}</b> (${j.type}) — ${j.houses} homes<br>
 
-💰 Total: $${Math.round(j.revenue)}<br>
-🏠 Per House: $${Math.round(j.pricePerHouse)}<br>
+Revenue: $${Math.round(j.revenue)}<br>
+Profit: $${Math.round(j.profit)}<br>
+Margin: ${j.margin.toFixed(1)}%<br><br>
 
-📉 Cost/House: $${Math.round(j.costPerHouse)}<br>
-📈 Profit/House: $${Math.round(j.profitPerHouse)}<br>
-
-📊 Margin: ${j.margin.toFixed(1)}%<br><br>
-
-<b>Materials</b><br>
-${matHTML}
-
-<span class="${j.paid?'paid':'unpaid'}">
-${j.paid?'PAID':'UNPAID'}
-</span>
+${mat}
 
 <button onclick="jobs[${i}].paid=!jobs[${i}].paid;localStorage.setItem('jobs',JSON.stringify(jobs));render()">Toggle Paid</button>
 <button onclick='pdf(${JSON.stringify(j)})'>PDF</button>
@@ -273,12 +242,10 @@ ${j.paid?'PAID':'UNPAID'}
 </div>`;
 }).join("");
 
-// ---------- CHARTS FIX ----------
-Object.values(charts).forEach(c=>c.destroy());
-charts = {};
+// chart fix
+if(chart) chart.destroy();
 
-// main
-charts.main = new Chart(document.getElementById("chartMain"),{
+chart = new Chart(document.getElementById("chartMain"),{
 type:"bar",
 data:{
 labels:jobs.map(j=>j.date),
@@ -289,37 +256,10 @@ datasets:[
 }
 });
 
-// type
-let s=jobs.filter(j=>j.type==="standard").length;
-let p=jobs.filter(j=>j.type==="premium").length;
-
-charts.type = new Chart(document.getElementById("chartType"),{
-type:"doughnut",
-data:{labels:["Standard","Premium"],datasets:[{data:[s,p]}]}
-});
-
-// monthly
-let m={};
-jobs.forEach(j=>{
-if(!m[j.date]) m[j.date]={r:0,p:0};
-m[j.date].r+=j.revenue;
-m[j.date].p+=j.profit;
-});
-
-charts.month = new Chart(document.getElementById("chartMonthly"),{
-type:"line",
-data:{
-labels:Object.keys(m),
-datasets:[
-{label:"Revenue",data:Object.values(m).map(v=>v.r),borderColor:"#d4af37"},
-{label:"Profit",data:Object.values(m).map(v=>v.p),borderColor:"#fff"}
-]
-}
-});
-
 }
 
 render();
+
 </script>
 
 </body>
