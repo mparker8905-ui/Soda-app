@@ -21,7 +21,6 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <div class="card">
 <h2>Create Job</h2>
-
 <input id="name" placeholder="Customer Name">
 
 <select id="size">
@@ -44,20 +43,39 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 </div>
 
 <div class="card">
-<h2>Inventory Costs</h2>
+<h2>Inventory</h2>
 
-<input id="tttf" placeholder="TTTF Blend Cost">
-<input id="rye" placeholder="Ryegrass Cost">
-<input id="milorganite" placeholder="Milorganite Cost">
-<input id="espoma" placeholder="Espoma Cost">
-<input id="wood" placeholder="Wood Mulch Cost">
-<input id="bfm" placeholder="BFM Mulch Cost">
-<input id="tack" placeholder="Tackifier Cost">
-<input id="compost" placeholder="Compost Cost">
-<input id="biochar" placeholder="Biochar Cost">
-<input id="humic" placeholder="Humic Cost">
+<input id="tttfCost" placeholder="TTTF Cost">
+<input id="tttfQty" placeholder="TTTF Quantity">
 
-<button onclick="saveCosts()">Save Costs</button>
+<input id="ryeCost" placeholder="Rye Cost">
+<input id="ryeQty" placeholder="Rye Quantity">
+
+<input id="milCost" placeholder="Milorganite Cost">
+<input id="milQty" placeholder="Milorganite Qty">
+
+<input id="espCost" placeholder="Espoma Cost">
+<input id="espQty" placeholder="Espoma Qty">
+
+<input id="woodCost" placeholder="Wood Mulch Cost">
+<input id="woodQty" placeholder="Wood Mulch Qty">
+
+<input id="bfmCost" placeholder="BFM Cost">
+<input id="bfmQty" placeholder="BFM Qty">
+
+<input id="tackCost" placeholder="Tackifier Cost">
+<input id="tackQty" placeholder="Tackifier Qty">
+
+<input id="compCost" placeholder="Compost Cost">
+<input id="compQty" placeholder="Compost Qty">
+
+<input id="bioCost" placeholder="Biochar Cost">
+<input id="bioQty" placeholder="Biochar Qty">
+
+<input id="humCost" placeholder="Humic Cost">
+<input id="humQty" placeholder="Humic Qty">
+
+<button onclick="saveInventory()">Save Inventory</button>
 </div>
 
 <div class="card">
@@ -69,54 +87,55 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 <div id="jobs"></div>
 </div>
 
-<div class="card">
-<h2>Analytics</h2>
-<canvas id="chart"></canvas>
-</div>
-
 <script>
 
-let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
-let costs = JSON.parse(localStorage.getItem("costs")||"{}")
-let chart
+let jobs=JSON.parse(localStorage.getItem("jobs")||"[]")
+let inv=JSON.parse(localStorage.getItem("inv")||"{}")
 
 const n=v=>parseFloat(v)||0
 
-function saveCosts(){
-costs={
-tttf:n(tttf.value),
-rye:n(rye.value),
-milorganite:n(milorganite.value),
-espoma:n(espoma.value),
-wood:n(wood.value),
-bfm:n(bfm.value),
-tack:n(tack.value),
-compost:n(compost.value),
-biochar:n(biochar.value),
-humic:n(humic.value)
+function saveInventory(){
+inv={
+tttf:{c:n(tttfCost.value),q:n(tttfQty.value)},
+rye:{c:n(ryeCost.value),q:n(ryeQty.value)},
+mil:{c:n(milCost.value),q:n(milQty.value)},
+esp:{c:n(espCost.value),q:n(espQty.value)},
+wood:{c:n(woodCost.value),q:n(woodQty.value)},
+bfm:{c:n(bfmCost.value),q:n(bfmQty.value)},
+tack:{c:n(tackCost.value),q:n(tackQty.value)},
+comp:{c:n(compCost.value),q:n(compQty.value)},
+bio:{c:n(bioCost.value),q:n(bioQty.value)},
+hum:{c:n(humCost.value),q:n(humQty.value)}
 }
-localStorage.setItem("costs",JSON.stringify(costs))
+localStorage.setItem("inv",JSON.stringify(inv))
 }
 
-// MATERIAL RECIPES
-function getMaterials(tier,houses){
+// RECIPES
+function getMaterials(tier,h){
 
 if(tier==="standard"){
 return {
-seed: (1*houses),
-fert: (costs.milorganite||0)*houses,
-mulch: (costs.wood||0)*houses,
-tack: (costs.tack||0)*houses,
-soil: ((costs.compost||0)+(costs.biochar||0)+(costs.humic||0))*houses
+tttf:0.8*h,
+rye:0.2*h,
+mil:1*h,
+wood:1*h,
+tack:1*h,
+comp:0,
+bio:0,
+hum:0
 }
 }
 
 return {
-seed: (1.2*houses),
-fert: (costs.espoma||0)*houses,
-mulch: (costs.bfm||0)*houses,
-tack: (costs.tack||0)*houses,
-soil: ((costs.compost||0)+(costs.biochar||0)+(costs.humic||0))*0.5*houses
+tttf:0.8*h,
+rye:0,
+mil:0,
+esp:1*h,
+bfm:1*h,
+tack:1*h,
+comp:1*h,
+bio:0.5*h,
+hum:0.5*h
 }
 
 }
@@ -124,56 +143,52 @@ soil: ((costs.compost||0)+(costs.biochar||0)+(costs.humic||0))*0.5*houses
 // CREATE JOB
 function createJob(){
 
-const houses=Math.max(1,n(housesInput()))
+const h=Math.max(1,n(houses.value))
 const tierVal=tier.value
 const builderMode=builder.checked
 const price=n(pricePerHouse.value)
 
-const base={
-small:1500,
-medium:2500,
-large:3500
-}[size.value] || 1500
+const base={small:1500,medium:2500,large:3500}[size.value]
 
-let revenue = builderMode ? (price*houses) : (base*houses)
+let revenue = builderMode ? price*h : base*h
+if(!revenue) revenue=base*h
 
-if(!revenue) revenue = base*houses
+const mats=getMaterials(tierVal,h)
 
-const mats=getMaterials(tierVal,houses)
+let breakdown={}
+let totalMatCost=0
 
-const matCost = mats.fert + mats.mulch + mats.tack + mats.soil
+for(let key in mats){
+const qty=mats[key]||0
+const cost=(inv[key]?.c||0)*qty
+breakdown[key]={qty,cost}
+totalMatCost+=cost
+if(inv[key]) inv[key].q -= qty
+}
 
-const profit = revenue - matCost
-const margin = revenue ? (profit/revenue*100) : 0
+const profit=revenue-totalMatCost
 
 jobs.push({
 name:name.value||"Client",
 tier:tierVal,
-houses,
+houses:h,
 revenue,
 profit,
-margin,
-materials:mats,
-date:new Date().toLocaleDateString()
+margin:(profit/revenue*100)||0,
+materials:breakdown
 })
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
-render()
-}
+localStorage.setItem("inv",JSON.stringify(inv))
 
-function housesInput(){
-return document.getElementById("houses").value
+render()
 }
 
 // RENDER
 function render(){
 
 let rev=0,prof=0
-
-jobs.forEach(j=>{
-rev+=n(j.revenue)
-prof+=n(j.profit)
-})
+jobs.forEach(j=>{rev+=j.revenue;prof+=j.profit})
 
 stats.innerHTML=`
 Jobs: ${jobs.length}<br>
@@ -185,6 +200,15 @@ Margin: ${(prof/rev*100||0).toFixed(1)}%
 jobsDiv.innerHTML=""
 
 jobs.forEach(j=>{
+
+let matHTML=""
+
+for(let m in j.materials){
+const d=j.materials[m]
+if(!d || (!d.qty && !d.cost)) continue
+matHTML+=`${m.toUpperCase()}: ${d.qty} units ($${d.cost.toFixed(0)})<br>`
+}
+
 jobsDiv.innerHTML+=`
 <div>
 <b>${j.name} (${j.tier})</b><br>
@@ -192,27 +216,8 @@ Houses: ${j.houses}<br>
 Revenue: $${j.revenue}<br>
 Profit: $${j.profit}<br>
 Margin: ${j.margin.toFixed(1)}%<br>
-Materials:<br>
-Seed Units: ${j.materials.seed}<br>
-Fertilizer: $${j.materials.fert}<br>
-Mulch: $${j.materials.mulch}<br>
-Tackifier: $${j.materials.tack}<br>
-Soil Additives: $${j.materials.soil}
+Materials:<br>${matHTML}
 </div><hr>`
-})
-
-// CHART FIX
-if(chart) chart.destroy()
-
-chart=new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:jobs.map(j=>j.date),
-datasets:[
-{label:"Revenue",data:jobs.map(j=>j.revenue)},
-{label:"Profit",data:jobs.map(j=>j.profit)}
-]
-}
 })
 
 }
@@ -220,11 +225,11 @@ datasets:[
 function resetApp(){
 localStorage.clear()
 jobs=[]
+inv={}
 render()
 }
 
 const jobsDiv=document.getElementById("jobs")
-
 render()
 
 </script>
