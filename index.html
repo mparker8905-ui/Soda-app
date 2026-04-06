@@ -1,304 +1,199 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoDa Operations</title>
+
+<!-- 🔥 REQUIRED FOR CHARTS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<title>Soda App</title>
 
 <style>
 body {
-  background:#0b0b0b;
-  color:white;
-  font-family:Arial;
-  margin:0;
-  padding:20px;
+  font-family: Arial;
+  background: #0d0d0d;
+  color: white;
+  margin: 0;
+  padding: 20px;
 }
 
-.header{
-  text-align:center;
-  margin-bottom:20px;
+.card {
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
 }
 
-.logo{
-  height:60px;
+h3 {
+  margin-top: 0;
 }
 
-.subtitle{
-  color:#d4af37;
-  margin-top:5px;
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: white;
+  border-radius: 8px;
 }
 
-.container{
-  display:flex;
-  flex-direction:column;
-  gap:15px;
+button {
+  width: 100%;
+  padding: 14px;
+  background: #d4af37;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
-.card{
-  background:#121212;
-  padding:15px;
-  border-radius:12px;
+.stat {
+  margin: 10px 0;
 }
 
-.stats{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:10px;
-}
-
-.stat{
-  background:#0f0f0f;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-}
-
-.stat h2{
-  color:#d4af37;
-}
-
-input, select{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  background:#1a1a1a;
-  border:1px solid #333;
-  color:white;
-  border-radius:8px;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  background:#d4af37;
-  border:none;
-  border-radius:8px;
-  margin-top:10px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.job{
-  background:#0f0f0f;
-  padding:10px;
-  border-left:3px solid #d4af37;
-  margin-top:10px;
-}
-
-#alerts{
-  color:#ff4d4d;
-  font-weight:bold;
+#alerts {
+  color: red;
+  font-weight: bold;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <img src="https://via.placeholder.com/150x60?text=SoDa" class="logo">
-  <div class="subtitle">Hydroseeding & Landscape Lighting</div>
-</div>
-
-<div class="container">
-
 <div class="card">
-  <h3>Overview</h3>
-  <div class="stats">
-    <div class="stat"><small>Jobs</small><h2 id="statJobs">0</h2></div>
-    <div class="stat"><small>Revenue</small><h2 id="statRevenue">$0</h2></div>
-    <div class="stat"><small>Profit</small><h2 id="statProfit">$0</h2></div>
-    <div class="stat"><small>Avg Margin</small><h2 id="statMargin">0%</h2></div>
-  </div>
+<h3>Overview</h3>
+<div class="stat">Jobs: <span id="jobs">0</span></div>
+<div class="stat">Revenue: $<span id="revenue">0</span></div>
+<div class="stat">Profit: $<span id="profit">0</span></div>
 </div>
 
 <div class="card">
-  <h3>Log Job</h3>
-  <input id="jobName" placeholder="Customer Name">
-
-  <select id="jobSize">
-    <option value="">Select Size</option>
-    <option value="5000">Small</option>
-    <option value="10000">Medium</option>
-    <option value="20000">Large</option>
-  </select>
-
-  <select id="jobPackage">
-    <option value="standard">Standard</option>
-    <option value="premium">Premium</option>
-  </select>
-
-  <button onclick="addJob()">Log Job</button>
+<h3>Log Job</h3>
+<input id="jobName" placeholder="Customer Name">
+<select id="jobSize">
+<option value="1000">Small</option>
+<option value="2000">Medium</option>
+<option value="3000">Large</option>
+</select>
+<button onclick="logJob()">Log Job</button>
 </div>
 
 <div class="card">
-  <h3>Inventory Alerts</h3>
-  <div id="alerts">All good</div>
+<h3>Inventory</h3>
+<input id="seed" placeholder="Seed">
+<input id="fert" placeholder="Fertilizer">
+<button onclick="saveInventory()">Save Inventory</button>
 </div>
 
 <div class="card">
-  <h3>Reorder List</h3>
-  <div id="reorderList">No restock needed</div>
+<h3>Material Costs</h3>
+<input id="seedCost" placeholder="Seed Cost">
+<input id="fertCost" placeholder="Fertilizer Cost">
+<button onclick="saveCosts()">Save Costs</button>
 </div>
 
 <div class="card">
-  <h3>Inventory</h3>
-  <input id="seed" placeholder="Seed">
-  <input id="fert" placeholder="Fertilizer">
-  <input id="mulch" placeholder="Mulch">
-  <input id="tack" placeholder="Tackifier">
-  <input id="compost" placeholder="Compost">
-  <button onclick="saveInventory()">Save Inventory</button>
+<h3>Inventory Alerts</h3>
+<div id="alerts">Checking...</div>
 </div>
 
 <div class="card">
-  <h3>Costs</h3>
-  <input id="seedCost" placeholder="Seed Cost">
-  <input id="fertCost" placeholder="Fertilizer Cost">
-  <input id="mulchCost" placeholder="Mulch Cost">
-  <input id="tackCost" placeholder="Tackifier Cost">
-  <input id="compostCost" placeholder="Compost Cost">
-  <button onclick="saveCosts()">Save Costs</button>
+<h3>Reorder List</h3>
+<div id="reorder">None</div>
 </div>
 
 <div class="card">
-  <h3>Job History</h3>
-  <div id="history"></div>
+<h3>Job History</h3>
+<div id="history"></div>
 </div>
 
+<div class="card">
+<h3>Analytics</h3>
+<canvas id="chart"></canvas>
 </div>
 
 <script>
-let inventory = JSON.parse(localStorage.getItem("inventory")) || {
-  seed:10,fert:10,mulch:10,tack:10,compost:10
-};
-
 let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+let inventory = JSON.parse(localStorage.getItem("inventory")) || {};
+let costs = JSON.parse(localStorage.getItem("costs")) || {};
 
-let costs = JSON.parse(localStorage.getItem("costs")) || {
-  seed:80,fert:40,mulch:60,tack:20,compost:50
-};
-
-function addJob(){
-
-  let size = Number(document.getElementById("jobSize").value);
-  let pkg = document.getElementById("jobPackage").value;
-  let name = document.getElementById("jobName").value || "Customer";
-
-  if(!size){
-    alert("Select job size");
-    return;
-  }
-
-  let factor = size / 5000;
-
-  let used = {
-    seed:0.5*factor,
-    fert:1*factor,
-    mulch:1*factor,
-    tack:0.5*factor,
-    compost:pkg==="premium"?1*factor:0
-  };
-
-  inventory.seed = Math.max(0, inventory.seed - used.seed);
-  inventory.fert = Math.max(0, inventory.fert - used.fert);
-  inventory.mulch = Math.max(0, inventory.mulch - used.mulch);
-  inventory.tack = Math.max(0, inventory.tack - used.tack);
-  inventory.compost = Math.max(0, inventory.compost - used.compost);
-
-  let cost =
-    used.seed*costs.seed +
-    used.fert*costs.fert +
-    used.mulch*costs.mulch +
-    used.tack*costs.tack +
-    used.compost*costs.compost;
-
-  let revenue = size * (pkg==="premium" ? 0.28 : 0.18);
-  let profit = revenue - cost;
-
-  jobs.push({name,profit,revenue});
-
-  saveAll();
-  render();
-}
-
-function saveInventory(){
-  inventory.seed = Number(document.getElementById("seed").value)||0;
-  inventory.fert = Number(document.getElementById("fert").value)||0;
-  inventory.mulch = Number(document.getElementById("mulch").value)||0;
-  inventory.tack = Number(document.getElementById("tack").value)||0;
-  inventory.compost = Number(document.getElementById("compost").value)||0;
-
-  saveAll();
-  render();
-}
-
-function saveCosts(){
-  costs.seed = Number(document.getElementById("seedCost").value)||0;
-  costs.fert = Number(document.getElementById("fertCost").value)||0;
-  costs.mulch = Number(document.getElementById("mulchCost").value)||0;
-  costs.tack = Number(document.getElementById("tackCost").value)||0;
-  costs.compost = Number(document.getElementById("compostCost").value)||0;
-
-  saveAll();
-  alert("Costs saved");
-}
-
-function saveAll(){
+function saveInventory() {
+  inventory.seed = Number(document.getElementById("seed").value);
+  inventory.fert = Number(document.getElementById("fert").value);
   localStorage.setItem("inventory", JSON.stringify(inventory));
-  localStorage.setItem("jobs", JSON.stringify(jobs));
+  updateAlerts();
+}
+
+function saveCosts() {
+  costs.seed = Number(document.getElementById("seedCost").value);
+  costs.fert = Number(document.getElementById("fertCost").value);
   localStorage.setItem("costs", JSON.stringify(costs));
 }
 
-function render(){
+function logJob() {
+  const name = document.getElementById("jobName").value;
+  const revenue = Number(document.getElementById("jobSize").value);
 
-  let rev=0, prof=0;
+  const job = {
+    name,
+    revenue,
+    profit: revenue * 0.5,
+    date: new Date().toLocaleDateString()
+  };
 
-  jobs.forEach(j=>{
-    rev+=j.revenue;
-    prof+=j.profit;
-  });
+  jobs.push(job);
+  localStorage.setItem("jobs", JSON.stringify(jobs));
 
-  document.getElementById("statJobs").innerText = jobs.length;
-  document.getElementById("statRevenue").innerText = "$"+Math.round(rev);
-  document.getElementById("statProfit").innerText = "$"+Math.round(prof);
-  document.getElementById("statMargin").innerText =
-    jobs.length ? ((prof/rev)*100).toFixed(1)+"%" : "0%";
-
-  let html="";
-  jobs.slice().reverse().forEach(j=>{
-    html += `<div class="job"><b>${j.name}</b><br>Profit: $${Math.round(j.profit)}</div>`;
-  });
-
-  document.getElementById("history").innerHTML = html;
-
-  checkInventory();
+  render();
 }
 
-function checkInventory(){
+function render() {
+  document.getElementById("jobs").innerText = jobs.length;
 
-  let alerts=[];
-  let reorder=[];
+  let totalRevenue = jobs.reduce((a, b) => a + b.revenue, 0);
+  let totalProfit = jobs.reduce((a, b) => a + b.profit, 0);
 
-  function check(val,name){
-    if(val <= 3){
-      alerts.push("⚠ "+name+" low");
-      reorder.push(name);
-    }
+  document.getElementById("revenue").innerText = totalRevenue;
+  document.getElementById("profit").innerText = totalProfit;
+
+  let historyHTML = "";
+  jobs.forEach(j => {
+    historyHTML += `<div>${j.name} - $${j.revenue}</div>`;
+  });
+  document.getElementById("history").innerHTML = historyHTML;
+
+  renderChart();
+}
+
+function updateAlerts() {
+  if (inventory.seed < 10) {
+    document.getElementById("alerts").innerText = "Low Seed!";
+    document.getElementById("reorder").innerText = "Seed";
+  } else {
+    document.getElementById("alerts").innerText = "All inventory levels good";
+    document.getElementById("reorder").innerText = "None";
   }
+}
 
-  check(inventory.seed,"Seed");
-  check(inventory.fert,"Fertilizer");
-  check(inventory.mulch,"Mulch");
-  check(inventory.tack,"Tackifier");
-  check(inventory.compost,"Compost");
+function renderChart() {
+  const ctx = document.getElementById("chart");
 
-  document.getElementById("alerts").innerHTML =
-    alerts.length ? alerts.join("<br>") : "All good";
-
-  document.getElementById("reorderList").innerHTML =
-    reorder.length ? reorder.join("<br>") : "No restock needed";
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: jobs.map(j => j.date),
+      datasets: [{
+        label: "Revenue",
+        data: jobs.map(j => j.revenue)
+      }]
+    }
+  });
 }
 
 render();
+updateAlerts();
 </script>
 
 </body>
