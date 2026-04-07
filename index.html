@@ -9,7 +9,9 @@ body{background:#000;color:#fff;font-family:sans-serif;margin:0}
 .card{background:#111;padding:20px;margin:15px;border-radius:16px}
 input,select{width:100%;padding:12px;margin:8px 0;background:#222;color:#fff;border:none;border-radius:10px}
 button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px;margin-top:10px;font-weight:bold}
-.alert{color:red}
+.alert{color:#ff4d4d}
+.good{color:#00ff88}
+.warn{color:#ffd700}
 </style>
 </head>
 
@@ -32,7 +34,7 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <input id="houses" type="number" value="1">
 <input id="sqft" placeholder="Sq Ft Per House">
-<input id="margin" placeholder="Margin % (default 60)">
+<input id="margin" placeholder="Target Margin % (default 60)">
 
 <h3>Labor & Overhead</h3>
 <input id="laborRate" placeholder="Labor $/hr">
@@ -42,12 +44,18 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <button onclick="autoFillPrice()">Auto Fill Price</button>
 
-<div id="priceDisplay" style="font-size:28px;font-weight:bold;margin-top:10px;"></div>
+<div id="priceCard" style="margin-top:20px;padding:20px;border:2px solid #d4af37;border-radius:16px;text-align:center;">
+<div style="opacity:.6;">Final Price</div>
+<div id="priceDisplay" style="font-size:42px;font-weight:bold;">$0</div>
+<div id="dealRating"></div>
+</div>
+
 <input id="jobPrice" type="hidden">
+
+<div id="pricingOutput"></div>
 
 <button onclick="createJob()">Create Job</button>
 
-<div id="pricingOutput"></div>
 </div>
 
 <div class="card">
@@ -103,7 +111,6 @@ const PREMIUM_KEYS=["elite","kbg","esp","bfm","tack","comp","bio","hum"]
 
 // ===== INVENTORY =====
 function saveInventory(){
-
 inv={
 tttf:{c:n(tttfCost.value),q:n(tttfQty.value)},
 rye:{c:n(ryeCost.value),q:n(ryeQty.value)},
@@ -118,17 +125,14 @@ comp:{c:n(compCost.value),q:n(compQty.value)},
 bio:{c:n(bioCost.value),q:n(bioQty.value)},
 hum:{c:n(humCost.value),q:n(humQty.value)}
 }
-
 localStorage.setItem("inv",JSON.stringify(inv))
-alert("Inventory Saved ✅")
+alert("Saved ✅")
 }
 
 // ===== MATERIAL ENGINE =====
 function getMaterials(tier,h){
-
 const sqft=n(document.getElementById("sqft").value)||5000
-const totalSqft=sqft*h
-const k=totalSqft/1000
+const k=(sqft*h)/1000
 
 if(tier==="standard"){
 const seed=6*k
@@ -168,45 +172,70 @@ let materialCost=0
 allowed.forEach(key=>{
 const qty=n(mats[key])
 const cost=n(inv[key]?.c)
-
-if(qty>0 && cost>0){
-materialCost+=qty*cost
-}
+if(qty>0 && cost>0) materialCost+=qty*cost
 })
 
-// LABOR
+// labor
 const labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)
 
-// OVERHEAD FIXED
-const overheadPercent = n(document.getElementById("overhead").value) || 15
-const overhead = (materialCost + labor) * (overheadPercent/100)
+// overhead
+const overheadPercent=n(overhead.value)||15
+const overheadCost=(materialCost+labor)*(overheadPercent/100)
 
-// TOTAL
-const totalCost=materialCost+labor+overhead
+// total cost
+const totalCost=materialCost+labor+overheadCost
 
-// MARGIN
-const margin=n(document.getElementById("margin").value)||60
-let price=totalCost/(1-(margin/100))
+// margin
+const targetMargin=n(document.getElementById("margin").value)||60
+let basePrice=totalCost/(1-(targetMargin/100))
 
-// BUILDER DISCOUNT
-if(h>=100) price*=0.7
-else if(h>=50) price*=0.8
-else if(h>=25) price*=0.9
-else if(h>=2) price*=0.95
+// REAL margin
+let profit=basePrice-totalCost
+let marginReal=(profit/basePrice)*100
 
-const final = price.toFixed(0)
+// ===== PROFIT PROTECTION =====
+const MIN_MARGIN=35
 
-// DISPLAY + STORE
-priceDisplay.innerHTML=`$${final}`
-jobPrice.value=final
-window.finalPrice=Number(final)
+if(marginReal<MIN_MARGIN){
+basePrice=totalCost/(1-(MIN_MARGIN/100))
+marginReal=MIN_MARGIN
+}
 
-// DEBUG OUTPUT
+// ===== BUILDER DISCOUNT =====
+let discount=0
+
+if(h<10) discount=0.05
+else if(h>=10 && h<25) discount=0.10
+else if(h>=25 && h<100) discount=0.20
+else if(h>=100) discount=0.30
+
+const finalPrice=basePrice*(1-discount)
+
+// ===== DISPLAY =====
+priceDisplay.innerText=`$${finalPrice.toFixed(0)}`
+jobPrice.value=finalPrice
+window.finalPrice=finalPrice
+
+// rating
+const rating=document.getElementById("dealRating")
+
+if(marginReal>60){
+rating.innerHTML="<span class='good'>A+ DEAL 💰</span>"
+}
+else if(marginReal>40){
+rating.innerHTML="<span class='warn'>B DEAL 👍</span>"
+}
+else{
+rating.innerHTML="<span class='alert'>C DEAL ⚠️</span>"
+}
+
+// breakdown
 pricingOutput.innerHTML=`
-Materials: $${materialCost.toFixed(0)}<br>
-Labor: $${labor.toFixed(0)}<br>
-Overhead: $${overhead.toFixed(0)}<br>
-<b>Total Cost: $${totalCost.toFixed(0)}</b>
+<div class="card">Materials: $${materialCost.toFixed(0)}</div>
+<div class="card">Labor: $${labor.toFixed(0)}</div>
+<div class="card">Overhead: $${overheadCost.toFixed(0)}</div>
+<div class="card"><b>Total Cost: $${totalCost.toFixed(0)}</b></div>
+<div class="card"><b>Builder Discount: ${(discount*100)}%</b></div>
 `
 }
 
@@ -237,13 +266,8 @@ if(!item || qty<=0) return
 const cost=qty*n(item.c)
 const remaining=item.q-qty
 
-// 🔥 ALERT FIX
-if(qty>item.q){
-alertsList.push(`🚨 ${key.toUpperCase()} OUT`)
-}
-else if(remaining<=5){
-alertsList.push(`⚠️ ${key.toUpperCase()} LOW (${remaining.toFixed(1)})`)
-}
+if(qty>item.q) alertsList.push(`🚨 ${key} OUT`)
+else if(remaining<=5) alertsList.push(`⚠️ ${key} LOW (${remaining.toFixed(1)})`)
 
 item.q=Math.max(0,remaining)
 
