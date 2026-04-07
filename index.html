@@ -41,7 +41,8 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 <input id="overhead" placeholder="Overhead %">
 
 <button onclick="autoFillPrice()">Auto Fill Price</button>
-<input id="jobPrice" placeholder="Final Price">
+
+<div id="priceDisplay"></div>
 
 <button onclick="createJob()">Create Job</button>
 
@@ -89,21 +90,20 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <script>
 
+// ================= STATE =================
 let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
 let inv = JSON.parse(localStorage.getItem("inv")||"{}")
 let chart
 
 const n=v=>parseFloat(v)||0
-const sqftInput=document.getElementById("sqft")
 
-// 🔒 STRICT MATERIAL GROUPS
-const STANDARD_KEYS = ["tttf","rye","mil","wood","tack"]
-const PREMIUM_KEYS = ["elite","kbg","esp","bfm","tack","comp","bio","hum"]
+const STANDARD_KEYS=["tttf","rye","mil","wood","tack"]
+const PREMIUM_KEYS=["elite","kbg","esp","bfm","tack","comp","bio","hum"]
 
 // ================= INVENTORY =================
 function saveInventory(){
 
-inv = {
+inv={
 tttf:{c:n(tttfCost.value),q:n(tttfQty.value)},
 rye:{c:n(ryeCost.value),q:n(ryeQty.value)},
 elite:{c:n(eliteCost.value),q:n(eliteQty.value)},
@@ -119,154 +119,135 @@ hum:{c:n(humCost.value),q:n(humQty.value)}
 }
 
 localStorage.setItem("inv",JSON.stringify(inv))
-alert("Inventory Saved ✅")
+alert("Saved ✅")
 }
 
-// ================= MATERIALS =================
+// ================= MATERIAL ENGINE =================
 function getMaterials(tier,h){
 
-const sqftVal=n(sqftInput.value)||5000
-const factor=(sqftVal*h)/1000
+const sqft=n(document.getElementById("sqft").value)||5000
+const totalSqft=sqft*h
+const k=totalSqft/1000
 
 if(tier==="standard"){
-const seed=6*factor
+const seed=6*k
 return {
 tttf:seed*0.85,
 rye:seed*0.15,
-mil:4*factor,
-wood:40*factor,
-tack:2*factor
+mil:1*k,
+wood:3*k,
+tack:0.5*k
 }
 }
 
-const seed=5*factor
+const seed=5*k
 return {
 elite:seed*0.8,
 kbg:seed*0.2,
-esp:4*factor,
-bfm:50*factor,
-tack:2*factor,
-comp:15*factor,
-bio:3*factor,
-hum:2*factor
+esp:1*k,
+bfm:4*k,
+tack:0.5*k,
+comp:1.5*k,
+bio:0.3*k,
+hum:0.2*k
 }
 }
 
 // ================= PRICING =================
 function autoFillPrice(){
 
-const h=Math.max(1,n(houses.value))
-const sqftVal=n(sqftInput.value)||5000
-const totalSqft=sqftVal*h
+const h=n(houses.value)||1
+const tierVal=tier.value
 
-const mats=getMaterials(tier.value,h)
-
-// 🔥 STRICT FILTER
-const allowed = tier.value==="standard"?STANDARD_KEYS:PREMIUM_KEYS
+const mats=getMaterials(tierVal,h)
+const allowed=tierVal==="standard"?STANDARD_KEYS:PREMIUM_KEYS
 
 let materialCost=0
 
 allowed.forEach(key=>{
-const qty=mats[key]||0
-const item=inv[key]
+const qty=n(mats[key])
+const cost=n(inv[key]?.c)
 
-if(item && qty>0){
-materialCost+=qty*n(item.c)
+if(qty>0 && cost>0){
+materialCost+=qty*cost
 }
 })
 
-if(materialCost<=0){
-alert("Enter inventory costs")
-return
-}
-
 // LABOR
-const laborRate=n(document.getElementById("laborRate").value)
-const crew=n(document.getElementById("crewSize").value)
-const hrs=n(document.getElementById("hours").value)
-
-let laborCost=laborRate*crew*hrs
-if(isNaN(laborCost)) laborCost=0
+const labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)
 
 // OVERHEAD
-let overheadPercent=n(document.getElementById("overhead").value)||15
-const overheadCost=(materialCost+laborCost)*(overheadPercent/100)
+const overhead=(materialCost+labor)*(n(overheadInput.value||15)/100)
 
-// TOTAL COST
-const totalCost=materialCost+laborCost+overheadCost
+// TOTAL
+const totalCost=materialCost+labor+overhead
 
 // MARGIN
-let marginPercent=n(document.getElementById("margin").value)||60
-const basePrice=totalCost/(1-(marginPercent/100))
+const margin=n(document.getElementById("margin").value)||60
+let price=totalCost/(1-(margin/100))
 
-// DISCOUNT
-let discount=0
-if(h>=100)discount=0.30
-else if(h>=50)discount=0.20
-else if(h>=25)discount=0.10
-else if(h>=2)discount=0.05
+// BUILDER DISCOUNT
+if(h>=100) price*=0.7
+else if(h>=50) price*=0.8
+else if(h>=25) price*=0.9
+else if(h>=2) price*=0.95
 
-const finalPrice=basePrice*(1-discount)
-
-// OUTPUT
-jobPrice.value=finalPrice.toFixed(0)
+priceDisplay.innerHTML=`<h2>$${price.toFixed(0)}</h2>`
 
 pricingOutput.innerHTML=`
 Materials: $${materialCost.toFixed(0)}<br>
-Labor: $${laborCost.toFixed(0)}<br>
-Overhead: $${overheadCost.toFixed(0)}<br>
-<b>Total Cost: $${totalCost.toFixed(0)}</b><br><br>
-
-Final Price: $${finalPrice.toFixed(0)}
+Labor: $${labor.toFixed(0)}<br>
+Overhead: $${overhead.toFixed(0)}<br>
+<b>Total Cost: $${totalCost.toFixed(0)}</b>
 `
+
+window.finalPrice=price
+window.lastMaterialCost=materialCost
 }
 
 // ================= CREATE JOB =================
 function createJob(){
 
-const h=Math.max(1,n(houses.value))
-const revenue=n(jobPrice.value)
-
-if(!revenue){
-alert("Use Auto Fill Price")
+if(!window.finalPrice){
+alert("Run Auto Fill Price")
 return
 }
 
-const mats=getMaterials(tier.value,h)
-const allowed = tier.value==="standard"?STANDARD_KEYS:PREMIUM_KEYS
+const h=n(houses.value)||1
+const tierVal=tier.value
+
+const mats=getMaterials(tierVal,h)
+const allowed=tierVal==="standard"?STANDARD_KEYS:PREMIUM_KEYS
 
 let breakdown={}
 let totalCost=0
 let alertsList=[]
 
 allowed.forEach(key=>{
-
-const qty=n(mats[key]||0)
-if(qty<=0) return
-
+const qty=n(mats[key])
 const item=inv[key]
-if(!item) return
 
-const available=n(item.q)
+if(!item || qty<=0) return
+
 const cost=qty*n(item.c)
 
-if(qty>available) alertsList.push(`🚨 ${key.toUpperCase()} SHORTAGE`)
-else if((available-qty)<=5) alertsList.push(`⚠️ ${key.toUpperCase()} LOW`)
+if(qty>item.q) alertsList.push(`🚨 ${key} shortage`)
+else if(item.q-qty<5) alertsList.push(`⚠️ ${key} low`)
 
-item.q=Math.max(0,available-qty)
+item.q-=qty
 
 breakdown[key]={qty,cost}
 totalCost+=cost
 })
 
-const profit=revenue-totalCost
+const profit=window.finalPrice-totalCost
 
 jobs.push({
 name:name.value||"Client",
-tier:tier.value,
-revenue,
+tier:tierVal,
+revenue:window.finalPrice,
 profit,
-margin:(profit/revenue*100)||0,
+margin:(profit/window.finalPrice*100)||0,
 materials:breakdown,
 alerts:alertsList
 })
@@ -280,50 +261,49 @@ render()
 // ================= RENDER =================
 function render(){
 
-let rev=0,prof=0,alertsHTML=""
+let rev=0,prof=0,alertHTML=""
 
 jobs.forEach(j=>{
 rev+=j.revenue
 prof+=j.profit
-j.alerts.forEach(a=>alertsHTML+=`<div class="alert">${a}</div>`)
+j.alerts.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
 })
 
 stats.innerHTML=`
 Jobs: ${jobs.length}<br>
-Revenue: $${rev}<br>
-Profit: $${prof}<br>
+Revenue: $${rev.toFixed(0)}<br>
+Profit: $${prof.toFixed(0)}<br>
 Margin: ${(prof/rev*100||0).toFixed(1)}%
 `
 
-alerts.innerHTML = alertsHTML || "No alerts ✅"
+alerts.innerHTML=alertHTML||"No alerts"
 
 jobsDiv.innerHTML=""
 
 jobs.slice().reverse().forEach(j=>{
-
-let matHTML=""
+let mats=""
 let total=0
 
 for(let m in j.materials){
 const d=j.materials[m]
 total+=d.cost
-matHTML+=`${m.toUpperCase()}: ${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
+mats+=`${m}: ${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
 }
 
 jobsDiv.innerHTML+=`
 <div class="card">
 <b>${j.name} (${j.tier})</b><br>
-Revenue: $${j.revenue}<br>
-Profit: $${j.profit}<br>
+Revenue: $${j.revenue.toFixed(0)}<br>
+Profit: $${j.profit.toFixed(0)}<br>
 Margin: ${j.margin.toFixed(1)}%<br><br>
-${matHTML}
+${mats}
 <b>Total Cost: $${total.toFixed(0)}</b>
 </div>
 `
 })
 
 // chart
-if(chart)chart.destroy()
+if(chart) chart.destroy()
 
 chart=new Chart(document.getElementById("chart"),{
 type:"bar",
@@ -338,7 +318,6 @@ datasets:[
 }
 
 function clearJobs(){
-if(!confirm("Delete all jobs?"))return
 jobs=[]
 localStorage.removeItem("jobs")
 render()
