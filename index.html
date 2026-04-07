@@ -15,6 +15,7 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 .alert{color:red}
 .good{color:lime}
 .flex{display:flex;gap:10px}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:none;overflow:auto;padding:20px;z-index:9999;}
 </style>
 </head>
 
@@ -36,7 +37,6 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <option value="profit">Max Profit</option>
 </select>
 
-<h3>Yard Size</h3>
 <div class="flex">
 <button onclick="setSize(3000)">Small</button>
 <button onclick="setSize(6000)">Medium</button>
@@ -54,11 +54,11 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <label><input type="checkbox" id="hum"> Humic Acid</label>
 
 <h3>Labor & Overhead</h3>
-<input id="laborRate" value="70" placeholder="Labor Rate ($/hr)">
+<input id="laborRate" value="70" placeholder="Labor Rate">
 <input id="crewSize" value="2" placeholder="Crew Size">
 <input id="hours" value="8" placeholder="Hours Per House">
-<input id="overhead" value="15" placeholder="Overhead (%)">
-<input id="margin" value="60" placeholder="Base Margin (%)">
+<input id="overhead" value="15" placeholder="Overhead %">
+<input id="margin" value="60" placeholder="Margin %">
 
 <div class="price-box">
 <div>Final Investment</div>
@@ -70,10 +70,16 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <div id="profitWarnings"></div>
 
 <button onclick="runAndCreate()">Create Job</button>
+<button onclick="openProposal()">Show Proposal</button>
 </div>
 
 <div class="card">
-<h2>Inventory (Cost + Qty)</h2>
+<h2>💰 Revenue Engine</h2>
+<div id="upsellBox"></div>
+</div>
+
+<div class="card">
+<h2>Inventory</h2>
 <div id="inventoryInputs"></div>
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
@@ -86,15 +92,37 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <canvas id="chart"></canvas>
 </div>
 
+<!-- PROPOSAL MODAL -->
+<div id="proposalModal" class="modal">
+<h1 style="text-align:center;">Your Lawn Upgrade</h1>
+
+<div class="card">
+<h2>🌱 Standard</h2>
+<div id="standardPrice"></div>
+</div>
+
+<div class="card" style="border:2px solid gold;">
+<h2>🔥 Premium</h2>
+<div id="premiumPrice"></div>
+</div>
+
+<div class="card">
+<h2>💎 Your Investment</h2>
+<div id="finalPrice"></div>
+</div>
+
+<button onclick="closeProposal()">Close</button>
+</div>
+
 <script>
 
-// ---------- DOM FIX (CRITICAL) ----------
-const jobsEl = document.getElementById("jobs")
-const alertsEl = document.getElementById("alerts")
-const inventoryInputs = document.getElementById("inventoryInputs")
+// ---------- SAFE NUMBER ----------
+function n(v){return isNaN(Number(v))?0:Number(v)}
 
-// ---------- HELPERS ----------
-function n(v){return Number(v)||0}
+// ---------- DOM ----------
+const jobsEl=document.getElementById("jobs")
+const alertsEl=document.getElementById("alerts")
+const inventoryInputs=document.getElementById("inventoryInputs")
 
 // ---------- STATE ----------
 let inv=JSON.parse(localStorage.getItem("inv")||"{}")
@@ -119,7 +147,7 @@ materials.forEach(m=>{
 inv[m]={c:n(document.getElementById(m+"C").value),q:n(document.getElementById(m+"Q").value)}
 })
 localStorage.setItem("inv",JSON.stringify(inv))
-alert("Inventory Saved")
+alert("Saved")
 }
 
 // ---------- TIER ----------
@@ -133,10 +161,7 @@ hum.checked=true
 }
 
 // ---------- SIZE ----------
-function setSize(v){
-sqft.value=v
-autoPrice()
-}
+function setSize(v){sqft.value=v;autoPrice()}
 
 // ---------- EFFICIENCY ----------
 function getEfficiency(h){
@@ -163,12 +188,8 @@ if(bidMode.value==="profit")base+=10
 return Math.max(25,Math.min(70,base))
 }
 
-// ---------- BAG SIZES ----------
-const bagSize={
-tttf:50,rye:50,elite:50,kbg:50,
-mil:50,esp:50,wood:50,bfm:50,
-tack:25,comp:40,bio:40,hum:40
-}
+// ---------- BAG SIZE ----------
+const bagSize={tttf:50,rye:50,elite:50,kbg:50,mil:50,esp:50,wood:50,bfm:50,tack:25,comp:40,bio:40,hum:40}
 
 // ---------- PRICING ----------
 function autoPrice(){
@@ -179,44 +200,29 @@ if(!sqftVal)return
 
 let totalSqft=sqftVal*h
 
-let rates = tier.value==="premium"?{
-elite:7,kbg:2,esp:5,bfm:7,tack:1,comp:20,bio:3,hum:2
-}:{
-tttf:7,rye:5,mil:5,wood:7,tack:1,
-comp:compost.checked?20:0,
-bio:bio.checked?3:0,
-hum:hum.checked?2:0
-}
+let rates=tier.value==="premium"?
+{elite:7,kbg:2,esp:5,bfm:7,tack:1,comp:20,bio:3,hum:2}:
+{tttf:7,rye:5,mil:5,wood:7,tack:1,comp:compost.checked?20:0,bio:bio.checked?3:0,hum:hum.checked?2:0}
 
 let materialCost=0
-let html=""
 window.lastMaterials={}
+let html=""
 
 Object.keys(rates).forEach(k=>{
 let lbs=(rates[k]*totalSqft)/1000
-let bags=lbs/bagSize[k]
-
+let bags=(lbs/bagSize[k])||0
 let cost=(inv[k]?.c||0)*bags
 
-window.lastMaterials[k]={qty:bags,cost}
+window.lastMaterials[k]={qty:n(bags),cost:n(cost)}
 materialCost+=cost
 
-html+=`${k}: ${bags.toFixed(2)} bags ($${cost.toFixed(0)})<br>`
+html+=`${k}: ${bags.toFixed(2)} ($${cost.toFixed(0)})<br>`
 })
 
-// LABOR
 let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)*h*getEfficiency(h)
-
-// OVERHEAD
 let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
+let growCost=grow.checked?(tier.value==="standard"?300:(h>=50?0:200)):0
 
-// GROW
-let growCost=0
-if(grow.checked){
-growCost=tier.value==="standard"?300:(h>=50?0:200)
-}
-
-// TOTAL
 let totalCost=materialCost+labor+overheadCost+growCost
 if(totalCost<=0)return
 
@@ -230,65 +236,63 @@ window.lastOverhead=overheadCost
 window.lastGrow=growCost
 
 priceDisplay.innerText="$"+price.toFixed(0)
-
-let realMargin=((price-totalCost)/price)*100
-dealScore.innerHTML=realMargin>50?"🔥 A DEAL":"👍 OK"
+dealScore.innerHTML=((price-totalCost)/price)>0.5?"🔥 A DEAL":"👍 OK"
 
 pricingOutput.innerHTML=html+`
 <br>Materials:$${materialCost.toFixed(0)}
 <br>Labor:$${labor.toFixed(0)}
 <br>Overhead:$${overheadCost.toFixed(0)}
 <br>Grow:$${growCost}
-<br><b>Total Cost:$${totalCost.toFixed(0)}</b>
-<br>Margin:${margin}%`
+<br><b>Total:$${totalCost.toFixed(0)}</b>`
 
-let warn=[]
-if(realMargin<35)warn.push("Low margin")
-if(labor>materialCost)warn.push("Labor > Materials")
-
-profitWarnings.innerHTML=warn.length?
-warn.map(w=>`<div class="alert">${w}</div>`).join(""):
-`<div class="good">✔ Healthy</div>`
+runRevenueEngine()
 }
 
-// ---------- SAFE CREATE ----------
-function runAndCreate(){
-autoPrice()
-setTimeout(()=>createJob(),50)
+// ---------- REVENUE ENGINE ----------
+function runRevenueEngine(){
+
+let suggestions=[]
+let margin=((window.finalPrice-(window.lastMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow))/window.finalPrice)*100
+
+if(tier.value==="standard"){
+suggestions.push("🔥 Upgrade to Premium for better results + higher ticket")
 }
+
+if(!grow.checked){
+suggestions.push("🌱 Add Grow System for higher success rate")
+}
+
+if(margin<40){
+suggestions.push("⚠️ Low margin — increase price or upsell")
+}
+
+upsellBox.innerHTML=suggestions.join("<br><br>")
+}
+
+// ---------- CREATE ----------
+function runAndCreate(){autoPrice();setTimeout(createJob,50)}
 
 function createJob(){
 
-if(!window.finalPrice || !window.lastMaterials){
-alert("Run pricing first")
-return
-}
+if(!window.finalPrice||!window.lastMaterials){alert("Run pricing first");return}
 
 let snapshot=JSON.parse(JSON.stringify(window.lastMaterials))
 let alertsArr=[]
 
 Object.keys(snapshot).forEach(k=>{
 let used=n(snapshot[k].qty)
-
 if(!inv[k])inv[k]={q:0,c:0}
-
 inv[k].q-=used
-
 if(inv[k].q<=5)alertsArr.push(`🚨 ${k} OUT`)
 else if(inv[k].q<20)alertsArr.push(`⚠️ ${k} LOW`)
 })
 
-let totalCost=window.lastMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow
-let revenue=window.finalPrice
+let totalCost=n(window.lastMaterialCost)+n(window.lastLabor)+n(window.lastOverhead)+n(window.lastGrow)
+let revenue=n(window.finalPrice)
 let profit=revenue-totalCost
 let margin=(profit/revenue)*100
 
-jobs.push({
-name:name.value||"Client",
-revenue,profit,margin,
-materials:snapshot,
-alerts:alertsArr
-})
+jobs.push({name:name.value||"Client",revenue,profit,margin,materials:snapshot,alerts:alertsArr})
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
@@ -306,48 +310,54 @@ alertsEl.innerHTML=""
 let alertHTML=""
 
 jobs.forEach(j=>{
-
-j.alerts.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
+j.alerts?.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
 
 let mats=""
-Object.keys(j.materials).forEach(m=>{
-mats+=`${m}: ${j.materials[m].qty.toFixed(2)} ($${j.materials[m].cost.toFixed(0)})<br>`
+Object.keys(j.materials||{}).forEach(m=>{
+mats+=`${m}: ${n(j.materials[m].qty).toFixed(2)} ($${n(j.materials[m].cost).toFixed(0)})<br>`
 })
 
 jobsEl.innerHTML+=`
 <div class="card">
 <b>${j.name}</b><br><br>
 ${mats}
-Revenue:$${j.revenue.toFixed(0)}<br>
-Profit:$${j.profit.toFixed(0)}<br>
-Margin:${j.margin.toFixed(1)}%
+Revenue:$${n(j.revenue).toFixed(0)}<br>
+Profit:$${n(j.profit).toFixed(0)}<br>
+Margin:${n(j.margin).toFixed(1)}%
 </div>`
 })
 
 alertsEl.innerHTML=alertHTML||"No alerts"
 
-// chart
 if(window.chart)chart.destroy()
-
 chart=new Chart(document.getElementById("chart"),{
 type:"bar",
-data:{
-labels:jobs.map((_,i)=>"Job "+(i+1)),
+data:{labels:jobs.map((_,i)=>"Job "+(i+1)),
 datasets:[
-{label:"Revenue",data:jobs.map(j=>j.revenue)},
-{label:"Profit",data:jobs.map(j=>j.profit)}
-]
-}
+{label:"Revenue",data:jobs.map(j=>n(j.revenue))},
+{label:"Profit",data:jobs.map(j=>n(j.profit))}
+]}
 })
 }
 
-// ---------- EVENTS (MOBILE FIX) ----------
+// ---------- PROPOSAL ----------
+function openProposal(){
+if(!window.finalPrice){alert("Run pricing");return}
+let base=window.finalPrice
+standardPrice.innerHTML=`<h1>$${(base*0.85).toFixed(0)}</h1>`
+premiumPrice.innerHTML=`<h1>$${(base*1.1).toFixed(0)}</h1>`
+finalPrice.innerHTML=`<h1>$${base.toFixed(0)}</h1>`
+proposalModal.style.display="block"
+}
+
+function closeProposal(){proposalModal.style.display="none"}
+
+// ---------- EVENTS ----------
 document.querySelectorAll("input,select").forEach(el=>{
 el.addEventListener("input",autoPrice)
 el.addEventListener("change",autoPrice)
 })
 
-// INIT
 render()
 
 </script>
