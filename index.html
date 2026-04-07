@@ -69,7 +69,7 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <div id="pricingOutput"></div>
 <div id="profitWarnings"></div>
 
-<button onclick="createJob()">Create Job</button>
+<button onclick="runAndCreate()">Create Job</button>
 </div>
 
 <div class="card">
@@ -88,7 +88,12 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 
 <script>
 
-// ---------- SAFE NUMBER ----------
+// ---------- DOM FIX (CRITICAL) ----------
+const jobsEl = document.getElementById("jobs")
+const alertsEl = document.getElementById("alerts")
+const inventoryInputs = document.getElementById("inventoryInputs")
+
+// ---------- HELPERS ----------
 function n(v){return Number(v)||0}
 
 // ---------- STATE ----------
@@ -114,7 +119,7 @@ materials.forEach(m=>{
 inv[m]={c:n(document.getElementById(m+"C").value),q:n(document.getElementById(m+"Q").value)}
 })
 localStorage.setItem("inv",JSON.stringify(inv))
-alert("Saved")
+alert("Inventory Saved")
 }
 
 // ---------- TIER ----------
@@ -191,7 +196,7 @@ Object.keys(rates).forEach(k=>{
 let lbs=(rates[k]*totalSqft)/1000
 let bags=lbs/bagSize[k]
 
-let cost= (inv[k]?.c||0)*bags
+let cost=(inv[k]?.c||0)*bags
 
 window.lastMaterials[k]={qty:bags,cost}
 materialCost+=cost
@@ -199,19 +204,19 @@ materialCost+=cost
 html+=`${k}: ${bags.toFixed(2)} bags ($${cost.toFixed(0)})<br>`
 })
 
-// ---------- LABOR ----------
+// LABOR
 let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)*h*getEfficiency(h)
 
-// ---------- OVERHEAD ----------
+// OVERHEAD
 let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
 
-// ---------- GROW ----------
+// GROW
 let growCost=0
 if(grow.checked){
 growCost=tier.value==="standard"?300:(h>=50?0:200)
 }
 
-// ---------- TOTAL ----------
+// TOTAL
 let totalCost=materialCost+labor+overheadCost+growCost
 if(totalCost<=0)return
 
@@ -227,7 +232,6 @@ window.lastGrow=growCost
 priceDisplay.innerText="$"+price.toFixed(0)
 
 let realMargin=((price-totalCost)/price)*100
-
 dealScore.innerHTML=realMargin>50?"🔥 A DEAL":"👍 OK"
 
 pricingOutput.innerHTML=html+`
@@ -238,7 +242,6 @@ pricingOutput.innerHTML=html+`
 <br><b>Total Cost:$${totalCost.toFixed(0)}</b>
 <br>Margin:${margin}%`
 
-// ---------- WARNINGS ----------
 let warn=[]
 if(realMargin<35)warn.push("Low margin")
 if(labor>materialCost)warn.push("Labor > Materials")
@@ -248,7 +251,12 @@ warn.map(w=>`<div class="alert">${w}</div>`).join(""):
 `<div class="good">✔ Healthy</div>`
 }
 
-// ---------- CREATE JOB ----------
+// ---------- SAFE CREATE ----------
+function runAndCreate(){
+autoPrice()
+setTimeout(()=>createJob(),50)
+}
+
 function createJob(){
 
 if(!window.finalPrice || !window.lastMaterials){
@@ -275,20 +283,17 @@ let revenue=window.finalPrice
 let profit=revenue-totalCost
 let margin=(profit/revenue)*100
 
-let job={
+jobs.push({
 name:name.value||"Client",
 revenue,profit,margin,
 materials:snapshot,
 alerts:alertsArr
-}
-
-jobs.push(job)
+})
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
 render()
-
 alert("Job Created ✅")
 }
 
@@ -336,11 +341,13 @@ datasets:[
 })
 }
 
-// ---------- EVENTS ----------
+// ---------- EVENTS (MOBILE FIX) ----------
 document.querySelectorAll("input,select").forEach(el=>{
 el.addEventListener("input",autoPrice)
+el.addEventListener("change",autoPrice)
 })
 
+// INIT
 render()
 
 </script>
