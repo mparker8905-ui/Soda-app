@@ -37,7 +37,7 @@ h2{margin-top:0}
 <input id="margin" placeholder="Target Margin % (default 60)">
 
 <h3>Labor & Overhead</h3>
-<input id="laborRate" placeholder="Labor $ / Hour (per person)">
+<input id="laborRate" placeholder="Labor $ / Hour">
 <input id="crewSize" placeholder="Crew Size">
 <input id="hours" placeholder="Hours Per Job">
 <input id="overhead" placeholder="Overhead % (default 15)">
@@ -153,7 +153,7 @@ hum:2*factor
 }
 }
 
-// ================= PRICING ENGINE =================
+// ================= PRICING =================
 function autoFillPrice(){
 
 const h=Math.max(1,n(houses.value))
@@ -176,22 +176,23 @@ alert("Enter inventory costs")
 return
 }
 
-// LABOR
-const laborRate=n(laborRateInput.value)
-const crew=n(crewSize.value)
-const hrs=n(hours.value)
+// LABOR FIXED
+const laborRate = n(document.getElementById("laborRate").value)
+const crew = n(document.getElementById("crewSize").value)
+const hrs = n(document.getElementById("hours").value)
 
-const laborCost=laborRate*crew*hrs
+let laborCost = laborRate * crew * hrs
+if(isNaN(laborCost)) laborCost = 0
 
 // OVERHEAD
-let overheadPercent=n(overhead.value)||15
+let overheadPercent = n(document.getElementById("overhead").value) || 15
 const overheadCost=(materialCost+laborCost)*(overheadPercent/100)
 
 // TOTAL COST
 const totalCost=materialCost+laborCost+overheadCost
 
 // MARGIN
-let marginPercent=n(margin.value)||60
+let marginPercent = n(document.getElementById("margin").value) || 60
 const basePrice=totalCost/(1-(marginPercent/100))
 
 // DISCOUNT
@@ -243,18 +244,24 @@ let alertsList=[]
 
 for(let key in mats){
 
-const qty=mats[key]
+const qty=n(mats[key])
 if(qty<=0)continue
 
 const item=inv[key]
 if(!item)continue
 
-const cost=qty*item.c
+const available=n(item.q)
+const cost=qty*n(item.c)
 
-if(qty>item.q)alertsList.push(`${key} shortage`)
-if((item.q-qty)<5)alertsList.push(`${key} low`)
+// ALERT FIX
+if(qty>available){
+alertsList.push(`🚨 ${key.toUpperCase()} SHORTAGE`)
+}
+else if((available-qty)<=5){
+alertsList.push(`⚠️ ${key.toUpperCase()} LOW`)
+}
 
-item.q=Math.max(0,item.q-qty)
+item.q=Math.max(0,available-qty)
 
 breakdown[key]={qty,cost}
 totalCost+=cost
@@ -305,7 +312,7 @@ Profit: $${prof}<br>
 Margin: ${(prof/rev*100||0).toFixed(1)}%
 `
 
-alerts.innerHTML=alertsHTML
+alerts.innerHTML = alertsHTML || "No alerts ✅"
 
 jobsDiv.innerHTML=""
 
@@ -317,7 +324,7 @@ let total=0
 for(let m in j.materials){
 const d=j.materials[m]
 total+=d.cost
-matHTML+=`${m}: ${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
+matHTML+=`${m.toUpperCase()}: ${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
 }
 
 jobsDiv.innerHTML+=`
