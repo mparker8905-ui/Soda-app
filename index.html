@@ -73,7 +73,7 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 </div>
 
 <div class="card">
-<h2>Inventory (Cost per Unit + Qty)</h2>
+<h2>Inventory (Cost per BAG + Qty)</h2>
 <div id="inventoryInputs"></div>
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
@@ -95,19 +95,12 @@ let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
 
 const materials = ["tttf","rye","elite","kbg","mil","esp","wood","bfm","tack","comp","bio","hum"]
 
-// ✅ REAL COVERAGE (FIXES YOUR ISSUE)
-const coverage = {
-tttf:1000, rye:1000, elite:1000, kbg:1000,
-mil:500, esp:500, wood:500, bfm:500,
-tack:2000, comp:1000, bio:2000, hum:4000
-}
-
 function renderInventoryInputs(){
 inventoryInputs.innerHTML=""
 materials.forEach(m=>{
 inventoryInputs.innerHTML+=`
-<input id="${m}C" placeholder="${m} cost per unit">
-<input id="${m}Q" placeholder="${m} quantity">
+<input id="${m}C" placeholder="${m} cost per BAG">
+<input id="${m}Q" placeholder="${m} quantity (bags)">
 `
 })
 }
@@ -155,6 +148,13 @@ if(bidMode.value==="profit")base+=10
 return Math.max(25,Math.min(70,base))
 }
 
+// ✅ REAL MATERIAL SYSTEM (FIXED)
+let bagSize = {
+tttf:50, rye:50, elite:50, kbg:50,
+mil:50, esp:50, wood:50, bfm:50,
+tack:25, comp:40, bio:40, hum:40
+}
+
 function autoFillPrice(){
 
 let sqftVal=n(sqft.value)
@@ -163,54 +163,54 @@ if(!sqftVal)return
 let h=n(houses.value)||1
 let totalSqft=sqftVal*h
 
-let rates = tier.value==="premium" ?
-{elite:.08,kbg:.02,esp:.05,bfm:.08,tack:.01,comp:.03,bio:.008,hum:.005} :
-{tttf:.085,rye:.015,mil:.05,wood:.08,tack:.01,
-comp:compost.checked?.03:0,
-bio:bio.checked?.008:0,
-hum:hum.checked?.005:0}
+let ratesPerK = tier.value==="premium" ? {
+elite:7, kbg:2, esp:5, bfm:7, tack:1, comp:20, bio:3, hum:2
+} : {
+tttf:7, rye:5, mil:5, wood:7, tack:1,
+comp:compost.checked?20:0,
+bio:bio.checked?3:0,
+hum:hum.checked?2:0
+}
 
 let materialCost=0
 let html=""
 window.lastMaterials={}
 
-Object.keys(rates).forEach(k=>{
+Object.keys(ratesPerK).forEach(k=>{
 
-let qty = (rates[k]*totalSqft)/coverage[k]
+let lbs = (ratesPerK[k]*totalSqft)/1000
+let units = lbs / bagSize[k]
+
 let costPerUnit = inv[k]?.c || 0
+let cost = units * costPerUnit
 
-let cost = qty * costPerUnit
-
-window.lastMaterials[k]={qty,cost}
+window.lastMaterials[k]={qty:units,cost}
 materialCost+=cost
 
-html += `${k}: ${qty.toFixed(2)} units ($${cost.toFixed(0)})<br>`
-
+html += `${k}: ${units.toFixed(2)} bags ($${cost.toFixed(0)})<br>`
 })
 
 let efficiency=getEfficiency(h)
 
-// ✅ CORRECT LABOR CALCULATION
-let labor = n(laborRate.value) * n(crewSize.value) * n(hours.value) * h * efficiency
-
-let overheadCost = (materialCost + labor) * (n(overhead.value)/100)
+let labor = n(laborRate.value)*n(crewSize.value)*n(hours.value)*h*efficiency
+let overheadCost = (materialCost+labor)*(n(overhead.value)/100)
 
 let growCost=0
 if(grow.checked){
-growCost = tier.value==="standard" ? 300 : (h>=50?0:200)
+growCost = tier.value==="standard"?300:(h>=50?0:200)
 }
 
-let totalCost = materialCost + labor + overheadCost + growCost
+let totalCost = materialCost+labor+overheadCost+growCost
 if(totalCost<=0)return
 
 let smartMargin=getSmartMargin()
-let price = totalCost / (1 - smartMargin/100)
+let price = totalCost/(1-(smartMargin/100))
 
 window.finalPrice=price
+window.lastMaterialCost=materialCost
 window.lastLabor=labor
 window.lastOverhead=overheadCost
 window.lastGrow=growCost
-window.lastMaterialCost=materialCost
 
 priceDisplay.innerText="$"+price.toFixed(0)
 
@@ -252,9 +252,9 @@ else if(inv[k].q<20)alertsArr.push(k+" LOW")
 }
 })
 
-let totalCost = window.lastMaterialCost + window.lastLabor + window.lastOverhead + window.lastGrow
-let profit = window.finalPrice - totalCost
-let margin = (profit / window.finalPrice) * 100
+let totalCost = window.lastMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow
+let profit = window.finalPrice-totalCost
+let margin = (profit/window.finalPrice)*100
 
 jobs.push({
 name:name.value||"Client",
@@ -297,7 +297,6 @@ Margin:${j.margin.toFixed(1)}%
 
 alerts.innerHTML = alertHTML || "No alerts"
 
-// chart
 if(window.chart)chart.destroy()
 
 chart = new Chart(document.getElementById("chart"),{
