@@ -23,6 +23,7 @@ h2{margin-top:0}
 
 <div class="card">
 <h2>Create Job</h2>
+
 <input id="name" placeholder="Customer Name">
 
 <select id="tier">
@@ -33,10 +34,22 @@ h2{margin-top:0}
 <input id="houses" type="number" value="1">
 <input id="sqft" placeholder="Sq Ft Per House">
 
+<input id="margin" placeholder="Target Margin % (default 60)">
+
+<h3>Labor & Overhead</h3>
+<input id="laborRate" placeholder="Labor $ / Hour (per person)">
+<input id="crewSize" placeholder="Crew Size">
+<input id="hours" placeholder="Hours Per Job">
+<input id="overhead" placeholder="Overhead % (default 15)">
+
 <button onclick="autoFillPrice()">Auto Fill Price</button>
+
 <input id="jobPrice" placeholder="Final Job Price">
 
 <button onclick="createJob()">Create Job</button>
+
+<div id="pricingOutput"></div>
+
 </div>
 
 <div class="card">
@@ -63,22 +76,14 @@ h2{margin-top:0}
 </div>
 
 <div class="card">
-<h2>Pricing Output</h2>
-<div id="pricingOutput"></div>
-</div>
-
-<div class="card">
-<h2>Inventory Alerts</h2>
+<h2>Alerts</h2>
 <div id="alerts"></div>
 </div>
 
 <div class="card">
 <h2>Job History</h2>
 <div id="jobs"></div>
-
-<button onclick="clearJobs()" style="background:#ff4d4d">
-Clear Job History
-</button>
+<button onclick="clearJobs()" style="background:red">Clear Job History</button>
 </div>
 
 <div class="card">
@@ -88,7 +93,6 @@ Clear Job History
 
 <script>
 
-// ================= DATA =================
 let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
 let inv = JSON.parse(localStorage.getItem("inv")||"{}")
 let chart
@@ -96,7 +100,7 @@ let chart
 const n=v=>parseFloat(v)||0
 const sqftInput=document.getElementById("sqft")
 
-// ================= INVENTORY =================
+// ================= SAVE INVENTORY =================
 function saveInventory(){
 
 inv = {
@@ -149,45 +153,78 @@ hum:2*factor
 }
 }
 
-// ================= PRICING =================
+// ================= PRICING ENGINE =================
 function autoFillPrice(){
 
 const h=Math.max(1,n(houses.value))
+const sqftVal=n(sqftInput.value)||5000
+const totalSqft=sqftVal*h
+
 const mats=getMaterials(tier.value,h)
 
-let cost=0
+let materialCost=0
 
-for(let key in mats){
+Object.keys(mats).forEach(key=>{
 const item=inv[key]
-if(item) cost+=mats[key]*item.c
+if(item && mats[key]>0){
+materialCost+=mats[key]*n(item.c)
 }
+})
 
-if(cost<=0){
-alert("Enter material costs first")
+if(materialCost<=0){
+alert("Enter inventory costs")
 return
 }
 
-let price=cost/0.4
+// LABOR
+const laborRate=n(laborRateInput.value)
+const crew=n(crewSize.value)
+const hrs=n(hours.value)
 
+const laborCost=laborRate*crew*hrs
+
+// OVERHEAD
+let overheadPercent=n(overhead.value)||15
+const overheadCost=(materialCost+laborCost)*(overheadPercent/100)
+
+// TOTAL COST
+const totalCost=materialCost+laborCost+overheadCost
+
+// MARGIN
+let marginPercent=n(margin.value)||60
+const basePrice=totalCost/(1-(marginPercent/100))
+
+// DISCOUNT
 let discount=0
 if(h>=100)discount=0.30
 else if(h>=50)discount=0.20
 else if(h>=25)discount=0.10
 else if(h>=2)discount=0.05
 
-price*=1-discount
+const finalPrice=basePrice*(1-discount)
 
-jobPrice.value=price.toFixed(0)
+// METRICS
+const profit=finalPrice-totalCost
+const profitPerHouse=profit/h
+const costPerK=totalCost/(totalSqft/1000)
+
+// OUTPUT
+jobPrice.value=finalPrice.toFixed(0)
 
 pricingOutput.innerHTML=`
-Material Cost: $${cost.toFixed(0)}<br>
-Margin Price: $${(cost/0.4).toFixed(0)}<br>
-Discount: ${(discount*100)}%<br>
-Final Price: $${price.toFixed(0)}
+Materials: $${materialCost.toFixed(0)}<br>
+Labor: $${laborCost.toFixed(0)}<br>
+Overhead: $${overheadCost.toFixed(0)}<br>
+<b>Total Cost: $${totalCost.toFixed(0)}</b><br><br>
+
+Final Price: $${finalPrice.toFixed(0)}<br>
+Profit: $${profit.toFixed(0)}<br>
+Profit/House: $${profitPerHouse.toFixed(0)}<br>
+Cost/1k sqft: $${costPerK.toFixed(2)}
 `
 }
 
-// ================= JOB =================
+// ================= CREATE JOB =================
 function createJob(){
 
 const h=Math.max(1,n(houses.value))
@@ -207,18 +244,17 @@ let alertsList=[]
 for(let key in mats){
 
 const qty=mats[key]
-if(qty<=0) continue
+if(qty<=0)continue
 
 const item=inv[key]
-if(!item) continue
+if(!item)continue
 
-const available=item.q
 const cost=qty*item.c
 
-if(qty>available) alertsList.push(`${key} shortage`)
-if((available-qty)<5) alertsList.push(`${key} low`)
+if(qty>item.q)alertsList.push(`${key} shortage`)
+if((item.q-qty)<5)alertsList.push(`${key} low`)
 
-item.q=Math.max(0,available-qty)
+item.q=Math.max(0,item.q-qty)
 
 breakdown[key]={qty,cost}
 totalCost+=cost
@@ -243,17 +279,12 @@ localStorage.setItem("inv",JSON.stringify(inv))
 render()
 }
 
-// ================= CLEAR JOBS =================
+// ================= CLEAR =================
 function clearJobs(){
-
-if(!confirm("Delete all job history?")) return
-
+if(!confirm("Delete all jobs?"))return
 jobs=[]
 localStorage.removeItem("jobs")
-
 render()
-
-alert("Job history cleared ✅")
 }
 
 // ================= RENDER =================
@@ -285,16 +316,9 @@ let total=0
 
 for(let m in j.materials){
 const d=j.materials[m]
-if(!d) continue
-
 total+=d.cost
-
-matHTML+=`
-${m.toUpperCase()}:
-${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
+matHTML+=`${m}: ${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
 }
-
-const perK=j.sqft/1000
 
 jobsDiv.innerHTML+=`
 <div class="card">
@@ -302,17 +326,14 @@ jobsDiv.innerHTML+=`
 Revenue: $${j.revenue}<br>
 Profit: $${j.profit}<br>
 Margin: ${j.margin.toFixed(1)}%<br><br>
-
 ${matHTML}
-
-<b>Total Cost:</b> $${total.toFixed(0)}<br>
-<b>Cost / 1k:</b> $${(total/perK).toFixed(0)}<br>
-<b>Profit / 1k:</b> $${(j.profit/perK).toFixed(0)}
+<b>Total Cost:</b> $${total.toFixed(0)}
 </div>
 `
 })
 
-if(chart) chart.destroy()
+// chart
+if(chart)chart.destroy()
 
 chart=new Chart(document.getElementById("chart"),{
 type:"bar",
