@@ -10,7 +10,6 @@ body{background:#000;color:#fff;font-family:sans-serif;margin:0}
 input,select{width:100%;padding:12px;margin:8px 0;background:#222;color:#fff;border:none;border-radius:10px}
 button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px;margin-top:10px;font-weight:bold}
 .alert{color:red}
-h2{margin-top:0}
 </style>
 </head>
 
@@ -33,23 +32,20 @@ h2{margin-top:0}
 
 <input id="houses" type="number" value="1">
 <input id="sqft" placeholder="Sq Ft Per House">
-
-<input id="margin" placeholder="Target Margin % (default 60)">
+<input id="margin" placeholder="Margin % (default 60)">
 
 <h3>Labor & Overhead</h3>
-<input id="laborRate" placeholder="Labor $ / Hour">
+<input id="laborRate" placeholder="Labor $/hr">
 <input id="crewSize" placeholder="Crew Size">
-<input id="hours" placeholder="Hours Per Job">
-<input id="overhead" placeholder="Overhead % (default 15)">
+<input id="hours" placeholder="Hours">
+<input id="overhead" placeholder="Overhead %">
 
 <button onclick="autoFillPrice()">Auto Fill Price</button>
-
-<input id="jobPrice" placeholder="Final Job Price">
+<input id="jobPrice" placeholder="Final Price">
 
 <button onclick="createJob()">Create Job</button>
 
 <div id="pricingOutput"></div>
-
 </div>
 
 <div class="card">
@@ -68,9 +64,9 @@ h2{margin-top:0}
 
 <input id="tackCost" placeholder="Tack Cost"><input id="tackQty" placeholder="Tack Qty">
 
-<input id="compCost" placeholder="Compost Cost"><input id="compQty" placeholder="Compost Qty">
-<input id="bioCost" placeholder="Biochar Cost"><input id="bioQty" placeholder="Bio Qty">
-<input id="humCost" placeholder="Humic Cost"><input id="humQty" placeholder="Humic Qty">
+<input id="compCost" placeholder="Compost Cost"><input id="compQty" placeholder="Comp Qty">
+<input id="bioCost" placeholder="Bio Cost"><input id="bioQty" placeholder="Bio Qty">
+<input id="humCost" placeholder="Humic Cost"><input id="humQty" placeholder="Hum Qty">
 
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
@@ -100,7 +96,11 @@ let chart
 const n=v=>parseFloat(v)||0
 const sqftInput=document.getElementById("sqft")
 
-// ================= SAVE INVENTORY =================
+// 🔒 STRICT MATERIAL GROUPS
+const STANDARD_KEYS = ["tttf","rye","mil","wood","tack"]
+const PREMIUM_KEYS = ["elite","kbg","esp","bfm","tack","comp","bio","hum"]
+
+// ================= INVENTORY =================
 function saveInventory(){
 
 inv = {
@@ -125,8 +125,8 @@ alert("Inventory Saved ✅")
 // ================= MATERIALS =================
 function getMaterials(tier,h){
 
-const sqftVal = n(sqftInput.value)||5000
-const factor = (sqftVal*h)/1000
+const sqftVal=n(sqftInput.value)||5000
+const factor=(sqftVal*h)/1000
 
 if(tier==="standard"){
 const seed=6*factor
@@ -135,8 +135,7 @@ tttf:seed*0.85,
 rye:seed*0.15,
 mil:4*factor,
 wood:40*factor,
-tack:2*factor,
-comp:0,bio:0,hum:0
+tack:2*factor
 }
 }
 
@@ -162,12 +161,17 @@ const totalSqft=sqftVal*h
 
 const mats=getMaterials(tier.value,h)
 
+// 🔥 STRICT FILTER
+const allowed = tier.value==="standard"?STANDARD_KEYS:PREMIUM_KEYS
+
 let materialCost=0
 
-Object.keys(mats).forEach(key=>{
+allowed.forEach(key=>{
+const qty=mats[key]||0
 const item=inv[key]
-if(item && mats[key]>0){
-materialCost+=mats[key]*n(item.c)
+
+if(item && qty>0){
+materialCost+=qty*n(item.c)
 }
 })
 
@@ -176,23 +180,23 @@ alert("Enter inventory costs")
 return
 }
 
-// LABOR FIXED
-const laborRate = n(document.getElementById("laborRate").value)
-const crew = n(document.getElementById("crewSize").value)
-const hrs = n(document.getElementById("hours").value)
+// LABOR
+const laborRate=n(document.getElementById("laborRate").value)
+const crew=n(document.getElementById("crewSize").value)
+const hrs=n(document.getElementById("hours").value)
 
-let laborCost = laborRate * crew * hrs
-if(isNaN(laborCost)) laborCost = 0
+let laborCost=laborRate*crew*hrs
+if(isNaN(laborCost)) laborCost=0
 
 // OVERHEAD
-let overheadPercent = n(document.getElementById("overhead").value) || 15
+let overheadPercent=n(document.getElementById("overhead").value)||15
 const overheadCost=(materialCost+laborCost)*(overheadPercent/100)
 
 // TOTAL COST
 const totalCost=materialCost+laborCost+overheadCost
 
 // MARGIN
-let marginPercent = n(document.getElementById("margin").value) || 60
+let marginPercent=n(document.getElementById("margin").value)||60
 const basePrice=totalCost/(1-(marginPercent/100))
 
 // DISCOUNT
@@ -204,11 +208,6 @@ else if(h>=2)discount=0.05
 
 const finalPrice=basePrice*(1-discount)
 
-// METRICS
-const profit=finalPrice-totalCost
-const profitPerHouse=profit/h
-const costPerK=totalCost/(totalSqft/1000)
-
 // OUTPUT
 jobPrice.value=finalPrice.toFixed(0)
 
@@ -218,10 +217,7 @@ Labor: $${laborCost.toFixed(0)}<br>
 Overhead: $${overheadCost.toFixed(0)}<br>
 <b>Total Cost: $${totalCost.toFixed(0)}</b><br><br>
 
-Final Price: $${finalPrice.toFixed(0)}<br>
-Profit: $${profit.toFixed(0)}<br>
-Profit/House: $${profitPerHouse.toFixed(0)}<br>
-Cost/1k sqft: $${costPerK.toFixed(2)}
+Final Price: $${finalPrice.toFixed(0)}
 `
 }
 
@@ -237,35 +233,31 @@ return
 }
 
 const mats=getMaterials(tier.value,h)
+const allowed = tier.value==="standard"?STANDARD_KEYS:PREMIUM_KEYS
 
 let breakdown={}
 let totalCost=0
 let alertsList=[]
 
-for(let key in mats){
+allowed.forEach(key=>{
 
-const qty=n(mats[key])
-if(qty<=0)continue
+const qty=n(mats[key]||0)
+if(qty<=0) return
 
 const item=inv[key]
-if(!item)continue
+if(!item) return
 
 const available=n(item.q)
 const cost=qty*n(item.c)
 
-// ALERT FIX
-if(qty>available){
-alertsList.push(`🚨 ${key.toUpperCase()} SHORTAGE`)
-}
-else if((available-qty)<=5){
-alertsList.push(`⚠️ ${key.toUpperCase()} LOW`)
-}
+if(qty>available) alertsList.push(`🚨 ${key.toUpperCase()} SHORTAGE`)
+else if((available-qty)<=5) alertsList.push(`⚠️ ${key.toUpperCase()} LOW`)
 
 item.q=Math.max(0,available-qty)
 
 breakdown[key]={qty,cost}
 totalCost+=cost
-}
+})
 
 const profit=revenue-totalCost
 
@@ -276,21 +268,12 @@ revenue,
 profit,
 margin:(profit/revenue*100)||0,
 materials:breakdown,
-alerts:alertsList,
-sqft:(n(sqftInput.value)||5000)*h
+alerts:alertsList
 })
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
-render()
-}
-
-// ================= CLEAR =================
-function clearJobs(){
-if(!confirm("Delete all jobs?"))return
-jobs=[]
-localStorage.removeItem("jobs")
 render()
 }
 
@@ -334,7 +317,7 @@ Revenue: $${j.revenue}<br>
 Profit: $${j.profit}<br>
 Margin: ${j.margin.toFixed(1)}%<br><br>
 ${matHTML}
-<b>Total Cost:</b> $${total.toFixed(0)}
+<b>Total Cost: $${total.toFixed(0)}</b>
 </div>
 `
 })
@@ -352,6 +335,13 @@ datasets:[
 ]
 }
 })
+}
+
+function clearJobs(){
+if(!confirm("Delete all jobs?"))return
+jobs=[]
+localStorage.removeItem("jobs")
+render()
 }
 
 const jobsDiv=document.getElementById("jobs")
