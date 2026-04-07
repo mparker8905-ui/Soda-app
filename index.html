@@ -42,7 +42,8 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <button onclick="autoFillPrice()">Auto Fill Price</button>
 
-<div id="priceDisplay"></div>
+<div id="priceDisplay" style="font-size:28px;font-weight:bold;margin-top:10px;"></div>
+<input id="jobPrice" type="hidden">
 
 <button onclick="createJob()">Create Job</button>
 
@@ -90,7 +91,7 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <script>
 
-// ================= STATE =================
+// ===== STATE =====
 let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
 let inv = JSON.parse(localStorage.getItem("inv")||"{}")
 let chart
@@ -100,7 +101,7 @@ const n=v=>parseFloat(v)||0
 const STANDARD_KEYS=["tttf","rye","mil","wood","tack"]
 const PREMIUM_KEYS=["elite","kbg","esp","bfm","tack","comp","bio","hum"]
 
-// ================= INVENTORY =================
+// ===== INVENTORY =====
 function saveInventory(){
 
 inv={
@@ -119,10 +120,10 @@ hum:{c:n(humCost.value),q:n(humQty.value)}
 }
 
 localStorage.setItem("inv",JSON.stringify(inv))
-alert("Saved ✅")
+alert("Inventory Saved ✅")
 }
 
-// ================= MATERIAL ENGINE =================
+// ===== MATERIAL ENGINE =====
 function getMaterials(tier,h){
 
 const sqft=n(document.getElementById("sqft").value)||5000
@@ -153,7 +154,7 @@ hum:0.2*k
 }
 }
 
-// ================= PRICING =================
+// ===== AUTO PRICE =====
 function autoFillPrice(){
 
 const h=n(houses.value)||1
@@ -176,8 +177,9 @@ materialCost+=qty*cost
 // LABOR
 const labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)
 
-// OVERHEAD
-const overhead=(materialCost+labor)*(n(overheadInput.value||15)/100)
+// OVERHEAD FIXED
+const overheadPercent = n(document.getElementById("overhead").value) || 15
+const overhead = (materialCost + labor) * (overheadPercent/100)
 
 // TOTAL
 const totalCost=materialCost+labor+overhead
@@ -192,20 +194,23 @@ else if(h>=50) price*=0.8
 else if(h>=25) price*=0.9
 else if(h>=2) price*=0.95
 
-priceDisplay.innerHTML=`<h2>$${price.toFixed(0)}</h2>`
+const final = price.toFixed(0)
 
+// DISPLAY + STORE
+priceDisplay.innerHTML=`$${final}`
+jobPrice.value=final
+window.finalPrice=Number(final)
+
+// DEBUG OUTPUT
 pricingOutput.innerHTML=`
 Materials: $${materialCost.toFixed(0)}<br>
 Labor: $${labor.toFixed(0)}<br>
 Overhead: $${overhead.toFixed(0)}<br>
 <b>Total Cost: $${totalCost.toFixed(0)}</b>
 `
-
-window.finalPrice=price
-window.lastMaterialCost=materialCost
 }
 
-// ================= CREATE JOB =================
+// ===== CREATE JOB =====
 function createJob(){
 
 if(!window.finalPrice){
@@ -230,11 +235,17 @@ const item=inv[key]
 if(!item || qty<=0) return
 
 const cost=qty*n(item.c)
+const remaining=item.q-qty
 
-if(qty>item.q) alertsList.push(`🚨 ${key} shortage`)
-else if(item.q-qty<5) alertsList.push(`⚠️ ${key} low`)
+// 🔥 ALERT FIX
+if(qty>item.q){
+alertsList.push(`🚨 ${key.toUpperCase()} OUT`)
+}
+else if(remaining<=5){
+alertsList.push(`⚠️ ${key.toUpperCase()} LOW (${remaining.toFixed(1)})`)
+}
 
-item.q-=qty
+item.q=Math.max(0,remaining)
 
 breakdown[key]={qty,cost}
 totalCost+=cost
@@ -258,7 +269,7 @@ localStorage.setItem("inv",JSON.stringify(inv))
 render()
 }
 
-// ================= RENDER =================
+// ===== RENDER =====
 function render(){
 
 let rev=0,prof=0,alertHTML=""
