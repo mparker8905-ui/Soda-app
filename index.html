@@ -25,12 +25,6 @@ h2{margin-top:0}
 <h2>Create Job</h2>
 <input id="name" placeholder="Customer Name">
 
-<select id="size">
-<option value="small">Small</option>
-<option value="medium">Medium</option>
-<option value="large">Large</option>
-</select>
-
 <select id="tier">
 <option value="standard">Standard</option>
 <option value="premium">Premium</option>
@@ -74,13 +68,17 @@ h2{margin-top:0}
 </div>
 
 <div class="card">
-<h2>Alerts</h2>
+<h2>Inventory Alerts</h2>
 <div id="alerts"></div>
 </div>
 
 <div class="card">
 <h2>Job History</h2>
 <div id="jobs"></div>
+
+<button onclick="clearJobs()" style="background:#ff4d4d">
+Clear Job History
+</button>
 </div>
 
 <div class="card">
@@ -245,6 +243,19 @@ localStorage.setItem("inv",JSON.stringify(inv))
 render()
 }
 
+// ================= CLEAR JOBS =================
+function clearJobs(){
+
+if(!confirm("Delete all job history?")) return
+
+jobs=[]
+localStorage.removeItem("jobs")
+
+render()
+
+alert("Job history cleared ✅")
+}
+
 // ================= RENDER =================
 function render(){
 
@@ -301,7 +312,6 @@ ${matHTML}
 `
 })
 
-// chart
 if(chart) chart.destroy()
 
 chart=new Chart(document.getElementById("chart"),{
