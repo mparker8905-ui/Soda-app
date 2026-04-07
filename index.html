@@ -35,15 +35,14 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 <option value="profit">Profit</option>
 </select>
 
-<!-- ✅ SIZE BUTTONS BACK -->
 <div class="flex">
 <button onclick="setSize(3000)">Small</button>
 <button onclick="setSize(6000)">Medium</button>
 <button onclick="setSize(10000)">Large</button>
 </div>
 
-<input id="sqft" value="3000" placeholder="Sq Ft">
-<input id="houses" value="1" placeholder="Houses">
+<input id="sqft" value="3000">
+<input id="houses" value="1">
 
 <h3>Add Ons</h3>
 <label><input type="checkbox" id="grow"> Grow</label>
@@ -93,7 +92,7 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 
 <script>
 
-// ---------- SAFE ----------
+// ---------- HELPERS ----------
 function n(v){return isNaN(Number(v))?0:Number(v)}
 
 // ---------- STATE ----------
@@ -143,17 +142,20 @@ localStorage.setItem("inv",JSON.stringify(inv))
 alert("Saved")
 }
 
-// ---------- PRICING ----------
+// ---------- PRICING ENGINE ----------
 function autoPrice(){
 
 let sqftVal=n(sqft.value)||1
 let h=n(houses.value)||1
 let totalSqft=sqftVal*h
 
-// ✅ ALWAYS VALID RATES
-let rates = tier.value==="premium"
-? {elite:7,kbg:2,esp:5,bfm:7,tack:1,comp:20,bio:3,hum:2}
-: {tttf:7,rye:5,mil:5,wood:7,tack:1}
+let rates={}
+
+if(tier.value==="premium"){
+rates={elite:7,kbg:2,esp:5,bfm:7,tack:1,comp:20,bio:3,hum:2}
+}else{
+rates={tttf:7,rye:5,mil:5,wood:7,tack:1}
+}
 
 if(compost.checked) rates.comp=20
 if(bio.checked) rates.bio=3
@@ -164,29 +166,43 @@ window.lastMaterials={}
 let html=""
 
 Object.keys(rates).forEach(k=>{
-let bags=Math.ceil((rates[k]*totalSqft)/1000)
-let cost=(inv[k]?.c||20)*bags // default cost fallback
+let qty=Math.max(1,Math.ceil((rates[k]*totalSqft)/1000))
+let costPer=inv[k]?.c||20
+let cost=qty*costPer
 
-window.lastMaterials[k]={qty:bags,cost:cost}
+window.lastMaterials[k]={qty,cost}
 materialCost+=cost
 
-html+=`${k}: ${bags} ($${cost})<br>`
+html+=`${k}: ${qty} ($${cost})<br>`
 })
 
-// ✅ LABOR
-let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)*h
+// LABOR
+let labor=Math.max(1,n(laborRate.value))*
+Math.max(1,n(crewSize.value))*
+Math.max(1,n(hours.value))*h
 
-// ✅ OVERHEAD
-let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
+// OVERHEAD
+let overheadCost=(materialCost+labor)*(n(overhead.value)/100||0.1)
 
-// ✅ GROW
+// GROW
 let growCost=grow.checked?300:0
 
 let totalCost=materialCost+labor+overheadCost+growCost
-let margin=n(margin.value)
 
-let price = totalCost/(1-(margin/100))
+// SAFE MARGIN
+let marginVal=n(margin.value)
+if(marginVal>=95) marginVal=60
 
+let divisor=1-(marginVal/100)
+if(divisor<=0) divisor=0.4
+
+let price=totalCost/divisor
+
+if(!price||!isFinite(price)||price<=0){
+price=totalCost*1.5
+}
+
+// STORE
 window.finalPrice=price
 window.lastMaterialCost=materialCost
 window.lastLabor=labor
@@ -203,7 +219,7 @@ pricingOutput.innerHTML=html+`
 <br><b>Total:$${totalCost}</b>`
 }
 
-// ---------- CREATE ----------
+// ---------- CREATE JOB ----------
 function runAndCreate(){
 autoPrice()
 setTimeout(createJob,50)
@@ -211,7 +227,11 @@ setTimeout(createJob,50)
 
 function createJob(){
 
-if(!window.finalPrice) return alert("Pricing not ready")
+if(!window.finalPrice||window.finalPrice<=0){
+alert("Pricing failed")
+autoPrice()
+return
+}
 
 let snapshot=JSON.parse(JSON.stringify(window.lastMaterials))
 let alertsArr=[]
@@ -222,9 +242,8 @@ if(!inv[k]) inv[k]={q:0,c:0}
 
 inv[k].q=Math.max(0,inv[k].q-used)
 
-// ✅ ALERT FIX
-if(inv[k].q===0) alertsArr.push(`${k} OUT`)
-else if(inv[k].q<10) alertsArr.push(`${k} LOW`)
+if(inv[k].q<=0) alertsArr.push(`${k.toUpperCase()} OUT`)
+else if(inv[k].q<10) alertsArr.push(`${k.toUpperCase()} LOW`)
 })
 
 let totalCost=window.lastMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow
@@ -246,7 +265,7 @@ localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
 render()
-alert("Job Created")
+alert("Job Created ✅")
 }
 
 // ---------- CLEAR ----------
@@ -279,30 +298,4 @@ Margin:${j.margin.toFixed(1)}%
 
 if(!alertsEl.innerHTML) alertsEl.innerHTML="No alerts"
 
-// chart
-if(window.chart) window.chart.destroy()
-
-window.chart=new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:jobs.map((_,i)=>"Job "+(i+1)),
-datasets:[
-{label:"Revenue",data:jobs.map(j=>j.revenue)},
-{label:"Profit",data:jobs.map(j=>j.profit)}
-]
-}
-})
-}
-
-// ---------- EVENTS ----------
-document.querySelectorAll("input,select").forEach(el=>{
-el.addEventListener("input",autoPrice)
-})
-
-render()
-autoPrice()
-
-</script>
-
-</body>
-</html>
+if(window.chart)
