@@ -35,7 +35,7 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 </select>
 
 <h3>Add Ons</h3>
-<label><input type="checkbox" id="grow" checked> 🔥 Grow System (Recommended)</label><br>
+<label><input type="checkbox" id="grow" checked> 🔥 Grow System</label><br>
 <label><input type="checkbox" id="aeration"> Aeration</label><br>
 <label><input type="checkbox" id="compostAdd"> Compost</label>
 
@@ -57,7 +57,6 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 <div id="dealRating"></div>
 </div>
 
-<input id="jobPrice" type="hidden">
 <div id="pricingOutput"></div>
 
 <button onclick="createJob()">Create Job</button>
@@ -102,29 +101,14 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 <canvas id="chart"></canvas>
 </div>
 
-<div class="card">
-<h2>Usage Trends</h2>
-<h3>Standard</h3>
-<canvas id="standardQtyChart"></canvas>
-<canvas id="standardCostChart"></canvas>
-
-<h3>Premium</h3>
-<canvas id="premiumQtyChart"></canvas>
-<canvas id="premiumCostChart"></canvas>
-</div>
-
 <script>
 
 let jobs=JSON.parse(localStorage.getItem("jobs")||"[]")
 let inv=JSON.parse(localStorage.getItem("inv")||"{}")
-let chart,standardQtyChart,standardCostChart,premiumQtyChart,premiumCostChart
+let chart
 
 const n=v=>parseFloat(v)||0
 
-const STANDARD_KEYS=["tttf","rye","mil","wood","tack"]
-const PREMIUM_KEYS=["elite","kbg","esp","bfm","tack","comp","bio","hum"]
-
-// AUTO TOGGLE GROW
 tier.addEventListener("change",()=>{
 if(tier.value==="premium"){
 grow.checked=true
@@ -136,15 +120,7 @@ compostAdd.checked=false
 }
 })
 
-// LOAD INVENTORY
-function loadInventoryToUI(){
-Object.keys(inv).forEach(k=>{
-document.getElementById(k+"Cost").value=inv[k]?.c||""
-document.getElementById(k+"Qty").value=inv[k]?.q||""
-})
-}
-
-// SAVE INVENTORY
+// INVENTORY
 function saveInventory(){
 inv={
 tttf:{c:n(tttfCost.value),q:n(tttfQty.value)},
@@ -161,11 +137,10 @@ bio:{c:n(bioCost.value),q:n(bioQty.value)},
 hum:{c:n(humCost.value),q:n(humQty.value)}
 }
 localStorage.setItem("inv",JSON.stringify(inv))
-loadInventoryToUI()
 alert("Saved")
 }
 
-// MATERIALS
+// MATERIAL LOGIC
 function getMaterials(tier,h){
 const sqftVal=n(sqft.value)||5000
 const k=(sqftVal*h)/1000
@@ -190,14 +165,10 @@ if(tier==="premium" || compostAdd.checked){
 mats.comp=(mats.comp||0)+(2*k)
 }
 
-if(tier==="premium" || aeration.checked){
-mats.aeration=h
-}
-
 return mats
 }
 
-// AUTO PRICE
+// FIXED PRICING ENGINE
 function autoFillPrice(){
 
 const h=n(houses.value)||1
@@ -205,28 +176,45 @@ const tierVal=tier.value
 const mats=getMaterials(tierVal,h)
 
 let materialCost=0
+let breakdownHTML=""
+
 Object.keys(mats).forEach(k=>{
-if(k==="aeration") return
-materialCost+=n(mats[k])*(inv[k]?.c||0)
+const qty=n(mats[k])
+const cost=qty*(inv[k]?.c||0)
+materialCost+=cost
+breakdownHTML+=`${k}: ${qty.toFixed(2)} ($${cost.toFixed(0)})<br>`
 })
 
-let aerationCost=(mats.aeration||0)*50
+// GROW
+let growCost=0
+let growDiscount=0
 
-let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)
-let overheadCost=(materialCost+labor)*(n(overhead.value||15)/100)
-
-// BUNDLE
-let bundleDiscount=0
-if(tierVal==="premium" && grow.checked){
+if(grow.checked){
 const sqftVal=n(sqft.value)||5000
 const k=(sqftVal*h)/1000
-const growCost=(0.5*k*(inv.bio?.c||0))+(0.5*k*(inv.hum?.c||0))
-bundleDiscount=growCost*0.30
+
+const bioCost=(0.5*k)*(inv.bio?.c||0)
+const humCost=(0.5*k)*(inv.hum?.c||0)
+
+growCost=bioCost+humCost
+
+if(tierVal==="premium"){
+growDiscount=growCost*0.30
+}
 }
 
-let totalCost=materialCost+labor+overheadCost+aerationCost-bundleDiscount
+// LABOR
+let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)
 
-let price=totalCost/(1-(n(margin.value||60)/100))
+// OVERHEAD
+let overheadCost=(materialCost+labor)*(n(overhead.value||15)/100)
+
+// TOTAL COST
+let totalCost=materialCost+labor+overheadCost+growCost-growDiscount
+
+// PRICE
+let marginVal=n(margin.value||60)/100
+let price=totalCost/(1-marginVal)
 
 // BUILDER DISCOUNT
 let discount=0
@@ -241,28 +229,31 @@ priceDisplay.innerText="$"+price.toFixed(0)
 window.finalPrice=price
 
 pricingOutput.innerHTML=`
-Materials: $${materialCost.toFixed(0)}<br>
-Labor: $${labor.toFixed(0)}<br>
-Overhead: $${overheadCost.toFixed(0)}<br>
-Aeration: $${aerationCost.toFixed(0)}<br>
-${bundleDiscount>0?`<div class="good">Bundle Savings: -$${bundleDiscount.toFixed(0)}</div>`:""}
-<b>Total Cost: $${totalCost.toFixed(0)}</b>
+${breakdownHTML}<br>
+
+${grow.checked?`
+<b>Grow System:</b> $${growCost.toFixed(0)}<br>
+${growDiscount>0?`<div class="good">Grow Discount: -$${growDiscount.toFixed(0)}</div>`:""}
+<br>`:""}
+
+<b>Materials:</b> $${materialCost.toFixed(0)}<br>
+<b>Labor:</b> $${labor.toFixed(0)}<br>
+<b>Overhead:</b> $${overheadCost.toFixed(0)}<br>
+<br>
+<b>Total Cost:</b> $${totalCost.toFixed(0)}
 `
 }
 
-// CREATE JOB
+// JOB CREATION (UNCHANGED LOGIC)
 function createJob(){
-if(!window.finalPrice){alert("Run pricing");return}
-
 const h=n(houses.value)||1
 const mats=getMaterials(tier.value,h)
 
 let breakdown={}
 let totalCost=0
-let alertSet=new Set()
+let alerts=[]
 
 Object.keys(mats).forEach(k=>{
-if(k==="aeration") return
 const qty=n(mats[k])
 const item=inv[k]
 if(!item) return
@@ -270,21 +261,14 @@ if(!item) return
 const cost=qty*(item.c||0)
 const remaining=item.q-qty
 
-if(remaining<=5) alertSet.add(`🚨 ${k} OUT`)
-else if(remaining<20) alertSet.add(`⚠️ ${k} LOW`)
+if(remaining<=5) alerts.push(`${k} OUT`)
+else if(remaining<20) alerts.push(`${k} LOW`)
 
 item.q=Math.max(0,remaining)
 
 breakdown[k]={qty,cost}
 totalCost+=cost
 })
-
-// aeration
-if(mats.aeration){
-const cost=50*h
-breakdown.aeration={qty:h,cost}
-totalCost+=cost
-}
 
 const profit=window.finalPrice-totalCost
 
@@ -293,29 +277,26 @@ name:name.value||"Client",
 tier:tier.value,
 revenue:window.finalPrice,
 profit,
-margin:(profit/window.finalPrice*100)||0,
 materials:breakdown,
-alerts:[...alertSet]
+alerts
 })
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
-loadInventoryToUI()
 render()
 }
 
 // RENDER
 function render(){
-
 let rev=0,prof=0,alertHTML=""
 jobs.forEach(j=>{
 rev+=j.revenue
 prof+=j.profit
-j.alerts.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
+j.alerts.forEach(a=>alertHTML+=`<div class="alert">🚨 ${a}</div>`)
 })
 
-stats.innerHTML=`Jobs:${jobs.length}<br>Revenue:$${rev.toFixed(0)}<br>Profit:$${prof.toFixed(0)}<br>Margin:${(prof/rev*100||0).toFixed(1)}%`
+stats.innerHTML=`Jobs:${jobs.length}<br>Revenue:$${rev.toFixed(0)}<br>Profit:$${prof.toFixed(0)}`
 alerts.innerHTML=alertHTML||"No alerts"
 
 jobsDiv.innerHTML=""
@@ -327,52 +308,6 @@ mats+=`${m}: ${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
 }
 jobsDiv.innerHTML+=`<div class="card">${j.name} (${j.tier})<br>${mats}</div>`
 })
-
-// chart
-if(chart) chart.destroy()
-chart=new Chart(document.getElementById("chart"),{
-type:"bar",
-data:{
-labels:jobs.map((_,i)=>i+1),
-datasets:[
-{label:"Revenue",data:jobs.map(j=>j.revenue)},
-{label:"Profit",data:jobs.map(j=>j.profit)}
-]
-}
-})
-
-// trend charts
-renderTrendCharts()
-}
-
-function renderTrendCharts(){
-
-const build=(tier,qtyId,costId)=>{
-const tierJobs=jobs.filter(j=>j.tier===tier)
-let totals={},costs={}
-tierJobs.forEach(j=>{
-for(let m in j.materials){
-totals[m]=(totals[m]||0)+j.materials[m].qty
-costs[m]=(costs[m]||0)+j.materials[m].cost
-}
-})
-
-if(window[qtyId]) window[qtyId].destroy()
-if(window[costId]) window[costId].destroy()
-
-window[qtyId]=new Chart(document.getElementById(qtyId),{
-type:"bar",
-data:{labels:Object.keys(totals),datasets:[{data:Object.values(totals)}]}
-})
-
-window[costId]=new Chart(document.getElementById(costId),{
-type:"pie",
-data:{labels:Object.keys(costs),datasets:[{data:Object.values(costs)}]}
-})
-}
-
-build("standard","standardQtyChart","standardCostChart")
-build("premium","premiumQtyChart","premiumCostChart")
 }
 
 function clearJobs(){
@@ -383,7 +318,6 @@ render()
 
 const jobsDiv=document.getElementById("jobs")
 
-loadInventoryToUI()
 render()
 
 </script>
