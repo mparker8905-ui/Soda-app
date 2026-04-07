@@ -3,7 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -11,11 +10,11 @@ body{font-family:Arial;background:#000;color:#fff;padding:20px;}
 .card{background:#111;padding:20px;border-radius:20px;margin-bottom:20px;}
 input,select{width:100%;padding:14px;margin:6px 0;border-radius:10px;border:none;background:#222;color:#fff;}
 button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;background:gold;font-weight:bold;}
-.flex{display:flex;gap:10px}
 .price-box{border:2px solid gold;padding:20px;border-radius:20px;text-align:center;}
 .big{font-size:34px}
 .alert{color:red}
 .good{color:lime}
+.flex{display:flex;gap:10px}
 </style>
 </head>
 
@@ -31,7 +30,6 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <option value="premium">🔥 Premium</option>
 </select>
 
-<h3>Bid Strategy</h3>
 <select id="bidMode">
 <option value="win">Win Job</option>
 <option value="balanced" selected>Balanced</option>
@@ -56,16 +54,15 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <label><input type="checkbox" id="hum"> Humic Acid</label>
 
 <h3>Labor & Overhead</h3>
-<input id="laborRate" placeholder="Labor Rate ($/hr)" value="70">
-<input id="crewSize" placeholder="Crew Size" value="2">
-<input id="hours" placeholder="Hours Per House" value="8">
-<input id="overhead" placeholder="Overhead (%)" value="15">
-<input id="margin" placeholder="Base Margin (%)" value="60">
+<input id="laborRate" value="70" placeholder="Labor Rate ($/hr)">
+<input id="crewSize" value="2" placeholder="Crew Size">
+<input id="hours" value="8" placeholder="Hours Per House">
+<input id="overhead" value="15" placeholder="Overhead (%)">
+<input id="margin" value="60" placeholder="Base Margin (%)">
 
 <div class="price-box">
 <div>Final Investment</div>
 <div id="priceDisplay" class="big">$0</div>
-<div id="tierBadge"></div>
 <div id="dealScore"></div>
 </div>
 
@@ -76,7 +73,7 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 </div>
 
 <div class="card">
-<h2>Inventory</h2>
+<h2>Inventory (Cost per Unit + Qty)</h2>
 <div id="inventoryInputs"></div>
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
@@ -98,12 +95,19 @@ let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
 
 const materials = ["tttf","rye","elite","kbg","mil","esp","wood","bfm","tack","comp","bio","hum"]
 
+// ✅ REAL COVERAGE (FIXES YOUR ISSUE)
+const coverage = {
+tttf:1000, rye:1000, elite:1000, kbg:1000,
+mil:500, esp:500, wood:500, bfm:500,
+tack:2000, comp:1000, bio:2000, hum:4000
+}
+
 function renderInventoryInputs(){
 inventoryInputs.innerHTML=""
 materials.forEach(m=>{
 inventoryInputs.innerHTML+=`
-<input id="${m}C" placeholder="${m} cost">
-<input id="${m}Q" placeholder="${m} qty">
+<input id="${m}C" placeholder="${m} cost per unit">
+<input id="${m}Q" placeholder="${m} quantity">
 `
 })
 }
@@ -114,7 +118,7 @@ materials.forEach(m=>{
 inv[m]={c:n(document.getElementById(m+"C").value),q:n(document.getElementById(m+"Q").value)}
 })
 localStorage.setItem("inv",JSON.stringify(inv))
-alert("Saved")
+alert("Inventory Saved")
 }
 
 function handleTier(){
@@ -151,20 +155,7 @@ if(bidMode.value==="profit")base+=10
 return Math.max(25,Math.min(70,base))
 }
 
-function detectProfitLeaks(totalCost, price, materialCost, labor, overheadCost){
-let warnings=[]
-let margin=((price-totalCost)/price)*100
-
-if(margin<35)warnings.push("⚠️ Low margin")
-if(margin<25)warnings.push("🚨 High risk job")
-if(labor>materialCost)warnings.push("⚠️ Labor > Materials")
-
-return warnings
-}
-
 function autoFillPrice(){
-
-if(Object.keys(inv).length===0){return}
 
 let sqftVal=n(sqft.value)
 if(!sqftVal)return
@@ -172,64 +163,75 @@ if(!sqftVal)return
 let h=n(houses.value)||1
 let totalSqft=sqftVal*h
 
-let rates=tier.value==="premium"?
-{elite:.08,kbg:.02,esp:.05,bfm:.08,tack:.01,comp:.03,bio:.008,hum:.005}:
+let rates = tier.value==="premium" ?
+{elite:.08,kbg:.02,esp:.05,bfm:.08,tack:.01,comp:.03,bio:.008,hum:.005} :
 {tttf:.085,rye:.015,mil:.05,wood:.08,tack:.01,
 comp:compost.checked?.03:0,
 bio:bio.checked?.008:0,
 hum:hum.checked?.005:0}
 
-let materialCost=0,html=""
+let materialCost=0
+let html=""
 window.lastMaterials={}
 
 Object.keys(rates).forEach(k=>{
-let qty=rates[k]*totalSqft
-let costPerUnit=inv[k]?.c||0
-let cost=qty*costPerUnit
+
+let qty = (rates[k]*totalSqft)/coverage[k]
+let costPerUnit = inv[k]?.c || 0
+
+let cost = qty * costPerUnit
 
 window.lastMaterials[k]={qty,cost}
-
 materialCost+=cost
-html+=`${k}: ${qty.toFixed(1)} ($${cost.toFixed(0)})<br>`
+
+html += `${k}: ${qty.toFixed(2)} units ($${cost.toFixed(0)})<br>`
+
 })
 
 let efficiency=getEfficiency(h)
-let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)*h*efficiency
-let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
+
+// ✅ CORRECT LABOR CALCULATION
+let labor = n(laborRate.value) * n(crewSize.value) * n(hours.value) * h * efficiency
+
+let overheadCost = (materialCost + labor) * (n(overhead.value)/100)
 
 let growCost=0
 if(grow.checked){
-growCost = tier.value==="standard"?300: (h>=50?0:200)
+growCost = tier.value==="standard" ? 300 : (h>=50?0:200)
 }
 
-let totalCost=materialCost+labor+overheadCost+growCost
+let totalCost = materialCost + labor + overheadCost + growCost
 if(totalCost<=0)return
 
 let smartMargin=getSmartMargin()
-let price=totalCost/(1-(smartMargin/100))
+let price = totalCost / (1 - smartMargin/100)
 
 window.finalPrice=price
 window.lastLabor=labor
 window.lastOverhead=overheadCost
 window.lastGrow=growCost
+window.lastMaterialCost=materialCost
 
 priceDisplay.innerText="$"+price.toFixed(0)
 
-let marginReal=((price-totalCost)/price)*100
-dealScore.innerHTML=marginReal>50?"🔥 A DEAL":"👍 OK"
+let realMargin=((price-totalCost)/price)*100
+dealScore.innerHTML = realMargin>50?"🔥 A DEAL":"👍 OK"
 
-tierBadge.innerHTML=tier.value==="premium"?"🌱 Premium Lawn":"✔ Standard"
+pricingOutput.innerHTML = html + `
+<br>Materials: $${materialCost.toFixed(0)}
+<br>Labor: $${labor.toFixed(0)}
+<br>Overhead: $${overheadCost.toFixed(0)}
+<br>Grow: $${growCost}
+<br><b>Total Cost: $${totalCost.toFixed(0)}</b>
+<br>Margin: ${smartMargin}%`
 
-pricingOutput.innerHTML=html+`
-<br>Materials:$${materialCost.toFixed(0)}
-<br>Labor:$${labor.toFixed(0)}
-<br>Overhead:$${overheadCost.toFixed(0)}
-<br>Grow:$${growCost}
-<br><b>Total Cost:$${totalCost.toFixed(0)}</b>
-<br>Margin:${smartMargin}%`
+let warnings=[]
+if(realMargin<35)warnings.push("⚠️ Low margin")
+if(labor>materialCost)warnings.push("⚠️ Labor > Materials")
 
-let warnings=detectProfitLeaks(totalCost,price,materialCost,labor,overheadCost)
-profitWarnings.innerHTML=warnings.map(w=>`<div class="alert">${w}</div>`).join("") || "<div class='good'>✔ Healthy</div>"
+profitWarnings.innerHTML = warnings.length ?
+warnings.map(w=>`<div class="alert">${w}</div>`).join("") :
+`<div class="good">✔ Healthy</div>`
 
 createBtn.disabled=false
 }
@@ -239,21 +241,20 @@ function createJob(){
 if(!window.finalPrice)return
 
 let alertsArr=[]
-let totalMaterialCost=0
 
 Object.keys(window.lastMaterials).forEach(k=>{
-let used=window.lastMaterials[k].qty
-inv[k].q-=used
+let used = window.lastMaterials[k].qty
+if(inv[k]){
+inv[k].q -= used
 
 if(inv[k].q<=5)alertsArr.push(k+" OUT")
 else if(inv[k].q<20)alertsArr.push(k+" LOW")
-
-totalMaterialCost+=window.lastMaterials[k].cost
+}
 })
 
-let totalCost=totalMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow
-let profit=window.finalPrice-totalCost
-let margin=(profit/window.finalPrice)*100
+let totalCost = window.lastMaterialCost + window.lastLabor + window.lastOverhead + window.lastGrow
+let profit = window.finalPrice - totalCost
+let margin = (profit / window.finalPrice) * 100
 
 jobs.push({
 name:name.value||"Client",
@@ -273,14 +274,15 @@ render()
 function render(){
 
 jobsDiv.innerHTML=""
-let aHTML=""
+let alertHTML=""
 
 jobs.forEach(j=>{
-j.alerts.forEach(a=>aHTML+=`<div class="alert">${a}</div>`)
+
+j.alerts.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
 
 let mats=""
 for(let m in j.materials){
-mats+=`${m}: ${j.materials[m].qty.toFixed(1)} ($${j.materials[m].cost.toFixed(0)})<br>`
+mats+=`${m}: ${j.materials[m].qty.toFixed(2)} ($${j.materials[m].cost.toFixed(0)})<br>`
 }
 
 jobsDiv.innerHTML+=`
@@ -293,16 +295,20 @@ Margin:${j.margin.toFixed(1)}%
 </div>`
 })
 
-alerts.innerHTML=aHTML||"No alerts"
+alerts.innerHTML = alertHTML || "No alerts"
 
+// chart
 if(window.chart)chart.destroy()
-chart=new Chart(document.getElementById("chart"),{
+
+chart = new Chart(document.getElementById("chart"),{
 type:"bar",
-data:{labels:jobs.map((_,i)=>"Job "+(i+1)),
+data:{
+labels:jobs.map((_,i)=>"Job "+(i+1)),
 datasets:[
 {label:"Revenue",data:jobs.map(j=>j.revenue)},
 {label:"Profit",data:jobs.map(j=>j.profit)}
-]}
+]
+}
 })
 }
 
