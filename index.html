@@ -12,6 +12,7 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 .alert{color:#ff4d4d}
 .good{color:#00ff88}
 .warn{color:#ffd700}
+.priceBox{border:2px solid #d4af37;padding:20px;border-radius:16px;text-align:center;margin-top:15px}
 </style>
 </head>
 
@@ -32,7 +33,7 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 <option value="premium">Premium</option>
 </select>
 
-<input id="houses" type="number" value="1">
+<input id="houses" type="number" value="1" placeholder="Houses">
 <input id="sqft" placeholder="Sq Ft Per House">
 <input id="margin" placeholder="Target Margin % (default 60)">
 
@@ -44,9 +45,9 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <button onclick="autoFillPrice()">Auto Fill Price</button>
 
-<div id="priceCard" style="margin-top:20px;padding:20px;border:2px solid #d4af37;border-radius:16px;text-align:center;">
-<div style="opacity:.6;">Final Price</div>
-<div id="priceDisplay" style="font-size:42px;font-weight:bold;">$0</div>
+<div class="priceBox">
+<div>Final Price</div>
+<div id="priceDisplay" style="font-size:40px">$0</div>
 <div id="dealRating"></div>
 </div>
 
@@ -66,17 +67,17 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 <input id="eliteCost" placeholder="Elite Cost"><input id="eliteQty" placeholder="Elite Qty">
 <input id="kbgCost" placeholder="KBG Cost"><input id="kbgQty" placeholder="KBG Qty">
 
-<input id="milCost" placeholder="Milorganite Cost"><input id="milQty" placeholder="Mil Qty">
-<input id="espCost" placeholder="Espoma Cost"><input id="espQty" placeholder="Esp Qty">
+<input id="milCost" placeholder="Mil Cost"><input id="milQty" placeholder="Mil Qty">
+<input id="espCost" placeholder="Esp Cost"><input id="espQty" placeholder="Esp Qty">
 
-<input id="woodCost" placeholder="Wood Mulch Cost"><input id="woodQty" placeholder="Wood Qty">
+<input id="woodCost" placeholder="Wood Cost"><input id="woodQty" placeholder="Wood Qty">
 <input id="bfmCost" placeholder="BFM Cost"><input id="bfmQty" placeholder="BFM Qty">
 
 <input id="tackCost" placeholder="Tack Cost"><input id="tackQty" placeholder="Tack Qty">
 
-<input id="compCost" placeholder="Compost Cost"><input id="compQty" placeholder="Comp Qty">
+<input id="compCost" placeholder="Comp Cost"><input id="compQty" placeholder="Comp Qty">
 <input id="bioCost" placeholder="Bio Cost"><input id="bioQty" placeholder="Bio Qty">
-<input id="humCost" placeholder="Humic Cost"><input id="humQty" placeholder="Hum Qty">
+<input id="humCost" placeholder="Hum Cost"><input id="humQty" placeholder="Hum Qty">
 
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
@@ -99,7 +100,6 @@ button{width:100%;padding:14px;background:#d4af37;border:none;border-radius:12px
 
 <script>
 
-// ===== STATE =====
 let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
 let inv = JSON.parse(localStorage.getItem("inv")||"{}")
 let chart
@@ -109,7 +109,49 @@ const n=v=>parseFloat(v)||0
 const STANDARD_KEYS=["tttf","rye","mil","wood","tack"]
 const PREMIUM_KEYS=["elite","kbg","esp","bfm","tack","comp","bio","hum"]
 
-// ===== INVENTORY =====
+// ===== LOAD INVENTORY INTO UI =====
+function loadInventoryToUI(){
+
+if(!inv) return
+
+tttfCost.value=inv.tttf?.c||""
+tttfQty.value=inv.tttf?.q||""
+
+ryeCost.value=inv.rye?.c||""
+ryeQty.value=inv.rye?.q||""
+
+eliteCost.value=inv.elite?.c||""
+eliteQty.value=inv.elite?.q||""
+
+kbgCost.value=inv.kbg?.c||""
+kbgQty.value=inv.kbg?.q||""
+
+milCost.value=inv.mil?.c||""
+milQty.value=inv.mil?.q||""
+
+espCost.value=inv.esp?.c||""
+espQty.value=inv.esp?.q||""
+
+woodCost.value=inv.wood?.c||""
+woodQty.value=inv.wood?.q||""
+
+bfmCost.value=inv.bfm?.c||""
+bfmQty.value=inv.bfm?.q||""
+
+tackCost.value=inv.tack?.c||""
+tackQty.value=inv.tack?.q||""
+
+compCost.value=inv.comp?.c||""
+compQty.value=inv.comp?.q||""
+
+bioCost.value=inv.bio?.c||""
+bioQty.value=inv.bio?.q||""
+
+humCost.value=inv.hum?.c||""
+humQty.value=inv.hum?.q||""
+}
+
+// ===== SAVE INVENTORY =====
 function saveInventory(){
 inv={
 tttf:{c:n(tttfCost.value),q:n(tttfQty.value)},
@@ -125,11 +167,13 @@ comp:{c:n(compCost.value),q:n(compQty.value)},
 bio:{c:n(bioCost.value),q:n(bioQty.value)},
 hum:{c:n(humCost.value),q:n(humQty.value)}
 }
+
 localStorage.setItem("inv",JSON.stringify(inv))
+loadInventoryToUI()
 alert("Saved ✅")
 }
 
-// ===== MATERIAL ENGINE =====
+// ===== MATERIALS =====
 function getMaterials(tier,h){
 const sqft=n(document.getElementById("sqft").value)||5000
 const k=(sqft*h)/1000
@@ -163,115 +207,73 @@ function autoFillPrice(){
 
 const h=n(houses.value)||1
 const tierVal=tier.value
-
 const mats=getMaterials(tierVal,h)
 const allowed=tierVal==="standard"?STANDARD_KEYS:PREMIUM_KEYS
 
 let materialCost=0
 
-allowed.forEach(key=>{
-const qty=n(mats[key])
-const cost=n(inv[key]?.c)
+allowed.forEach(k=>{
+const qty=n(mats[k])
+const cost=n(inv[k]?.c)
 if(qty>0 && cost>0) materialCost+=qty*cost
 })
 
-// labor
 const labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)
+const overheadCost=(materialCost+labor)*(n(overhead.value||15)/100)
 
-// overhead
-const overheadPercent=n(overhead.value)||15
-const overheadCost=(materialCost+labor)*(overheadPercent/100)
-
-// total cost
 const totalCost=materialCost+labor+overheadCost
 
-// margin
-const targetMargin=n(document.getElementById("margin").value)||60
-let basePrice=totalCost/(1-(targetMargin/100))
+let price=totalCost/(1-(n(margin.value||60)/100))
 
-// REAL margin
-let profit=basePrice-totalCost
-let marginReal=(profit/basePrice)*100
-
-// ===== PROFIT PROTECTION =====
-const MIN_MARGIN=35
-
-if(marginReal<MIN_MARGIN){
-basePrice=totalCost/(1-(MIN_MARGIN/100))
-marginReal=MIN_MARGIN
-}
-
-// ===== BUILDER DISCOUNT =====
 let discount=0
-
 if(h<10) discount=0.05
-else if(h>=10 && h<25) discount=0.10
-else if(h>=25 && h<100) discount=0.20
-else if(h>=100) discount=0.30
+else if(h<25) discount=0.10
+else if(h<100) discount=0.20
+else discount=0.30
 
-const finalPrice=basePrice*(1-discount)
+price=price*(1-discount)
 
-// ===== DISPLAY =====
-priceDisplay.innerText=`$${finalPrice.toFixed(0)}`
-jobPrice.value=finalPrice
-window.finalPrice=finalPrice
+priceDisplay.innerText=`$${price.toFixed(0)}`
+jobPrice.value=price
+window.finalPrice=price
 
-// rating
-const rating=document.getElementById("dealRating")
-
-if(marginReal>60){
-rating.innerHTML="<span class='good'>A+ DEAL 💰</span>"
-}
-else if(marginReal>40){
-rating.innerHTML="<span class='warn'>B DEAL 👍</span>"
-}
-else{
-rating.innerHTML="<span class='alert'>C DEAL ⚠️</span>"
-}
-
-// breakdown
 pricingOutput.innerHTML=`
-<div class="card">Materials: $${materialCost.toFixed(0)}</div>
-<div class="card">Labor: $${labor.toFixed(0)}</div>
-<div class="card">Overhead: $${overheadCost.toFixed(0)}</div>
-<div class="card"><b>Total Cost: $${totalCost.toFixed(0)}</b></div>
-<div class="card"><b>Builder Discount: ${(discount*100)}%</b></div>
+Materials: $${materialCost.toFixed(0)}<br>
+Labor: $${labor.toFixed(0)}<br>
+Overhead: $${overheadCost.toFixed(0)}<br>
+<b>Total Cost: $${totalCost.toFixed(0)}</b>
 `
 }
 
 // ===== CREATE JOB =====
 function createJob(){
 
-if(!window.finalPrice){
-alert("Run Auto Fill Price")
-return
-}
+if(!window.finalPrice){alert("Run Auto Fill");return}
 
 const h=n(houses.value)||1
 const tierVal=tier.value
-
 const mats=getMaterials(tierVal,h)
 const allowed=tierVal==="standard"?STANDARD_KEYS:PREMIUM_KEYS
 
 let breakdown={}
 let totalCost=0
-let alertsList=[]
+let alertSet=new Set()
 
-allowed.forEach(key=>{
-const qty=n(mats[key])
-const item=inv[key]
+allowed.forEach(k=>{
+const qty=n(mats[k])
+const item=inv[k]
 
-if(!item || qty<=0) return
+if(!item) return
 
 const cost=qty*n(item.c)
 const remaining=item.q-qty
 
-if(qty>item.q) alertsList.push(`🚨 ${key} OUT`)
-else if(remaining<=5) alertsList.push(`⚠️ ${key} LOW (${remaining.toFixed(1)})`)
+if(qty>item.q) alertSet.add(`${k} OUT`)
+else if(remaining<=5) alertSet.add(`${k} LOW`)
 
 item.q=Math.max(0,remaining)
 
-breakdown[key]={qty,cost}
+breakdown[k]={qty,cost}
 totalCost+=cost
 })
 
@@ -284,12 +286,13 @@ revenue:window.finalPrice,
 profit,
 margin:(profit/window.finalPrice*100)||0,
 materials:breakdown,
-alerts:alertsList
+alerts:[...alertSet]
 })
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
+loadInventoryToUI()
 render()
 }
 
@@ -297,7 +300,6 @@ render()
 function render(){
 
 let rev=0,prof=0,alertHTML=""
-
 jobs.forEach(j=>{
 rev+=j.revenue
 prof+=j.profit
@@ -318,7 +320,6 @@ jobsDiv.innerHTML=""
 jobs.slice().reverse().forEach(j=>{
 let mats=""
 let total=0
-
 for(let m in j.materials){
 const d=j.materials[m]
 total+=d.cost
@@ -337,9 +338,7 @@ ${mats}
 `
 })
 
-// chart
 if(chart) chart.destroy()
-
 chart=new Chart(document.getElementById("chart"),{
 type:"bar",
 data:{
@@ -360,6 +359,7 @@ render()
 
 const jobsDiv=document.getElementById("jobs")
 
+loadInventoryToUI()
 render()
 
 </script>
