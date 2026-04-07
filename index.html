@@ -88,13 +88,18 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 
 <script>
 
-function n(v){return Number(v)||0}
+// ---------- HELPERS ----------
+function n(v){ return Number(v) || 0 }
 
-let inv = JSON.parse(localStorage.getItem("inv")||"{}")
-let jobs = JSON.parse(localStorage.getItem("jobs")||"[]")
+const jobsEl = document.getElementById("jobs")
+const alertsEl = document.getElementById("alerts")
+
+let inv = JSON.parse(localStorage.getItem("inv") || "{}")
+let jobs = JSON.parse(localStorage.getItem("jobs") || "[]")
 
 const materials = ["tttf","rye","elite","kbg","mil","esp","wood","bfm","tack","comp","bio","hum"]
 
+// ---------- INVENTORY UI ----------
 function renderInventoryInputs(){
 inventoryInputs.innerHTML=""
 materials.forEach(m=>{
@@ -114,6 +119,7 @@ localStorage.setItem("inv",JSON.stringify(inv))
 alert("Inventory Saved")
 }
 
+// ---------- TIER ----------
 function handleTier(){
 if(tier.value==="premium"){
 aeration.checked=true
@@ -123,8 +129,9 @@ hum.checked=true
 }
 }
 
-function setSize(v){sqft.value=v; autoFillPrice()}
+function setSize(v){sqft.value=v; autoFillPriceWrapper()}
 
+// ---------- LABOR ----------
 function getEfficiency(h){
 if(h<=3)return 1
 if(h<=9)return .9
@@ -134,6 +141,7 @@ if(h<=99)return .6
 return .5
 }
 
+// ---------- MARGIN ----------
 function getSmartMargin(){
 let base=n(margin.value)
 let h=n(houses.value)||1
@@ -148,13 +156,14 @@ if(bidMode.value==="profit")base+=10
 return Math.max(25,Math.min(70,base))
 }
 
-// ✅ REAL MATERIAL SYSTEM (FIXED)
+// ---------- MATERIAL ENGINE ----------
 let bagSize = {
 tttf:50, rye:50, elite:50, kbg:50,
 mil:50, esp:50, wood:50, bfm:50,
 tack:25, comp:40, bio:40, hum:40
 }
 
+// ---------- AUTO PRICE ----------
 function autoFillPrice(){
 
 let sqftVal=n(sqft.value)
@@ -164,9 +173,9 @@ let h=n(houses.value)||1
 let totalSqft=sqftVal*h
 
 let ratesPerK = tier.value==="premium" ? {
-elite:7, kbg:2, esp:5, bfm:7, tack:1, comp:20, bio:3, hum:2
+elite:7,kbg:2,esp:5,bfm:7,tack:1,comp:20,bio:3,hum:2
 } : {
-tttf:7, rye:5, mil:5, wood:7, tack:1,
+tttf:7,rye:5,mil:5,wood:7,tack:1,
 comp:compost.checked?20:0,
 bio:bio.checked?3:0,
 hum:hum.checked?2:0
@@ -187,7 +196,7 @@ let cost = units * costPerUnit
 window.lastMaterials[k]={qty:units,cost}
 materialCost+=cost
 
-html += `${k}: ${units.toFixed(2)} bags ($${cost.toFixed(0)})<br>`
+html+=`${k}: ${units.toFixed(2)} bags ($${cost.toFixed(0)})<br>`
 })
 
 let efficiency=getEfficiency(h)
@@ -232,36 +241,56 @@ if(labor>materialCost)warnings.push("⚠️ Labor > Materials")
 profitWarnings.innerHTML = warnings.length ?
 warnings.map(w=>`<div class="alert">${w}</div>`).join("") :
 `<div class="good">✔ Healthy</div>`
-
-createBtn.disabled=false
 }
 
+// ---------- VALIDATION ----------
+function validatePricing(){
+return window.finalPrice && window.lastMaterialCost>=0
+}
+
+function autoFillPriceWrapper(){
+autoFillPrice()
+createBtn.disabled = !validatePricing()
+}
+
+// ---------- CREATE JOB ----------
 function createJob(){
 
-if(!window.finalPrice)return
+if(!validatePricing()){
+alert("Run pricing first")
+return
+}
+
+let materialSnapshot = JSON.parse(JSON.stringify(window.lastMaterials))
 
 let alertsArr=[]
+let totalMaterialCost=0
 
-Object.keys(window.lastMaterials).forEach(k=>{
-let used = window.lastMaterials[k].qty
+Object.keys(materialSnapshot).forEach(k=>{
+
+let used = n(materialSnapshot[k].qty)
+
 if(inv[k]){
-inv[k].q -= used
+inv[k].q = Math.max(0, n(inv[k].q) - used)
 
-if(inv[k].q<=5)alertsArr.push(k+" OUT")
-else if(inv[k].q<20)alertsArr.push(k+" LOW")
+if(inv[k].q<=5)alertsArr.push(`🚨 ${k.toUpperCase()} OUT`)
+else if(inv[k].q<20)alertsArr.push(`⚠️ ${k.toUpperCase()} LOW`)
 }
+
+totalMaterialCost+=materialSnapshot[k].cost
 })
 
-let totalCost = window.lastMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow
-let profit = window.finalPrice-totalCost
-let margin = (profit/window.finalPrice)*100
+let totalCost = totalMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow
+let revenue = window.finalPrice
+let profit = revenue-totalCost
+let margin = (profit/revenue)*100
 
 jobs.push({
 name:name.value||"Client",
-revenue:window.finalPrice,
+revenue,
 profit,
 margin,
-materials:window.lastMaterials,
+materials:materialSnapshot,
 alerts:alertsArr
 })
 
@@ -269,11 +298,15 @@ localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
 render()
+alert("Job Created ✅")
 }
 
+// ---------- RENDER ----------
 function render(){
 
-jobsDiv.innerHTML=""
+jobsEl.innerHTML=""
+alertsEl.innerHTML=""
+
 let alertHTML=""
 
 jobs.forEach(j=>{
@@ -281,13 +314,13 @@ jobs.forEach(j=>{
 j.alerts.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
 
 let mats=""
-for(let m in j.materials){
+Object.keys(j.materials).forEach(m=>{
 mats+=`${m}: ${j.materials[m].qty.toFixed(2)} ($${j.materials[m].cost.toFixed(0)})<br>`
-}
+})
 
-jobsDiv.innerHTML+=`
+jobsEl.innerHTML+=`
 <div class="card">
-<b>${j.name}</b><br>
+<b>${j.name}</b><br><br>
 ${mats}
 Revenue:$${j.revenue.toFixed(0)}<br>
 Profit:$${j.profit.toFixed(0)}<br>
@@ -295,7 +328,7 @@ Margin:${j.margin.toFixed(1)}%
 </div>`
 })
 
-alerts.innerHTML = alertHTML || "No alerts"
+alertsEl.innerHTML = alertHTML || "No alerts"
 
 if(window.chart)chart.destroy()
 
@@ -311,8 +344,9 @@ datasets:[
 })
 }
 
+// ---------- EVENTS ----------
 document.querySelectorAll("input,select").forEach(el=>{
-el.addEventListener("input",autoFillPrice)
+el.addEventListener("input",autoFillPriceWrapper)
 })
 
 render()
