@@ -12,10 +12,9 @@ input,select{width:100%;padding:14px;margin:6px 0;border-radius:10px;border:none
 button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;background:gold;font-weight:bold;}
 .price-box{border:2px solid gold;padding:20px;border-radius:20px;text-align:center;}
 .big{font-size:34px}
-.alert{color:red}
+.alert{color:#ff4d4d;font-weight:bold;margin-bottom:6px;}
 .good{color:lime}
 .flex{display:flex;gap:10px}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:none;overflow:auto;padding:20px;z-index:9999;}
 </style>
 </head>
 
@@ -26,9 +25,9 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 
 <input id="name" placeholder="Customer Name">
 
-<select id="tier" onchange="handleTier()">
+<select id="tier">
 <option value="standard">Standard</option>
-<option value="premium">🔥 Premium</option>
+<option value="premium">Premium</option>
 </select>
 
 <select id="bidMode">
@@ -44,149 +43,70 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 </div>
 
 <input id="sqft" placeholder="Sq Ft Per House">
-<input id="houses" value="1" placeholder="Number of Houses">
+<input id="houses" value="1" placeholder="Houses">
 
 <h3>Add Ons</h3>
-<label><input type="checkbox" id="grow"> Grow System</label>
+<label><input type="checkbox" id="grow"> Grow</label>
 <label><input type="checkbox" id="aeration"> Aeration</label>
 <label><input type="checkbox" id="compost"> Compost</label>
-<label><input type="checkbox" id="bio"> Biochar</label>
-<label><input type="checkbox" id="hum"> Humic Acid</label>
+<label><input type="checkbox" id="bio"> Bio</label>
+<label><input type="checkbox" id="hum"> Humic</label>
 
-<h3>Labor & Overhead</h3>
-<input id="laborRate" value="70" placeholder="Labor Rate">
-<input id="crewSize" value="2" placeholder="Crew Size">
-<input id="hours" value="8" placeholder="Hours Per House">
+<h3>Labor</h3>
+<input id="laborRate" value="70" placeholder="Rate">
+<input id="crewSize" value="2" placeholder="Crew">
+<input id="hours" value="8" placeholder="Hours / House">
 <input id="overhead" value="15" placeholder="Overhead %">
 <input id="margin" value="60" placeholder="Margin %">
 
 <div class="price-box">
 <div>Final Investment</div>
 <div id="priceDisplay" class="big">$0</div>
-<div id="dealScore"></div>
 </div>
 
 <div id="pricingOutput"></div>
-<div id="profitWarnings"></div>
 
 <button onclick="runAndCreate()">Create Job</button>
-<button onclick="openProposal()">Show Proposal</button>
 </div>
 
-<div class="card">
-<h2>💰 Revenue Engine</h2>
-<div id="upsellBox"></div>
-</div>
-
-<div class="card">
-<h2>Inventory</h2>
-<div id="inventoryInputs"></div>
-<button onclick="saveInventory()">Save Inventory</button>
-</div>
-
+<div class="card"><h2>Inventory</h2><div id="invUI"></div><button onclick="saveInv()">Save</button></div>
 <div class="card"><h2>Alerts</h2><div id="alerts"></div></div>
 <div class="card"><h2>Job History</h2><div id="jobs"></div></div>
-
-<div class="card">
-<h2>Analytics</h2>
-<canvas id="chart"></canvas>
-</div>
-
-<!-- PROPOSAL MODAL -->
-<div id="proposalModal" class="modal">
-<h1 style="text-align:center;">Your Lawn Upgrade</h1>
-
-<div class="card">
-<h2>🌱 Standard</h2>
-<div id="standardPrice"></div>
-</div>
-
-<div class="card" style="border:2px solid gold;">
-<h2>🔥 Premium</h2>
-<div id="premiumPrice"></div>
-</div>
-
-<div class="card">
-<h2>💎 Your Investment</h2>
-<div id="finalPrice"></div>
-</div>
-
-<button onclick="closeProposal()">Close</button>
-</div>
+<div class="card"><h2>Analytics</h2><canvas id="chart"></canvas></div>
 
 <script>
 
-// ---------- SAFE NUMBER ----------
+// ---------- SAFE ----------
 function n(v){return isNaN(Number(v))?0:Number(v)}
-
-// ---------- DOM ----------
-const jobsEl=document.getElementById("jobs")
-const alertsEl=document.getElementById("alerts")
-const inventoryInputs=document.getElementById("inventoryInputs")
 
 // ---------- STATE ----------
 let inv=JSON.parse(localStorage.getItem("inv")||"{}")
 let jobs=JSON.parse(localStorage.getItem("jobs")||"[]")
 
-const materials=["tttf","rye","elite","kbg","mil","esp","wood","bfm","tack","comp","bio","hum"]
+const mats=["tttf","rye","elite","kbg","mil","esp","wood","bfm","tack","comp","bio","hum"]
 
-// ---------- INVENTORY ----------
-function renderInventory(){
-inventoryInputs.innerHTML=""
-materials.forEach(m=>{
-inventoryInputs.innerHTML+=`
+// ---------- INVENTORY UI ----------
+function renderInv(){
+invUI.innerHTML=""
+mats.forEach(m=>{
+invUI.innerHTML+=`
 <input id="${m}C" placeholder="${m} cost">
 <input id="${m}Q" placeholder="${m} qty">
 `
 })
 }
-renderInventory()
+renderInv()
 
-function saveInventory(){
-materials.forEach(m=>{
+function saveInv(){
+mats.forEach(m=>{
 inv[m]={c:n(document.getElementById(m+"C").value),q:n(document.getElementById(m+"Q").value)}
 })
 localStorage.setItem("inv",JSON.stringify(inv))
 alert("Saved")
 }
 
-// ---------- TIER ----------
-function handleTier(){
-if(tier.value==="premium"){
-aeration.checked=true
-compost.checked=true
-bio.checked=true
-hum.checked=true
-}
-}
-
 // ---------- SIZE ----------
 function setSize(v){sqft.value=v;autoPrice()}
-
-// ---------- EFFICIENCY ----------
-function getEfficiency(h){
-if(h<=3)return 1
-if(h<=9)return .9
-if(h<=24)return .8
-if(h<=49)return .7
-if(h<=99)return .6
-return .5
-}
-
-// ---------- MARGIN ----------
-function getMargin(){
-let base=n(margin.value)
-let h=n(houses.value)
-
-if(h>=50)base-=10
-else if(h>=25)base-=7
-else if(h>=10)base-=5
-
-if(bidMode.value==="win")base-=10
-if(bidMode.value==="profit")base+=10
-
-return Math.max(25,Math.min(70,base))
-}
 
 // ---------- BAG SIZE ----------
 const bagSize={tttf:50,rye:50,elite:50,kbg:50,mil:50,esp:50,wood:50,bfm:50,tack:25,comp:40,bio:40,hum:40}
@@ -210,24 +130,23 @@ let html=""
 
 Object.keys(rates).forEach(k=>{
 let lbs=(rates[k]*totalSqft)/1000
-let bags=(lbs/bagSize[k])||0
+let bags=Math.ceil(lbs/bagSize[k]||0)
 let cost=(inv[k]?.c||0)*bags
 
-window.lastMaterials[k]={qty:n(bags),cost:n(cost)}
+window.lastMaterials[k]={qty:bags,cost:cost}
 materialCost+=cost
 
-html+=`${k}: ${bags.toFixed(2)} ($${cost.toFixed(0)})<br>`
+html+=`${k}: ${bags} ($${cost})<br>`
 })
 
-let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)*h*getEfficiency(h)
+let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)*h
 let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
-let growCost=grow.checked?(tier.value==="standard"?300:(h>=50?0:200)):0
+let growCost=grow.checked?300:0
 
 let totalCost=materialCost+labor+overheadCost+growCost
-if(totalCost<=0)return
+let margin=n(margin.value)
 
-let margin=getMargin()
-let price=totalCost/(1-(margin/100))
+let price= totalCost>0 ? totalCost/(1-(margin/100)) : 0
 
 window.finalPrice=price
 window.lastMaterialCost=materialCost
@@ -236,37 +155,13 @@ window.lastOverhead=overheadCost
 window.lastGrow=growCost
 
 priceDisplay.innerText="$"+price.toFixed(0)
-dealScore.innerHTML=((price-totalCost)/price)>0.5?"🔥 A DEAL":"👍 OK"
 
 pricingOutput.innerHTML=html+`
-<br>Materials:$${materialCost.toFixed(0)}
-<br>Labor:$${labor.toFixed(0)}
-<br>Overhead:$${overheadCost.toFixed(0)}
+<br>Materials:$${materialCost}
+<br>Labor:$${labor}
+<br>Overhead:$${overheadCost}
 <br>Grow:$${growCost}
-<br><b>Total:$${totalCost.toFixed(0)}</b>`
-
-runRevenueEngine()
-}
-
-// ---------- REVENUE ENGINE ----------
-function runRevenueEngine(){
-
-let suggestions=[]
-let margin=((window.finalPrice-(window.lastMaterialCost+window.lastLabor+window.lastOverhead+window.lastGrow))/window.finalPrice)*100
-
-if(tier.value==="standard"){
-suggestions.push("🔥 Upgrade to Premium for better results + higher ticket")
-}
-
-if(!grow.checked){
-suggestions.push("🌱 Add Grow System for higher success rate")
-}
-
-if(margin<40){
-suggestions.push("⚠️ Low margin — increase price or upsell")
-}
-
-upsellBox.innerHTML=suggestions.join("<br><br>")
+<br><b>Total:$${totalCost}</b>`
 }
 
 // ---------- CREATE ----------
@@ -274,88 +169,114 @@ function runAndCreate(){autoPrice();setTimeout(createJob,50)}
 
 function createJob(){
 
-if(!window.finalPrice||!window.lastMaterials){alert("Run pricing first");return}
+if(!window.finalPrice)return alert("Run pricing")
 
 let snapshot=JSON.parse(JSON.stringify(window.lastMaterials))
+
 let alertsArr=[]
+let seen=new Set()
 
 Object.keys(snapshot).forEach(k=>{
 let used=n(snapshot[k].qty)
+
 if(!inv[k])inv[k]={q:0,c:0}
-inv[k].q-=used
-if(inv[k].q<=5)alertsArr.push(`🚨 ${k} OUT`)
-else if(inv[k].q<20)alertsArr.push(`⚠️ ${k} LOW`)
+
+// safe deduction
+inv[k].q=Math.max(0,inv[k].q-used)
+
+// alerts
+if(inv[k].q===0){
+if(!seen.has(k)){alertsArr.push(`🚨 ${k.toUpperCase()} OUT`);seen.add(k)}
+}
+else if(inv[k].q<20){
+if(!seen.has(k)){alertsArr.push(`⚠️ ${k.toUpperCase()} LOW`);seen.add(k)}
+}
 })
 
 let totalCost=n(window.lastMaterialCost)+n(window.lastLabor)+n(window.lastOverhead)+n(window.lastGrow)
 let revenue=n(window.finalPrice)
 let profit=revenue-totalCost
-let margin=(profit/revenue)*100
+let margin=revenue>0?(profit/revenue)*100:0
 
-jobs.push({name:name.value||"Client",revenue,profit,margin,materials:snapshot,alerts:alertsArr})
+jobs.push({
+name:name.value||"Client",
+materials:snapshot,
+materialCost:window.lastMaterialCost,
+labor:window.lastLabor,
+overhead:window.lastOverhead,
+grow:window.lastGrow,
+revenue,
+profit,
+margin,
+alerts:alertsArr,
+date:new Date().toLocaleString()
+})
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
 render()
-alert("Job Created ✅")
+
+alert("Job Created")
 }
 
 // ---------- RENDER ----------
 function render(){
 
 jobsEl.innerHTML=""
-alertsEl.innerHTML=""
+alerts.innerHTML=""
 
-let alertHTML=""
+let alertSet=new Set()
 
 jobs.forEach(j=>{
-j.alerts?.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
 
-let mats=""
-Object.keys(j.materials||{}).forEach(m=>{
-mats+=`${m}: ${n(j.materials[m].qty).toFixed(2)} ($${n(j.materials[m].cost).toFixed(0)})<br>`
+j.alerts.forEach(a=>{
+if(!alertSet.has(a)){
+alerts.innerHTML+=`<div class="alert">${a}</div>`
+alertSet.add(a)
+}
+})
+
+let matsHTML=""
+Object.keys(j.materials).forEach(m=>{
+matsHTML+=`${m}: ${j.materials[m].qty} ($${j.materials[m].cost})<br>`
 })
 
 jobsEl.innerHTML+=`
 <div class="card">
-<b>${j.name}</b><br><br>
-${mats}
-Revenue:$${n(j.revenue).toFixed(0)}<br>
-Profit:$${n(j.profit).toFixed(0)}<br>
-Margin:${n(j.margin).toFixed(1)}%
+<b>${j.name}</b><br>
+<small>${j.date}</small><br><br>
+${matsHTML}
+Materials:$${j.materialCost}<br>
+Labor:$${j.labor}<br>
+Overhead:$${j.overhead}<br>
+Grow:$${j.grow}<br>
+Revenue:$${j.revenue}<br>
+Profit:$${j.profit}<br>
+Margin:${j.margin.toFixed(1)}%
 </div>`
 })
 
-alertsEl.innerHTML=alertHTML||"No alerts"
+if(!alerts.innerHTML)alerts.innerHTML="No alerts"
 
-if(window.chart)chart.destroy()
-chart=new Chart(document.getElementById("chart"),{
+// chart
+if(window.chart)window.chart.destroy()
+
+window.chart=new Chart(document.getElementById("chart"),{
 type:"bar",
-data:{labels:jobs.map((_,i)=>"Job "+(i+1)),
+data:{
+labels:jobs.map((_,i)=>"Job "+(i+1)),
 datasets:[
-{label:"Revenue",data:jobs.map(j=>n(j.revenue))},
-{label:"Profit",data:jobs.map(j=>n(j.profit))}
-]}
+{label:"Revenue",data:jobs.map(j=>j.revenue)},
+{label:"Profit",data:jobs.map(j=>j.profit)}
+]
+}
 })
 }
-
-// ---------- PROPOSAL ----------
-function openProposal(){
-if(!window.finalPrice){alert("Run pricing");return}
-let base=window.finalPrice
-standardPrice.innerHTML=`<h1>$${(base*0.85).toFixed(0)}</h1>`
-premiumPrice.innerHTML=`<h1>$${(base*1.1).toFixed(0)}</h1>`
-finalPrice.innerHTML=`<h1>$${base.toFixed(0)}</h1>`
-proposalModal.style.display="block"
-}
-
-function closeProposal(){proposalModal.style.display="none"}
 
 // ---------- EVENTS ----------
 document.querySelectorAll("input,select").forEach(el=>{
 el.addEventListener("input",autoPrice)
-el.addEventListener("change",autoPrice)
 })
 
 render()
