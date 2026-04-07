@@ -15,40 +15,36 @@ button{width:100%;padding:16px;margin-top:10px;border:none;border-radius:12px;ba
 .alert{color:red}
 .good{color:lime}
 
-#proposalModal{
-position:fixed;
-top:0;left:0;
-width:100%;height:100%;
-background:#000;
-display:none;
-overflow:auto;
-padding:20px;
-}
-.proposal-card{
-background:#111;
-border:2px solid gold;
-padding:20px;
-border-radius:20px;
-}
+#proposalModal{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:none;overflow:auto;padding:20px;}
+.proposal-card{background:#111;border:2px solid gold;padding:20px;border-radius:20px;}
 </style>
 </head>
 
 <body>
 
 <div class="card">
+<h2>Dashboard</h2>
+<div id="stats"></div>
+</div>
+
+<div class="card">
 <h2>Create Job</h2>
 
 <input id="name" placeholder="Customer Name">
 
-<select id="tier">
+<select id="tier" onchange="handleTier()">
 <option value="standard">Standard</option>
-<option value="premium">🔥 Premium (Best Value)</option>
+<option value="premium">🔥 Premium</option>
 </select>
 
-<label><input type="checkbox" id="grow"> Grow System</label>
+<h3>Add Ons</h3>
+<label><input type="checkbox" id="grow"> Grow System</label><br>
+<label><input type="checkbox" id="aeration"> Aeration</label><br>
+<label><input type="checkbox" id="compost"> Compost</label><br>
+<label><input type="checkbox" id="bio"> Biochar</label><br>
+<label><input type="checkbox" id="hum"> Humic Acid</label>
 
 <input id="houses" value="1" placeholder="Houses">
-<input id="sqft" placeholder="Sq Ft Per House">
 
 <h3>Labor & Overhead</h3>
 <input id="laborRate" value="70">
@@ -70,12 +66,42 @@ border-radius:20px;
 </div>
 
 <div class="card">
+<h2>Inventory</h2>
+<input id="tttfC" placeholder="TTTF Cost">
+<input id="tttfQ" placeholder="TTTF Qty">
+<input id="ryeC" placeholder="Rye Cost">
+<input id="ryeQ" placeholder="Rye Qty">
+<input id="eliteC" placeholder="Elite Cost">
+<input id="eliteQ" placeholder="Elite Qty">
+<input id="kbgC" placeholder="KBG Cost">
+<input id="kbgQ" placeholder="KBG Qty">
+<input id="milC" placeholder="Milorganite Cost">
+<input id="milQ" placeholder="Milorganite Qty">
+<input id="espC" placeholder="Espoma Cost">
+<input id="espQ" placeholder="Espoma Qty">
+<input id="woodC" placeholder="Wood Cost">
+<input id="woodQ" placeholder="Wood Qty">
+<input id="bfmC" placeholder="BFM Cost">
+<input id="bfmQ" placeholder="BFM Qty">
+<input id="tackC" placeholder="Tack Cost">
+<input id="tackQ" placeholder="Tack Qty">
+<input id="compC" placeholder="Compost Cost">
+<input id="compQ" placeholder="Compost Qty">
+<input id="bioC" placeholder="Bio Cost">
+<input id="bioQ" placeholder="Bio Qty">
+<input id="humC" placeholder="Humic Cost">
+<input id="humQ" placeholder="Humic Qty">
+
+<button onclick="saveInv()">Save Inventory</button>
+</div>
+
+<div class="card">
 <h2>Alerts</h2>
 <div id="alerts"></div>
 </div>
 
 <div class="card">
-<h2>Jobs</h2>
+<h2>Job History</h2>
 <div id="jobs"></div>
 </div>
 
@@ -91,19 +117,50 @@ function n(v){return Number(v)||0}
 let jobs=JSON.parse(localStorage.getItem("jobs")||"[]")
 let inv=JSON.parse(localStorage.getItem("inv")||"{}")
 
-function getMaterials(tier,h){
+function handleTier(){
+if(tier.value==="premium"){
+aeration.checked=true
+compost.checked=true
+bio.checked=true
+hum.checked=true
+}
+}
 
-if(tier==="standard"){
+function saveInv(){
+inv={
+tttf:{c:n(tttfC.value),q:n(tttfQ.value)},
+rye:{c:n(ryeC.value),q:n(ryeQ.value)},
+elite:{c:n(eliteC.value),q:n(eliteQ.value)},
+kbg:{c:n(kbgC.value),q:n(kbgQ.value)},
+mil:{c:n(milC.value),q:n(milQ.value)},
+esp:{c:n(espC.value),q:n(espQ.value)},
+wood:{c:n(woodC.value),q:n(woodQ.value)},
+bfm:{c:n(bfmC.value),q:n(bfmQ.value)},
+tack:{c:n(tackC.value),q:n(tackQ.value)},
+comp:{c:n(compC.value),q:n(compQ.value)},
+bio:{c:n(bioC.value),q:n(bioQ.value)},
+hum:{c:n(humC.value),q:n(humQ.value)}
+}
+localStorage.setItem("inv",JSON.stringify(inv))
+alert("Saved")
+}
+
+function getMaterials(tierVal,h){
+
+if(tierVal==="standard"){
 return{
 tttf:1.7*h,
 rye:0.3*h,
 mil:1.2*h,
 wood:12*h,
-tack:0.6*h
+tack:0.6*h,
+comp:compost.checked?4*h:0,
+bio:bio.checked?1*h:0,
+hum:hum.checked?1*h:0
 }
 }
 
-if(tier==="premium"){
+if(tierVal==="premium"){
 return{
 elite:1.6*h,
 kbg:0.4*h,
@@ -132,82 +189,31 @@ materialCost+=cost
 html+=`${k}: ${qty.toFixed(2)} ($${cost.toFixed(0)})<br>`
 })
 
-// ===== GROW SYSTEM =====
-let growCost=0
-let growText=""
-
-if(grow.checked){
-
-if(tier.value==="standard"){
-growCost = h>=10 ? (100*h)+(50*3*h) : (150+(50*3))
-growText=`Grow: $${growCost}`
-}
-
-if(tier.value==="premium"){
-
-if(h>=50){
-growCost=0
-growText=`<span class="good">Grow Included</span>`
-}
-else if(h>=10){
-growCost=(50*2*h)
-growText=`Grow: $${growCost}`
-}
-else{
-growCost=50+(50*3)
-growText=`Grow: $${growCost}`
-}
-}
-}
-
-// ===== LABOR =====
 let labor=n(laborRate.value)*n(crewSize.value)*n(hours.value)
-
-// ===== OVERHEAD =====
 let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
+let totalCost=materialCost+labor+overheadCost
 
-// ===== TOTAL COST =====
-let totalCost=materialCost+labor+overheadCost+growCost
-
-// ===== PRICE =====
 let price=totalCost/(1-(n(margin.value)/100))
-
-// ===== BUILDER DISCOUNT =====
-let discount= h<10?0.05:h<25?0.10:h<100?0.20:0.30
-price*=1-discount
 
 priceDisplay.innerText="$"+price.toFixed(0)
 window.finalPrice=price
 
-pricingOutput.innerHTML=`
-${html}<br>
-${grow.checked?growText+"<br><br>":""}
-Materials: $${materialCost.toFixed(0)}<br>
-Labor: $${labor.toFixed(0)}<br>
-Overhead: $${overheadCost.toFixed(0)}<br>
-Total Cost: $${totalCost.toFixed(0)}
-`
+pricingOutput.innerHTML=html
 }
 
 function createJob(){
 
-if(!window.finalPrice){
-alert("Run pricing first")
-return
-}
+if(!window.finalPrice){alert("Run pricing");return}
 
-const h=n(houses.value)||1
-const mats=getMaterials(tier.value,h)
+const mats=getMaterials(tier.value,n(houses.value)||1)
 
 let breakdown={}
 let totalCost=0
 let alertsList=[]
 
-// ===== MATERIAL DEDUCTION =====
 Object.keys(mats).forEach(k=>{
 let qty=n(mats[k])
 let item=inv[k]||{c:0,q:0}
-
 let cost=qty*(item.c||0)
 let remaining=item.q-qty
 
@@ -221,30 +227,13 @@ breakdown[k]={qty,cost}
 totalCost+=cost
 })
 
-// ===== GROW =====
-let growCost=0
-if(grow.checked){
-
-if(tier.value==="standard"){
-growCost = h>=10 ? (100*h)+(50*3*h) : (150+(50*3))
-}
-
-if(tier.value==="premium"){
-growCost = h>=50 ? 0 : (h>=10 ? (50*2*h) : (50+(50*3)))
-}
-
-breakdown["grow"]={qty:1,cost:growCost}
-totalCost+=growCost
-}
-
 jobs.push({
 name:name.value||"Client",
 tier:tier.value,
 revenue:window.finalPrice,
 profit:window.finalPrice-totalCost,
 materials:breakdown,
-alerts:alertsList,
-grow:grow.checked
+alerts:alertsList
 })
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
@@ -256,112 +245,70 @@ render()
 function render(){
 
 jobsDiv.innerHTML=""
-let alertHTML=""
+let rev=0,prof=0,alertHTML=""
 
 jobs.forEach((j,i)=>{
+rev+=j.revenue
+prof+=j.profit
 
-j.alerts.forEach(a=>{
-alertHTML+=`<div class="alert">🚨 ${a}</div>`
-})
+j.alerts.forEach(a=>alertHTML+=`<div class="alert">${a}</div>`)
+
+let mats=""
+for(let m in j.materials){
+let d=j.materials[m]
+mats+=`${m}: ${d.qty.toFixed(2)} ($${d.cost.toFixed(0)})<br>`
+}
 
 jobsDiv.innerHTML+=`
 <div class="card">
-<b>${j.name} (${j.tier})</b><br>
+<b>${j.name}</b><br>
+${mats}
 Revenue: $${j.revenue.toFixed(0)}<br>
 Profit: $${j.profit.toFixed(0)}<br>
-
-<button onclick="openProposal(${i})">View Proposal</button>
+<button onclick="openProposal(${i})">Proposal</button>
 </div>
 `
 })
 
+stats.innerHTML=`Jobs:${jobs.length}<br>Revenue:$${rev.toFixed(0)}<br>Profit:$${prof.toFixed(0)}`
 alerts.innerHTML=alertHTML||"No alerts"
 }
 
-// ===== PROPOSAL =====
 function openProposal(i){
-
 let j=jobs[i]
 
 proposalContent.innerHTML=`
 <div class="proposal-card">
-
 <h2>${j.name}</h2>
+<h3>${j.tier.toUpperCase()}</h3>
 
-<h3>${j.tier.toUpperCase()} PACKAGE</h3>
-
-<p>
-We don’t just seed lawns — we build them from the soil up.
-</p>
-
-<p>
-Our process delivers thicker growth, stronger roots, and long-term durability.
-</p>
-
-${j.grow?`<p>✔ Grow System Included</p>`:""}
+<p>We build lawns that last — thicker, stronger, and healthier.</p>
 
 <div class="price-box">
 <div>Final Investment</div>
 <div class="big">$${j.revenue.toFixed(0)}</div>
 </div>
 
-<p>
-This investment reflects a premium installation designed to outperform standard seeding methods.
-</p>
-
 <button onclick="downloadPDF(${i})">Download PDF</button>
-
 </div>
 `
 
 proposalModal.style.display="block"
 }
 
-function closeProposal(){
-proposalModal.style.display="none"
-}
+function closeProposal(){proposalModal.style.display="none"}
 
-// ===== LUXURY PDF =====
 async function downloadPDF(i){
 
 const { jsPDF } = window.jspdf
-let j = jobs[i]
-
+let j=jobs[i]
 let doc=new jsPDF()
-let y=20
 
-doc.setFontSize(20)
-doc.text("LAWN IMPROVEMENT PROPOSAL",105,y,{align:"center"})
-
-y+=10
-doc.text("Premium Hydroseeding System",105,y,{align:"center"})
-
-y+=10
-doc.line(20,y,190,y)
-
-y+=15
-doc.text("Client: "+j.name,20,y)
-
-y+=15
-doc.text("Package: "+j.tier.toUpperCase(),20,y)
-
-y+=15
-doc.text("This is a premium lawn installation designed for long-term performance.",20,y)
-
-y+=10
-doc.text("Stronger roots. Thicker turf. Better results.",20,y)
-
-y+=20
-doc.setFontSize(18)
-doc.text("$"+j.revenue.toFixed(0),105,y,{align:"center"})
+doc.text("Lawn Proposal",20,20)
+doc.text(j.name,20,30)
+doc.text("Investment: $"+j.revenue.toFixed(0),20,40)
 
 doc.save(j.name+"_proposal.pdf")
-}
-
-function clearJobs(){
-jobs=[]
-localStorage.removeItem("jobs")
-render()
 }
 
 render()
