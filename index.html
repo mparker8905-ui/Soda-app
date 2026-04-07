@@ -13,8 +13,6 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 .price-box{border:2px solid gold;padding:20px;border-radius:20px;text-align:center;}
 .big{font-size:34px}
 .alert{color:#ff4d4d;font-weight:bold;margin-bottom:6px;}
-.good{color:lime}
-.flex{display:flex;gap:10px}
 </style>
 </head>
 
@@ -25,24 +23,18 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 
 <input id="name" placeholder="Customer Name">
 
-<select id="tier">
+<select id="tier" onchange="handleTier()">
 <option value="standard">Standard</option>
 <option value="premium">Premium</option>
 </select>
 
 <select id="bidMode">
+<option value="balanced">Balanced</option>
 <option value="win">Win Job</option>
-<option value="balanced" selected>Balanced</option>
 <option value="profit">Max Profit</option>
 </select>
 
-<div class="flex">
-<button onclick="setSize(3000)">Small</button>
-<button onclick="setSize(6000)">Medium</button>
-<button onclick="setSize(10000)">Large</button>
-</div>
-
-<input id="sqft" placeholder="Sq Ft Per House">
+<input id="sqft" value="3000" placeholder="Sq Ft">
 <input id="houses" value="1" placeholder="Houses">
 
 <h3>Add Ons</h3>
@@ -53,11 +45,11 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <label><input type="checkbox" id="hum"> Humic</label>
 
 <h3>Labor</h3>
-<input id="laborRate" value="70" placeholder="Rate">
-<input id="crewSize" value="2" placeholder="Crew">
-<input id="hours" value="8" placeholder="Hours / House">
-<input id="overhead" value="15" placeholder="Overhead %">
-<input id="margin" value="60" placeholder="Margin %">
+<input id="laborRate" value="70">
+<input id="crewSize" value="2">
+<input id="hours" value="8">
+<input id="overhead" value="15">
+<input id="margin" value="60">
 
 <div class="price-box">
 <div>Final Investment</div>
@@ -69,10 +61,27 @@ button{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;ba
 <button onclick="runAndCreate()">Create Job</button>
 </div>
 
-<div class="card"><h2>Inventory</h2><div id="invUI"></div><button onclick="saveInv()">Save</button></div>
-<div class="card"><h2>Alerts</h2><div id="alerts"></div></div>
-<div class="card"><h2>Job History</h2><div id="jobs"></div></div>
-<div class="card"><h2>Analytics</h2><canvas id="chart"></canvas></div>
+<div class="card">
+<h2>Inventory</h2>
+<div id="invUI"></div>
+<button onclick="saveInv()">Save Inventory</button>
+</div>
+
+<div class="card">
+<h2>Alerts</h2>
+<div id="alerts"></div>
+</div>
+
+<div class="card">
+<h2>Job History</h2>
+<button onclick="clearJobs()" style="background:red;">Clear Job History</button>
+<div id="jobs"></div>
+</div>
+
+<div class="card">
+<h2>Analytics</h2>
+<canvas id="chart"></canvas>
+</div>
 
 <script>
 
@@ -83,9 +92,14 @@ function n(v){return isNaN(Number(v))?0:Number(v)}
 let inv=JSON.parse(localStorage.getItem("inv")||"{}")
 let jobs=JSON.parse(localStorage.getItem("jobs")||"[]")
 
+// ---------- DOM FIX ----------
+const jobsEl=document.getElementById("jobs")
+const alertsEl=document.getElementById("alerts")
+const invUI=document.getElementById("invUI")
+
+// ---------- INVENTORY ----------
 const mats=["tttf","rye","elite","kbg","mil","esp","wood","bfm","tack","comp","bio","hum"]
 
-// ---------- INVENTORY UI ----------
 function renderInv(){
 invUI.innerHTML=""
 mats.forEach(m=>{
@@ -105,8 +119,15 @@ localStorage.setItem("inv",JSON.stringify(inv))
 alert("Saved")
 }
 
-// ---------- SIZE ----------
-function setSize(v){sqft.value=v;autoPrice()}
+// ---------- PREMIUM FIX ----------
+function handleTier(){
+if(tier.value==="premium"){
+aeration.checked=true
+compost.checked=true
+bio.checked=true
+hum.checked=true
+}
+}
 
 // ---------- BAG SIZE ----------
 const bagSize={tttf:50,rye:50,elite:50,kbg:50,mil:50,esp:50,wood:50,bfm:50,tack:25,comp:40,bio:40,hum:40}
@@ -114,15 +135,16 @@ const bagSize={tttf:50,rye:50,elite:50,kbg:50,mil:50,esp:50,wood:50,bfm:50,tack:
 // ---------- PRICING ----------
 function autoPrice(){
 
-let sqftVal=n(sqft.value)
+let sqftVal=n(sqft.value)||1
 let h=n(houses.value)||1
-if(!sqftVal)return
-
 let totalSqft=sqftVal*h
 
-let rates=tier.value==="premium"?
-{elite:7,kbg:2,esp:5,bfm:7,tack:1,comp:20,bio:3,hum:2}:
-{tttf:7,rye:5,mil:5,wood:7,tack:1,comp:compost.checked?20:0,bio:bio.checked?3:0,hum:hum.checked?2:0}
+let rates = tier.value==="premium"
+? {elite:7,kbg:2,esp:5,bfm:7,tack:1,comp:20,bio:3,hum:2}
+: {tttf:7,rye:5,mil:5,wood:7,tack:1,
+comp: compost.checked?20:0,
+bio: bio.checked?3:0,
+hum: hum.checked?2:0}
 
 let materialCost=0
 window.lastMaterials={}
@@ -130,7 +152,7 @@ let html=""
 
 Object.keys(rates).forEach(k=>{
 let lbs=(rates[k]*totalSqft)/1000
-let bags=Math.ceil(lbs/bagSize[k]||0)
+let bags=Math.ceil(lbs/(bagSize[k]||1))
 let cost=(inv[k]?.c||0)*bags
 
 window.lastMaterials[k]={qty:bags,cost:cost}
@@ -146,7 +168,7 @@ let growCost=grow.checked?300:0
 let totalCost=materialCost+labor+overheadCost+growCost
 let margin=n(margin.value)
 
-let price= totalCost>0 ? totalCost/(1-(margin/100)) : 0
+let price = totalCost>0 ? totalCost/(1-(margin/100)) : 0
 
 window.finalPrice=price
 window.lastMaterialCost=materialCost
@@ -165,7 +187,10 @@ pricingOutput.innerHTML=html+`
 }
 
 // ---------- CREATE ----------
-function runAndCreate(){autoPrice();setTimeout(createJob,50)}
+function runAndCreate(){
+autoPrice()
+setTimeout(createJob,50)
+}
 
 function createJob(){
 
@@ -178,18 +203,17 @@ let seen=new Set()
 
 Object.keys(snapshot).forEach(k=>{
 let used=n(snapshot[k].qty)
-
 if(!inv[k])inv[k]={q:0,c:0}
 
-// safe deduction
 inv[k].q=Math.max(0,inv[k].q-used)
 
-// alerts
-if(inv[k].q===0){
-if(!seen.has(k)){alertsArr.push(`🚨 ${k.toUpperCase()} OUT`);seen.add(k)}
+if(inv[k].q===0 && !seen.has(k)){
+alertsArr.push(`🚨 ${k.toUpperCase()} OUT`)
+seen.add(k)
 }
-else if(inv[k].q<20){
-if(!seen.has(k)){alertsArr.push(`⚠️ ${k.toUpperCase()} LOW`);seen.add(k)}
+else if(inv[k].q<20 && !seen.has(k)){
+alertsArr.push(`⚠️ ${k.toUpperCase()} LOW`)
+seen.add(k)
 }
 })
 
@@ -216,15 +240,23 @@ localStorage.setItem("jobs",JSON.stringify(jobs))
 localStorage.setItem("inv",JSON.stringify(inv))
 
 render()
-
 alert("Job Created")
+}
+
+// ---------- CLEAR HISTORY ----------
+function clearJobs(){
+if(confirm("Clear all job history?")){
+jobs=[]
+localStorage.removeItem("jobs")
+render()
+}
 }
 
 // ---------- RENDER ----------
 function render(){
 
 jobsEl.innerHTML=""
-alerts.innerHTML=""
+alertsEl.innerHTML=""
 
 let alertSet=new Set()
 
@@ -232,7 +264,7 @@ jobs.forEach(j=>{
 
 j.alerts.forEach(a=>{
 if(!alertSet.has(a)){
-alerts.innerHTML+=`<div class="alert">${a}</div>`
+alertsEl.innerHTML+=`<div class="alert">${a}</div>`
 alertSet.add(a)
 }
 })
@@ -257,9 +289,9 @@ Margin:${j.margin.toFixed(1)}%
 </div>`
 })
 
-if(!alerts.innerHTML)alerts.innerHTML="No alerts"
+if(!alertsEl.innerHTML)alertsEl.innerHTML="No alerts"
 
-// chart
+// chart fix
 if(window.chart)window.chart.destroy()
 
 window.chart=new Chart(document.getElementById("chart"),{
@@ -280,6 +312,7 @@ el.addEventListener("input",autoPrice)
 })
 
 render()
+autoPrice()
 
 </script>
 
