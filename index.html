@@ -39,6 +39,13 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 <label># Houses</label>
 <input id="houses" value="1">
 
+<h3>Add Ons</h3>
+<label><input type="checkbox" id="grow"> Grow</label>
+<label><input type="checkbox" id="aeration"> Aeration</label>
+<label><input type="checkbox" id="compost"> Compost</label>
+<label><input type="checkbox" id="bio"> Biochar</label>
+<label><input type="checkbox" id="hum"> Humic</label>
+
 <h3>Labor</h3>
 <input id="rate" placeholder="Hourly Rate" value="70">
 <input id="crew" placeholder="Crew Size" value="2">
@@ -89,12 +96,17 @@ let inventory=JSON.parse(localStorage.getItem("inventory")||"{}")
 
 // ---------- MATERIAL MAP ----------
 const materials = {
-standard:{
-tttf:6, rye:4, mil:4, wood:5, tack:1
-},
-premium:{
-elite:6, kbg:2, fert:4, bio:2, hum:2, comp:15
+standard:{ tttf:6, rye:4, mil:4, wood:5, tack:1 },
+premium:{ elite:6, kbg:2, fert:4, bio:2, hum:2, comp:15 }
 }
+
+// ---------- BUILDER DISCOUNT ----------
+function getDiscount(houses){
+if(houses>=100) return 0.30
+if(houses>=75) return 0.25
+if(houses>=30) return 0.20
+if(houses>=10) return 0.10
+return 0
 }
 
 // ---------- SIZE ----------
@@ -103,7 +115,18 @@ sqft.value=v
 calculate()
 }
 
-// ---------- INVENTORY UI ----------
+// ---------- PREMIUM AUTO SELECT ----------
+tier.onchange=()=>{
+if(tier.value==="premium"){
+aeration.checked=true
+compost.checked=true
+bio.checked=true
+hum.checked=true
+}
+calculate()
+}
+
+// ---------- INVENTORY ----------
 function renderInventory(){
 
 let html="<h3>STANDARD</h3>"
@@ -149,25 +172,29 @@ function calculate(){
 let sqftVal=n(sqft.value)
 let housesVal=n(houses.value)
 
-let tierKey=tier.value
-let matSet=materials[tierKey]
+let matSet=materials[tier.value]
 
 let materialCost=0
 let used={}
 
-// MATERIAL CALC
+// MATERIALS
 Object.keys(matSet).forEach(m=>{
-let rate=matSet[m]
-let usage=(rate*sqftVal*housesVal)/1000
+let usage=(matSet[m]*sqftVal*housesVal)/1000
 let costPer=inventory[m]?.cost||20
-
 let cost=usage*costPer
 
 used[m]={usage,cost}
 materialCost+=cost
 })
 
-// LABOR (MULTIPLIED)
+// ADD-ONS
+if(compost.checked) materialCost+=sqftVal*housesVal*0.05
+if(bio.checked) materialCost+=sqftVal*housesVal*0.02
+if(hum.checked) materialCost+=sqftVal*housesVal*0.02
+if(grow.checked) materialCost*=1.1
+if(aeration.checked) materialCost+=sqftVal*housesVal*0.03
+
+// LABOR
 let labor=n(rate.value)*n(crew.value)*n(hours.value)*housesVal
 
 // OVERHEAD
@@ -175,17 +202,25 @@ let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
 
 let totalCost=materialCost+labor+overheadCost
 
-let revenue=totalCost*(1+(n(margin.value)/100))
+// PRICING
+let baseRevenue=totalCost*(1+(n(margin.value)/100))
+
+let discount=getDiscount(housesVal)
+
+let revenue=baseRevenue*(1-discount)
+
 let profit=revenue-totalCost
 let marginPct=(profit/revenue)*100
 
-window.calcData={materialCost,totalCost,revenue,profit,marginPct,used}
+window.calcData={materialCost,totalCost,revenue,profit,marginPct,used,discount,baseRevenue}
 
 price.innerText="$"+Math.round(revenue)
 
 breakdown.innerHTML=`
 Cost: $${Math.round(totalCost)}<br>
-Revenue: $${Math.round(revenue)}<br>
+Base Price: $${Math.round(baseRevenue)}<br>
+Discount: ${(discount*100)}%<br>
+Final Revenue: $${Math.round(revenue)}<br>
 Profit: $${Math.round(profit)}<br>
 Margin: ${marginPct.toFixed(1)}%
 `
@@ -276,7 +311,6 @@ datasets:[
 
 const jobsDiv=document.getElementById("jobs")
 
-// ---------- INIT ----------
 document.querySelectorAll("input,select").forEach(el=>{
 el.addEventListener("input",calculate)
 })
