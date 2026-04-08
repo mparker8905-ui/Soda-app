@@ -2,12 +2,19 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{background:#0b0b0b;color:#fff;font-family:Arial;padding:16px}
 .card{background:#121212;padding:16px;border-radius:14px;margin-bottom:14px}
-input{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#1c1c1c;color:#fff}
+input,select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#1c1c1c;color:#fff}
 button{padding:12px;border:none;border-radius:8px;background:#d4af37;color:#000;font-weight:bold;width:100%;margin-top:8px}
+.row{display:flex;gap:8px}
+.row button{flex:1}
 .gold{color:#d4af37;font-size:20px}
+.alert{padding:6px;margin:4px 0;border-radius:6px}
+.low{background:#665500}
+.out{background:#661111}
 </style>
 </head>
 
@@ -18,97 +25,58 @@ button{padding:12px;border:none;border-radius:8px;background:#d4af37;color:#000;
 
 <input id="customer" placeholder="Customer Name">
 
+<select id="tier" onchange="applyPremium()">
+<option value="standard">Standard</option>
+<option value="premium">Premium</option>
+</select>
+
+<select id="strategy">
+<option>Balanced</option>
+<option>Win Job</option>
+<option>Max Profit</option>
+</select>
+
+<input id="sqft" placeholder="Square Feet">
+<input id="houses" placeholder="# Houses">
+
+<h3>Add Ons</h3>
+
+<label><input type="checkbox" id="grow"> Grow System</label>
+<label><input type="checkbox" id="aeration"> Aeration</label>
+<label><input type="checkbox" id="compost"> Compost</label>
+<label><input type="checkbox" id="bioHum"> Bio/Hum Blend (50/50)</label>
+<label><input type="checkbox" id="bio100"> Biochar 100%</label>
+<label><input type="checkbox" id="hum100"> Humic 100%</label>
+
+<label><input type="checkbox" id="lime" onchange="toggle('limeAmount',this)"> Lime</label>
+<input id="limeAmount" placeholder="Lime Amount" style="display:none">
+
+<label><input type="checkbox" id="sulfur" onchange="toggle('sulfurAmount',this)"> Sulfur</label>
+<input id="sulfurAmount" placeholder="Sulfur Amount" style="display:none">
+
 <h3>Schedule</h3>
-
-<label>Quote Date</label>
 <input type="date" id="quote">
-
-<label>Soil Test Date</label>
-<input type="date" id="soil">
-
-<label>Aeration Date</label>
-<input type="date" id="aerationDate">
-
-<label>Compost Date</label>
-<input type="date" id="compostDate">
-
-<label>Hydroseed Date</label>
-<input type="date" id="hydroDate">
-
-<label>Grow System Install</label>
-<input type="date" id="installDate">
-
-<label>Grow System Removal</label>
-<input type="date" id="removalDate">
-
-<label>Final Lawn Inspection</label>
-<input type="date" id="inspectionDate">
 
 <button onclick="createJob()">Create Job</button>
 </div>
 
 <div class="card">
 <h2>Inventory</h2>
-
 <h3>Standard</h3>
-
-<input id="s_seed_name" placeholder="Seed Name">
-<input id="s_seed_cost" placeholder="Seed Cost">
-<input id="s_seed_qty" placeholder="Seed Quantity">
-
-<input id="s_fert_name" placeholder="Fertilizer Name">
-<input id="s_fert_cost" placeholder="Fertilizer Cost">
-<input id="s_fert_qty" placeholder="Fertilizer Quantity">
-
-<input id="s_mulch_name" placeholder="Mulch Name">
-<input id="s_mulch_cost" placeholder="Mulch Cost">
-<input id="s_mulch_qty" placeholder="Mulch Quantity">
-
-<input id="s_tack_name" placeholder="Tackifier Name">
-<input id="s_tack_cost" placeholder="Tackifier Cost">
-<input id="s_tack_qty" placeholder="Tackifier Quantity">
+<div id="invStandard"></div>
 
 <h3>Premium</h3>
-
-<input id="p_seed_name" placeholder="Seed Name">
-<input id="p_seed_cost" placeholder="Seed Cost">
-<input id="p_seed_qty" placeholder="Seed Quantity">
-
-<input id="p_fert_name" placeholder="Fertilizer Name">
-<input id="p_fert_cost" placeholder="Fertilizer Cost">
-<input id="p_fert_qty" placeholder="Fertilizer Quantity">
-
-<input id="p_mulch_name" placeholder="Mulch Name">
-<input id="p_mulch_cost" placeholder="Mulch Cost">
-<input id="p_mulch_qty" placeholder="Mulch Quantity">
-
-<input id="p_tack_name" placeholder="Tackifier Name">
-<input id="p_tack_cost" placeholder="Tackifier Cost">
-<input id="p_tack_qty" placeholder="Tackifier Quantity">
-
-<input id="p_bio_name" placeholder="Biochar Name">
-<input id="p_bio_cost" placeholder="Biochar Cost">
-<input id="p_bio_qty" placeholder="Biochar Quantity">
-
-<input id="p_hum_name" placeholder="Humic Name">
-<input id="p_hum_cost" placeholder="Humic Cost">
-<input id="p_hum_qty" placeholder="Humic Quantity">
+<div id="invPremium"></div>
 
 <h3>Add Ons</h3>
+<div id="invAdd"></div>
 
-<input id="lime_name" placeholder="Lime Name">
-<input id="lime_cost" placeholder="Lime Cost">
-<input id="lime_qty" placeholder="Lime Quantity">
+<button onclick="renderInventory()">Save Inventory</button>
+</div>
 
-<input id="sulfur_name" placeholder="Sulfur Name">
-<input id="sulfur_cost" placeholder="Sulfur Cost">
-<input id="sulfur_qty" placeholder="Sulfur Quantity">
-
-<input id="sprinkler_name" placeholder="Sprinkler Name">
-<input id="sprinkler_cost" placeholder="Sprinkler Cost">
-<input id="sprinkler_qty" placeholder="Sprinkler Quantity">
-
-<button onclick="saveInventory()">Save Inventory</button>
+<div class="card">
+<h2>Alerts</h2>
+<div id="alerts"></div>
 </div>
 
 <div class="card">
@@ -116,49 +84,103 @@ button{padding:12px;border:none;border-radius:8px;background:#d4af37;color:#000;
 <div id="jobs"></div>
 </div>
 
+<div class="card">
+<h2>Analytics</h2>
+<canvas id="revChart"></canvas>
+<canvas id="profitChart"></canvas>
+<div class="gold" id="totals"></div>
+</div>
+
 <script>
+
+let inventory={
+standard:[{name:"Seed",cost:80,qty:100},{name:"Fertilizer",cost:40,qty:100},{name:"Mulch",cost:35,qty:100},{name:"Tackifier",cost:25,qty:100}],
+premium:[{name:"Seed",cost:100,qty:100},{name:"Fertilizer",cost:50,qty:100},{name:"Mulch",cost:40,qty:100},{name:"Tackifier",cost:30,qty:100},{name:"Biochar",cost:25,qty:100},{name:"Humic",cost:20,qty:100}],
+addons:[{name:"Lime",cost:15,qty:100},{name:"Sulfur",cost:20,qty:100},{name:"Sprinkler",cost:50,qty:50}]
+}
 
 let jobs=[]
 
+function toggle(id,el){
+document.getElementById(id).style.display=el.checked?"block":"none"
+}
+
+function applyPremium(){
+if(tier.value==="premium"){
+aeration.checked=true
+compost.checked=true
+bioHum.checked=true
+lime.checked=true
+sulfur.checked=true
+toggle('limeAmount',lime)
+toggle('sulfurAmount',sulfur)
+}
+}
+
 function createJob(){
+
+let sqftVal=parseFloat(sqft.value)||0
+let housesVal=parseFloat(houses.value)||1
+
+let revenue=sqftVal*2*housesVal
+let cost=1000
+let profit=revenue-cost
 
 let job={
 name:customer.value,
-schedule:{
-quote:quote.value,
-soil:soil.value,
-aeration:aerationDate.value,
-compost:compostDate.value,
-hydro:hydroDate.value,
-install:installDate.value,
-removal:removalDate.value,
-inspection:inspectionDate.value
+revenue,
+profit,
+materials:{
+grow:grow.checked,
+aeration:aeration.checked,
+compost:compost.checked,
+bioHum:bioHum.checked,
+bio100:bio100.checked,
+hum100:hum100.checked,
+lime:limeAmount.value,
+sulfur:sulfurAmount.value
 }
 }
 
 jobs.push(job)
 renderJobs()
+renderTotals()
+renderAlerts()
 }
 
 function renderJobs(){
 jobs.innerHTML=jobs.map(j=>`
 <div>
 <b>${j.name}</b><br>
-Quote: ${j.schedule.quote}<br>
-Soil: ${j.schedule.soil}<br>
-Aeration: ${j.schedule.aeration}<br>
-Compost: ${j.schedule.compost}<br>
-Hydro: ${j.schedule.hydro}<br>
-Install: ${j.schedule.install}<br>
-Removal: ${j.schedule.removal}<br>
-Inspection: ${j.schedule.inspection}
+Revenue: $${j.revenue}<br>
+Profit: $${j.profit}<br>
+Materials Used:<br>
+${Object.entries(j.materials).map(([k,v])=>k+": "+v).join("<br>")}
 </div><br>
 `).join("")
 }
 
-function saveInventory(){
-alert("Inventory Saved")
+function renderTotals(){
+let rev=jobs.reduce((a,b)=>a+b.revenue,0)
+let prof=jobs.reduce((a,b)=>a+b.profit,0)
+let margin=rev?((prof/rev)*100).toFixed(1):0
+
+totals.innerHTML=`
+Total Revenue: $${rev}<br>
+Total Profit: $${prof}<br>
+Avg Margin: ${margin}%
+`
 }
+
+function renderAlerts(){
+alerts.innerHTML=""
+inventory.standard.concat(inventory.premium,inventory.addons).forEach(i=>{
+if(i.qty<5) alerts.innerHTML+=`<div class="alert out">${i.name} OUT</div>`
+else if(i.qty<20) alerts.innerHTML+=`<div class="alert low">${i.name} LOW</div>`
+})
+}
+
+renderAlerts()
 
 </script>
 
