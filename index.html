@@ -59,7 +59,6 @@ text-align:center;
 
 <body>
 
-<!-- JOB -->
 <div class="card">
 <h2>Create Job</h2>
 
@@ -98,11 +97,11 @@ text-align:center;
 <input id="crew" placeholder="Crew Size" value="2">
 <input id="hours" placeholder="Hours Per House" value="8">
 
-<h3>Overhead</h3>
-<input id="overhead" placeholder="Overhead %" value="15">
+<h3>Overhead %</h3>
+<input id="overhead" value="15">
 
-<h3>Profit Target</h3>
-<input id="margin" placeholder="Margin %" value="40">
+<h3>Profit Margin %</h3>
+<input id="margin" value="40">
 
 <div class="box">
 <div>Final Investment</div>
@@ -116,9 +115,7 @@ text-align:center;
 <!-- INVENTORY -->
 <div class="card">
 <h2>Inventory</h2>
-
 <div id="inventoryUI"></div>
-
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
 
@@ -152,13 +149,12 @@ text-align:center;
 
 <script>
 
-// HELPERS
 const n=v=>Number(v)||0
 
 let jobs=[]
 let inventory={}
 
-// MATERIAL USAGE (per 1k sqft)
+// MATERIAL RATES
 const standard={seed:6,fert:4,mulch:5,tack:1}
 const premium={elite:6,kbg:2,fert:4,comp:10,bio:2,hum:2}
 const addons={grow:2,aeration:1,compost:5,bio:1,humic:1}
@@ -176,44 +172,43 @@ inventoryUI.innerHTML=`
 
 <h3>Standard</h3>
 
-<input id="seed_name" placeholder="Seed Name">
-<input id="seed_cost" placeholder="Cost">
-<input id="seed_qty" placeholder="Qty">
+<input id="seed_name" value="${inventory.seed?.name||""}" placeholder="Seed Name">
+<input id="seed_cost" value="${inventory.seed?.cost||""}" placeholder="Cost">
+<input id="seed_qty" value="${inventory.seed?.qty||""}" placeholder="Qty">
 
-<input id="fert_name" placeholder="Fertilizer Name">
-<input id="fert_cost" placeholder="Cost">
-<input id="fert_qty" placeholder="Qty">
+<input id="fert_name" value="${inventory.fert?.name||""}" placeholder="Fertilizer Name">
+<input id="fert_cost" value="${inventory.fert?.cost||""}" placeholder="Cost">
+<input id="fert_qty" value="${inventory.fert?.qty||""}" placeholder="Qty">
 
-<input id="mulch_name" placeholder="Mulch Name">
-<input id="mulch_cost" placeholder="Cost">
-<input id="mulch_qty" placeholder="Qty">
+<input id="mulch_name" value="${inventory.mulch?.name||""}" placeholder="Mulch Name">
+<input id="mulch_cost" value="${inventory.mulch?.cost||""}" placeholder="Cost">
+<input id="mulch_qty" value="${inventory.mulch?.qty||""}" placeholder="Qty">
 
-<input id="tack_name" placeholder="Tack Name">
-<input id="tack_cost" placeholder="Cost">
-<input id="tack_qty" placeholder="Qty">
+<input id="tack_name" value="${inventory.tack?.name||""}" placeholder="Tack Name">
+<input id="tack_cost" value="${inventory.tack?.cost||""}" placeholder="Cost">
+<input id="tack_qty" value="${inventory.tack?.qty||""}" placeholder="Qty">
 
 <h3>Premium</h3>
 
-<input id="elite_name" placeholder="Elite Seed">
-<input id="elite_cost" placeholder="Cost">
-<input id="elite_qty" placeholder="Qty">
+<input id="elite_name" value="${inventory.elite?.name||""}" placeholder="Elite Seed">
+<input id="elite_cost" value="${inventory.elite?.cost||""}" placeholder="Cost">
+<input id="elite_qty" value="${inventory.elite?.qty||""}" placeholder="Qty">
 
-<input id="kbg_name" placeholder="KBG Seed">
-<input id="kbg_cost" placeholder="Cost">
-<input id="kbg_qty" placeholder="Qty">
+<input id="kbg_name" value="${inventory.kbg?.name||""}" placeholder="KBG Seed">
+<input id="kbg_cost" value="${inventory.kbg?.cost||""}" placeholder="Cost">
+<input id="kbg_qty" value="${inventory.kbg?.qty||""}" placeholder="Qty">
 
-<input id="comp_name" placeholder="Compost">
-<input id="comp_cost" placeholder="Cost">
-<input id="comp_qty" placeholder="Qty">
+<input id="comp_name" value="${inventory.comp?.name||""}" placeholder="Compost">
+<input id="comp_cost" value="${inventory.comp?.cost||""}" placeholder="Cost">
+<input id="comp_qty" value="${inventory.comp?.qty||""}" placeholder="Qty">
 
-<input id="bio_name" placeholder="Biochar">
-<input id="bio_cost" placeholder="Cost">
-<input id="bio_qty" placeholder="Qty">
+<input id="bio_name" value="${inventory.bio?.name||""}" placeholder="Biochar">
+<input id="bio_cost" value="${inventory.bio?.cost||""}" placeholder="Cost">
+<input id="bio_qty" value="${inventory.bio?.qty||""}" placeholder="Qty">
 
-<input id="hum_name" placeholder="Humic">
-<input id="hum_cost" placeholder="Cost">
-<input id="hum_qty" placeholder="Qty">
-
+<input id="hum_name" value="${inventory.hum?.name||""}" placeholder="Humic">
+<input id="hum_cost" value="${inventory.hum?.cost||""}" placeholder="Cost">
+<input id="hum_qty" value="${inventory.hum?.qty||""}" placeholder="Qty">
 `
 }
 
@@ -221,14 +216,17 @@ inventoryUI.innerHTML=`
 function saveInventory(){
 
 ["seed","fert","mulch","tack","elite","kbg","comp","bio","hum"].forEach(m=>{
-inventory[m]={
-name:document.getElementById(m+"_name")?.value||m,
-cost:n(document.getElementById(m+"_cost")?.value)||20,
-qty:n(document.getElementById(m+"_qty")?.value)||0
-}
+
+if(!inventory[m]) inventory[m]={}
+
+inventory[m].name=document.getElementById(m+"_name").value||m
+inventory[m].cost=n(document.getElementById(m+"_cost").value)||20
+inventory[m].qty=n(document.getElementById(m+"_qty").value)||0
+
 })
 
 alert("Inventory Saved")
+renderAlerts()
 }
 
 // PREMIUM AUTO SELECT
@@ -317,6 +315,9 @@ function createJob(){
 
 calculate()
 
+const customerName=name.value||"Customer"
+
+// DEDUCT INVENTORY + SYNC
 Object.entries(calc.used).forEach(([k,v])=>{
 if(inventory[k]){
 inventory[k].qty-=v.usage
@@ -325,11 +326,12 @@ if(inventory[k].qty<0) inventory[k].qty=0
 })
 
 jobs.push({
-name:name.value||"Customer",
+name:customerName,
 ...calc,
 date:new Date().toLocaleString()
 })
 
+renderInventory()
 renderJobs()
 renderCharts()
 renderAlerts()
@@ -369,11 +371,11 @@ function renderAlerts(){
 
 let html=""
 
-Object.entries(inventory).forEach(([k,v])=>{
+Object.values(inventory).forEach(v=>{
 if(v.qty<5){
-html+=`<div class="alert out">OUT: ${v.name} (${v.qty})</div>`
+html+=`<div class="alert out">OUT: ${v.name} (${v.qty.toFixed(1)})</div>`
 }else if(v.qty<20){
-html+=`<div class="alert">LOW: ${v.name} (${v.qty})</div>`
+html+=`<div class="alert">LOW: ${v.name} (${v.qty.toFixed(1)})</div>`
 }
 })
 
