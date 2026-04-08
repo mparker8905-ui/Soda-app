@@ -11,16 +11,15 @@ input,select{width:100%;margin:6px 0;padding:12px;border-radius:10px;border:none
 button{padding:12px;border-radius:12px;border:none;background:gold;color:#000;font-weight:bold;margin-top:8px}
 .row{display:flex;gap:10px}
 .row button{flex:1}
-.toggle{display:flex;align-items:center;gap:10px;margin:8px 0}
-.big{font-size:32px;text-align:center;margin-top:10px}
+.toggle{display:flex;align-items:center;gap:12px;margin:10px 0}
+.big{font-size:32px;text-align:center}
+.box{border:2px solid gold;padding:20px;border-radius:20px;text-align:center;margin-top:10px}
 .gold{color:gold;font-weight:bold}
-.box{border:2px solid gold;padding:20px;border-radius:20px;margin-top:10px;text-align:center}
 </style>
 </head>
 
 <body>
 
-<!-- CREATE JOB -->
 <div class="card">
 <h2>Create Job</h2>
 
@@ -48,25 +47,24 @@ button{padding:12px;border-radius:12px;border:none;background:gold;color:#000;fo
 
 <h3>Add Ons</h3>
 
-<div class="toggle"><input type="checkbox" id="grow"> Grow System</div>
-<div class="toggle"><input type="checkbox" id="aeration"> Aeration</div>
-<div class="toggle"><input type="checkbox" id="compost"> Compost</div>
-<div class="toggle"><input type="checkbox" id="bio"> Biochar (50%)</div>
-<div class="toggle"><input type="checkbox" id="humic"> Humic Acid (50%)</div>
+<div class="toggle"><input type="checkbox" id="grow">Grow System</div>
+<div class="toggle"><input type="checkbox" id="aeration">Aeration</div>
+<div class="toggle"><input type="checkbox" id="compost">Compost</div>
+<div class="toggle"><input type="checkbox" id="bio">Biochar (50%)</div>
+<div class="toggle"><input type="checkbox" id="humic">Humic Acid (50%)</div>
 
 <h3>Labor</h3>
-<input id="rate" value="70" placeholder="Rate">
-<input id="crew" value="2" placeholder="Crew Size">
-<input id="hours" value="8" placeholder="Hours">
+<input id="rate" value="70">
+<input id="crew" value="2">
+<input id="hours" value="8">
 
 <h3>Overhead / Margin</h3>
-<input id="overhead" value="15" placeholder="Overhead %">
-<input id="margin" value="40" placeholder="Margin %">
+<input id="overhead" value="15">
+<input id="margin" value="40">
 
 <div class="box">
 <div>Final Investment</div>
 <div class="big" id="price">$0</div>
-
 <div id="breakdown"></div>
 </div>
 
@@ -77,10 +75,10 @@ button{padding:12px;border-radius:12px;border:none;background:gold;color:#000;fo
 <div class="card">
 <h2>Inventory</h2>
 
-<h3>Standard</h3>
+<h3>Standard Package</h3>
 <div id="standardInv"></div>
 
-<h3>Premium</h3>
+<h3>Premium Package</h3>
 <div id="premiumInv"></div>
 
 <button onclick="saveInventory()">Save Inventory</button>
@@ -90,7 +88,7 @@ button{padding:12px;border-radius:12px;border:none;background:gold;color:#000;fo
 <div class="card">
 <h2>Job History</h2>
 <button onclick="clearJobs()">Clear</button>
-<div id="jobs"></div>
+<div id="jobList"></div>
 </div>
 
 <!-- ANALYTICS -->
@@ -117,7 +115,7 @@ const n=v=>Number(v)||0
 let jobs=[]
 let inventory={}
 
-// ---------- MATERIAL MAP ----------
+// MATERIAL RATES (per 1k sqft)
 const standardMats={
 seed:6,
 fert:4,
@@ -134,7 +132,6 @@ bio:2,
 hum:2
 }
 
-// ---------- ADD-ONS ----------
 const addOns={
 grow:2,
 aeration:1,
@@ -143,49 +140,72 @@ bio:1,
 humic:1
 }
 
-// ---------- SIZE ----------
+// SIZE
 function setSize(v){
 sqft.value=v
 calculate()
 }
 
-// ---------- INVENTORY UI ----------
+// INVENTORY UI
 function renderInventory(){
 
-let sHTML=""
-Object.keys(standardMats).forEach(m=>{
-sHTML+=`
-<b>${m}</b>
-<input id="${m}_cost" placeholder="cost">
-<input id="${m}_qty" placeholder="qty">
-`
-})
+standardInv.innerHTML=`
+<b>Seed</b>
+<input id="seed_cost" placeholder="cost">
+<input id="seed_qty" placeholder="qty">
 
-let pHTML=""
-Object.keys(premiumMats).forEach(m=>{
-pHTML+=`
-<b>${m}</b>
-<input id="${m}_cost" placeholder="cost">
-<input id="${m}_qty" placeholder="qty">
-`
-})
+<b>Fertilizer</b>
+<input id="fert_cost" placeholder="cost">
+<input id="fert_qty" placeholder="qty">
 
-standardInv.innerHTML=sHTML
-premiumInv.innerHTML=pHTML
+<b>Mulch</b>
+<input id="mulch_cost" placeholder="cost">
+<input id="mulch_qty" placeholder="qty">
+
+<b>Tack</b>
+<input id="tack_cost" placeholder="cost">
+<input id="tack_qty" placeholder="qty">
+`
+
+premiumInv.innerHTML=`
+<b>Elite Seed</b>
+<input id="elite_cost" placeholder="cost">
+<input id="elite_qty" placeholder="qty">
+
+<b>KBG Seed</b>
+<input id="kbg_cost" placeholder="cost">
+<input id="kbg_qty" placeholder="qty">
+
+<b>Fertilizer</b>
+<input id="fert_cost" placeholder="cost">
+<input id="fert_qty" placeholder="qty">
+
+<b>Compost</b>
+<input id="comp_cost" placeholder="cost">
+<input id="comp_qty" placeholder="qty">
+
+<b>Biochar</b>
+<input id="bio_cost" placeholder="cost">
+<input id="bio_qty" placeholder="qty">
+
+<b>Humic Acid</b>
+<input id="hum_cost" placeholder="cost">
+<input id="hum_qty" placeholder="qty">
+`
 }
 
-// ---------- SAVE INVENTORY ----------
+// SAVE INVENTORY
 function saveInventory(){
 
 [...Object.keys(standardMats),...Object.keys(premiumMats)].forEach(m=>{
 inventory[m]={
-cost:n(document.getElementById(m+"_cost").value)||20,
-qty:n(document.getElementById(m+"_qty").value)||0
+cost:n(document.getElementById(m+"_cost")?.value)||20,
+qty:n(document.getElementById(m+"_qty")?.value)||0
 }
 })
 }
 
-// ---------- CALC ----------
+// CALCULATE
 function calculate(){
 
 let sqftVal=n(sqft.value)
@@ -218,7 +238,6 @@ matCost+=cost
 let labor=n(rate.value)*n(crew.value)*n(hours.value)*housesVal
 
 let overheadCost=(matCost+labor)*(n(overhead.value)/100)
-
 let totalCost=matCost+labor+overheadCost
 
 let multiplier=1+(n(margin.value)/100)
@@ -229,16 +248,14 @@ if(strategy.value==="max") multiplier*=1.25
 let revenue=totalCost*multiplier
 
 // BUILDER DISCOUNT
-if(housesVal>=10&&housesVal<30) revenue*=0.9
-if(housesVal>=30&&housesVal<75) revenue*=0.8
+if(housesVal>=10 && housesVal<30) revenue*=0.9
+if(housesVal>=30 && housesVal<75) revenue*=0.8
 if(housesVal>=75) revenue*=0.7
 
 let profit=revenue-totalCost
 let marginPct=(profit/revenue)*100
 
-window.calc={
-used,matCost,labor,totalCost,revenue,profit,marginPct
-}
+window.calc={used,matCost,labor,totalCost,revenue,profit,marginPct}
 
 price.innerHTML="$"+Math.round(revenue)
 
@@ -250,54 +267,55 @@ Margin: ${marginPct.toFixed(1)}%
 `
 }
 
-// ---------- CREATE JOB ----------
+// CREATE JOB
 function createJob(){
 calculate()
+
 jobs.push({...calc,date:new Date().toLocaleString()})
+
 renderJobs()
 renderCharts()
 }
 
-// ---------- JOBS ----------
+// JOB HISTORY
 function renderJobs(){
-jobs.innerHTML=""
+
+jobList.innerHTML=""
 
 jobs.forEach(j=>{
+
 let mats=""
 Object.entries(j.used).forEach(([k,v])=>{
 mats+=`${k}: ${v.usage.toFixed(2)} ($${Math.round(v.cost)})<br>`
 })
 
-jobs.innerHTML+=`
+jobList.innerHTML+=`
 <div class="card">
 ${j.date}<br><br>
 ${mats}<br>
+Material Cost:$${Math.round(j.matCost)}<br>
+Labor:$${Math.round(j.labor)}<br>
 Revenue:$${Math.round(j.revenue)}<br>
-Profit:$${Math.round(j.profit)}
+Profit:$${Math.round(j.profit)}<br>
+Margin:${j.marginPct.toFixed(1)}%
 </div>`
 })
 }
 
-// ---------- TOTALS ----------
-function totals(){
-let rev=jobs.reduce((a,b)=>a+b.revenue,0)
-let prof=jobs.reduce((a,b)=>a+b.profit,0)
-
-totalRevenue.innerHTML="$"+Math.round(rev)
-totalProfit.innerHTML="$"+Math.round(prof)
-}
-
-// ---------- CHARTS ----------
+// TOTALS + CHARTS
 let revChart, profitChart
 
 function renderCharts(){
 
-totals()
-
 let labels=jobs.map((_,i)=>"Job "+(i+1))
-
 let rev=jobs.map(j=>j.revenue)
 let prof=jobs.map(j=>j.profit)
+
+let totalRev=jobs.reduce((a,b)=>a+b.revenue,0)
+let totalProf=jobs.reduce((a,b)=>a+b.profit,0)
+
+totalRevenue.innerHTML="$"+Math.round(totalRev)
+totalProfit.innerHTML="$"+Math.round(totalProf)
 
 if(revChart) revChart.destroy()
 if(profitChart) profitChart.destroy()
@@ -313,7 +331,7 @@ data:{labels,datasets:[{label:"Profit",data:prof}]}
 })
 }
 
-// ---------- CLEAR ----------
+// CLEAR
 function clearJobs(){
 jobs=[]
 renderJobs()
