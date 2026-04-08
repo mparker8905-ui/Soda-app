@@ -7,6 +7,7 @@
 <style>
 body{background:#000;color:#fff;font-family:sans-serif;padding:16px;margin:0}
 .card{background:#111;padding:18px;border-radius:18px;margin-bottom:16px}
+
 input,select{
 width:100%;
 margin:6px 0;
@@ -17,6 +18,7 @@ background:#222;
 color:#fff;
 font-size:16px;
 }
+
 button{
 padding:14px;
 border-radius:12px;
@@ -27,6 +29,7 @@ font-weight:bold;
 margin-top:10px;
 width:100%;
 }
+
 .row{display:flex;gap:10px}
 .row button{flex:1}
 
@@ -47,7 +50,6 @@ flex-shrink:0;
 .toggle span{
 flex:1;
 text-align:left;
-word-break:break-word;
 }
 
 .box{
@@ -60,6 +62,20 @@ margin-top:12px;
 
 .big{font-size:30px}
 .gold{color:gold;font-weight:bold}
+
+.alert{
+margin:6px 0;
+padding:10px;
+border-radius:10px;
+background:#220000;
+color:#ff4d4d;
+font-weight:bold;
+}
+
+.alert.out{
+background:#550000;
+color:#ff0000;
+}
 </style>
 </head>
 
@@ -99,9 +115,9 @@ margin-top:12px;
 <label class="toggle"><input type="checkbox" id="humic"><span>Humic Acid (50%)</span></label>
 
 <h3>Labor</h3>
-<input id="rate" value="70" placeholder="Rate">
-<input id="crew" value="2" placeholder="Crew Size">
-<input id="hours" value="8" placeholder="Hours">
+<input id="rate" value="70">
+<input id="crew" value="2">
+<input id="hours" value="8">
 
 <h3>Overhead / Margin</h3>
 <input id="overhead" value="15">
@@ -124,6 +140,12 @@ margin-top:12px;
 <div id="premiumInv"></div>
 
 <button onclick="saveInventory()">Save Inventory</button>
+</div>
+
+<!-- ALERTS -->
+<div class="card">
+<h2>Alerts</h2>
+<div id="alerts"></div>
 </div>
 
 <!-- JOB HISTORY -->
@@ -173,7 +195,6 @@ function renderInventory(){
 
 standardInv.innerHTML=`
 <h3>Standard Package</h3>
-
 <input id="seed_name" placeholder="Seed Name">
 <input id="seed_cost" placeholder="Cost">
 <input id="seed_qty" placeholder="Qty">
@@ -193,7 +214,6 @@ standardInv.innerHTML=`
 
 premiumInv.innerHTML=`
 <h3>Premium Package</h3>
-
 <input id="elite_name" placeholder="Elite Seed Name">
 <input id="elite_cost" placeholder="Cost">
 <input id="elite_qty" placeholder="Qty">
@@ -228,7 +248,25 @@ cost:n(document.getElementById(m+"_cost")?.value)||20,
 qty:n(document.getElementById(m+"_qty")?.value)||0
 }
 })
+
 }
+
+// PREMIUM AUTO SELECT
+tier.addEventListener("change",()=>{
+
+if(tier.value==="premium"){
+["aeration","compost","bio","humic"].forEach(id=>{
+document.getElementById(id).checked=true
+})
+}else{
+["aeration","compost","bio","humic"].forEach(id=>{
+document.getElementById(id).checked=false
+})
+}
+
+calculate()
+
+})
 
 // CALC
 function calculate(){
@@ -298,15 +336,15 @@ calculate()
 jobs.push({...calc,date:new Date().toLocaleString()})
 renderJobs()
 renderCharts()
+renderAlerts()
 }
 
-// JOBS
+// JOB HISTORY
 function renderJobs(){
 
 jobList.innerHTML=""
 
 jobs.forEach(j=>{
-
 let mats=""
 Object.entries(j.used).forEach(([k,v])=>{
 mats+=`${inventory[k]?.name||k}: ${v.usage.toFixed(2)} ($${Math.round(v.cost)})<br>`
@@ -323,6 +361,35 @@ Profit:$${Math.round(j.profit)}<br>
 Margin:${j.marginPct.toFixed(1)}%
 </div>`
 })
+}
+
+// ALERTS
+function renderAlerts(){
+
+let html=""
+
+// JOB ALERTS
+jobs.forEach(j=>{
+if(j.marginPct < 25){
+html += `<div class="alert">⚠️ Low margin (${j.marginPct.toFixed(1)}%)</div>`
+}
+})
+
+// INVENTORY ALERTS
+Object.entries(inventory).forEach(([k,v])=>{
+
+if(v.qty < 5){
+html += `<div class="alert out">🚨 OUT: ${v.name||k} (${v.qty})</div>`
+}
+else if(v.qty < 20){
+html += `<div class="alert">⚠️ Low: ${v.name||k} (${v.qty})</div>`
+}
+
+})
+
+if(!html) html="No alerts"
+
+alerts.innerHTML=html
 }
 
 // CHARTS
@@ -343,15 +410,16 @@ totalProfit.innerHTML="$"+Math.round(totalProf)
 if(revChart) revChart.destroy()
 if(profitChart) profitChart.destroy()
 
-revChart=new Chart(document.getElementById("revChart"),{
+revChart=new Chart(revChart,{
 type:"line",
 data:{labels,datasets:[{label:"Revenue",data:rev}]}
 })
 
-profitChart=new Chart(document.getElementById("profitChart"),{
+profitChart=new Chart(profitChart,{
 type:"line",
 data:{labels,datasets:[{label:"Profit",data:prof}]}
 })
+
 }
 
 // CLEAR
@@ -359,6 +427,7 @@ function clearJobs(){
 jobs=[]
 renderJobs()
 renderCharts()
+renderAlerts()
 }
 
 // INIT
