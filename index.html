@@ -7,18 +7,20 @@
 <style>
 body{background:#000;color:#fff;font-family:sans-serif;padding:20px}
 .card{background:#111;padding:20px;border-radius:20px;margin-bottom:20px}
-input,select,button{width:100%;margin:6px 0;padding:12px;border-radius:10px;border:none;background:#222;color:#fff}
-button{background:gold;color:#000;font-weight:bold}
+input,select{width:100%;margin:6px 0;padding:12px;border-radius:10px;border:none;background:#222;color:#fff}
+button{padding:12px;border-radius:12px;border:none;background:gold;color:#000;font-weight:bold;margin-top:8px}
 .row{display:flex;gap:10px}
 .row button{flex:1}
-.big{font-size:28px;text-align:center}
+.toggle{display:flex;align-items:center;gap:10px;margin:8px 0}
+.big{font-size:32px;text-align:center;margin-top:10px}
 .gold{color:gold;font-weight:bold}
-.alert{color:red}
+.box{border:2px solid gold;padding:20px;border-radius:20px;margin-top:10px;text-align:center}
 </style>
 </head>
 
 <body>
 
+<!-- CREATE JOB -->
 <div class="card">
 <h2>Create Job</h2>
 
@@ -44,17 +46,29 @@ button{background:gold;color:#000;font-weight:bold}
 <input id="sqft" placeholder="Sqft">
 <input id="houses" placeholder="Houses">
 
+<h3>Add Ons</h3>
+
+<div class="toggle"><input type="checkbox" id="grow"> Grow System</div>
+<div class="toggle"><input type="checkbox" id="aeration"> Aeration</div>
+<div class="toggle"><input type="checkbox" id="compost"> Compost</div>
+<div class="toggle"><input type="checkbox" id="bio"> Biochar (50%)</div>
+<div class="toggle"><input type="checkbox" id="humic"> Humic Acid (50%)</div>
+
 <h3>Labor</h3>
-<input id="rate" value="70">
-<input id="crew" value="2">
-<input id="hours" value="8">
+<input id="rate" value="70" placeholder="Rate">
+<input id="crew" value="2" placeholder="Crew Size">
+<input id="hours" value="8" placeholder="Hours">
 
 <h3>Overhead / Margin</h3>
-<input id="overhead" value="15">
-<input id="margin" value="40">
+<input id="overhead" value="15" placeholder="Overhead %">
+<input id="margin" value="40" placeholder="Margin %">
 
+<div class="box">
+<div>Final Investment</div>
 <div class="big" id="price">$0</div>
+
 <div id="breakdown"></div>
+</div>
 
 <button onclick="createJob()">Create Job</button>
 </div>
@@ -62,14 +76,14 @@ button{background:gold;color:#000;font-weight:bold}
 <!-- INVENTORY -->
 <div class="card">
 <h2>Inventory</h2>
-<div id="inventoryUI"></div>
-<button onclick="saveInventory()">Save Inventory</button>
-</div>
 
-<!-- ALERTS -->
-<div class="card">
-<h2>Alerts</h2>
-<div id="alerts"></div>
+<h3>Standard</h3>
+<div id="standardInv"></div>
+
+<h3>Premium</h3>
+<div id="premiumInv"></div>
+
+<button onclick="saveInventory()">Save Inventory</button>
 </div>
 
 <!-- JOB HISTORY -->
@@ -94,11 +108,6 @@ button{background:gold;color:#000;font-weight:bold}
 <div class="gold">Total Profit</div>
 <div id="totalProfit"></div>
 
-<br>
-
-<div class="gold">Fatal Costs</div>
-<div id="fatalCosts"></div>
-
 </div>
 
 <script>
@@ -106,12 +115,32 @@ button{background:gold;color:#000;font-weight:bold}
 const n=v=>Number(v)||0
 
 let jobs=[]
-let inventoryData={}
+let inventory={}
 
-// ---------- MATERIAL RATES (PER 1K SQFT) ----------
-const materialRates={
-standard:{seed:6,fert:4,mulch:5,tack:1},
-premium:{elite:6,kbg:2,fert:4,comp:10,bio:2,hum:2}
+// ---------- MATERIAL MAP ----------
+const standardMats={
+seed:6,
+fert:4,
+mulch:5,
+tack:1
+}
+
+const premiumMats={
+elite:6,
+kbg:2,
+fert:4,
+comp:10,
+bio:2,
+hum:2
+}
+
+// ---------- ADD-ONS ----------
+const addOns={
+grow:2,
+aeration:1,
+compost:5,
+bio:1,
+humic:1
 }
 
 // ---------- SIZE ----------
@@ -120,30 +149,40 @@ sqft.value=v
 calculate()
 }
 
-// ---------- INVENTORY ----------
+// ---------- INVENTORY UI ----------
 function renderInventory(){
-let html=""
 
-Object.keys({...materialRates.standard,...materialRates.premium}).forEach(m=>{
-let d=inventoryData[m]||{}
-html+=`
+let sHTML=""
+Object.keys(standardMats).forEach(m=>{
+sHTML+=`
 <b>${m}</b>
-<input id="${m}_cost" placeholder="cost" value="${d.cost||""}">
-<input id="${m}_qty" placeholder="qty" value="${d.qty||""}">
+<input id="${m}_cost" placeholder="cost">
+<input id="${m}_qty" placeholder="qty">
 `
 })
 
-inventoryUI.innerHTML=html
+let pHTML=""
+Object.keys(premiumMats).forEach(m=>{
+pHTML+=`
+<b>${m}</b>
+<input id="${m}_cost" placeholder="cost">
+<input id="${m}_qty" placeholder="qty">
+`
+})
+
+standardInv.innerHTML=sHTML
+premiumInv.innerHTML=pHTML
 }
 
+// ---------- SAVE INVENTORY ----------
 function saveInventory(){
-Object.keys({...materialRates.standard,...materialRates.premium}).forEach(m=>{
-inventoryData[m]={
-cost:n(document.getElementById(m+"_cost").value),
-qty:n(document.getElementById(m+"_qty").value)
+
+[...Object.keys(standardMats),...Object.keys(premiumMats)].forEach(m=>{
+inventory[m]={
+cost:n(document.getElementById(m+"_cost").value)||20,
+qty:n(document.getElementById(m+"_qty").value)||0
 }
 })
-renderInventory()
 }
 
 // ---------- CALC ----------
@@ -152,56 +191,53 @@ function calculate(){
 let sqftVal=n(sqft.value)
 let housesVal=n(houses.value)||1
 
-let matSet=materialRates[tier.value]
+let mats = tier.value==="standard"?standardMats:premiumMats
 
-let totalMaterialCost=0
-let usedMaterials={}
+let used={}
+let matCost=0
 
-Object.keys(matSet).forEach(m=>{
+Object.keys(mats).forEach(m=>{
+let usage=((mats[m]*sqftVal)/1000)*housesVal
+let cost=(inventory[m]?.cost||20)*usage
 
-// correct usage formula
-let usagePerHouse = (matSet[m] * sqftVal) / 1000
-let totalUsage = usagePerHouse * housesVal
-
-let costPer = inventoryData[m]?.cost || 20
-let cost = totalUsage * costPer
-
-usedMaterials[m]={usage:totalUsage,cost}
-totalMaterialCost+=cost
-
+used[m]={usage,cost}
+matCost+=cost
 })
 
-// labor
+// ADD ONS
+Object.keys(addOns).forEach(a=>{
+if(document.getElementById(a).checked){
+let usage=((addOns[a]*sqftVal)/1000)*housesVal
+let cost=usage*20
+used[a]={usage,cost}
+matCost+=cost
+}
+})
+
+// LABOR
 let labor=n(rate.value)*n(crew.value)*n(hours.value)*housesVal
 
-let overheadCost=(totalMaterialCost+labor)*(n(overhead.value)/100)
+let overheadCost=(matCost+labor)*(n(overhead.value)/100)
 
-let totalCost=totalMaterialCost+labor+overheadCost
+let totalCost=matCost+labor+overheadCost
 
-// pricing
-let marginMult=1+(n(margin.value)/100)
+let multiplier=1+(n(margin.value)/100)
 
-if(strategy.value==="win") marginMult*=0.85
-if(strategy.value==="max") marginMult*=1.25
+if(strategy.value==="win") multiplier*=0.85
+if(strategy.value==="max") multiplier*=1.25
 
-let revenue=totalCost*marginMult
+let revenue=totalCost*multiplier
 
-// builder discount
-if(housesVal>=10 && housesVal<30) revenue*=0.9
-if(housesVal>=30 && housesVal<75) revenue*=0.8
+// BUILDER DISCOUNT
+if(housesVal>=10&&housesVal<30) revenue*=0.9
+if(housesVal>=30&&housesVal<75) revenue*=0.8
 if(housesVal>=75) revenue*=0.7
 
 let profit=revenue-totalCost
 let marginPct=(profit/revenue)*100
 
-window.calcData={
-usedMaterials,
-totalMaterialCost,
-labor,
-totalCost,
-revenue,
-profit,
-marginPct
+window.calc={
+used,matCost,labor,totalCost,revenue,profit,marginPct
 }
 
 price.innerHTML="$"+Math.round(revenue)
@@ -216,103 +252,76 @@ Margin: ${marginPct.toFixed(1)}%
 
 // ---------- CREATE JOB ----------
 function createJob(){
-
 calculate()
-
-// inventory deduction
-Object.keys(calcData.usedMaterials).forEach(m=>{
-if(!inventoryData[m]) return
-
-inventoryData[m].qty -= calcData.usedMaterials[m].usage
-
-if(inventoryData[m].qty < 0){
-inventoryData[m].qty = 0
-}
-})
-
-jobs.push({...calcData,date:new Date().toLocaleString()})
-
-renderAll()
+jobs.push({...calc,date:new Date().toLocaleString()})
+renderJobs()
+renderCharts()
 }
 
-// ---------- RENDER ----------
-function renderAll(){
-
-// JOBS
+// ---------- JOBS ----------
+function renderJobs(){
 jobs.innerHTML=""
-jobs.forEach(j=>{
 
-let matHTML=""
-Object.entries(j.usedMaterials).forEach(([k,v])=>{
-matHTML+=`${k}: ${v.usage.toFixed(2)} ($${Math.round(v.cost)})<br>`
+jobs.forEach(j=>{
+let mats=""
+Object.entries(j.used).forEach(([k,v])=>{
+mats+=`${k}: ${v.usage.toFixed(2)} ($${Math.round(v.cost)})<br>`
 })
 
 jobs.innerHTML+=`
 <div class="card">
 ${j.date}<br><br>
-<b>Materials</b><br>
-${matHTML}<br>
-Material Cost:$${Math.round(j.totalMaterialCost)}<br>
-Labor:$${Math.round(j.labor)}<br>
+${mats}<br>
 Revenue:$${Math.round(j.revenue)}<br>
-Profit:$${Math.round(j.profit)}<br>
-Margin:${j.marginPct.toFixed(1)}%
+Profit:$${Math.round(j.profit)}
 </div>`
 })
+}
 
-// TOTALS
-let totalRev=jobs.reduce((a,b)=>a+b.revenue,0)
-let totalProf=jobs.reduce((a,b)=>a+b.profit,0)
-let totalMat=jobs.reduce((a,b)=>a+b.totalMaterialCost,0)
-let totalLabor=jobs.reduce((a,b)=>a+b.labor,0)
+// ---------- TOTALS ----------
+function totals(){
+let rev=jobs.reduce((a,b)=>a+b.revenue,0)
+let prof=jobs.reduce((a,b)=>a+b.profit,0)
 
-totalRevenue.innerHTML="$"+Math.round(totalRev)
-totalProfit.innerHTML="$"+Math.round(totalProf)
-
-fatalCosts.innerHTML=`
-Material Spend: $${Math.round(totalMat)}<br>
-Labor Spend: $${Math.round(totalLabor)}
-`
-
-buildCharts()
+totalRevenue.innerHTML="$"+Math.round(rev)
+totalProfit.innerHTML="$"+Math.round(prof)
 }
 
 // ---------- CHARTS ----------
 let revChart, profitChart
 
-function buildCharts(){
+function renderCharts(){
+
+totals()
 
 let labels=jobs.map((_,i)=>"Job "+(i+1))
-let revData=jobs.map(j=>j.revenue)
-let profitData=jobs.map(j=>j.profit)
+
+let rev=jobs.map(j=>j.revenue)
+let prof=jobs.map(j=>j.profit)
 
 if(revChart) revChart.destroy()
 if(profitChart) profitChart.destroy()
 
-revChart=new Chart(revChartCanvas,{
+revChart=new Chart(document.getElementById("revChart"),{
 type:"line",
-data:{labels,datasets:[{label:"Revenue",data:revData}]}
+data:{labels,datasets:[{label:"Revenue",data:rev}]}
 })
 
-profitChart=new Chart(profitChartCanvas,{
+profitChart=new Chart(document.getElementById("profitChart"),{
 type:"line",
-data:{labels,datasets:[{label:"Profit",data:profitData}]}
+data:{labels,datasets:[{label:"Profit",data:prof}]}
 })
-
 }
-
-const revChartCanvas=document.getElementById("revChart")
-const profitChartCanvas=document.getElementById("profitChart")
 
 // ---------- CLEAR ----------
 function clearJobs(){
 jobs=[]
-renderAll()
+renderJobs()
+renderCharts()
 }
 
 // INIT
 renderInventory()
-
 document.querySelectorAll("input,select").forEach(el=>{
 el.addEventListener("input",calculate)
 })
