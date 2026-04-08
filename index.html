@@ -9,10 +9,9 @@ body{font-family:Arial;background:#000;color:#fff;padding:20px;}
 .card{background:#111;padding:20px;border-radius:20px;margin-bottom:20px;}
 input,select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:none;background:#222;color:#fff;}
 button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:bold;}
-.flex{display:flex;gap:10px;margin:10px 0;}
 .price-box{border:2px solid gold;padding:20px;border-radius:20px;text-align:center;}
-.big{font-size:32px}
-.alert{color:#ff4d4d;font-weight:bold;}
+.big{font-size:28px}
+.alert{color:red;font-weight:bold;}
 </style>
 </head>
 
@@ -23,59 +22,39 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 
 <input id="name" placeholder="Customer Name">
 
-<label>Tier</label>
 <select id="tier">
 <option value="standard">Standard</option>
 <option value="premium">Premium</option>
 </select>
 
-<div class="flex">
-<button onclick="setSize(3000)">Small</button>
-<button onclick="setSize(6000)">Medium</button>
-<button onclick="setSize(10000)">Large</button>
-</div>
-
-<label>Square Feet</label>
-<input id="sqft" value="3000">
-
-<label># of Properties</label>
-<input id="houses" value="1">
-
-<h3>Add Ons</h3>
-<label><input type="checkbox" id="grow"> Grow</label>
-<label><input type="checkbox" id="aeration"> Aeration</label>
-<label><input type="checkbox" id="compost"> Compost</label>
-<label><input type="checkbox" id="bio"> Bio (50%)</label>
-<label><input type="checkbox" id="hum"> Humic (50%)</label>
+<input id="sqft" placeholder="Square Feet" value="3000">
 
 <h3>Labor</h3>
-<label>Hourly Rate</label>
-<input id="laborRate" value="70">
+<input id="rate" placeholder="Hourly Rate" value="70">
+<input id="crew" placeholder="Crew Size" value="2">
+<input id="hours" placeholder="Hours" value="8">
 
-<label>Crew Size</label>
-<input id="crewSize" value="2">
-
-<label>Hours</label>
-<input id="hours" value="8">
-
-<h3>Overhead & Margin</h3>
-<label>Overhead %</label>
+<h3>Overhead %</h3>
 <input id="overhead" value="15">
 
-<label>Margin %</label>
+<h3>Margin %</h3>
 <input id="margin" value="40">
 
 <div class="price-box">
 <div>Final Investment</div>
-<div id="priceDisplay" class="big">$0</div>
+<div id="price" class="big">$0</div>
+
+<div id="breakdown"></div>
 </div>
 
 <button onclick="createJob()">Create Job</button>
 </div>
 
 <div class="card">
-<h2>Inventory</h2>
+<h2>Inventory (by Brand)</h2>
+
 <div id="inventory"></div>
+
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
 
@@ -97,41 +76,44 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 <script>
 
 // ---------- HELPERS ----------
-function n(v){return Number(v)||0}
+const n=v=>Number(v)||0
 
-// ---------- DATA ----------
+// ---------- STORAGE ----------
 let jobs=JSON.parse(localStorage.getItem("jobs")||"[]")
 let inventory=JSON.parse(localStorage.getItem("inventory")||"{}")
 
-const materials=["seed","fert","comp","bio","hum"]
-
-// ---------- SIZE ----------
-function setSize(v){sqft.value=v;calculate()}
-
-// ---------- PREMIUM ----------
-tier.onchange=()=>{
-if(tier.value==="premium"){
-aeration.checked=true
-compost.checked=true
-bio.checked=true
-hum.checked=true
-}
-calculate()
+// ---------- MATERIAL MODEL ----------
+const materials = {
+seed:{rate:6},
+fert:{rate:4},
+comp:{rate:5},
+bio:{rate:2},
+hum:{rate:2}
 }
 
-// ---------- INVENTORY ----------
+// ---------- INVENTORY UI ----------
 function renderInventory(){
-inventoryDiv.innerHTML=materials.map(m=>`
-<input id="${m}c" placeholder="${m} cost">
-<input id="${m}q" placeholder="${m} qty">
-`).join("")
+let html=""
+Object.keys(materials).forEach(m=>{
+html+=`
+<b>${m.toUpperCase()}</b>
+<input id="${m}_brand" placeholder="brand">
+<input id="${m}_cost" placeholder="cost per unit">
+<input id="${m}_qty" placeholder="qty">
+`
+})
+inventoryDiv.innerHTML=html
 }
 const inventoryDiv=document.getElementById("inventory")
 renderInventory()
 
 function saveInventory(){
-materials.forEach(m=>{
-inventory[m]={c:n(document.getElementById(m+"c").value),q:n(document.getElementById(m+"q").value)}
+Object.keys(materials).forEach(m=>{
+inventory[m]={
+brand:document.getElementById(m+"_brand").value,
+cost:n(document.getElementById(m+"_cost").value),
+qty:n(document.getElementById(m+"_qty").value)
+}
 })
 localStorage.setItem("inventory",JSON.stringify(inventory))
 alert("Saved")
@@ -140,36 +122,45 @@ alert("Saved")
 // ---------- CALC ----------
 function calculate(){
 
-let sqftVal=n(sqft.value)
-let jobsCount=n(houses.value)
+let sqft=n(document.getElementById("sqft").value)
 
-// REALISTIC RATES (FIXED)
-let baseRate = tier.value==="premium" ? 0.12 : 0.08
+// MATERIAL USAGE
+let materialCost=0
+let used={}
 
-let materialCost = sqftVal * baseRate
+Object.keys(materials).forEach(m=>{
+let usage=(materials[m].rate*sqft)/1000
+let inv=inventory[m]||{cost:20}
 
-// ADD-ONS
-if(compost.checked) materialCost += sqftVal * 0.05
-if(bio.checked) materialCost += sqftVal * 0.02
-if(hum.checked) materialCost += sqftVal * 0.02
-if(grow.checked) materialCost *=1.1
+let cost=usage*(inv.cost||20)
+
+used[m]={usage,cost}
+
+materialCost+=cost
+})
 
 // LABOR
-let labor = n(laborRate.value)*n(crewSize.value)*n(hours.value)
+let labor=n(rate.value)*n(crew.value)*n(hours.value)
 
 // OVERHEAD
-let overheadCost = (materialCost+labor)*(n(overhead.value)/100)
+let overheadCost=(materialCost+labor)*(n(overhead.value)/100)
 
-// TOTAL COST
-let totalCost = materialCost+labor+overheadCost
+let totalCost=materialCost+labor+overheadCost
 
-// FINAL PRICE
-let price = totalCost*(1+(n(margin.value)/100))
+let revenue=totalCost*(1+(n(margin.value)/100))
+let profit=revenue-totalCost
+let marginPct=(profit/revenue)*100
 
-window.finalPrice=price
-window.materialCost=materialCost
+window.calcData={materialCost,labor,overheadCost,totalCost,revenue,profit,marginPct,used}
 
-priceDisplay.innerText="$"+Math.round(price)
+price.innerText="$"+Math.round(revenue)
+
+breakdown.innerHTML=`
+Cost: $${Math.round(totalCost)}<br>
+Revenue: $${Math.round(revenue)}<br>
+Profit: $${Math.round(profit)}<br>
+Margin: ${marginPct.toFixed(1)}%
+`
 }
 
 // ---------- CREATE JOB ----------
@@ -179,33 +170,30 @@ calculate()
 
 let alertsArr=[]
 
-materials.forEach(m=>{
-if(!inventory[m]) inventory[m]={q:0,c:0}
+// DEDUCT REAL MATERIALS
+Object.keys(window.calcData.used).forEach(m=>{
+let usage=window.calcData.used[m].usage
 
-inventory[m].q -= 1
+if(!inventory[m]) return
 
-if(inventory[m].q<=0){
+inventory[m].qty -= usage
+
+if(inventory[m].qty<=0){
 alertsArr.push(m+" OUT")
-inventory[m].q=0
+inventory[m].qty=0
 }
 })
 
-let revenue=window.finalPrice
-let profit=revenue-window.materialCost
-let margin=(profit/revenue)*100
+localStorage.setItem("inventory",JSON.stringify(inventory))
 
 jobs.push({
 name:name.value||"Client",
-revenue,
-profit,
-margin,
-materialCost:window.materialCost,
+...window.calcData,
 alerts:alertsArr,
 date:new Date().toLocaleString()
 })
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
-localStorage.setItem("inventory",JSON.stringify(inventory))
 
 render()
 }
@@ -213,25 +201,40 @@ render()
 // ---------- RENDER ----------
 function render(){
 
-let jobsHTML=""
-let alertsHTML=""
-
+// ALERTS
+let alertHTML=""
 jobs.forEach(j=>{
-j.alerts.forEach(a=>alertsHTML+=`<div class="alert">${a}</div>`)
+j.alerts.forEach(a=>{
+alertHTML+=`<div class="alert">${a}</div>`
+})
+})
+alerts.innerHTML=alertHTML||"No alerts"
+
+// JOBS
+let jobsHTML=""
+jobs.forEach(j=>{
+
+let matHTML=""
+Object.entries(j.used).forEach(([k,v])=>{
+matHTML+=`${k}: ${v.usage.toFixed(1)} ($${Math.round(v.cost)})<br>`
+})
 
 jobsHTML+=`
 <div class="card">
 <b>${j.name}</b><br>
-${j.date}<br>
-Material Cost:$${Math.round(j.materialCost)}<br>
+${j.date}<br><br>
+
+<b>Materials Used</b><br>
+${matHTML}<br>
+
+Cost:$${Math.round(j.totalCost)}<br>
 Revenue:$${Math.round(j.revenue)}<br>
 Profit:$${Math.round(j.profit)}<br>
-Margin:${j.margin.toFixed(1)}%
+Margin:${j.marginPct.toFixed(1)}%
 </div>`
 })
 
-alerts.innerHTML=alertsHTML||"No alerts"
-jobsDiv.innerHTML=jobsHTML
+document.getElementById("jobs").innerHTML=jobsHTML
 
 // CHART
 if(window.chart) window.chart.destroy()
@@ -247,8 +250,6 @@ datasets:[
 }
 })
 }
-
-const jobsDiv=document.getElementById("jobs")
 
 // ---------- LIVE ----------
 document.querySelectorAll("input,select").forEach(el=>{
