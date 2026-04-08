@@ -9,6 +9,7 @@ body{font-family:Arial;background:#000;color:#fff;padding:20px;}
 .card{background:#111;padding:20px;border-radius:20px;margin-bottom:20px;}
 input,select{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:none;background:#222;color:#fff;}
 button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:bold;}
+.flex{display:flex;gap:10px;margin:10px 0;}
 .price-box{border:2px solid gold;padding:20px;border-radius:20px;text-align:center;}
 .big{font-size:28px}
 .alert{color:red;font-weight:bold;}
@@ -27,7 +28,20 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 <option value="premium">Premium</option>
 </select>
 
-<input id="sqft" placeholder="Square Feet" value="3000">
+<div class="flex">
+<button onclick="setSize(3000)">Small</button>
+<button onclick="setSize(6000)">Medium</button>
+<button onclick="setSize(10000)">Large</button>
+</div>
+
+<input id="sqft" value="3000">
+
+<h3>Add Ons</h3>
+<label><input type="checkbox" id="grow"> Grow</label>
+<label><input type="checkbox" id="aeration"> Aeration</label>
+<label><input type="checkbox" id="compost"> Compost</label>
+<label><input type="checkbox" id="bio"> Biochar</label>
+<label><input type="checkbox" id="hum"> Humic</label>
 
 <h3>Labor</h3>
 <input id="rate" placeholder="Hourly Rate" value="70">
@@ -43,7 +57,6 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 <div class="price-box">
 <div>Final Investment</div>
 <div id="price" class="big">$0</div>
-
 <div id="breakdown"></div>
 </div>
 
@@ -51,10 +64,8 @@ button{padding:12px;border:none;border-radius:12px;background:gold;font-weight:b
 </div>
 
 <div class="card">
-<h2>Inventory (by Brand)</h2>
-
+<h2>Inventory</h2>
 <div id="inventory"></div>
-
 <button onclick="saveInventory()">Save Inventory</button>
 </div>
 
@@ -82,7 +93,7 @@ const n=v=>Number(v)||0
 let jobs=JSON.parse(localStorage.getItem("jobs")||"[]")
 let inventory=JSON.parse(localStorage.getItem("inventory")||"{}")
 
-// ---------- MATERIAL MODEL ----------
+// ---------- MATERIAL RATES ----------
 const materials = {
 seed:{rate:6},
 fert:{rate:4},
@@ -91,53 +102,73 @@ bio:{rate:2},
 hum:{rate:2}
 }
 
-// ---------- INVENTORY UI ----------
+// ---------- SIZE ----------
+function setSize(v){
+sqft.value=v
+calculate()
+}
+
+// ---------- PREMIUM AUTO SELECT ----------
+tier.onchange=()=>{
+if(tier.value==="premium"){
+aeration.checked=true
+compost.checked=true
+bio.checked=true
+hum.checked=true
+}
+calculate()
+}
+
+// ---------- INVENTORY ----------
 function renderInventory(){
 let html=""
 Object.keys(materials).forEach(m=>{
+let data=inventory[m]||{}
 html+=`
 <b>${m.toUpperCase()}</b>
-<input id="${m}_brand" placeholder="brand">
-<input id="${m}_cost" placeholder="cost per unit">
-<input id="${m}_qty" placeholder="qty">
+<input id="${m}_cost" placeholder="cost" value="${data.cost||""}">
+<input id="${m}_qty" placeholder="qty" value="${data.qty||""}">
 `
 })
 inventoryDiv.innerHTML=html
 }
 const inventoryDiv=document.getElementById("inventory")
-renderInventory()
 
 function saveInventory(){
 Object.keys(materials).forEach(m=>{
 inventory[m]={
-brand:document.getElementById(m+"_brand").value,
 cost:n(document.getElementById(m+"_cost").value),
 qty:n(document.getElementById(m+"_qty").value)
 }
 })
 localStorage.setItem("inventory",JSON.stringify(inventory))
-alert("Saved")
+renderInventory()
 }
 
 // ---------- CALC ----------
 function calculate(){
 
-let sqft=n(document.getElementById("sqft").value)
+let sqftVal=n(sqft.value)
 
-// MATERIAL USAGE
+// BASE MATERIAL COST
 let materialCost=0
 let used={}
 
 Object.keys(materials).forEach(m=>{
-let usage=(materials[m].rate*sqft)/1000
-let inv=inventory[m]||{cost:20}
-
-let cost=usage*(inv.cost||20)
+let usage=(materials[m].rate*sqftVal)/1000
+let costPer=inventory[m]?.cost||20
+let cost=usage*costPer
 
 used[m]={usage,cost}
-
 materialCost+=cost
 })
+
+// ADD-ONS
+if(compost.checked) materialCost+=sqftVal*0.05
+if(bio.checked) materialCost+=sqftVal*0.02
+if(hum.checked) materialCost+=sqftVal*0.02
+if(grow.checked) materialCost*=1.1
+if(aeration.checked) materialCost+=sqftVal*0.03
 
 // LABOR
 let labor=n(rate.value)*n(crew.value)*n(hours.value)
@@ -151,7 +182,7 @@ let revenue=totalCost*(1+(n(margin.value)/100))
 let profit=revenue-totalCost
 let marginPct=(profit/revenue)*100
 
-window.calcData={materialCost,labor,overheadCost,totalCost,revenue,profit,marginPct,used}
+window.calcData={materialCost,totalCost,revenue,profit,marginPct,used}
 
 price.innerText="$"+Math.round(revenue)
 
@@ -170,7 +201,7 @@ calculate()
 
 let alertsArr=[]
 
-// DEDUCT REAL MATERIALS
+// REAL INVENTORY DEDUCTION
 Object.keys(window.calcData.used).forEach(m=>{
 let usage=window.calcData.used[m].usage
 
@@ -188,9 +219,9 @@ localStorage.setItem("inventory",JSON.stringify(inventory))
 
 jobs.push({
 name:name.value||"Client",
+date:new Date().toLocaleString(),
 ...window.calcData,
-alerts:alertsArr,
-date:new Date().toLocaleString()
+alerts:alertsArr
 })
 
 localStorage.setItem("jobs",JSON.stringify(jobs))
@@ -204,13 +235,13 @@ function render(){
 // ALERTS
 let alertHTML=""
 jobs.forEach(j=>{
-j.alerts.forEach(a=>{
+j.alerts?.forEach(a=>{
 alertHTML+=`<div class="alert">${a}</div>`
 })
 })
 alerts.innerHTML=alertHTML||"No alerts"
 
-// JOBS
+// JOB HISTORY
 let jobsHTML=""
 jobs.forEach(j=>{
 
@@ -224,7 +255,7 @@ jobsHTML+=`
 <b>${j.name}</b><br>
 ${j.date}<br><br>
 
-<b>Materials Used</b><br>
+<b>Materials</b><br>
 ${matHTML}<br>
 
 Cost:$${Math.round(j.totalCost)}<br>
@@ -234,7 +265,7 @@ Margin:${j.marginPct.toFixed(1)}%
 </div>`
 })
 
-document.getElementById("jobs").innerHTML=jobsHTML
+jobsDiv.innerHTML=jobsHTML
 
 // CHART
 if(window.chart) window.chart.destroy()
@@ -251,11 +282,14 @@ datasets:[
 })
 }
 
-// ---------- LIVE ----------
+const jobsDiv=document.getElementById("jobs")
+
+// ---------- INIT ----------
 document.querySelectorAll("input,select").forEach(el=>{
 el.addEventListener("input",calculate)
 })
 
+renderInventory()
 calculate()
 render()
 
