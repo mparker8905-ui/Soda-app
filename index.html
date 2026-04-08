@@ -2,23 +2,26 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{background:#0b0b0b;color:#fff;font-family:Arial;padding:16px}
 .card{background:#121212;padding:16px;border-radius:14px;margin-bottom:14px}
-input,select{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:none;background:#1c1c1c;color:#fff}
+input,select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#1c1c1c;color:#fff}
 button{padding:12px;border:none;border-radius:8px;background:#d4af37;color:#000;font-weight:bold;width:100%;margin-top:8px}
 .row{display:flex;gap:8px}
 .row button{flex:1}
-.gold{color:#d4af37;font-size:18px;font-weight:bold}
-.label{font-size:12px;color:#aaa;margin-top:6px}
+.gold{color:#d4af37}
+.alert{padding:6px;border-radius:6px;margin:4px 0}
+.low{background:#665500}
+.out{background:#661111}
+.small{font-size:14px}
 </style>
 </head>
 
 <body>
 
 <div class="card">
-
 <h2>Create Job</h2>
 
 <input id="customer" placeholder="Customer Name">
@@ -43,38 +46,32 @@ button{padding:12px;border:none;border-radius:8px;background:#d4af37;color:#000;
 <input id="sqft" placeholder="Square Feet">
 <input id="houses" placeholder="# Houses">
 
+<h3>Add Ons</h3>
+
+<label>Grow System <input type="checkbox" id="grow"></label>
+<label>Aeration <input type="checkbox" id="aeration"></label>
+<label>Compost <input type="checkbox" id="compost"></label>
+<label>Biochar 50% <input type="checkbox" id="bio50"></label>
+<label>Humic 50% <input type="checkbox" id="humic50"></label>
+<label>Biochar 100% <input type="checkbox" id="bio100"></label>
+<label>Humic 100% <input type="checkbox" id="humic100"></label>
+
 <h3>Schedule</h3>
-
-<div class="label">Quote Date</div>
-<input type="date" id="quote">
-
-<div class="label">Soil Test Date</div>
-<input type="date" id="soil">
-
-<div class="label">Aeration Date</div>
-<input type="date" id="aeration_date">
-
-<div class="label">Compost Date</div>
-<input type="date" id="compost_date">
-
-<div class="label">Hydroseed Date</div>
-<input type="date" id="seed_date">
-
-<div class="label">Grow Install</div>
-<input type="date" id="install">
-
-<div class="label">Grow Removal</div>
-<input type="date" id="removal">
-
-<div class="label">Final Inspection</div>
-<input type="date" id="inspect">
+<input type="date">
+<input type="date">
+<input type="date">
+<input type="date">
+<input type="date">
+<input type="date">
+<input type="date">
+<input type="date">
 
 <h3>Labor</h3>
 <input id="rate" placeholder="Hourly Rate">
 <input id="crew" placeholder="Crew Size">
 <input id="hours" placeholder="Hours per house">
 
-<h3>Target Margin %</h3>
+<h3 class="small">Target Margin %</h3>
 <input id="margin">
 
 <div class="card">
@@ -88,116 +85,188 @@ button{padding:12px;border:none;border-radius:8px;background:#d4af37;color:#000;
 </div>
 
 <div class="card">
-<h2>Job History</h2>
-<div id="jobHistory"></div>
+<h2>Inventory</h2>
+
+<h3>Standard</h3>
+<div id="inv_standard"></div>
+
+<h3>Premium</h3>
+<div id="inv_premium"></div>
+
+<button onclick="saveInventory()">Save Inventory</button>
 </div>
 
 <div class="card">
-<h2>Totals</h2>
-<div id="totals"></div>
+<h2>Alerts</h2>
+<div id="alerts"></div>
+</div>
+
+<div class="card">
+<h2>Job History</h2>
+<div id="jobs"></div>
+</div>
+
+<div class="card">
+<h2>Analytics</h2>
+<canvas id="revChart"></canvas>
+<canvas id="profitChart"></canvas>
+
+<div class="gold" id="totals"></div>
 </div>
 
 <script>
 
+let inventory={
+standard:{
+seed:{name:"Seed",cost:80,qty:100},
+fert:{name:"Fertilizer",cost:40,qty:100},
+mulch:{name:"Mulch",cost:35,qty:100}
+},
+premium:{
+seed:{name:"Elite Seed",cost:100,qty:100},
+comp:{name:"Compost",cost:30,qty:100},
+bio:{name:"Biochar",cost:25,qty:100},
+hum:{name:"Humic",cost:20,qty:100}
+}
+}
+
 let jobs=[]
 
+tier.onchange=()=>{
+if(tier.value==="premium"){
+aeration.checked=true
+compost.checked=true
+bio50.checked=true
+humic50.checked=true
+}
+}
+
 function setSize(v){
-document.getElementById("sqft").value=v
+sqft.value=v
 calculate()
 }
 
 function calculate(){
 
-let sqft=Number(document.getElementById("sqft").value)||0
-let houses=Number(document.getElementById("houses").value)||1
+let sqftVal=Number(sqft.value)||0
+let housesVal=Number(houses.value)||1
 
-let materialCost=(sqft/1000)*houses*200
+let mat=(sqftVal/1000)*housesVal*200
 
-let labor=(Number(rate.value)||0)*(Number(crew.value)||0)*(Number(hours.value)||0)*houses
+let labor=(Number(rate.value)||0)*(Number(crew.value)||0)*(Number(hours.value)||0)*housesVal
 
-let totalCost=materialCost+labor
+let cost=mat+labor
 
-let margin=Number(document.getElementById("margin").value)/100||0
-
-let revenue = margin>0 ? totalCost/(1-margin) : totalCost
+let marginVal=(margin.value||0)/100
+let revenue = marginVal>0 ? cost/(1-marginVal) : cost
 
 if(strategy.value==="win") revenue*=0.9
 if(strategy.value==="max") revenue*=1.2
 
-let profit=revenue-totalCost
-let marginPct=(profit/revenue)*100
+let profit=revenue-cost
+let marginPct = revenue>0 ? (profit/revenue)*100 : 0
 
-document.getElementById("price").innerHTML="$"+Math.round(revenue)
+price.innerHTML="$"+Math.round(revenue)
 
-document.getElementById("breakdown").innerHTML=`
-Materials: $${Math.round(materialCost)}<br>
+breakdown.innerHTML=`
+Materials: $${Math.round(mat)}<br>
 Labor: $${Math.round(labor)}<br>
 Revenue: $${Math.round(revenue)}<br>
 Profit: $${Math.round(profit)}<br>
 Margin: ${marginPct.toFixed(1)}%
 `
 
-return {materialCost,labor,revenue,profit,marginPct}
+return {mat,labor,revenue,profit,marginPct}
 }
 
 function createJob(){
+let c=calculate()
 
-let data=calculate()
-
-let job={
-name:document.getElementById("customer").value||"Customer",
-quote:document.getElementById("quote").value||"N/A",
-material:data.materialCost,
-labor:data.labor,
-revenue:data.revenue,
-profit:data.profit,
-margin:data.marginPct
-}
-
-jobs.push(job)
+jobs.push({
+name:customer.value||"Customer",
+date:new Date().toLocaleDateString(),
+...c
+})
 
 renderJobs()
-renderTotals()
+renderAlerts()
+renderAnalytics()
 }
 
 function renderJobs(){
-
-let container=document.getElementById("jobHistory")
-container.innerHTML=""
-
+jobs.innerHTML=""
 jobs.forEach(j=>{
-container.innerHTML+=`
+jobs.innerHTML+=`
 <div class="card">
 <b>${j.name}</b><br>
-Quote Date: ${j.quote}<br><br>
-
-Materials: $${Math.round(j.material)}<br>
+${j.date}<br><br>
+Materials: $${Math.round(j.mat)}<br>
 Labor: $${Math.round(j.labor)}<br>
 Revenue: $${Math.round(j.revenue)}<br>
 Profit: $${Math.round(j.profit)}<br>
-Margin: ${j.margin.toFixed(1)}%
+Margin: ${j.marginPct.toFixed(1)}%
 </div>
 `
 })
 }
 
-function renderTotals(){
+function renderAlerts(){
+alerts.innerHTML=""
+Object.values(inventory.standard).forEach(m=>{
+if(m.qty<5) alerts.innerHTML+=`<div class="alert out">OUT: ${m.name}</div>`
+else if(m.qty<20) alerts.innerHTML+=`<div class="alert low">LOW: ${m.name}</div>`
+})
+}
 
-let totalRevenue=jobs.reduce((a,b)=>a+b.revenue,0)
-let totalProfit=jobs.reduce((a,b)=>a+b.profit,0)
+function renderInventory(){
 
-let avgMargin = totalRevenue>0 ? (totalProfit/totalRevenue)*100 : 0
+inv_standard.innerHTML=""
+Object.keys(inventory.standard).forEach(k=>{
+let m=inventory.standard[k]
+inv_standard.innerHTML+=`
+<input value="${m.name}">
+<input value="${m.cost}">
+<input value="${m.qty}">
+`
+})
 
-document.getElementById("totals").innerHTML=`
-<div class="gold">Total Revenue: $${Math.round(totalRevenue)}</div>
-<div class="gold">Total Profit: $${Math.round(totalProfit)}</div>
-<div class="gold">Avg Margin: ${avgMargin.toFixed(1)}%</div>
+inv_premium.innerHTML=""
+Object.keys(inventory.premium).forEach(k=>{
+let m=inventory.premium[k]
+inv_premium.innerHTML+=`
+<input value="${m.name}">
+<input value="${m.cost}">
+<input value="${m.qty}">
+`
+})
+}
+
+function saveInventory(){
+alert("Inventory Saved")
+renderAlerts()
+}
+
+function renderAnalytics(){
+
+let rev=jobs.map(j=>j.revenue)
+let prof=jobs.map(j=>j.profit)
+
+new Chart(revChart,{type:"line",data:{labels:rev.map((_,i)=>i),datasets:[{data:rev}]}})
+new Chart(profitChart,{type:"line",data:{labels:prof.map((_,i)=>i),datasets:[{data:prof}]}})
+
+let totalRev=rev.reduce((a,b)=>a+b,0)
+let totalProf=prof.reduce((a,b)=>a+b,0)
+let margin= totalRev>0 ? (totalProf/totalRev)*100 : 0
+
+totals.innerHTML=`
+Total Revenue: $${Math.round(totalRev)}<br>
+Total Profit: $${Math.round(totalProf)}<br>
+Avg Margin: ${margin.toFixed(1)}%
 `
 }
 
-document.querySelectorAll("input,select").forEach(el=>{
-el.addEventListener("input",calculate)
-})
+renderInventory()
+document.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",calculate))
 
 </script>
 
