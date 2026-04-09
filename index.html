@@ -131,130 +131,93 @@ label{display:block;margin-top:8px}
 
 <script>
 
-alert("START")
+<script>
 
-localStorage.removeItem("lawnPro")
-
-alert("JS Loaded")
+alert("JS LOADED")
 
 // ===== STATE =====
-
-let app =
-JSON.parse(localStorage.getItem("lawnPro")) || {
-
-inventory:{
-  standard:[
-    {name:"seed",cost:80,qty:100},
-    {name:"fert",cost:40,qty:100},
-    {name:"mulch",cost:35,qty:100},
-    {name:"tack",cost:25,qty:100}
-  ],
-  premium:[
-    {name:"bio",cost:25,qty:100},
-    {name:"humic",cost:20,qty:100}
-  ],
-  addons:[
-    {name:"lime",cost:15,qty:100},
-    {name:"sulfur",cost:20,qty:100}
-  ]
-},
-
-jobs:[]
+let app = {
+  inventory:{
+    standard:[
+      {name:"seed",cost:80,qty:100},
+      {name:"fert",cost:40,qty:100},
+      {name:"mulch",cost:35,qty:100},
+      {name:"tack",cost:25,qty:100}
+    ],
+    premium:[
+      {name:"bio",cost:25,qty:100},
+      {name:"humic",cost:20,qty:100}
+    ],
+    addons:[
+      {name:"lime",cost:15,qty:100},
+      {name:"sulfur",cost:20,qty:100}
+    ]
+  },
+  jobs:[]
 }
 
 // ===== HELPERS =====
-function el(id){return document.getElementById(id)}
+function el(id){ return document.getElementById(id) }
 
 // ===== PREMIUM AUTO =====
-
 window.applyPremium = function(){
-
   el("tier").value = "premium"
-
   el("aeration").checked = true
   el("compost").checked = true
   el("bioHum").checked = true
   el("lime").checked = true
   el("sulfur").checked = true
-
   calculate()
-  render()
 }
 
-// ===== CALC ENGINE =====
+// ===== CALCULATE =====
 function calculate(){
 
-let sqft=+el("sqft").value||0
-let houses=+el("houses").value||1
-let margin=(+el("margin").value||40)/100
-let overhead=(+el("overhead").value||15)/100
+  let sqft = +el("sqft").value || 0
+  let houses = +el("houses").value || 1
+  let margin = (+el("margin").value || 40)/100
+  let overhead = (+el("overhead").value || 15)/100
 
-let strategy = el("strategy").value
+  let factor = sqft/5000
 
-if(strategy === "win"){
-  margin = 0.25
-}
-
-if(strategy === "max"){
-  margin = 0.55
-}
-
-let factor=sqft/5000
-
-let used={
-seed:0.5*factor*houses,
-fert:1*factor*houses,
-mulch:1*factor*houses,
-tack:0.5*factor*houses,
-bio: el("bioHum").checked?0.5*factor*houses:0,
-humic: el("bioHum").checked?0.5*factor*houses:0,
-lime: el("lime").checked?+el("limeQty").value||0:0,
-sulfur: el("sulfur").checked?+el("sulfurQty").value||0:0
-}
-
-let allMaterials = [
-  ...app.inventory.standard,
-  ...app.inventory.premium,
-  ...app.inventory.addons
-]
-
-let materialsCost = 0
-
-allMaterials.forEach(i=>{
-  if(used[i.name]){
-    materialCost += used[i.name] * i.cost
+  let used = {
+    seed:0.5*factor*houses,
+    fert:1*factor*houses,
+    mulch:1*factor*houses,
+    tack:0.5*factor*houses,
+    bio: el("bioHum").checked ? 0.5*factor*houses : 0,
+    humic: el("bioHum").checked ? 0.5*factor*houses : 0,
+    lime: el("lime").checked ? +el("limeQty").value||0 : 0,
+    sulfur: el("sulfur").checked ? +el("sulfurQty").value||0 : 0
   }
-})
 
-let labor= (sqft<5000?200:400)*houses
-let overheadCost=(materialCost+labor)*overhead
-let cost=materialCost+labor+overheadCost
-let revenue=cost/(1-margin)
-let profit=revenue-cost
+  let allMaterials = [
+    ...app.inventory.standard,
+    ...app.inventory.premium,
+    ...app.inventory.addons
+  ]
 
-el("finalPrice").innerHTML="$"+Math.round(revenue)
-el("finalDetails").innerHTML=`
-Materials: $${Math.round(materialCost)}<br>
-Labor: $${labor}<br>
-Overhead: $${Math.round(overheadCost)}<br><br>
-Cost: $${Math.round(cost)}<br>
-Revenue: $${Math.round(revenue)}<br>
-Profit: $${Math.round(profit)}<br>
-Margin: ${(profit/revenue*100).toFixed(1)}%
-`
+  let materialCost = 0
 
-return {
-  revenue,
-  profit,
-  cost,
-  used
+  allMaterials.forEach(i=>{
+    if(used[i.name]){
+      materialCost += used[i.name] * i.cost
+    }
+  })
+
+  let labor = (sqft<5000?200:400)*houses
+  let overheadCost = (materialCost+labor)*overhead
+  let cost = materialCost + labor + overheadCost
+  let revenue = cost/(1-margin)
+  let profit = revenue - cost
+
+  el("finalPrice").innerHTML = "$"+Math.round(revenue)
+
+  return {revenue,profit,cost,used}
 }
 
 // ===== CREATE JOB =====
-
 window.createJob = function(){
-
-alert("job working") // test
 
   let data = calculate()
 
@@ -267,15 +230,11 @@ alert("job working") // test
     date: new Date().toLocaleDateString()
   })
 
-  save()
   render()
 }
 
 // ===== PROPOSAL =====
-
 window.viewProposal = function(){
-
- alert("proposal working") // test
 
   let data = calculate()
 
@@ -286,202 +245,43 @@ window.viewProposal = function(){
   )
 }
 
-<body style="background:#0b0b0b;color:white;font-family:Arial;padding:20px">
-
-<h1 style="color:#d4af37">Lawn Treatment Proposal</h1>
-
-<h2>${el("customer").value}</h2>
-
-<div style="border:2px solid #d4af37;padding:20px;border-radius:12px;margin-top:20px">
-
-<h1 style="color:#d4af37;font-size:40px">$${Math.round(d.revenue)}</h1>
-
-<p>Materials: $${Math.round(d.materialCost)}</p>
-<p>Labor Included</p>
-<p>Professional Application</p>
-
-<br>
-
-<b>Total Investment</b>
-
-</div>
-
-<br><br>
-
-<button onclick="window.print()" style="padding:10px;background:#d4af37;border:none;border-radius:8px">
-Download / Print PDF
-</button>
-
-<br><br>
-
-<a href="sms:?&body=Your%20lawn%20quote%20is%20$${Math.round(d.revenue)}" 
-style="color:#d4af37">Send via Text</a>
-
-<br><br>
-
-<a href="mailto:?subject=Lawn Quote&body=Your quote is $${Math.round(d.revenue)}" 
-style="color:#d4af37">Send via Email</a>
-
-</body>
-`)
-}
-
-// ===== SAVE =====
-function save(){
-localStorage.setItem("lawnPro",JSON.stringify(app))
-alert("Saved")
-}
-
 // ===== RENDER =====
 function render(){
 
-console.log("RENDER RUNNING")
+  let inventoryUI = el("inventoryUI")
+  let history = el("history")
 
-alert("render started")
+  // INVENTORY
+  inventoryUI.innerHTML = `
+  <h3>Standard</h3>
+  ${app.inventory.standard.map(i=>`
+    ${i.name} - $${i.cost} - Qty: ${i.qty}<br>
+  `).join("")}
 
-let inventoryUI = el("inventoryUI")
-let history = el("history")
-let alerts = el("alerts")
-let totals = el("totals")
+  <h3>Premium</h3>
+  ${app.inventory.premium.map(i=>`
+    ${i.name} - $${i.cost} - Qty: ${i.qty}<br>
+  `).join("")}
 
-inventoryUI.innerHTML = "TEST"
+  <h3>Addons</h3>
+  ${app.inventory.addons.map(i=>`
+    ${i.name} - $${i.cost} - Qty: ${i.qty}<br>
+  `).join("")}
+  `
 
-alert("before inventory")
-
-// inventory
-
-console.log("inventory:", app.inventory)
-
-inventoryUI.innerHTML = `
-
-<h3 style="color:#d4af37">Standard Materials</h3>
-${app.inventory.standard.map((i,idx)=>`
-<input placeholder="Name" value="${i.name}" 
-onchange="app.inventory.standard[${idx}].name=this.value">
-
-<input placeholder="Cost" value="${i.cost}" 
-onchange="app.inventory.standard[${idx}].cost=+this.value">
-
-<input placeholder="Qty" value="${i.qty}" 
-onchange="app.inventory.standard[${idx}].qty=+this.value">
-`).join("")}
-`
-
-<h3 style="color:#d4af37">Premium Materials</h3>
-${app.inventory.premium.map((i,idx)=>`
-<input value="${i.name}" 
-onchange="app.inventory.premium[${idx}].name=this.value">
-
-<input value="${i.cost}" 
-onchange="app.inventory.premium[${idx}].cost=+this.value">
-
-<input value="${i.qty}" 
-onchange="app.inventory.premium[${idx}].qty=+this.value">
-`).join("")}
-
-<h3 style="color:#d4af37">Add Ons</h3>
-${app.inventory.addons.map((i,idx)=>`
-<input value="${i.name}" 
-onchange="app.inventory.addons[${idx}].name=this.value">
-
-<input value="${i.cost}" 
-onchange="app.inventory.addons[${idx}].cost=+this.value">
-
-<input value="${i.qty}" 
-onchange="app.inventory.addons[${idx}].qty=+this.value">
-`).join("")}
-
-
-history.innerHTML = app.jobs.map(j=>`
-<div class="job">
-
-<b style="font-size:18px">${j.name}</b><br>
-<small>${j.date}</small><br><br>
-
-Revenue: $${Math.round(j.revenue)}<br>
-Profit: $${Math.round(j.profit)}<br>
-
-<br>
-<span style="color:#d4af37">Materials Used</span><br>
-<small>${j.materials}</small>
-
-</div>
-`).join("")
-
-// alerts
-
-let alertsList = []
-
-let allMaterials = [
-  ...app.inventory.standard,
-  ...app.inventory.premium,
-  ...app.inventory.addons
-]
-
-allMaterials.forEach(i=>{
-  if(i.qty <= 0){
-    alertsList.push("❌ OUT: " + i.name)
-  }
-  else if(i.qty < 10){
-    alertsList.push("⚠️ LOW: " + i.name)
-  }
-})
-
-// 🔥 BONUS: profit warning
-let lastJob = app.jobs[app.jobs.length-1]
-if(lastJob && lastJob.profit < 500){
-  alertsList.push("⚠️ Low Profit Job")
+  // HISTORY
+  history.innerHTML = app.jobs.map(j=>`
+    <div>
+      ${j.name} - $${Math.round(j.revenue)} profit $${Math.round(j.profit)}
+    </div>
+  `).join("")
 }
 
-alerts.innerHTML = alertsList.length
-? alertsList.join("<br>")
-: "✅ Inventory Healthy"
-
-// totals
-let rev=app.jobs.reduce((a,b)=>a+b.revenue,0)
-let prof=app.jobs.reduce((a,b)=>a+b.profit,0)
-
-totals.innerHTML = 
-<div style="
-background:#111;
-border:2px solid #d4af37;
-padding:20px;
-border-radius:12px;
-text-align:center;
-">
-
-<div style="font-size:18px">Total Revenue</div>
-<div class="gold">$${Math.round(rev)}</div>
-
-<br>
-
-<div style="font-size:18px">Total Profit</div>
-<div class="gold">$${Math.round(prof)}</div>
-
-<br>
-
-<div style="font-size:18px">Avg Margin</div>
-<div class="gold">
-${rev ? ((prof/rev)*100).toFixed(1) : 0}%
-</div>
-
-</div>
-
-// chart
-//new Chart(document.getElementById("chart"),{
-//type:"bar",
-//data:{
-//labels:app.jobs.map(j=>j.name),
-//datasets:[{label:"Profit",data:app.jobs.map(j=>j.profit)}]
-//}
-//})
-
-// ===== LIVE =====
-//setInterval(calculate,500)
-
-}
-
+// ===== START =====
 render()
+
+</script>
+
 </script>
 
 </body>
