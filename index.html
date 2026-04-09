@@ -337,6 +337,8 @@ alert("Saved")
 // ===== RENDER =====
 function render(){
 
+console.log("RENDER RUNNING")
+
 alert("render started")
 
 let inventoryUI = el("inventoryUI")
@@ -475,10 +477,10 @@ ${rev ? ((prof/rev)*100).toFixed(1) : 0}%
 //}
 //})
 
-}
-
 // ===== LIVE =====
 //setInterval(calculate,500)
+
+}
 
 render()
 </script>
