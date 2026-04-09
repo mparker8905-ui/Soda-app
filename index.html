@@ -127,6 +127,11 @@ label{display:block;margin-top:8px}
 <div id="totals" class="gold"></div>
 </div>
 
+<div class="card">
+  <h3>CRM</h3>
+  <div id="crm"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -152,6 +157,9 @@ let app = {
     ]
   },
   jobs:[]
+
+customers:[]
+
 }
 
 // ===== HELPERS =====
@@ -219,6 +227,32 @@ window.createJob = function(){
 
   let data = calculate()
 
+let name = el("customer").value || "Customer"
+
+// check if customer exists
+let existing = app.customers.find(c => c.name === name)
+
+if(!existing){
+  app.customers.push({
+    name: name,
+    jobs: []
+  })
+}
+
+// deduct inventory
+let allMaterials = [
+  ...app.inventory.standard,
+  ...app.inventory.premium,
+  ...app.inventory.addons
+]
+
+allMaterials.forEach(item => {
+  if(data.used[item.name]){
+    item.qty -= data.used[item.name]
+    if(item.qty < 0) item.qty = 0
+  }
+})
+
   app.jobs.push({
     name: el("customer").value || "Customer",
     revenue: data.revenue,
@@ -228,6 +262,19 @@ window.createJob = function(){
     date: new Date().toLocaleDateString()
   })
 
+let name = el("customer").value || "Customer"
+
+let customer = app.customers.find(c => c.name === name)
+
+if(customer){
+  customer.jobs.push({
+    revenue: data.revenue,
+    profit: data.profit,
+    date: new Date().toLocaleDateString()
+  })
+}
+
+  save()
   render()
 }
 
@@ -290,6 +337,20 @@ onchange="app.inventory.addons[${idx}].cost=+this.value">
 
 <input type="number" value="${i.qty}" 
 onchange="app.inventory.addons[${idx}].qty=+this.value">
+</div>
+`).join("")}
+`
+
+let crm = el("crm")
+
+crm.innerHTML = `
+<h3 style="color:#d4af37">Customers</h3>
+
+${app.customers.map(c => `
+<div style="margin-bottom:15px;padding:10px;border:1px solid #333">
+<b>${c.name}</b><br>
+<small>Jobs: ${c.jobs.length}</small><br>
+<small>Total Profit: $${Math.round(c.jobs.reduce((a,b)=>a+b.profit,0))}</small>
 </div>
 `).join("")}
 `
