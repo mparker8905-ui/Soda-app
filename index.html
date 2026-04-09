@@ -179,6 +179,8 @@ window.applyPremium = function(){
 // ===== CALCULATE =====
 function calculate(){
 
+alert("calculate running")
+
   let sqft = +el("sqft").value || 0
   let houses = +el("houses").value || 1
   let margin = (+el("margin").value || 40)/100
