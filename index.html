@@ -151,19 +151,16 @@ function el(id){return document.getElementById(id)}
 
 // ===== PREMIUM AUTO =====
 
-function applyPremium(){
+window.applyPremium = function(){
 
-  // set dropdown
   el("tier").value = "premium"
 
-  // check all boxes
   el("aeration").checked = true
   el("compost").checked = true
   el("bioHum").checked = true
   el("lime").checked = true
   el("sulfur").checked = true
 
-  // force update
   calculate()
   render()
 }
@@ -237,58 +234,38 @@ return {
   used
 }
 
-function applyPremium(){
-  el("tier").value = "premium"
-
-  el("aeration").checked = true
-  el("compost").checked = true
-  el("bioHum").checked = true
-  el("lime").checked = true
-  el("sulfur").checked = true
-
-  calculate()
-}
-
 // ===== CREATE JOB =====
-function createJob(){
 
-let data=calculate()
+window.createJob = function(){
 
-app.jobs.push({
-name: el("customer").value,
-revenue: data.revenue,
-profit: data.profit,
-cost: data.cost,
-materials: JSON.stringify(data.used), // 🔥 critical
-date: new Date().toLocaleDateString()
-})
+  let data = calculate()
 
-let allMaterials = [
-  ...app.inventory.standard,
-  ...app.inventory.premium,
-  ...app.inventory.addons
-]
+  app.jobs.push({
+    name: el("customer").value || "Customer",
+    revenue: data.revenue,
+    profit: data.profit,
+    cost: data.cost,
+    materials: JSON.stringify(data.used),
+    date: new Date().toLocaleDateString()
+  })
 
-allMaterials.forEach(i=>{
-  if(data.used[i.name]){
-    i.qty -= data.used[i.name]
-    if(i.qty < 0) i.qty = 0
-  }
-})
-
-save()
-render()
+  save()
+  render()
 }
 
 // ===== PROPOSAL =====
 
-function viewProposal(){
+window.viewProposal = function(){
 
-let d = calculate()
+  let data = calculate()
 
-let w = window.open()
+  alert(
+    "Customer: " + (el("customer").value || "Customer") +
+    "\nRevenue: $" + Math.round(data.revenue) +
+    "\nProfit: $" + Math.round(data.profit)
+  )
+}
 
-w.document.write(`
 <body style="background:#0b0b0b;color:white;font-family:Arial;padding:20px">
 
 <h1 style="color:#d4af37">Lawn Treatment Proposal</h1>
@@ -337,6 +314,11 @@ alert("Saved")
 
 // ===== RENDER =====
 function render(){
+
+let inventoryUI = el("inventoryUI")
+let history = el("history")
+let alerts = el("alerts")
+let totals = el("totals")
 
 // inventory
 
@@ -469,8 +451,8 @@ datasets:[{label:"Profit",data:app.jobs.map(j=>j.profit)}]
 
 // ===== LIVE =====
 setInterval(calculate,500)
-render()
 
+render()
 </script>
 
 </body>
