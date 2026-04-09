@@ -389,6 +389,7 @@ onchange="app.inventory.addons[${idx}].cost=+this.value">
 <input value="${i.qty}" 
 onchange="app.inventory.addons[${idx}].qty=+this.value">
 `).join("")}
+`
 
 history.innerHTML = app.jobs.map(j=>`
 <div class="job">
@@ -449,20 +450,20 @@ text-align:center;
 ">
 
 <div style="font-size:18px">Total Revenue</div>
-<div class="gold">$$${Math.round(rev)}</div>
+<div class="gold">$${Math.round(rev)}</div>
 
 <br>
 
 <div style="font-size:18px">Total Profit</div>
-<div class="gold">$$${Math.round(prof)}</div>
+<div class="gold">$${Math.round(prof)}</div>
 
 <br>
 
 <div style="font-size:18px">Avg Margin</div>
 <div class="gold">
-${app.jobs.length ? ((prof/rev)*100).toFixed(1) : 0}%
+${rev ? ((prof/rev)*100).toFixed(1) : 0}%
 </div>
-
+`
 </div>
 
 // chart
