@@ -91,15 +91,16 @@ label{display:block;margin-top:8px}
 <label>Final Inspection</label>
 <input id="finalDate" type="date">
 
+<button onclick="createJob()">Create Job</button>
+<button onclick="viewProposal()">View Proposal</button>
+<button onclick="applyPremium()">Auto Apply Premium</button>
+<button onclick="saveInventory()">Save Inventory</button>
+
 <div class="finalBox">
 <h3>Final Investment</h3>
 <div id="finalPrice" class="gold"></div>
 <div id="finalDetails"></div>no
 </div>
-
-<button onclick="createJob()">Create Job</button>
-<button onclick="viewProposal()">View Proposal</button>
-<button onclick="applyPremium()">Auto Apply Premium</button>
 
 <div class="card">
 <h3>Inventory</h3>
@@ -136,72 +137,239 @@ label{display:block;margin-top:8px}
 
 <script>
 
-alert("JS LOADED")
+// ===== STORAGE =====
+function save(){
+  localStorage.setItem("app", JSON.stringify(app))
+}
 
-console.log("START")
-
-let app = {
-  inventory:{
-    standard:[{name:"seed",cost:80,qty:100}]
+function load(){
+  let data = localStorage.getItem("app")
+  if(data){
+    app = JSON.parse(data)
   }
 }
 
-inventoryUI.innerHTML = `
-<h3>Standard</h3>
-${(app.inventory.standard || []).map(i=>`
-  <div>${i.name} - $${i.cost} - Qty: ${i.qty}</div>
-`).join("")}
+// ===== STATE =====
+let app = {
+  inventory:{
+    standard:[
+      {name:"seed",cost:80,qty:100},
+      {name:"fert",cost:40,qty:100},
+      {name:"mulch",cost:35,qty:100},
+      {name:"tack",cost:25,qty:100}
+    ],
+    premium:[
+      {name:"bio",cost:25,qty:100},
+      {name:"humic",cost:20,qty:100}
+    ],
+    addons:[
+      {name:"lime",cost:15,qty:100},
+      {name:"sulfur",cost:20,qty:100}
+    ]
+  },
+  jobs:[],
+  customers:[]
+}
 
-<h3>Premium</h3>
-${(app.inventory.premium || []).map(i=>`
-  <div>${i.name} - $${i.cost} - Qty: ${i.qty}</div>
-`).join("")}
+// ===== HELPERS =====
+function el(id){ return document.getElementById(id) }
 
-<h3>Addons</h3>
-${(app.inventory.addons || []).map(i=>`
-  <div>${i.name} - $${i.cost} - Qty: ${i.qty}</div>
-`).join("")}
-`
+// ===== CALCULATE =====
+function calculate(){
 
-let alerts = el("alerts")
+  let sqft = +el("sqft").value || 0
+  let houses = +el("houses").value || 1
+  let margin = (+el("margin").value || 40)/100
+  let overhead = (+el("overhead").value || 15)/100
 
-let alertsList = []
+  let factor = sqft/5000
 
-let allMaterials = [
-  ...(app.inventory.standard || []),
-  ...(app.inventory.premium || []),
-  ...(app.inventory.addons || [])
-]
-
-allMaterials.forEach(i=>{
-  if(i.qty <= 0){
-    alertsList.push("❌ OUT: " + i.name)
+  let used = {
+    seed:0.5*factor*houses,
+    fert:1*factor*houses,
+    mulch:1*factor*houses,
+    tack:0.5*factor*houses,
+    bio: el("bioHum")?.checked ? 0.5*factor*houses : 0,
+    humic: el("bioHum")?.checked ? 0.5*factor*houses : 0,
+    lime: el("lime")?.checked ? +el("limeQty").value||0 : 0,
+    sulfur: el("sulfur")?.checked ? +el("sulfurQty").value||0 : 0
   }
-  else if(i.qty < 10){
-    alertsList.push("⚠️ LOW: " + i.name)
+
+  let all = [
+    ...app.inventory.standard,
+    ...app.inventory.premium,
+    ...app.inventory.addons
+  ]
+
+  let materialCost = 0
+
+  all.forEach(i=>{
+    if(used[i.name]){
+      materialCost += used[i.name] * i.cost
+    }
+  })
+
+  let labor = (sqft < 5000 ? 200 : 400) * houses
+  let overheadCost = (materialCost + labor) * overhead
+  let cost = materialCost + labor + overheadCost
+  let revenue = cost/(1-margin)
+  let profit = revenue - cost
+
+  el("finalPrice").innerHTML =
+    revenue ? "$"+Math.round(revenue) : "0"
+
+  return {revenue, profit, cost, used}
+}
+
+// ===== CREATE JOB =====
+function createJob(){
+
+  let data = calculate()
+  let name = el("customer").value || "Customer"
+
+  let existing = app.customers.find(c=>c.name===name)
+
+  if(!existing){
+    app.customers.push({name:name, jobs:[]})
+    existing = app.customers.find(c=>c.name===name)
   }
-})
 
-alerts.innerHTML = alertsList.length
-  ? alertsList.join("<br>")
-  : "✅ Inventory Healthy"
+  existing.jobs.push({
+    revenue:data.revenue,
+    profit:data.profit,
+    date:new Date().toLocaleDateString()
+  })
 
-let crm = el("crm")
+  app.jobs.push({
+    name:name,
+    revenue:data.revenue,
+    profit:data.profit,
+    date:new Date().toLocaleDateString()
+  })
 
-crm.innerHTML = `
-<h3 style="color:#d4af37">Customers</h3>
+  // deduct inventory
+  let all = [
+    ...app.inventory.standard,
+    ...app.inventory.premium,
+    ...app.inventory.addons
+  ]
 
-${(app.customers || []).map(c => `
-  <div style="margin-bottom:15px;padding:10px;border:1px solid #333">
-    <b>${c.name || "No Name"}</b><br>
-    <small>Jobs: ${(c.jobs || []).length}</small><br>
-    <small>Total Profit: $${Math.round(
-      (c.jobs || []).reduce((a,b)=>a+(b.profit||0),0)
-    )}</small>
-  </div>
-`).join("")}
-`
+  all.forEach(i=>{
+    if(data.used[i.name]){
+      i.qty -= data.used[i.name]
+      if(i.qty < 0) i.qty = 0
+    }
+  })
 
+  save()
+  render()
+}
+
+// ===== INVENTORY SAVE =====
+function saveInventory(){
+
+  let inputs = document.querySelectorAll("#inventoryUI input")
+
+  inputs.forEach(input=>{
+    let type = input.dataset.type
+    let idx = input.dataset.idx
+    let field = input.dataset.field
+
+    app.inventory[type][idx][field] =
+      field==="name"
+        ? input.value
+        : +input.value
+  })
+
+  save()
+  render()
+}
+
+// ===== RENDER =====
+function render(){
+
+  // INVENTORY
+  let inventoryUI = el("inventoryUI")
+
+  inventoryUI.innerHTML = `
+    <h3>Standard</h3>
+    ${app.inventory.standard.map((i,idx)=>`
+      <div>
+        <input data-type="standard" data-idx="${idx}" data-field="name" value="${i.name}">
+        <input data-type="standard" data-idx="${idx}" data-field="cost" value="${i.cost}">
+        <input data-type="standard" data-idx="${idx}" data-field="qty" value="${i.qty}">
+      </div>
+    `).join("")}
+
+    <h3>Premium</h3>
+    ${app.inventory.premium.map((i,idx)=>`
+      <div>
+        <input data-type="premium" data-idx="${idx}" data-field="name" value="${i.name}">
+        <input data-type="premium" data-idx="${idx}" data-field="cost" value="${i.cost}">
+        <input data-type="premium" data-idx="${idx}" data-field="qty" value="${i.qty}">
+      </div>
+    `).join("")}
+
+    <h3>Addons</h3>
+    ${app.inventory.addons.map((i,idx)=>`
+      <div>
+        <input data-type="addons" data-idx="${idx}" data-field="name" value="${i.name}">
+        <input data-type="addons" data-idx="${idx}" data-field="cost" value="${i.cost}">
+        <input data-type="addons" data-idx="${idx}" data-field="qty" value="${i.qty}">
+      </div>
+    `).join("")}
+  `
+
+  // ALERTS
+  let alerts = el("alerts")
+
+  let all = [
+    ...app.inventory.standard,
+    ...app.inventory.premium,
+    ...app.inventory.addons
+  ]
+
+  let list = []
+
+  all.forEach(i=>{
+    if(i.qty <= 0){
+      list.push("❌ OUT: " + i.name)
+    } else if(i.qty < 10){
+      list.push("⚠️ LOW: " + i.name)
+    }
+  })
+
+  alerts.innerHTML = list.length
+    ? list.join("<br>")
+    : "✅ Inventory Healthy"
+
+  // HISTORY
+  let history = el("history")
+
+  history.innerHTML = app.jobs.map(j=>`
+    <div>
+      ${j.name} - $${Math.round(j.revenue)} profit $${Math.round(j.profit)}
+    </div>
+  `).join("")
+
+  // CRM
+  let crm = el("crm")
+
+  crm.innerHTML = `
+    <h3>Customers</h3>
+    ${app.customers.map(c=>`
+      <div style="margin-bottom:10px;border:1px solid #333;padding:10px">
+        <b>${c.name}</b><br>
+        Jobs: ${c.jobs.length}<br>
+        Profit: $${Math.round(c.jobs.reduce((a,b)=>a+(b.profit||0),0))}
+      </div>
+    `).join("")}
+  `
+
+}
+
+// ===== START =====
+load()
 render()
 
 </script>
