@@ -97,9 +97,9 @@ label{display:block;margin-top:8px}
 <div id="finalDetails"></div>no
 </div>
 
-<button onclick="applyPremium()">Auto Apply Premium</button>
 <button onclick="createJob()">Create Job</button>
 <button onclick="viewProposal()">View Proposal</button>
+<button onclick="applyPremium()">Auto Apply Premium</button>
 
 <div class="card">
 <h3>Inventory</h3>
@@ -250,22 +250,49 @@ function render(){
   let history = el("history")
 
   // INVENTORY
-  inventoryUI.innerHTML = `
-  <h3>Standard</h3>
-  ${app.inventory.standard.map(i=>`
-    ${i.name} - $${i.cost} - Qty: ${i.qty}<br>
-  `).join("")}
+ inventoryUI.innerHTML = `
+<h3 style="color:#d4af37">Standard Materials</h3>
+${app.inventory.standard.map((i,idx)=>`
+<div style="margin-bottom:10px">
+<input value="${i.name}" 
+onchange="app.inventory.standard[${idx}].name=this.value">
 
-  <h3>Premium</h3>
-  ${app.inventory.premium.map(i=>`
-    ${i.name} - $${i.cost} - Qty: ${i.qty}<br>
-  `).join("")}
+<input type="number" value="${i.cost}" 
+onchange="app.inventory.standard[${idx}].cost=+this.value">
 
-  <h3>Addons</h3>
-  ${app.inventory.addons.map(i=>`
-    ${i.name} - $${i.cost} - Qty: ${i.qty}<br>
-  `).join("")}
-  `
+<input type="number" value="${i.qty}" 
+onchange="app.inventory.standard[${idx}].qty=+this.value">
+</div>
+`).join("")}
+
+<h3 style="color:#d4af37">Premium Materials</h3>
+${app.inventory.premium.map((i,idx)=>`
+<div style="margin-bottom:10px">
+<input value="${i.name}" 
+onchange="app.inventory.premium[${idx}].name=this.value">
+
+<input type="number" value="${i.cost}" 
+onchange="app.inventory.premium[${idx}].cost=+this.value">
+
+<input type="number" value="${i.qty}" 
+onchange="app.inventory.premium[${idx}].qty=+this.value">
+</div>
+`).join("")}
+
+<h3 style="color:#d4af37">Add Ons</h3>
+${app.inventory.addons.map((i,idx)=>`
+<div style="margin-bottom:10px">
+<input value="${i.name}" 
+onchange="app.inventory.addons[${idx}].name=this.value">
+
+<input type="number" value="${i.cost}" 
+onchange="app.inventory.addons[${idx}].cost=+this.value">
+
+<input type="number" value="${i.qty}" 
+onchange="app.inventory.addons[${idx}].qty=+this.value">
+</div>
+`).join("")}
+`
 
   // HISTORY
   history.innerHTML = app.jobs.map(j=>`
@@ -277,7 +304,8 @@ function render(){
 
 // ===== START =====
 render()
-
+calculate()
+save()
 </script>
 
 </body>
