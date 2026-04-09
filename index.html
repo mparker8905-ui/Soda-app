@@ -255,7 +255,6 @@ return {
 window.createJob = function(){
 
 alert("job working") // test
-}
 
   let data = calculate()
 
@@ -277,7 +276,6 @@ alert("job working") // test
 window.viewProposal = function(){
 
  alert("proposal working") // test
-}
 
   let data = calculate()
 
@@ -354,7 +352,7 @@ alert("before inventory")
 
 console.log("inventory:", app.inventory)
 
-inventoryUI.innerHTML = 
+inventoryUI.innerHTML = `
 
 <h3 style="color:#d4af37">Standard Materials</h3>
 ${app.inventory.standard.map((i,idx)=>`
@@ -367,6 +365,7 @@ onchange="app.inventory.standard[${idx}].cost=+this.value">
 <input placeholder="Qty" value="${i.qty}" 
 onchange="app.inventory.standard[${idx}].qty=+this.value">
 `).join("")}
+`
 
 <h3 style="color:#d4af37">Premium Materials</h3>
 ${app.inventory.premium.map((i,idx)=>`
