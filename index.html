@@ -8,10 +8,24 @@
 body{background:#0b0b0b;color:#fff;font-family:Arial;padding:15px}
 .card{background:#121212;padding:15px;margin-bottom:15px;border-radius:12px}
 input,select{width:100%;padding:10px;margin-top:8px;background:#1a1a1a;color:#fff;border-radius:8px;border:1px solid #333}
+input, select {
+  font-size:16px;
+}
 button{width:100%;padding:12px;margin-top:10px;background:#d4af37;border:none;border-radius:8px;font-weight:bold}
-.gold{color:#d4af37;font-size:22px;font-weight:bold}
+.gold{
+  color:#d4af37;
+  font-size:32px;
+  font-weight:bold;
+}
 .job{background:#0f0f0f;padding:10px;margin-top:10px;border-left:3px solid #d4af37;border-radius:8px}
-.finalBox{border:2px solid #d4af37;border-radius:12px;padding:15px;text-align:center;margin-top:15px}
+.finalBox{
+  border:2px solid #d4af37;
+  border-radius:16px;
+  padding:20px;
+  text-align:center;
+  margin-top:20px;
+  box-shadow:0 0 20px rgba(212,175,55,0.25);
+}
 label{display:block;margin-top:8px}
 </style>
 </head>
@@ -69,9 +83,17 @@ label{display:block;margin-top:8px}
 <div id="finalDetails"></div>
 </div>
 
-<button onclick="applyPremium()">Auto Apply Premium</button>
-<button onclick="createJob()">Create Job</button>
-<button onclick="viewProposal()">View Proposal</button>
+function applyPremium(){
+el("tier").value = "premium"   // 🔥 THIS WAS MISSING
+
+el("aeration").checked = true
+el("compost").checked = true
+el("bioHum").checked = true
+el("lime").checked = true
+el("sulfur").checked = true
+
+calculate()
+}
 
 </div>
 
@@ -124,12 +146,26 @@ jobs:[]
 function el(id){return document.getElementById(id)}
 
 // ===== PREMIUM AUTO =====
+
 function applyPremium(){
-el("aeration").checked=true
-el("compost").checked=true
-el("bioHum").checked=true
-el("lime").checked=true
-el("sulfur").checked=true
+
+// 🔥 set package
+el("tier").value = "premium"
+
+// 🔥 auto select EVERYTHING premium includes
+el("aeration").checked = true
+el("compost").checked = true
+el("bioHum").checked = true
+el("bio100").checked = false
+el("humic100").checked = false
+
+el("lime").checked = true
+el("sulfur").checked = true
+
+// optional default amounts
+if(!el("limeQty").value) el("limeQty").value = 10
+if(!el("sulfurQty").value) el("sulfurQty").value = 5
+
 calculate()
 }
 
@@ -140,6 +176,16 @@ let sqft=+el("sqft").value||0
 let houses=+el("houses").value||1
 let margin=(+el("margin").value||40)/100
 let overhead=(+el("overhead").value||15)/100
+
+let strategy = el("strategy").value
+
+if(strategy === "win"){
+  margin = 0.25
+}
+
+if(strategy === "max"){
+  margin = 0.55
+}
 
 let factor=sqft/5000
 
@@ -154,9 +200,18 @@ lime: el("lime").checked?+el("limeQty").value||0:0,
 sulfur: el("sulfur").checked?+el("sulfurQty").value||0:0
 }
 
-let materialCost=0
-app.inventory.forEach(i=>{
-if(used[i.name]) materialCost+=used[i.name]*i.cost
+let allMaterials = [
+  ...app.inventory.standard,
+  ...app.inventory.premium,
+  ...app.inventory.addons
+]
+
+let materialsCost = 0
+
+allMaterials.forEach(i=>{
+  if(used[i.name]){
+    materialCost += used[i.name] * i.cost
+  }
 })
 
 let labor= (sqft<5000?200:400)*houses
@@ -185,15 +240,25 @@ function createJob(){
 let data=calculate()
 
 app.jobs.push({
-name:el("customer").value,
-...data
+name: el("customer").value,
+revenue: data.revenue,
+profit: data.profit,
+cost: data.cost,
+materials: JSON.stringify(data.used), // 🔥 critical
+date: new Date().toLocaleDateString()
 })
 
-app.inventory.forEach(i=>{
-if(data.used[i.name]){
-i.qty-=data.used[i.name]
-if(i.qty<0)i.qty=0
-}
+let allMaterials = [
+  ...app.inventory.standard,
+  ...app.inventory.premium,
+  ...app.inventory.addons
+]
+
+allMaterials.forEach(i=>{
+  if(data.used[i.name]){
+    i.qty -= data.used[i.name]
+    if(i.qty < 0) i.qty = 0
+  }
 })
 
 save()
@@ -201,14 +266,51 @@ render()
 }
 
 // ===== PROPOSAL =====
+
 function viewProposal(){
-let d=calculate()
-let w=window.open()
+
+let d = calculate()
+
+let w = window.open()
+
 w.document.write(`
-<h1>Proposal</h1>
-Customer: ${el("customer").value}<br>
-Revenue: $${Math.round(d.revenue)}<br>
-Profit: $${Math.round(d.profit)}
+<body style="background:#0b0b0b;color:white;font-family:Arial;padding:20px">
+
+<h1 style="color:#d4af37">Lawn Treatment Proposal</h1>
+
+<h2>${el("customer").value}</h2>
+
+<div style="border:2px solid #d4af37;padding:20px;border-radius:12px;margin-top:20px">
+
+<h1 style="color:#d4af37;font-size:40px">$${Math.round(d.revenue)}</h1>
+
+<p>Materials: $${Math.round(d.materialCost)}</p>
+<p>Labor Included</p>
+<p>Professional Application</p>
+
+<br>
+
+<b>Total Investment</b>
+
+</div>
+
+<br><br>
+
+<button onclick="window.print()" style="padding:10px;background:#d4af37;border:none;border-radius:8px">
+Download / Print PDF
+</button>
+
+<br><br>
+
+<a href="sms:?&body=Your%20lawn%20quote%20is%20$${Math.round(d.revenue)}" 
+style="color:#d4af37">Send via Text</a>
+
+<br><br>
+
+<a href="mailto:?subject=Lawn Quote&body=Your quote is $${Math.round(d.revenue)}" 
+style="color:#d4af37">Send via Email</a>
+
+</body>
 `)
 }
 
@@ -222,34 +324,123 @@ alert("Saved")
 function render(){
 
 // inventory
-inventoryUI.innerHTML=app.inventory.map((i,idx)=>`
-<input value="${i.name}" onchange="app.inventory[${idx}].name=this.value">
-<input value="${i.cost}" onchange="app.inventory[${idx}].cost=+this.value">
-<input value="${i.qty}" onchange="app.inventory[${idx}].qty=+this.value">
-`).join("")
 
-// jobs
-history.innerHTML=app.jobs.map(j=>`
+inventoryUI.innerHTML = `
+
+<h3 style="color:#d4af37">Standard Materials</h3>
+${app.inventory.standard.map((i,idx)=>`
+<input placeholder="Name" value="${i.name}" 
+onchange="app.inventory.standard[${idx}].name=this.value">
+
+<input placeholder="Cost" value="${i.cost}" 
+onchange="app.inventory.standard[${idx}].cost=+this.value">
+
+<input placeholder="Qty" value="${i.qty}" 
+onchange="app.inventory.standard[${idx}].qty=+this.value">
+`).join("")}
+
+<h3 style="color:#d4af37">Premium Materials</h3>
+${app.inventory.premium.map((i,idx)=>`
+<input value="${i.name}" 
+onchange="app.inventory.premium[${idx}].name=this.value">
+
+<input value="${i.cost}" 
+onchange="app.inventory.premium[${idx}].cost=+this.value">
+
+<input value="${i.qty}" 
+onchange="app.inventory.premium[${idx}].qty=+this.value">
+`).join("")}
+
+<h3 style="color:#d4af37">Add Ons</h3>
+${app.inventory.addons.map((i,idx)=>`
+<input value="${i.name}" 
+onchange="app.inventory.addons[${idx}].name=this.value">
+
+<input value="${i.cost}" 
+onchange="app.inventory.addons[${idx}].cost=+this.value">
+
+<input value="${i.qty}" 
+onchange="app.inventory.addons[${idx}].qty=+this.value">
+`).join("")}
+
+`
+
+history.innerHTML = app.jobs.map(j=>`
 <div class="job">
-<b>${j.name}</b><br>
+
+<b style="font-size:18px">${j.name}</b><br>
+<small>${j.date}</small><br><br>
+
 Revenue: $${Math.round(j.revenue)}<br>
-Profit: $${Math.round(j.profit)}
+Profit: $${Math.round(j.profit)}<br>
+
+<br>
+<span style="color:#d4af37">Materials Used</span><br>
+<small>${j.materials}</small>
+
 </div>
 `).join("")
 
 // alerts
-alerts.innerHTML=app.inventory.map(i=>{
-if(i.qty<10)return "LOW: "+i.name
-}).join("<br>")
+
+let alertsList = []
+
+let allMaterials = [
+  ...app.inventory.standard,
+  ...app.inventory.premium,
+  ...app.inventory.addons
+]
+
+allMaterials.forEach(i=>{
+  if(i.qty <= 0){
+    alertsList.push("❌ OUT: " + i.name)
+  }
+  else if(i.qty < 10){
+    alertsList.push("⚠️ LOW: " + i.name)
+  }
+})
+
+// 🔥 BONUS: profit warning
+let lastJob = app.jobs[app.jobs.length-1]
+if(lastJob && lastJob.profit < 500){
+  alertsList.push("⚠️ Low Profit Job")
+}
+
+alerts.innerHTML = alertsList.length
+  ? alertsList.join("<br>")
+  : "✅ All systems good"
+
+alerts.innerHTML = alertsList.length ? alertsList.join("<br>") : "✅ Inventory Healthy"
 
 // totals
 let rev=app.jobs.reduce((a,b)=>a+b.revenue,0)
 let prof=app.jobs.reduce((a,b)=>a+b.profit,0)
 
-totals.innerHTML=`
-Revenue: $${Math.round(rev)}<br>
-Profit: $${Math.round(prof)}<br>
-Avg Margin: ${app.jobs.length?((prof/rev)*100).toFixed(1):0}%
+totals.innerHTML = `
+<div style="
+background:#111;
+border:2px solid #d4af37;
+padding:20px;
+border-radius:12px;
+text-align:center;
+">
+
+<div style="font-size:18px">Total Revenue</div>
+<div class="gold">$${Math.round(rev)}</div>
+
+<br>
+
+<div style="font-size:18px">Total Profit</div>
+<div class="gold">$${Math.round(prof)}</div>
+
+<br>
+
+<div style="font-size:18px">Avg Margin</div>
+<div class="gold">
+${app.jobs.length ? ((prof/rev)*100).toFixed(1) : 0}%
+</div>
+
+</div>
 `
 
 // chart
