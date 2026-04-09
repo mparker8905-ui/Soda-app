@@ -214,10 +214,14 @@ function calculate(){
   let labor = (sqft<5000?200:400)*houses
   let overheadCost = (materialCost+labor)*overhead
   let cost = materialCost + labor + overheadCost
-  let revenue = cost/(1-margin)
+ let revenue = cost/(1-margin)
+
+if(!revenue || isNaN(revenue)){
+  revenue = 0
+}
   let profit = revenue - cost
 
-  el("finalPrice").innerHTML = "$"+Math.round(revenue)
+el("finalPrice").innerHTML = revenue ? "$"+Math.round(revenue) : "$0"
 
   return {revenue,profit,cost,used}
 }
