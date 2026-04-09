@@ -300,9 +300,17 @@ function render(){
   let inventoryUI = el("inventoryUI")
   let history = el("history")
   let alerts = el("alerts")
+  let crm = el("crm")
 
   //inventory
 inventoryUI.innerHTML = "TEST INVENTORY"
+
+  // HISTORY
+  history.innerHTML = app.jobs.map(j=>`
+    <div>
+      ${j.name} - $${Math.round(j.revenue)} profit $${Math.round(j.profit)}
+    </div>
+  `).join("")
 
 let alertsList = []
 
@@ -329,8 +337,6 @@ Premium count: ${(app.inventory?.premium || []).length}<br>
 Addons count: ${(app.inventory?.addons || []).length}
 `
 
-let crm = el("crm")
-
 crm.innerHTML = `
 <h3 style="color:#d4af37">Customers</h3>
 
@@ -342,14 +348,6 @@ ${app.customers.map(c => `
 </div>
 `).join("")}
 `
-
-  // HISTORY
-  history.innerHTML = app.jobs.map(j=>`
-    <div>
-      ${j.name} - $${Math.round(j.revenue)} profit $${Math.round(j.profit)}
-    </div>
-  `).join("")
-
 
 // ===== START =====
 calculate()
