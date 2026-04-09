@@ -285,143 +285,122 @@ function saveInventory(){
 }
 
 // ===== RENDER =====
+
 function render(){
 
-  // INVENTORY
+alert("step X")
+
+  console.log("1️⃣ render start")
+
   let inventoryUI = el("inventoryUI")
+  console.log("2️⃣ inventoryUI", inventoryUI)
+
+  let history = el("history")
+  console.log("3️⃣ history", history)
+
+  let alerts = el("alerts")
+  console.log("4️⃣ alerts", alerts)
+
+  let crm = el("crm")
+  console.log("5️⃣ crm", crm)
+
+  // ===== INVENTORY =====
+  console.log("6️⃣ before inventory render")
 
   inventoryUI.innerHTML = `
     <h3>Standard</h3>
-    ${app.inventory.standard.map((i,idx)=>`
+    ${(app.inventory.standard||[]).map((i,idx)=>`
       <div>
         <input data-type="standard" data-idx="${idx}" data-field="name" value="${i.name}">
         <input data-type="standard" data-idx="${idx}" data-field="cost" value="${i.cost}">
         <input data-type="standard" data-idx="${idx}" data-field="qty" value="${i.qty}">
       </div>
     `).join("")}
-
-    <h3>Premium</h3>
-    ${app.inventory.premium.map((i,idx)=>`
-      <div>
-        <input data-type="premium" data-idx="${idx}" data-field="name" value="${i.name}">
-        <input data-type="premium" data-idx="${idx}" data-field="cost" value="${i.cost}">
-        <input data-type="premium" data-idx="${idx}" data-field="qty" value="${i.qty}">
-      </div>
-    `).join("")}
-
-    <h3>Addons</h3>
-    ${app.inventory.addons.map((i,idx)=>`
-      <div>
-        <input data-type="addons" data-idx="${idx}" data-field="name" value="${i.name}">
-        <input data-type="addons" data-idx="${idx}" data-field="cost" value="${i.cost}">
-        <input data-type="addons" data-idx="${idx}" data-field="qty" value="${i.qty}">
-      </div>
-    `).join("")}
   `
 
-  // ALERTS
-  let alerts = el("alerts")
+  console.log("7️⃣ after inventory")
+
+  // ===== ALERTS =====
+  console.log("8️⃣ before alerts")
 
   let all = [
-    ...app.inventory.standard,
-    ...app.inventory.premium,
-    ...app.inventory.addons
+    ...(app.inventory.standard||[]),
+    ...(app.inventory.premium||[]),
+    ...(app.inventory.addons||[])
   ]
 
   let list = []
 
   all.forEach(i=>{
     if(i.qty <= 0){
-      list.push("❌ OUT: " + i.name)
+      list.push("OUT: "+i.name)
     } else if(i.qty < 10){
-      list.push("⚠️ LOW: " + i.name)
+      list.push("LOW: "+i.name)
     }
   })
 
-  alerts.innerHTML = list.length
-    ? list.join("<br>")
-    : "✅ Inventory Healthy"
+  alerts.innerHTML = list.length ? list.join("<br>") : "OK"
 
-  // HISTORY
-  let history = el("history")
+  console.log("9️⃣ after alerts")
 
-  history.innerHTML = app.jobs.map(j=>`
-    <div>
-      ${j.name} - $${Math.round(j.revenue)} profit $${Math.round(j.profit)}
-    </div>
+  // ===== HISTORY =====
+  console.log("🔟 before history")
+
+  history.innerHTML = (app.jobs||[]).map(j=>`
+    <div>${j.name}</div>
   `).join("")
 
-  // CRM
-  let crm = el("crm")
+  console.log("11️⃣ after history")
+
+  // ===== CRM =====
+  console.log("12️⃣ before crm")
 
   crm.innerHTML = `
-    <h3>Customers</h3>
-    ${app.customers.map(c=>`
-      <div style="margin-bottom:10px;border:1px solid #333;padding:10px">
-        <b>${c.name}</b><br>
-        Jobs: ${c.jobs.length}<br>
-        Profit: $${Math.round(c.jobs.reduce((a,b)=>a+(b.profit||0),0))}
-      </div>
+    ${(app.customers||[]).map(c=>`
+      <div>${c.name}</div>
     `).join("")}
   `
 
+  console.log("13️⃣ after crm")
 
-// ===== TOTALS =====
-let totals = el("totals")
+  // ===== TOTALS =====
+  console.log("14️⃣ before totals")
 
-let totalRevenue = app.jobs.reduce((a,b)=>a+(b.revenue||0),0)
-let totalProfit = app.jobs.reduce((a,b)=>a+(b.profit||0),0)
+  let totals = el("totals")
 
-totals.innerHTML = `
-  <div style="font-size:18px">
-    Total Revenue: $${Math.round(totalRevenue)}<br>
-    Total Profit: $${Math.round(totalProfit)}
-  </div>
-`
+  let totalRevenue = (app.jobs||[]).reduce((a,b)=>a+(b.revenue||0),0)
+  let totalProfit = (app.jobs||[]).reduce((a,b)=>a+(b.profit||0),0)
 
-// ===== CHART SAFE =====
-let ctx = document.getElementById("chart")
+  totals.innerHTML = `Rev: $${Math.round(totalRevenue)} | Profit: $${Math.round(totalProfit)}`
 
-if (ctx && window.Chart) {
+  console.log("15️⃣ after totals")
 
-  try {
+  // ===== CHART =====
+  console.log("16️⃣ before chart")
 
-    if (window.myChart) {
-      window.myChart.destroy()
-    }
+  let ctx = document.getElementById("chart")
 
-    window.myChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: app.jobs.map(j => j.name + " " + j.date),
-        datasets: [
-          {
-            label: "Revenue",
-            data: app.jobs.map(j => j.revenue)
-          },
-          {
-            label: "Profit",
-            data: app.jobs.map(j => j.profit)
-          }
-        ]
-      },
-      options: {
-        plugins: {
-          legend: {
-            labels: { color: "white" }
-          }
-        },
-        scales: {
-          x: { ticks: { color: "white" } },
-          y: { ticks: { color: "white" } }
-        }
+  if(ctx && window.Chart){
+    try{
+      if(window.myChart){
+        window.myChart.destroy()
       }
-    })
 
-  } catch (e) {
-    console.log("Chart error:", e)
+      window.myChart = new Chart(ctx, {
+        type:"bar",
+        data:{
+          labels:(app.jobs||[]).map(j=>j.name),
+          datasets:[
+            {label:"Profit", data:(app.jobs||[]).map(j=>j.profit)}
+          ]
+        }
+      })
+    }catch(e){
+      console.log("CHART ERROR", e)
+    }
   }
 
+  console.log("17️⃣ render complete")
 }
 
 // ===== START =====
