@@ -301,55 +301,8 @@ function render(){
   let history = el("history")
   let alerts = el("alerts")
 
-  // INVENTORY
-
-inventoryUI.innerHTML = `
-
-<h3>Standard</h3>
-${(app.inventory?.standard || []).map((i,idx)=>`
-<div>
-<input value="${i.name || ""}" 
-onchange="app.inventory.standard[${idx}].name=this.value">
-
-<input value="${i.cost || 0}" 
-onchange="app.inventory.standard[${idx}].cost=+this.value">
-
-<input value="${i.qty || 0}" 
-onchange="app.inventory.standard[${idx}].qty=+this.value">
-</div>
-`).join("")}
-
-<h3>Premium</h3>
-${(app.inventory?.premium || []).map((i,idx)=>`
-<div>
-
-<input value="${i.name || ""}">
-onchange="app.inventory.premium[${idx}]..."
-
-<input value="${i.cost || 0}">
-onchange="app.inventory.premium[${idx}]..."
-
-<input value="${i.qty || 0}">
-onchange="app.inventory.premium[${idx}]..."
-
-</div>
-`).join("")}
-
-<h3>Addons</h3>
-${(app.inventory?.addons || []).map((i,idx)=>`
-<div>
-<input value="${i.name || ""}">
-onchange="app.inventory.addons[${idx}]..."
-
-<input value="${i.cost || 0}">
-onchange="app.inventory.addons[${idx}]..."
-
-<input value="${i.qty || 0}">
-onchange="app.inventory.addons[${idx}]..."
-
-</div>
-`).join("")}
-`
+  //inventory
+inventoryUI.innerHTML = "TEST INVENTORY"
 
 let alertsList = []
 
@@ -368,10 +321,13 @@ allMaterials.forEach(i=>{
   }
 })
 
-alerts.innerHTML = alertsList.length
-  ? alertsList.join("<br>") 
-  : "✅ Inventory Healthy"
-
+alerts.innerHTML = `
+DEBUG:<br>
+Inventory exists: ${!!app.inventory}<br>
+Standard count: ${(app.inventory?.standard || []).length}<br>
+Premium count: ${(app.inventory?.premium || []).length}<br>
+Addons count: ${(app.inventory?.addons || []).length}
+`
 
 let crm = el("crm")
 
