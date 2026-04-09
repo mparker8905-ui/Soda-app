@@ -2,15 +2,15 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoDa Pro System</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{background:#0b0b0b;color:#fff;font-family:Arial;padding:15px}
 .card{background:#121212;padding:15px;margin-bottom:15px;border-radius:12px}
-input,select{width:100%;padding:10px;margin-top:8px;background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:8px}
+input,select{width:100%;padding:10px;margin-top:8px;background:#1a1a1a;color:#fff;border-radius:8px;border:1px solid #333}
 button{width:100%;padding:12px;margin-top:10px;background:#d4af37;border:none;border-radius:8px;font-weight:bold}
+.gold{color:#d4af37;font-size:22px;font-weight:bold}
 .job{background:#0f0f0f;padding:10px;margin-top:10px;border-left:3px solid #d4af37;border-radius:8px}
-.gold{color:#d4af37;font-weight:bold}
 </style>
 </head>
 
@@ -37,7 +37,6 @@ button{width:100%;padding:12px;margin-top:10px;background:#d4af37;border:none;bo
 <label><input type="checkbox" id="bioHum"> Bio/Hum Blend (50/50)</label><br>
 <label><input type="checkbox" id="bio100"> Biochar 100%</label><br>
 <label><input type="checkbox" id="hum100"> Humic 100%</label><br>
-<label><input type="checkbox" id="grow"> Grow System</label><br>
 
 <label><input type="checkbox" id="lime" onchange="toggle('limeQty',this)"> Lime</label>
 <input id="limeQty" placeholder="Lime Amount" style="display:none">
@@ -56,10 +55,8 @@ button{width:100%;padding:12px;margin-top:10px;background:#d4af37;border:none;bo
 
 <div class="card">
 <h3>Inventory</h3>
-
 <div id="inventoryUI"></div>
-
-<button onclick="saveInventory()">Save Inventory</button>
+<button onclick="save()">Save Inventory</button>
 </div>
 
 <div class="card">
@@ -70,6 +67,14 @@ button{width:100%;padding:12px;margin-top:10px;background:#d4af37;border:none;bo
 <div class="card">
 <h3>Job History</h3>
 <div id="jobHistory"></div>
+</div>
+
+<div class="card">
+<h3>Analytics</h3>
+<canvas id="revChart"></canvas>
+<canvas id="profitChart"></canvas>
+
+<div class="gold" id="totals"></div>
 </div>
 
 <script>
@@ -110,9 +115,11 @@ if(tier.value==="premium"){
 aeration.checked=true
 compost.checked=true
 bioHum.checked=true
+
 lime.checked=true
-sulfur.checked=true
 toggle('limeQty',lime)
+
+sulfur.checked=true
 toggle('sulfurQty',sulfur)
 }
 }
@@ -129,12 +136,12 @@ let sqftVal=+sqft.value||0
 let housesVal=+houses.value||1
 let marginVal=(+margin.value||30)/100
 
-let material= sqftVal*0.12*housesVal
-let labor=200*housesVal
-let cost=material+labor
+let material = sqftVal*0.12*housesVal
+let labor = 200*housesVal
+let cost = material+labor
 
-let revenue= cost/(1-marginVal)
-let profit= revenue-cost
+let revenue = cost/(1-marginVal)
+let profit = revenue-cost
 
 final.innerHTML=`
 Revenue: $${revenue.toFixed(0)}<br>
@@ -143,20 +150,22 @@ Profit: $${profit.toFixed(0)}<br>
 Margin: ${(profit/revenue*100).toFixed(1)}%
 `
 
-return {revenue,cost,profit,material}
+return {revenue,cost,profit,material,margin:(profit/revenue*100)}
 }
 
-setInterval(calc,400)
+setInterval(calc,500)
 
 // ===== CREATE JOB =====
 function createJob(){
 
-let c=calc()
+let c = calc()
 
 let job={
 customer:customer.value,
+tier:tier.value,
+sqft:sqft.value,
+houses:houses.value,
 ...c,
-date:new Date().toLocaleDateString(),
 addons:{
 aeration:aeration.checked,
 compost:compost.checked,
@@ -169,39 +178,55 @@ sulfur:sulfurQty.value
 }
 
 app.jobs.push(job)
-deductInventory()
 save()
 
 renderJobs()
+renderTotals()
+renderCharts()
 renderAlerts()
 }
 
-// ===== INVENTORY =====
-function renderInventory(){
+// ===== JOB HISTORY =====
+function renderJobs(){
+jobHistory.innerHTML=app.jobs.map(j=>`
+<div class="job">
+<b>${j.customer}</b><br>
+${j.tier} | ${j.sqft} sqft | ${j.houses} homes<br>
+Revenue: $${j.revenue.toFixed(0)}<br>
+Cost: $${j.cost.toFixed(0)}<br>
+Profit: $${j.profit.toFixed(0)}<br>
+Margin: ${j.margin.toFixed(1)}%<br>
+Addons: ${Object.entries(j.addons).map(([k,v])=>k+":"+v).join(", ")}
+</div>
+`).join("")
+}
 
-inventoryUI.innerHTML=""
+// ===== TOTALS =====
+function renderTotals(){
+let rev=app.jobs.reduce((a,b)=>a+b.revenue,0)
+let prof=app.jobs.reduce((a,b)=>a+b.profit,0)
+let margin=app.jobs.length?app.jobs.reduce((a,b)=>a+b.margin,0)/app.jobs.length:0
 
-;["standard","premium","addons"].forEach(type=>{
-inventoryUI.innerHTML+=`<h4>${type}</h4>`
-
-app.inventory[type].forEach((m,i)=>{
-inventoryUI.innerHTML+=`
-<input value="${m.name}" onchange="app.inventory.${type}[${i}].name=this.value">
-<input value="${m.cost}" onchange="app.inventory.${type}[${i}].cost=+this.value">
-<input value="${m.qty}" onchange="app.inventory.${type}[${i}].qty=+this.value">
+totals.innerHTML=`
+Total Revenue: $${rev.toFixed(0)}<br>
+Total Profit: $${prof.toFixed(0)}<br>
+Avg Margin: ${margin.toFixed(1)}%
 `
-})
-})
 }
 
-function saveInventory(){
-save()
-alert("Saved")
-}
+// ===== CHARTS =====
+function renderCharts(){
+new Chart(revChart,{
+type:"bar",
+data:{labels:app.jobs.map(j=>j.customer),
+datasets:[{data:app.jobs.map(j=>j.revenue)}]}
+})
 
-// ===== DEDUCT =====
-function deductInventory(){
-app.inventory.standard.forEach(m=>m.qty--)
+new Chart(profitChart,{
+type:"bar",
+data:{labels:app.jobs.map(j=>j.customer),
+datasets:[{data:app.jobs.map(j=>j.profit)}]}
+})
 }
 
 // ===== ALERTS =====
@@ -213,15 +238,19 @@ else if(m.qty<20) alerts.innerHTML+=`⚠ ${m.name} LOW<br>`
 })
 }
 
-// ===== JOB HISTORY =====
-function renderJobs(){
-jobHistory.innerHTML=app.jobs.map(j=>`
-<div class="job">
-<b>${j.customer}</b><br>
-Revenue: $${j.revenue.toFixed(0)}<br>
-Profit: $${j.profit.toFixed(0)}<br>
-</div>
-`).join("")
+// ===== INVENTORY UI =====
+function renderInventory(){
+inventoryUI.innerHTML=""
+;["standard","premium","addons"].forEach(type=>{
+inventoryUI.innerHTML+=`<h4>${type}</h4>`
+app.inventory[type].forEach((m,i)=>{
+inventoryUI.innerHTML+=`
+<input value="${m.name}" onchange="app.inventory.${type}[${i}].name=this.value">
+<input value="${m.cost}" onchange="app.inventory.${type}[${i}].cost=+this.value">
+<input value="${m.qty}" onchange="app.inventory.${type}[${i}].qty=+this.value">
+`
+})
+})
 }
 
 // ===== PROPOSAL =====
@@ -229,16 +258,20 @@ function openProposal(){
 let c=calc()
 let w=window.open("")
 w.document.write(`
-<h1>Proposal</h1>
+<h1>SoDa Proposal</h1>
 Customer: ${customer.value}<br>
-Revenue: $${c.revenue.toFixed(0)}<br>
-<button onclick="window.print()">Download PDF</button>
+Tier: ${tier.value}<br>
+Revenue: $${c.revenue.toFixed(0)}<br><br>
+<button onclick="window.print()">Download PDF</button><br>
+<a href="mailto:?subject=Proposal">Email</a><br>
+<a href="sms:?body=Proposal">Text</a>
 `)
 }
 
 // ===== INIT =====
 renderInventory()
 renderJobs()
+renderTotals()
 renderAlerts()
 
 </script>
