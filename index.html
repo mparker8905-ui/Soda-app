@@ -304,7 +304,6 @@ alert("render start")
   let inventoryUI = el("inventoryUI")
   let history = el("history")
 
-alert("before inventory")
 
   // INVENTORY
 
@@ -356,29 +355,29 @@ onchange="app.inventory.addons[${idx}]..."
 `).join("")}
 `
 
-alert("after inventory")
-
-let alerts = el("alerts")
+  let alerts = el("alerts")
 
 let alertsList = []
 
 let allMaterials = [
-  ...app.inventory.standard,
-  ...app.inventory.premium,
-  ...app.inventory.addons
+  ...(app.inventory?.standard || []),
+  ...(app.inventory?.premium || []),
+  ...(app.inventory?.addons || [])
 ]
 
 allMaterials.forEach(i=>{
   if(i.qty <= 0){
     alertsList.push("❌ OUT: " + i.name)
-  } else if(i.qty < 10){
+  }
+  else if(i.qty < 10){
     alertsList.push("⚠️ LOW: " + i.name)
   }
 })
 
 alerts.innerHTML = alertsList.length
-  ? alertsList.join("<br>")
+  ? alertsList.join("<br>") 
   : "✅ Inventory Healthy"
+
 
 let crm = el("crm")
 
@@ -404,9 +403,8 @@ ${app.customers.map(c => `
 alert("END OF SCRIPT")
 
 // ===== START =====
-render()
 calculate()
-save()
+render()
 </script>
 
 </body>
