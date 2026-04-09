@@ -153,24 +153,19 @@ function el(id){return document.getElementById(id)}
 
 function applyPremium(){
 
-// 🔥 set package
-el("tier").value = "premium"
+  // set dropdown
+  el("tier").value = "premium"
 
-// 🔥 auto select EVERYTHING premium includes
-el("aeration").checked = true
-el("compost").checked = true
-el("bioHum").checked = true
-el("bio100").checked = false
-el("humic100").checked = false
+  // check all boxes
+  el("aeration").checked = true
+  el("compost").checked = true
+  el("bioHum").checked = true
+  el("lime").checked = true
+  el("sulfur").checked = true
 
-el("lime").checked = true
-el("sulfur").checked = true
-
-// optional default amounts
-if(!el("limeQty").value) el("limeQty").value = 10
-if(!el("sulfurQty").value) el("sulfurQty").value = 5
-
-calculate()
+  // force update
+  calculate()
+  render()
 }
 
 // ===== CALC ENGINE =====
@@ -235,7 +230,11 @@ Profit: $${Math.round(profit)}<br>
 Margin: ${(profit/revenue*100).toFixed(1)}%
 `
 
-return {used,materialCost,cost,revenue,profit}
+return {
+  revenue,
+  profit,
+  cost,
+  used
 }
 
 function applyPremium(){
@@ -378,30 +377,6 @@ onchange="app.inventory.addons[${idx}].cost=+this.value">
 <input value="${i.qty}" 
 onchange="app.inventory.addons[${idx}].qty=+this.value">
 `).join("")}
-
-inventoryUI.innerHTML = `
-
-<h3>Standard</h3>
-${app.inventory.standard.map((i,idx)=>`
-<input value="${i.name}" onchange="app.inventory.standard[${idx}].name=this.value">
-<input value="${i.cost}" onchange="app.inventory.standard[${idx}].cost=+this.value">
-<input value="${i.qty}" onchange="app.inventory.standard[${idx}].qty=+this.value">
-`).join("")}
-
-<h3>Premium</h3>
-${app.inventory.premium.map((i,idx)=>`
-<input value="${i.name}" onchange="app.inventory.premium[${idx}].name=this.value">
-<input value="${i.cost}" onchange="app.inventory.premium[${idx}].cost=+this.value">
-<input value="${i.qty}" onchange="app.inventory.premium[${idx}].qty=+this.value">
-`).join("")}
-
-<h3>Add Ons</h3>
-${app.inventory.addons.map((i,idx)=>`
-<input value="${i.name}" onchange="app.inventory.addons[${idx}].name=this.value">
-<input value="${i.cost}" onchange="app.inventory.addons[${idx}].cost=+this.value">
-<input value="${i.qty}" onchange="app.inventory.addons[${idx}].qty=+this.value">
-`).join("")}
-`
 
 history.innerHTML = app.jobs.map(j=>`
 <div class="job">
