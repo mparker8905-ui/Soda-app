@@ -131,8 +131,6 @@ label{display:block;margin-top:8px}
 
 <script>
 
-localStorage.removeItem("lawnPro")
-
 alert("JS Loaded")
 
 // ===== STATE =====
@@ -252,6 +250,9 @@ return {
 
 window.createJob = function(){
 
+alert("job working") // test
+}
+
   let data = calculate()
 
   app.jobs.push({
@@ -270,6 +271,9 @@ window.createJob = function(){
 // ===== PROPOSAL =====
 
 window.viewProposal = function(){
+
+ alert("proposal working") // test
+}
 
   let data = calculate()
 
