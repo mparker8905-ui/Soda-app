@@ -309,21 +309,34 @@ alert("before inventory")
   // INVENTORY
 
 inventoryUI.innerHTML = `
+
 <h3>Standard</h3>
 ${(app.inventory?.standard || []).map((i,idx)=>`
 <div>
-<input value="${i.name || ""}">
-<input value="${i.cost || 0}">
-<input value="${i.qty || 0}">
+<input value="${i.name || ""}" 
+onchange="app.inventory.standard[${idx}].name=this.value">
+
+<input value="${i.cost || 0}" 
+onchange="app.inventory.standard[${idx}].cost=+this.value">
+
+<input value="${i.qty || 0}" 
+onchange="app.inventory.standard[${idx}].qty=+this.value">
 </div>
 `).join("")}
 
 <h3>Premium</h3>
 ${(app.inventory?.premium || []).map((i,idx)=>`
 <div>
+
 <input value="${i.name || ""}">
+onchange="app.inventory.premium[${idx}]..."
+
 <input value="${i.cost || 0}">
+onchange="app.inventory.premium[${idx}]..."
+
 <input value="${i.qty || 0}">
+onchange="app.inventory.premium[${idx}]..."
+
 </div>
 `).join("")}
 
@@ -331,13 +344,41 @@ ${(app.inventory?.premium || []).map((i,idx)=>`
 ${(app.inventory?.addons || []).map((i,idx)=>`
 <div>
 <input value="${i.name || ""}">
+onchange="app.inventory.addons[${idx}]..."
+
 <input value="${i.cost || 0}">
+onchange="app.inventory.addons[${idx}]..."
+
 <input value="${i.qty || 0}">
+onchange="app.inventory.addons[${idx}]..."
+
 </div>
 `).join("")}
 `
 
 alert("after inventory")
+
+let alerts = el("alerts")
+
+let alertsList = []
+
+let allMaterials = [
+  ...app.inventory.standard,
+  ...app.inventory.premium,
+  ...app.inventory.addons
+]
+
+allMaterials.forEach(i=>{
+  if(i.qty <= 0){
+    alertsList.push("❌ OUT: " + i.name)
+  } else if(i.qty < 10){
+    alertsList.push("⚠️ LOW: " + i.name)
+  }
+})
+
+alerts.innerHTML = alertsList.length
+  ? alertsList.join("<br>")
+  : "✅ Inventory Healthy"
 
 let crm = el("crm")
 
