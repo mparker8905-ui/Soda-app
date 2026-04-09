@@ -295,59 +295,16 @@ window.viewProposal = function(){
 }
 
 // ===== RENDER =====
+
 function render(){
 
   let inventoryUI = el("inventoryUI")
-  let history = el("history")
   let alerts = el("alerts")
-  let crm = el("crm")
 
-  //inventory
-inventoryUI.innerHTML = "TEST INVENTORY"
+  inventoryUI.innerHTML = "TEST INVENTORY WORKING"
+  alerts.innerHTML = "TEST ALERTS WORKING"
 
-  // HISTORY
-  history.innerHTML = app.jobs.map(j=>`
-    <div>
-      ${j.name} - $${Math.round(j.revenue)} profit $${Math.round(j.profit)}
-    </div>
-  `).join("")
-
-let alertsList = []
-
-let allMaterials = [
-  ...(app.inventory?.standard || []),
-  ...(app.inventory?.premium || []),
-  ...(app.inventory?.addons || [])
-]
-
-allMaterials.forEach(i=>{
-  if(i.qty <= 0){
-    alertsList.push("❌ OUT: " + i.name)
-  }
-  else if(i.qty < 10){
-    alertsList.push("⚠️ LOW: " + i.name)
-  }
-})
-
-alerts.innerHTML = `
-DEBUG:<br>
-Inventory exists: ${!!app.inventory}<br>
-Standard count: ${(app.inventory?.standard || []).length}<br>
-Premium count: ${(app.inventory?.premium || []).length}<br>
-Addons count: ${(app.inventory?.addons || []).length}
-`
-
-crm.innerHTML = `
-<h3 style="color:#d4af37">Customers</h3>
-
-${app.customers.map(c => `
-<div style="margin-bottom:15px;padding:10px;border:1px solid #333">
-<b>${c.name}</b><br>
-<small>Jobs: ${c.jobs.length}</small><br>
-<small>Total Profit: $${Math.round(c.jobs.reduce((a,b)=>a+b.profit,0))}</small>
-</div>
-`).join("")}
-`
+}
 
 // ===== START =====
 calculate()
