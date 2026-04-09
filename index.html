@@ -365,6 +365,59 @@ function render(){
     `).join("")}
   `
 
+
+// ===== TOTALS =====
+let totals = el("totals")
+
+let totalRevenue = app.jobs.reduce((a,b)=>a+(b.revenue||0),0)
+let totalProfit = app.jobs.reduce((a,b)=>a+(b.profit||0),0)
+
+totals.innerHTML = `
+  <div style="font-size:18px">
+    Total Revenue: $${Math.round(totalRevenue)}<br>
+    Total Profit: $${Math.round(totalProfit)}
+  </div>
+`
+
+// ===== CHART =====
+let ctx = document.getElementById("chart")
+
+if(ctx){
+
+  // destroy old chart if exists (prevents bugs)
+  if(window.myChart){
+    window.myChart.destroy()
+  }
+
+ window.myChart = new Chart(ctx, {
+  type: "bar",
+  data: {
+    labels: app.jobs.map(j=>j.name + " " + j.date),
+    datasets: [
+      {
+        label: "Revenue",
+        data: app.jobs.map(j=>j.revenue)
+      },
+      {
+        label: "Profit",
+        data: app.jobs.map(j=>j.profit)
+      }
+    ]
+  },
+  options: {
+    plugins: {
+      legend: {
+        labels: { color: "white" }
+      }
+    },
+    scales: {
+      x: { ticks: { color: "white" } },
+      y: { ticks: { color: "white" } }
+    }
+  }
+})
+
+
 }
 
 // ===== START =====
