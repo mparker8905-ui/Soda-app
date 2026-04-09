@@ -179,8 +179,6 @@ window.applyPremium = function(){
 // ===== CALCULATE =====
 function calculate(){
 
-alert("calculate running")
-
   let sqft = +el("sqft").value || 0
   let houses = +el("houses").value || 1
   let margin = (+el("margin").value || 40)/100
@@ -299,11 +297,9 @@ window.viewProposal = function(){
 // ===== RENDER =====
 function render(){
 
-alert("render start")
-
   let inventoryUI = el("inventoryUI")
   let history = el("history")
-
+  let alerts = el("alerts")
 
   // INVENTORY
 
@@ -355,8 +351,6 @@ onchange="app.inventory.addons[${idx}]..."
 `).join("")}
 `
 
-  let alerts = el("alerts")
-
 let alertsList = []
 
 let allMaterials = [
@@ -400,7 +394,6 @@ ${app.customers.map(c => `
     </div>
   `).join("")
 
-alert("END OF SCRIPT")
 
 // ===== START =====
 calculate()
