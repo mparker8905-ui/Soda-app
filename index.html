@@ -149,6 +149,7 @@ function load(){
 }
 
 // ===== STATE =====
+
 let app = {
   inventory:{
     standard:[
@@ -214,50 +215,52 @@ function calculate(){
   let revenue = cost/(1-margin)
   let profit = revenue - cost
 
-  el("finalPrice").innerHTML =
-    revenue ? "$"+Math.round(revenue) : "0"
+el("finalPrice").innerHTML = "$" + Math.round(revenue)
 
   return {revenue, profit, cost, used}
 }
 
 // ===== CREATE JOB =====
-function createJob(){
+
+window.createJob = function(){
 
   let data = calculate()
+
   let name = el("customer").value || "Customer"
+  let date = new Date().toLocaleDateString()
 
-  let existing = app.customers.find(c=>c.name===name)
+  let margin = data.revenue > 0 
+    ? Math.round((data.profit / data.revenue) * 100) 
+    : 0
 
-  if(!existing){
-    app.customers.push({name:name, jobs:[]})
-    existing = app.customers.find(c=>c.name===name)
-  }
-
-  existing.jobs.push({
-    revenue:data.revenue,
-    profit:data.profit,
-    date:new Date().toLocaleDateString()
-  })
+  // build material breakdown
+  let materialsUsed = Object.entries(data.used)
+    .filter(([k,v]) => v > 0)
+    .map(([k,v]) => `${k}: ${v.toFixed(1)}`)
+    .join(", ")
 
   app.jobs.push({
-    name:name,
-    revenue:data.revenue,
-    profit:data.profit,
-    date:new Date().toLocaleDateString()
+    name,
+    date,
+    revenue: data.revenue,
+    profit: data.profit,
+    cost: data.cost,
+    margin,
+    materials: materialsUsed
   })
 
-  // deduct inventory
-  let all = [
-    ...app.inventory.standard,
-    ...app.inventory.premium,
-    ...app.inventory.addons
-  ]
+  // customer tracking
+  let customer = app.customers.find(c => c.name === name)
 
-  all.forEach(i=>{
-    if(data.used[i.name]){
-      i.qty -= data.used[i.name]
-      if(i.qty < 0) i.qty = 0
-    }
+  if(!customer){
+    customer = {name, jobs:[]}
+    app.customers.push(customer)
+  }
+
+  customer.jobs.push({
+    revenue: data.revenue,
+    profit: data.profit,
+    date
   })
 
   save()
@@ -304,6 +307,16 @@ alert("step X")
   let crm = el("crm")
   console.log("5️⃣ crm", crm)
 
+let totals = el("totals")
+
+let totalRevenue = app.jobs.reduce((a,b)=>a+b.revenue,0)
+let totalProfit = app.jobs.reduce((a,b)=>a+b.profit,0)
+
+totals.innerHTML = `
+  Revenue: $${Math.round(totalRevenue)}<br>
+  Profit: $${Math.round(totalProfit)}<br>
+  Jobs: ${app.jobs.length}
+
   // ===== INVENTORY =====
   console.log("6️⃣ before inventory render")
 
@@ -346,9 +359,16 @@ alert("step X")
   // ===== HISTORY =====
   console.log("🔟 before history")
 
-  history.innerHTML = (app.jobs||[]).map(j=>`
-    <div>${j.name}</div>
-  `).join("")
+ history.innerHTML = app.jobs.map(j => `
+  <div style="margin-bottom:10px">
+    <b>${j.name}</b><br>
+    Date: ${j.date}<br>
+    Revenue: $${Math.round(j.revenue)}<br>
+    Profit: $${Math.round(j.profit)} (${j.margin}%)<br>
+    Cost: $${Math.round(j.cost)}<br>
+    Materials: ${j.materials}
+  </div>
+`).join("")
 
   console.log("11️⃣ after history")
 
