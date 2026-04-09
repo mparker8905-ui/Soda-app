@@ -299,53 +299,45 @@ window.viewProposal = function(){
 // ===== RENDER =====
 function render(){
 
+alert("render start")
+
   let inventoryUI = el("inventoryUI")
   let history = el("history")
 
+alert("before inventory")
+
   // INVENTORY
- inventoryUI.innerHTML = `
-<h3 style="color:#d4af37">Standard Materials</h3>
-${app.inventory.standard.map((i,idx)=>`
-<div style="margin-bottom:10px">
-<input value="${i.name}" 
-onchange="app.inventory.standard[${idx}].name=this.value">
 
-<input type="number" value="${i.cost}" 
-onchange="app.inventory.standard[${idx}].cost=+this.value">
-
-<input type="number" value="${i.qty}" 
-onchange="app.inventory.standard[${idx}].qty=+this.value">
+inventoryUI.innerHTML = `
+<h3>Standard</h3>
+${(app.inventory?.standard || []).map((i,idx)=>`
+<div>
+<input value="${i.name || ""}">
+<input value="${i.cost || 0}">
+<input value="${i.qty || 0}">
 </div>
 `).join("")}
 
-<h3 style="color:#d4af37">Premium Materials</h3>
-${app.inventory.premium.map((i,idx)=>`
-<div style="margin-bottom:10px">
-<input value="${i.name}" 
-onchange="app.inventory.premium[${idx}].name=this.value">
-
-<input type="number" value="${i.cost}" 
-onchange="app.inventory.premium[${idx}].cost=+this.value">
-
-<input type="number" value="${i.qty}" 
-onchange="app.inventory.premium[${idx}].qty=+this.value">
+<h3>Premium</h3>
+${(app.inventory?.premium || []).map((i,idx)=>`
+<div>
+<input value="${i.name || ""}">
+<input value="${i.cost || 0}">
+<input value="${i.qty || 0}">
 </div>
 `).join("")}
 
-<h3 style="color:#d4af37">Add Ons</h3>
-${app.inventory.addons.map((i,idx)=>`
-<div style="margin-bottom:10px">
-<input value="${i.name}" 
-onchange="app.inventory.addons[${idx}].name=this.value">
-
-<input type="number" value="${i.cost}" 
-onchange="app.inventory.addons[${idx}].cost=+this.value">
-
-<input type="number" value="${i.qty}" 
-onchange="app.inventory.addons[${idx}].qty=+this.value">
+<h3>Addons</h3>
+${(app.inventory?.addons || []).map((i,idx)=>`
+<div>
+<input value="${i.name || ""}">
+<input value="${i.cost || 0}">
+<input value="${i.qty || 0}">
 </div>
 `).join("")}
 `
+
+alert("after inventory")
 
 let crm = el("crm")
 
