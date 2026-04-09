@@ -379,44 +379,48 @@ totals.innerHTML = `
   </div>
 `
 
-// ===== CHART =====
+// ===== CHART SAFE =====
 let ctx = document.getElementById("chart")
 
-if(ctx){
+if (ctx && window.Chart) {
 
-  // destroy old chart if exists (prevents bugs)
-  if(window.myChart){
-    window.myChart.destroy()
-  }
+  try {
 
- window.myChart = new Chart(ctx, {
-  type: "bar",
-  data: {
-    labels: app.jobs.map(j=>j.name + " " + j.date),
-    datasets: [
-      {
-        label: "Revenue",
-        data: app.jobs.map(j=>j.revenue)
-      },
-      {
-        label: "Profit",
-        data: app.jobs.map(j=>j.profit)
-      }
-    ]
-  },
-  options: {
-    plugins: {
-      legend: {
-        labels: { color: "white" }
-      }
-    },
-    scales: {
-      x: { ticks: { color: "white" } },
-      y: { ticks: { color: "white" } }
+    if (window.myChart) {
+      window.myChart.destroy()
     }
-  }
-})
 
+    window.myChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: app.jobs.map(j => j.name + " " + j.date),
+        datasets: [
+          {
+            label: "Revenue",
+            data: app.jobs.map(j => j.revenue)
+          },
+          {
+            label: "Profit",
+            data: app.jobs.map(j => j.profit)
+          }
+        ]
+      },
+      options: {
+        plugins: {
+          legend: {
+            labels: { color: "white" }
+          }
+        },
+        scales: {
+          x: { ticks: { color: "white" } },
+          y: { ticks: { color: "white" } }
+        }
+      }
+    })
+
+  } catch (e) {
+    console.log("Chart error:", e)
+  }
 
 }
 
