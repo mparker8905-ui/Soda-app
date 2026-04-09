@@ -128,187 +128,29 @@ label{display:block;margin-top:8px}
 </div>
 
 <div class="card">
-  <h3>CRM</h3>
-  <div id="crm"></div>
+<h3>CRM</h3>
+<div id="crm"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
-alert("JS LOADED")
+console.log("START")
 
-// ===== STATE =====
 let app = {
   inventory:{
-    standard:[
-      {name:"seed",cost:80,qty:100},
-      {name:"fert",cost:40,qty:100},
-      {name:"mulch",cost:35,qty:100},
-      {name:"tack",cost:25,qty:100}
-    ],
-    premium:[
-      {name:"bio",cost:25,qty:100},
-      {name:"humic",cost:20,qty:100}
-    ],
-    addons:[
-      {name:"lime",cost:15,qty:100},
-      {name:"sulfur",cost:20,qty:100}
-    ]
-  },
-  jobs:[]
-
-customers:[]
-
-}
-
-// ===== HELPERS =====
-function el(id){ return document.getElementById(id) }
-
-// ===== PREMIUM AUTO =====
-window.applyPremium = function(){
-  el("tier").value = "premium"
-  el("aeration").checked = true
-  el("compost").checked = true
-  el("bioHum").checked = true
-  el("lime").checked = true
-  el("sulfur").checked = true
-  calculate()
-}
-
-// ===== CALCULATE =====
-function calculate(){
-
-  let sqft = +el("sqft").value || 0
-  let houses = +el("houses").value || 1
-  let margin = (+el("margin").value || 40)/100
-  let overhead = (+el("overhead").value || 15)/100
-
-  let factor = sqft/5000
-
-  let used = {
-    seed:0.5*factor*houses,
-    fert:1*factor*houses,
-    mulch:1*factor*houses,
-    tack:0.5*factor*houses,
-    bio: el("bioHum").checked ? 0.5*factor*houses : 0,
-    humic: el("bioHum").checked ? 0.5*factor*houses : 0,
-    lime: el("lime").checked ? +el("limeQty").value||0 : 0,
-    sulfur: el("sulfur").checked ? +el("sulfurQty").value||0 : 0
+    standard:[{name:"seed",cost:80,qty:100}]
   }
-
-  let allMaterials = [
-    ...app.inventory.standard,
-    ...app.inventory.premium,
-    ...app.inventory.addons
-  ]
-
-  let materialCost = 0
-
-  allMaterials.forEach(i=>{
-    if(used[i.name]){
-      materialCost += used[i.name] * i.cost
-    }
-  })
-
-  let labor = (sqft<5000?200:400)*houses
-  let overheadCost = (materialCost+labor)*overhead
-  let cost = materialCost + labor + overheadCost
- let revenue = cost/(1-margin)
-
-if(!revenue || isNaN(revenue)){
-  revenue = 0
 }
-  let profit = revenue - cost
-
-el("finalPrice").innerHTML = revenue ? "$"+Math.round(revenue) : "$0"
-
-  return {revenue,profit,cost,used}
-}
-
-// ===== CREATE JOB =====
-window.createJob = function(){
-
-  let data = calculate()
-
-let name = el("customer").value || "Customer"
-
-// check if customer exists
-let existing = app.customers.find(c => c.name === name)
-
-if(!existing){
-  app.customers.push({
-    name: name,
-    jobs: []
-  })
-}
-
-// deduct inventory
-let allMaterials = [
-  ...app.inventory.standard,
-  ...app.inventory.premium,
-  ...app.inventory.addons
-]
-
-allMaterials.forEach(item => {
-  if(data.used[item.name]){
-    item.qty -= data.used[item.name]
-    if(item.qty < 0) item.qty = 0
-  }
-})
-
-  app.jobs.push({
-    name: el("customer").value || "Customer",
-    revenue: data.revenue,
-    profit: data.profit,
-    cost: data.cost,
-    materials: JSON.stringify(data.used),
-    date: new Date().toLocaleDateString()
-  })
-
-let name = el("customer").value || "Customer"
-
-let customer = app.customers.find(c => c.name === name)
-
-if(customer){
-  customer.jobs.push({
-    revenue: data.revenue,
-    profit: data.profit,
-    date: new Date().toLocaleDateString()
-  })
-}
-
-  save()
-  render()
-}
-
-// ===== PROPOSAL =====
-window.viewProposal = function(){
-
-  let data = calculate()
-
-  alert(
-    "Customer: " + (el("customer").value || "Customer") +
-    "\nRevenue: $" + Math.round(data.revenue) +
-    "\nProfit: $" + Math.round(data.profit)
-  )
-}
-
-// ===== RENDER =====
 
 function render(){
-
-  let inventoryUI = el("inventoryUI")
-  let alerts = el("alerts")
-
-  inventoryUI.innerHTML = "TEST INVENTORY WORKING"
-  alerts.innerHTML = "TEST ALERTS WORKING"
-
+  let el = document.getElementById("inventoryUI")
+  el.innerHTML = "WORKING"
 }
 
-// ===== START =====
-calculate()
 render()
+
 </script>
 
 </body>
