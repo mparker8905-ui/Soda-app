@@ -354,7 +354,7 @@ alert("before inventory")
 
 console.log("inventory:", app.inventory)
 
-inventoryUI.innerHTML = `
+inventoryUI.innerHTML = 
 
 <h3 style="color:#d4af37">Standard Materials</h3>
 ${app.inventory.standard.map((i,idx)=>`
@@ -391,7 +391,7 @@ onchange="app.inventory.addons[${idx}].cost=+this.value">
 <input value="${i.qty}" 
 onchange="app.inventory.addons[${idx}].qty=+this.value">
 `).join("")}
-`
+
 
 history.innerHTML = app.jobs.map(j=>`
 <div class="job">
@@ -442,7 +442,7 @@ alerts.innerHTML = alertsList.length
 let rev=app.jobs.reduce((a,b)=>a+b.revenue,0)
 let prof=app.jobs.reduce((a,b)=>a+b.profit,0)
 
-totals.innerHTML = `
+totals.innerHTML = 
 <div style="
 background:#111;
 border:2px solid #d4af37;
@@ -465,7 +465,7 @@ text-align:center;
 <div class="gold">
 ${rev ? ((prof/rev)*100).toFixed(1) : 0}%
 </div>
-`
+
 </div>
 
 // chart
