@@ -131,20 +131,32 @@ label{display:block;margin-top:8px}
 
 <script>
 
+localStorage.removeItem("lawnPro")
+
 alert("JS Loaded")
 
 // ===== STATE =====
-let app = JSON.parse(localStorage.getItem("lawnPro")) || {
-inventory:[
-{name:"seed",cost:80,qty:100},
-{name:"fert",cost:40,qty:100},
-{name:"mulch",cost:35,qty:100},
-{name:"tack",cost:25,qty:100},
-{name:"bio",cost:25,qty:100},
-{name:"humic",cost:20,qty:100},
-{name:"lime",cost:15,qty:100},
-{name:"sulfur",cost:20,qty:100}
-],
+
+let app =
+JSON.parse(localStorage.getItem("lawnPro")) || {
+
+inventory:{
+  standard:[
+    {name:"seed",cost:80,qty:100},
+    {name:"fert",cost:40,qty:100},
+    {name:"mulch",cost:35,qty:100},
+    {name:"tack",cost:25,qty:100}
+  ],
+  premium:[
+    {name:"bio",cost:25,qty:100},
+    {name:"humic",cost:20,qty:100}
+  ],
+  addons:[
+    {name:"lime",cost:15,qty:100},
+    {name:"sulfur",cost:20,qty:100}
+  ]
+},
+
 jobs:[]
 }
 
@@ -330,6 +342,8 @@ alert("before inventory")
 
 // inventory
 
+console.log("inventory:", app.inventory)
+
 inventoryUI.innerHTML = `
 
 <h3 style="color:#d4af37">Standard Materials</h3>
@@ -412,10 +426,8 @@ if(lastJob && lastJob.profit < 500){
 }
 
 alerts.innerHTML = alertsList.length
-  ? alertsList.join("<br>")
-  : "✅ All systems good"
-
-alerts.innerHTML = alertsList.length ? alertsList.join("<br>") : "✅ Inventory Healthy"
+? alertsList.join("<br>")
+: "✅ Inventory Healthy"
 
 // totals
 let rev=app.jobs.reduce((a,b)=>a+b.revenue,0)
@@ -431,12 +443,12 @@ text-align:center;
 ">
 
 <div style="font-size:18px">Total Revenue</div>
-<div class="gold">$${Math.round(rev)}</div>
+<div class="gold">$$${Math.round(rev)}</div>
 
 <br>
 
 <div style="font-size:18px">Total Profit</div>
-<div class="gold">$${Math.round(prof)}</div>
+<div class="gold">$$${Math.round(prof)}</div>
 
 <br>
 
