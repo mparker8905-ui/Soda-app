@@ -69,33 +69,37 @@ label{display:block;margin-top:8px}
 <input id="sulfurQty" placeholder="Sulfur Amount">
 
 <h3>Schedule</h3>
+
+<label>Quote Date</label>
 <input id="quoteDate" type="date">
+
+<label>Soil Test Date</label>
+<input id="soilDate" type="date">
+
+<label>Aeration Date</label>
 <input id="aerationDate" type="date">
+
+<label>Compost Date</label>
 <input id="compostDate" type="date">
+
+<label>Hydroseed Date</label>
 <input id="hydroDate" type="date">
+
+<label>Grow System Install</label>
 <input id="installDate" type="date">
-<input id="removalDate" type="date">
-<input id="checkDate" type="date">
+
+<label>Final Inspection</label>
+<input id="finalDate" type="date">
 
 <div class="finalBox">
 <h3>Final Investment</h3>
 <div id="finalPrice" class="gold"></div>
-<div id="finalDetails"></div>
+<div id="finalDetails"></div>no
 </div>
 
-function applyPremium(){
-el("tier").value = "premium"   // 🔥 THIS WAS MISSING
-
-el("aeration").checked = true
-el("compost").checked = true
-el("bioHum").checked = true
-el("lime").checked = true
-el("sulfur").checked = true
-
-calculate()
-}
-
-</div>
+<button onclick="applyPremium()">Auto Apply Premium</button>
+<button onclick="createJob()">Create Job</button>
+<button onclick="viewProposal()">View Proposal</button>
 
 <div class="card">
 <h3>Inventory</h3>
@@ -234,6 +238,18 @@ Margin: ${(profit/revenue*100).toFixed(1)}%
 return {used,materialCost,cost,revenue,profit}
 }
 
+function applyPremium(){
+  el("tier").value = "premium"
+
+  el("aeration").checked = true
+  el("compost").checked = true
+  el("bioHum").checked = true
+  el("lime").checked = true
+  el("sulfur").checked = true
+
+  calculate()
+}
+
 // ===== CREATE JOB =====
 function createJob(){
 
@@ -363,6 +379,28 @@ onchange="app.inventory.addons[${idx}].cost=+this.value">
 onchange="app.inventory.addons[${idx}].qty=+this.value">
 `).join("")}
 
+inventoryUI.innerHTML = `
+
+<h3>Standard</h3>
+${app.inventory.standard.map((i,idx)=>`
+<input value="${i.name}" onchange="app.inventory.standard[${idx}].name=this.value">
+<input value="${i.cost}" onchange="app.inventory.standard[${idx}].cost=+this.value">
+<input value="${i.qty}" onchange="app.inventory.standard[${idx}].qty=+this.value">
+`).join("")}
+
+<h3>Premium</h3>
+${app.inventory.premium.map((i,idx)=>`
+<input value="${i.name}" onchange="app.inventory.premium[${idx}].name=this.value">
+<input value="${i.cost}" onchange="app.inventory.premium[${idx}].cost=+this.value">
+<input value="${i.qty}" onchange="app.inventory.premium[${idx}].qty=+this.value">
+`).join("")}
+
+<h3>Add Ons</h3>
+${app.inventory.addons.map((i,idx)=>`
+<input value="${i.name}" onchange="app.inventory.addons[${idx}].name=this.value">
+<input value="${i.cost}" onchange="app.inventory.addons[${idx}].cost=+this.value">
+<input value="${i.qty}" onchange="app.inventory.addons[${idx}].qty=+this.value">
+`).join("")}
 `
 
 history.innerHTML = app.jobs.map(j=>`
