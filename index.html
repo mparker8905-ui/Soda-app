@@ -201,8 +201,6 @@ function calculateJob(){
   let packageType = document.getElementById("package").value
   let pricingMode = document.getElementById("pricingMode").value
 
-  let addons = app.job.addons
-
   let totalSqft = sqft * houses
   let builderMult = getBuilderMultiplier(houses)
   let units = totalSqft / 1000
@@ -223,6 +221,9 @@ units = units * materialEfficiency
   }
 
   // ADDONS
+
+ let addons = app.job.addons
+
   if(addons.compost) materialCost += units * RATES.compost * COSTS.compost
   if(addons.biohum) materialCost += units * COSTS.biohum
 
@@ -340,6 +341,9 @@ document.getElementById("houses").addEventListener("input", function(e){
 document.getElementById("customer").addEventListener("input", function(e){
   app.job.customer = e.target.value
 })
+
+document.getElementById("limeQty")?.addEventListener("input", render)
+document.getElementById("sulfurQty")?.addEventListener("input", render)
 
 </script>
 
