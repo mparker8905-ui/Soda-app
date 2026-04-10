@@ -197,10 +197,9 @@ function getBuilderMultiplier(houses){
 
 function calculateJob(){
 
- let builderMult = getBuilderMultiplier(houses)
-
   let sqft = Number(document.getElementById("sqft").value) || 0
   let houses = Number(document.getElementById("houses")?.value) || 1
+  let builderMult = getBuilderMultiplier(houses)
   let packageType = document.getElementById("package").value
   let pricingMode = document.getElementById("pricingMode").value
 
@@ -244,9 +243,8 @@ if(addons.sulfur) materialCost += sulfurQty * COSTS.sulfur
 let labor = (totalSqft * 0.05) * builderMult
 
 // APPLY MATERIAL EFFICIENCY (bulk savings)
-let materialAdjusted = materialCost * (1 - ((1 - builderMult) * 0.5))
 
-let totalCost = materialAdjusted + labor
+let totalCost = materialCost + labor
 
   // PRICING MODES
 
