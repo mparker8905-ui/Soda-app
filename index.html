@@ -67,25 +67,12 @@ input{width:100%;padding:10px;margin:5px 0;background:#222;border:1px solid #333
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
+</script>
 
+// ---------- HELPERS ----------
 function el(id){ return document.getElementById(id) }
 
-function save(){
-  localStorage.setItem("app", JSON.stringify(app))
-}
-
-function load(){
-  try{
-    let data = localStorage.getItem("app")
-    if(data){
-      app = JSON.parse(data)
-    }
-  }catch(e){
-    localStorage.removeItem("app")
-  }
-}
-
+// ---------- STATE ----------
 let app = {
   inventory:{
     standard:[
@@ -104,173 +91,178 @@ let app = {
     ]
   },
   jobs:[],
-  customers:[]
+  job:{
+    customer:"",
+    sqft:0,
+    houses:1,
+    package:"standard",
+    addons:{
+      aeration:false,
+      compost:false,
+      biohum:false,
+      lime:0,
+      sulfur:0,
+      grow:false
+    }
+  }
+}
+
+// ---------- STORAGE ----------
+function save(){
+  localStorage.setItem("app", JSON.stringify(app))
+}
+
+function load(){
+  let data = localStorage.getItem("app")
+  if(data) app = JSON.parse(data)
+}
+
+// ---------- LOGIC ----------
+function applyPackage(){
+  let j = app.job
+
+  if(j.package === "premium"){
+    j.addons.aeration = true
+    j.addons.compost = true
+    j.addons.biohum = true
+    if(!j.addons.lime) j.addons.lime = 1
+    if(!j.addons.sulfur) j.addons.sulfur = 1
+  }
 }
 
 function calculate(){
-  let sqft = +el("sqft").value || 0
-  let houses = +el("houses").value || 1
-  let margin = (+el("margin").value || 40)/100
-  let overhead = (+el("overhead").value || 15)/100
+  let j = app.job
 
-  let factor = sqft/5000
+  let sqft = j.sqft
+  let houses = j.houses
+  let factor = sqft / 5000
 
-  let used = {
-    seed:0.5*factor*houses,
-    fert:1*factor*houses,
-    mulch:1*factor*houses,
-    tack:0.5*factor*houses,
-    bio:0.5*factor*houses,
-    humic:0.5*factor*houses
+  applyPackage()
+
+  let used = {}
+
+  // base
+  if(j.package === "standard"){
+    used.seed = 0.5 * factor * houses
+    used.fert = 1 * factor * houses
+    used.mulch = 1 * factor * houses
+    used.tack = 0.5 * factor * houses
   }
 
-  let all = [...app.inventory.standard,...app.inventory.premium,...app.inventory.addons]
+  if(j.package === "premium"){
+    used.seed = 0.5 * factor * houses
+    used.fert = 1 * factor * houses
+    used.mulch = 1 * factor * houses
+    used.tack = 0.5 * factor * houses
+    used.bio = 0.5 * factor * houses
+    used.humic = 0.5 * factor * houses
+  }
+
+  // addons
+  if(j.addons.aeration) used.aeration = factor
+  if(j.addons.compost) used.compost = factor
+  if(j.addons.biohum){
+    used.bio = (used.bio || 0) + 0.5 * factor
+    used.humic = (used.humic || 0) + 0.5 * factor
+  }
+
+  if(j.addons.lime) used.lime = j.addons.lime
+  if(j.addons.sulfur) used.sulfur = j.addons.sulfur
+
+  let all = [
+    ...app.inventory.standard,
+    ...app.inventory.premium,
+    ...app.inventory.addons
+  ]
 
   let materialCost = 0
+
   all.forEach(i=>{
     if(used[i.name]){
-      materialCost += used[i.name]*i.cost
+      materialCost += used[i.name] * i.cost
     }
   })
 
-  let labor = (sqft<5000?200:400)*houses
-  let cost = materialCost + labor + (materialCost+labor)*overhead
-  let revenue = cost/(1-margin)
+  let labor = (sqft < 5000 ? 200 : 400) * houses
+  let overheadRate = (+el("overhead")?.value || 15)/100
+  let margin = (+el("margin")?.value || 40)/100
+
+  let cost = materialCost + labor
+  let overhead = cost * overheadRate
+  cost += overhead
+
+  let revenue = cost / (1 - margin)
   let profit = revenue - cost
 
-  el("finalPrice").innerHTML = revenue ? "$"+Math.round(revenue) : "no"
-
-  return {revenue,profit,cost,used}
+  return {used, materialCost, labor, overhead, cost, revenue, profit}
 }
-//===== creat job===
 
+// ---------- INVENTORY ----------
+function findItem(name){
+  return [...app.inventory.standard, ...app.inventory.premium, ...app.inventory.addons]
+    .find(i => i.name === name)
+}
+
+// ---------- ACTIONS ----------
 function createJob(){
   let data = calculate()
-  if(!data) return
+  let j = app.job
 
-  let name = el("customer").value || "Customer"
-  let date = new Date().toLocaleDateString()
+  // deduct inventory
+  Object.keys(data.used).forEach(name=>{
+    let item = findItem(name)
+    if(item) item.qty -= data.used[name]
+  })
 
   app.jobs.push({
-    name,date,
-    revenue:data.revenue,
-    profit:data.profit,
-    cost:data.cost
+    name: j.customer || "Customer",
+    revenue: data.revenue,
+    profit: data.profit
   })
-
-let data = calculate()
-if(!data || !data.revenue) return
 
   save()
   render()
 }
 
-//===== view proposal====
-
-function viewProposal(){
-  let data = calculate()
-  if(!data) return
-  alert("Revenue: $" + Math.round(data.revenue) + "\nProfit: $" + Math.round(data.profit))
-}
-//====== Inventory====
-
-function saveInventory(){
-  let inputs = document.querySelectorAll("#inventoryUI input")
-  inputs.forEach(input=>{
-    let t=input.dataset.type
-    let i=input.dataset.idx
-    let f=input.dataset.field
-    app.inventory[t][i][f]=f==="name"?input.value:+input.value
-  })
-  save()
-  render()
-}
-
-//====Render===
-
+// ---------- RENDER ----------
 function render(){
 
-  let inventoryUI = el("inventoryUI")
+  let data = calculate()
 
-  inventoryUI.innerHTML = `
-  <h3>Standard</h3>
-  ${app.inventory.standard.map((i,idx)=>`
-    <input data-type="standard" data-idx="${idx}" data-field="name" value="${i.name}">
-    <input data-type="standard" data-idx="${idx}" data-field="cost" value="${i.cost}">
-    <input data-type="standard" data-idx="${idx}" data-field="qty" value="${i.qty}">
-  `).join("")}
-
-  <h3>Premium</h3>
-  ${app.inventory.premium.map((i,idx)=>`
-    <input data-type="premium" data-idx="${idx}" data-field="name" value="${i.name}">
-    <input data-type="premium" data-idx="${idx}" data-field="cost" value="${i.cost}">
-    <input data-type="premium" data-idx="${idx}" data-field="qty" value="${i.qty}">
-  `).join("")}
-
-  <h3>Addons</h3>
-  ${app.inventory.addons.map((i,idx)=>`
-    <input data-type="addons" data-idx="${idx}" data-field="name" value="${i.name}">
-    <input data-type="addons" data-idx="${idx}" data-field="cost" value="${i.cost}">
-    <input data-type="addons" data-idx="${idx}" data-field="qty" value="${i.qty}">
-  `).join("")}
+  // FINAL CARD
+  el("finalPrice").innerHTML = `
+    <div class="gold">$${Math.round(data.revenue)}</div>
+    Materials: $${Math.round(data.materialCost)}<br>
+    Labor: $${data.labor}<br>
+    Overhead: $${Math.round(data.overhead)}<br><br>
+    Cost: $${Math.round(data.cost)}<br>
+    Profit: $${Math.round(data.profit)}<br>
+    Margin: ${Math.round((data.profit/data.revenue)*100)}%
   `
-//=====Alerts====
 
-  let alerts = el("alerts")
-  let list=[]
-  let all=[...app.inventory.standard,...app.inventory.premium,...app.inventory.addons]
-
-  all.forEach(i=>{
-    if(i.qty<=0) list.push("OUT: "+i.name)
-    else if(i.qty<10) list.push("LOW: "+i.name)
-  })
-
-  alerts.innerHTML = list.length?list.join("<br>"):"Healthy"
-
+  // HISTORY
   el("history").innerHTML = app.jobs.map(j=>`
-    <div>${j.name} - $${Math.round(j.revenue)} profit $${Math.round(j.profit)}</div>
+    <div>${j.name} - $${Math.round(j.revenue)}</div>
   `).join("")
+}
 
-  let totalRevenue = app.jobs.reduce((a,b)=>a+b.revenue,0)
-  let totalProfit = app.jobs.reduce((a,b)=>a+b.profit,0)
+// ---------- UI BINDINGS ----------
+function bind(){
 
-  el("totals").innerHTML = `
-    Revenue: $${Math.round(totalRevenue)}<br>
-    Profit: $${Math.round(totalProfit)}
-  `
-
-//====Chart====
- let ctx = document.getElementById("chart")?.getContext("2d")
-
-  if(ctx && window.Chart){
-    if(window.myChart) window.myChart.destroy()
-    window.myChart = new Chart(ctx,{
-      type:"bar",
-      data:{
-        labels:app.jobs.map(j=>j.name),
-        datasets:[{label:"Profit",data:app.jobs.map(j=>j.profit)}]
-      }
-    })
-  }
+  el("customer").oninput = e => app.job.customer = e.target.value
+  el("sqft").oninput = e => { app.job.sqft = +e.target.value; render() }
+  el("houses").oninput = e => { app.job.houses = +e.target.value; render() }
 
 }
 
+// ---------- INIT ----------
 function init(){
   load()
+  bind()
   render()
-
-  // auto update pricing when typing
-  ["sqft","houses","margin","overhead"].forEach(id=>{
-    el(id).addEventListener("input", calculate)
-  })
-
-  calculate() // run once on load
 }
 
 init()
-
-load()
-render()
 
 </script>
 
