@@ -65,7 +65,6 @@ input,select,button{
 <div class="card">
 <h2>Add Ons</h2>
 
-<div class="toggle" data-name="aeration" onclick="toggleAddon(this)">Aeration</div>
 <div class="toggle" data-name="compost" onclick="toggleAddon(this)">Compost</div>
 <div class="toggle" data-name="biohum" onclick="toggleAddon(this)">Bio / Hum Blend</div>
 
@@ -222,6 +221,10 @@ function render(){
 // ---------- INIT ----------
 document.addEventListener("DOMContentLoaded", () => {
   bind()
+  render()
+})
+
+document.addEventListener("DOMContentLoaded", () => {
   render()
 })
 
