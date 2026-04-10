@@ -65,14 +65,14 @@ input,select,button{
 <div class="card">
 <h2>Add Ons</h2>
 
-<div class="toggle" onclick="toggleAddon('aeration',this)">Aeration</div>
-<div class="toggle" onclick="toggleAddon('compost',this)">Compost</div>
-<div class="toggle" onclick="toggleAddon('biohum',this)">Bio / Hum Blend</div>
+<div class="toggle" data-name="aeration" onclick="toggleAddon('aeration',this)">Aeration</div>
+<div class="toggle" data-name="compost" onclick="toggleAddon('compost',this)">Compost</div>
+<div class="toggle" data-name="Bio/Hum" onclick="toggleAddon('biohum',this)">Bio / Hum Blend</div>
 
-<div class="toggle" onclick="toggleAddon('lime',this)">Lime</div>
+<div class="toggle" data-name="lime" onclick="toggleAddon('lime',this)">Lime</div>
 <input id="limeQty" type="number" placeholder="Lime Quantity">
 
-<div class="toggle" onclick="toggleAddon('sulfur',this)">Sulfur</div>
+<div class="toggle" data-name="sulfur" onclick="toggleAddon('sulfur',this)">Sulfur</div>
 <input id="sulfurQty" type="number" placeholder="Sulfur Quantity">
 
 </div>
@@ -204,8 +204,22 @@ function applyPackage(){
 }
 
 // ---------- RENDER ----------
+
 function render(){
-  console.log("render", app.job)
+  let j = app.job
+
+  // Sync toggle UI with state
+  document.querySelectorAll(".toggle").forEach(elm=>{
+   let name = elm.dataset.name
+
+    if(j.addons[name]){
+      elm.classList.add("active")
+    } else {
+      elm.classList.remove("active")
+    }
+  })
+
+  console.log("render", j)
 }
 
 // ---------- INIT ----------
