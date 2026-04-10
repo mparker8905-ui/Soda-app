@@ -137,14 +137,16 @@ label{display:block;margin-top:8px}
 <script>
 
 // ===== STORAGE =====
-function save(){
-  localStorage.setItem("app", JSON.stringify(app))
-}
 
 function load(){
-  let data = localStorage.getItem("app")
-  if(data){
-    app = JSON.parse(data)
+  try{
+    let data = localStorage.getItem("app")
+    if(data){
+      app = JSON.parse(data)
+    }
+  }catch(e){
+    console.log("LOAD ERROR", e)
+    localStorage.removeItem("app") // reset bad data
   }
 }
 
@@ -177,10 +179,10 @@ function el(id){ return document.getElementById(id) }
 // ===== CALCULATE =====
 function calculate(){
 
-  let sqft = +el("sqft").value || 0
-  let houses = +el("houses").value || 1
-  let margin = (+el("margin").value || 40)/100
-  let overhead = (+el("overhead").value || 15)/100
+  let sqft = +el("sqft")?.value || 0
+  let houses = +el("houses")?.value || 1
+  let margin = (+el("margin")?.value || 40)/100
+  let overhead = (+el("overhead")?.value || 15)/100
 
   let factor = sqft/5000
 
@@ -215,7 +217,9 @@ function calculate(){
   let revenue = cost/(1-margin)
   let profit = revenue - cost
 
-el("finalPrice").innerHTML = "$" + Math.round(revenue)
+el("finalPrice").innerHTML = revenue 
+  ? "$" + Math.round(revenue) 
+  : "no"
 
   return {revenue, profit, cost, used}
 }
@@ -225,6 +229,7 @@ el("finalPrice").innerHTML = "$" + Math.round(revenue)
 window.createJob = function(){
 
   let data = calculate()
+  if(!data) return
 
   let name = el("customer").value || "Customer"
   let date = new Date().toLocaleDateString()
@@ -240,13 +245,11 @@ window.createJob = function(){
     .join(", ")
 
   app.jobs.push({
-    name,
-    date,
+    name: el("customer")?.value || "Customer",
     revenue: data.revenue,
     profit: data.profit,
     cost: data.cost,
-    margin,
-    materials: materialsUsed
+    date: new Date().toLocaleDateString()
   })
 
   // customer tracking
@@ -265,7 +268,32 @@ window.createJob = function(){
 
   save()
   render()
+
+//====View proposal===
+window.viewProposal = function(){
+
+  let data = calculate()
+  if(!data) return
+
+  alert(
+    "Revenue: $" + Math.round(data.revenue) +
+    "\nProfit: $" + Math.round(data.profit)
+  )
 }
+
+//=====Apply premium=====
+
+window.applyPremium = function(){
+
+  let tier = document.getElementById("tier")
+  if(tier) tier.value = "premium"
+
+  let ids = ["aeration","compost","bioHum","lime","sulfur"]
+
+  ids.forEach(id=>{
+  let checkbox = document.getElementById(id)
+  if(checkbox) checkbox.checked = true
+  })
 
 // ===== INVENTORY SAVE =====
 function saveInventory(){
@@ -287,6 +315,7 @@ function saveInventory(){
   render()
 }
 
+
 // ===== RENDER =====
 
 function render(){
@@ -296,6 +325,7 @@ alert("step X")
   console.log("1️⃣ render start")
 
   let inventoryUI = el("inventoryUI")
+  if(!inventoryUI) return
   console.log("2️⃣ inventoryUI", inventoryUI)
 
   let history = el("history")
@@ -320,16 +350,22 @@ totals.innerHTML = `
   // ===== INVENTORY =====
   console.log("6️⃣ before inventory render")
 
-  inventoryUI.innerHTML = `
-    <h3>Standard</h3>
-    ${(app.inventory.standard||[]).map((i,idx)=>`
-      <div>
-        <input data-type="standard" data-idx="${idx}" data-field="name" value="${i.name}">
-        <input data-type="standard" data-idx="${idx}" data-field="cost" value="${i.cost}">
-        <input data-type="standard" data-idx="${idx}" data-field="qty" value="${i.qty}">
-      </div>
-    `).join("")}
-  `
+inventoryUI.innerHTML = `
+<h3>Standard</h3>
+${(app.inventory.standard || []).map(i => `
+  <div>${i.name} - $${i.cost} - Qty: ${i.qty}</div>
+`).join("")}
+
+<h3>Premium</h3>
+${(app.inventory.premium || []).map(i => `
+  <div>${i.name} - $${i.cost} - Qty: ${i.qty}</div>
+`).join("")}
+
+<h3>Addons</h3>
+${(app.inventory.addons || []).map(i => `
+  <div>${i.name} - $${i.cost} - Qty: ${i.qty}</div>
+`).join("")}
+`
 
   console.log("7️⃣ after inventory")
 
