@@ -122,23 +122,8 @@ input{
 
 <script>
 
-// ---------- UI ----------
-
-window.setSize = function(val){
-  console.log("clicked size:", val)
-
-  app.job.sqft = val
-
-  let input = document.getElementByid("sqft")
-  if(input){
-    input.value = val
-  }
-
-  render()
-}
-
 // ---------- HELPERS ----------
-function el(id){ return document.getElementByid(id) }
+function el(id){ return document.getElementById(id) }
 
 // ---------- STATE ----------
 let app = {
@@ -178,6 +163,22 @@ job:{
     lime:0,
     sulfur:0
   }
+}
+}
+
+// ---------- UI ----------
+
+window.setSize = function(val){
+  console.log("clicked size:", val)
+
+  app.job.sqft = val
+
+  let input = document.getElementById("sqft")
+  if(input){
+    input.value = val
+  }
+
+  render()
 }
 
 // ---------- STORAGE ----------
@@ -383,10 +384,11 @@ el("sulfurQty").oninput=e=>{app.job.addons.sulfur=+e.target.value;render()}
 
 // ---------- INIT ----------
 function init(){
-load()
-bind()
-render()
-}
+
+document.addEventListener("DOMContentLoaded", () => {
+  bind()
+  render()
+})
 
 init()
 
