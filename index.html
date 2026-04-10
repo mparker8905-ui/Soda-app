@@ -273,9 +273,11 @@ render()
 // ---------- UI ----------
 
 function setSize(val){
+  console.log("clicked size:", val)
+
   app.job.sqft = val
 
-  const input = el("sqft")
+  let input = document.getElementById("sqft")
   if(input){
     input.value = val
   }
