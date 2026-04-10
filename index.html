@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{background:#000;color:#fff;font-family:sans-serif;margin:0;padding:10px}
+body{background:#000;color:#fff;font-family:sans-serif;padding:10px}
 .card{background:#111;padding:15px;border-radius:12px;margin-bottom:20px}
-input,select,button{
+
+input,button{
   width:100%;
   padding:12px;
   margin-top:8px;
@@ -15,9 +16,11 @@ input,select,button{
   color:#fff;
   border-radius:8px
 }
+
 .row{display:flex;gap:10px}
 .row button{flex:1}
 
+/* TOGGLES */
 .toggle{
   background:#1a1a1a;
   padding:14px;
@@ -25,15 +28,13 @@ input,select,button{
   margin:10px 0;
   border:1px solid #2a2a2a;
   text-align:center;
-  font-weight:500;
   transition:.2s;
 }
+
 .toggle.active{
   background:#d4af37;
   color:#000;
-  font-weight:bold;
   border:1px solid #d4af37;
-  box-shadow:0 0 10px rgba(212,175,55,0.4);
 }
 </style>
 </head>
@@ -43,14 +44,7 @@ input,select,button{
 <div class="card">
 <h2>Create Job</h2>
 
-<input id="customer" placeholder="Customer Name">
-
-<select id="package">
-  <option value="standard">Standard</option>
-  <option value="premium">Premium</option>
-</select>
-
-<input id="houses" type="number" value="1" placeholder="# of Houses">
+<input id="sqft" placeholder="Square Feet">
 
 <div class="row">
   <button onclick="setSize(3000)">Small</button>
@@ -58,182 +52,93 @@ input,select,button{
   <button onclick="setSize(12000)">Large</button>
 </div>
 
-<input id="sqft" type="number" placeholder="Square Feet (per house)">
-
 </div>
 
 <div class="card">
 <h2>Add Ons</h2>
 
-<div class="toggle" data-name="aeration" onclick="toggleAddon(this)">Aeration</div>
-<div class="toggle" data-name="compost" onclick="toggleAddon(this)">Compost</div>
-<div class="toggle" data-name="biohum" onclick="toggleAddon(this)">Bio / Hum Blend</div>
+<div class="toggle" onclick="toggleAddon(this)">Aeration</div>
+<div class="toggle" onclick="toggleAddon(this)">Compost</div>
+<div class="toggle" onclick="toggleAddon(this)">Bio / Hum Blend</div>
 
-<div class="toggle" data-name="lime" onclick="toggleAddon(this)">Lime</div>
+<div class="toggle" onclick="toggleAddon(this)">Lime</div>
 <input id="limeQty" type="number" placeholder="Lime Quantity">
 
-<div class="toggle" data-name="sulfur" onclick="toggleAddon(this)">Sulfur</div>
+<div class="toggle" onclick="toggleAddon(this)">Sulfur</div>
 <input id="sulfurQty" type="number" placeholder="Sulfur Quantity">
+
+</div>
+
+<div class="card">
+<h2>Costs</h2>
+
+<input id="seedCost" placeholder="Seed Cost">
+<input id="fertCost" placeholder="Fertilizer Cost">
+<input id="mulchCost" placeholder="Mulch Cost">
+<input id="tackCost" placeholder="Tack Cost">
+<input id="compostCostUnit" placeholder="Compost Cost">
+
+<button onclick="saveCosts()">Save Costs</button>
 
 </div>
 
 <script>
 
-// ---------- HELPERS ----------
-function el(id){ return document.getElementById(id) }
-
-// ---------- STATE ----------
-let app = {
-  inventory:{
-    standard:[
-      {name:"seed",cost:80,qty:100},
-      {name:"fert",cost:40,qty:100},
-      {name:"mulch",cost:35,qty:100},
-      {name:"tack",cost:25,qty:100}
-    ],
-    premium:[
-      {name:"bio",cost:25,qty:100},
-      {name:"humic",cost:20,qty:100}
-    ],
-    addons:[
-      {name:"lime",cost:15,qty:100},
-      {name:"sulfur",cost:20,qty:100}
-    ]
-  },
-
-  jobs:[],
-
-  job:{
-    customer:"",
-    sqft:0,
-    houses:1,
-    package:"standard",
-
-    addons:{
-      aeration:false,
-      compost:false,
-      biohum:false,
-      lime:false,
-      sulfur:false,
-      grow:false
-    },
-
-    quantities:{
-      lime:0,
-      sulfur:0
-    }
-  }
-};
-
-// ---------- UI FUNCTIONS ----------
-
+// ==============================
+// SIZE BUTTONS
+// ==============================
 function setSize(val){
-  app.job.sqft = val
-  document.getElementById("sqft").value = val
+  let input = document.getElementById("sqft")
+  if(input){
+    input.value = val
+  }
 }
 
+// ==============================
+// TOGGLE BUTTONS
+// ==============================
 function toggleAddon(el){
-  const name = el.dataset.name
 
-  app.job.addons[name] = !app.job.addons[name]
-
-  // direct UI update (NO render dependency)
-  if(app.job.addons[name]){
-    el.classList.add("active")
-  } else {
+  if(el.classList.contains("active")){
     el.classList.remove("active")
+  } else {
+    el.classList.add("active")
   }
+
 }
 
-// ---------- BIND ----------
-function bind(){
+// ==============================
+// SAVE COSTS
+// ==============================
+function saveCosts(){
 
-  let customer = el("customer")
-  if(customer){
-    customer.oninput = function(e){
-      app.job.customer = e.target.value
-    }
-  }
+  let costs = {
+    seed: Number(document.getElementById("seedCost")?.value) || 0,
+    fert: Number(document.getElementById("fertCost")?.value) || 0,
+    mulch: Number(document.getElementById("mulchCost")?.value) || 0,
+    tack: Number(document.getElementById("tackCost")?.value) || 0,
+    compost: Number(document.getElementById("compostCostUnit")?.value) || 0
+  };
 
-  let sqft = el("sqft")
-  if(sqft){
-    sqft.oninput = function(e){
-      app.job.sqft = +e.target.value
-      render()
-    }
-  }
+  localStorage.setItem("costs", JSON.stringify(costs));
 
-  let houses = el("houses")
-  if(houses){
-    houses.oninput = function(e){
-      app.job.houses = +e.target.value
-      render()
-    }
-  }
-
-  let pack = el("package")
-  if(pack){
-    pack.onchange = function(e){
-      app.job.package = e.target.value
-      applyPackage()
-      render()
-    }
-  }
-
-  let limeQty = el("limeQty")
-  if(limeQty){
-    limeQty.oninput = function(e){
-      app.job.quantities.lime = +e.target.value
-      render()
-    }
-  }
-
-  let sulfurQty = el("sulfurQty")
-  if(sulfurQty){
-    sulfurQty.oninput = function(e){
-      app.job.quantities.sulfur = +e.target.value
-      render()
-    }
-  }
+  alert("Costs Saved ✅");
 }
 
-// ---------- LOGIC ----------
-
-function applyPackage(){
-
-  let j = app.job
-
-  if(j.package === "premium"){
-
-    j.addons.aeration = true
-    j.addons.compost = true
-    j.addons.biohum = true
-    j.addons.lime = true
-    j.addons.sulfur = true
-
-    j.quantities.lime = j.quantities.lime || 1
-    j.quantities.sulfur = j.quantities.sulfur || 1
-
-    // 🔥 FORCE UI update immediately
-    document.querySelectorAll(".toggle").forEach(el=>{
-      let name = el.dataset.name
-
-      if(j.addons[name]){
-        el.classList.add("active")
-      }
-    })
-  }
+// ==============================
+// INIT (SAFE)
+// ==============================
+function updateDashboard(){
+  console.log("dashboard ready")
 }
 
-// ---------- RENDER ----------
-function render(){
+function checkLowInventory(){
+  console.log("inventory checked")
+}
 
-  let j = app.job
-
-  // sync toggle UI
-  let toggles = document.querySelectorAll(".toggle")
-
-  for(let i = 0;
+// RUN
+updateDashboard()
+checkLowInventory()
 
 </script>
 
