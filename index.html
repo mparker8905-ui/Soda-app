@@ -12,7 +12,6 @@ button{background:#d4af37;border:none;padding:12px;border-radius:8px;width:100%;
 input{width:100%;padding:10px;margin:5px 0;background:#222;border:1px solid #333;color:white;border-radius:8px}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -24,12 +23,15 @@ input{width:100%;padding:10px;margin:5px 0;background:#222;border:1px solid #333
 <input id="houses" value="1">
 <input id="margin" value="40">
 <input id="overhead" value="15">
-<button onclick="calculate()">Calculate</button>
-</div>
 
 <div class="card">
 <h2>Final Investment</h2>
 <div id="finalPrice">no</div>
+</div>
+
+<div class="card">
+<button onclick="createJob()">Create Job</button></div>
+<button onclick="viewProposal()">View Proposal</button>
 </div>
 
 <div class="card">
@@ -41,11 +43,6 @@ input{width:100%;padding:10px;margin:5px 0;background:#222;border:1px solid #333
 <div class="card">
 <h2>Alerts</h2>
 <div id="alerts"></div>
-</div>
-
-<div class="card">
-<button onclick="createJob()">Create Job</button>
-<button onclick="viewProposal()">View Proposal</button>
 </div>
 
 <div class="card">
@@ -67,6 +64,8 @@ input{width:100%;padding:10px;margin:5px 0;background:#222;border:1px solid #333
 <h2>Totals</h2>
 <div id="totals"></div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
@@ -143,6 +142,7 @@ function calculate(){
 
   return {revenue,profit,cost,used}
 }
+//===== creat job===
 
 function createJob(){
   let data = calculate()
@@ -158,15 +158,21 @@ function createJob(){
     cost:data.cost
   })
 
+let data = calculate()
+if(!data || !data.revenue) return
+
   save()
   render()
 }
+
+//===== view proposal====
 
 function viewProposal(){
   let data = calculate()
   if(!data) return
   alert("Revenue: $" + Math.round(data.revenue) + "\nProfit: $" + Math.round(data.profit))
 }
+//====== Inventory====
 
 function saveInventory(){
   let inputs = document.querySelectorAll("#inventoryUI input")
@@ -179,6 +185,8 @@ function saveInventory(){
   save()
   render()
 }
+
+//====Render===
 
 function render(){
 
@@ -206,6 +214,7 @@ function render(){
     <input data-type="addons" data-idx="${idx}" data-field="qty" value="${i.qty}">
   `).join("")}
   `
+//=====Alerts====
 
   let alerts = el("alerts")
   let list=[]
@@ -230,7 +239,8 @@ function render(){
     Profit: $${Math.round(totalProfit)}
   `
 
-  let ctx = document.getElementById("chart")
+//====Chart====
+ let ctx = document.getElementById("chart")?.getContext("2d")
 
   if(ctx && window.Chart){
     if(window.myChart) window.myChart.destroy()
@@ -244,6 +254,20 @@ function render(){
   }
 
 }
+
+function init(){
+  load()
+  render()
+
+  // auto update pricing when typing
+  ["sqft","houses","margin","overhead"].forEach(id=>{
+    el(id).addEventListener("input", calculate)
+  })
+
+  calculate() // run once on load
+}
+
+init()
 
 load()
 render()
