@@ -20,26 +20,29 @@ input,select{width:100%;padding:10px;margin:5px 0;background:#222;border:1px sol
 
 <body>
 
+<!-- CREATE JOB -->
 <div class="card">
 <h2>Create Job</h2>
+
 <input id="customer" placeholder="Customer Name">
 
 <select id="package">
-<option value="standard">Standard</option>
-<option value="premium">Premium</option>
+  <option value="standard">Standard</option>
+  <option value="premium">Premium</option>
 </select>
 
+<input id="houses" type="number" value="1" placeholder="# of Houses">
+
 <div class="row">
-<button onclick="setSize(3000)">Small</button>
-<button onclick="setSize(8000)">Medium</button>
-<button onclick="setSize(15000)">Large</button>
+  <button onclick="setSize(3000)">Small</button>
+  <button onclick="setSize(6000)">Medium</button>
+  <button onclick="setSize(12000)">Large</button>
 </div>
 
-<input id="sqft" placeholder="Square Feet">
-<input id="houses" value="1">
-
+<input id="sqft" type="number" placeholder="Square Feet (per house)">
 </div>
 
+<!-- ADD ONS -->
 <div class="card">
 <h2>Add Ons</h2>
 
@@ -47,8 +50,11 @@ input,select{width:100%;padding:10px;margin:5px 0;background:#222;border:1px sol
 <div class="toggle" data-name="compost" onclick="toggle('compost')">Compost</div>
 <div class="toggle" data-name="biohum" onclick="toggle('biohum')">Bio / Hum Blend</div>
 
-<input id="limeQty" placeholder="Lime Quantity">
-<input id="sulfurQty" placeholder="Sulfur Quantity">
+<div class="toggle" data-name="lime" onclick="toggle('lime')">Lime</div>
+<input id="limeQty" type="number" placeholder="Lime Quantity">
+
+<div class="toggle" data-name="sulfur" onclick="toggle('sulfur')">Sulfur</div>
+<input id="sulfurQty" type="number" placeholder="Sulfur Quantity">
 
 <div class="toggle" data-name="grow" onclick="toggle('grow')">Grow System</div>
 </div>
@@ -114,19 +120,24 @@ addons:[
 },
 jobs:[],
 job:{
-customer:"",
-sqft:0,
-houses:1,
-package:"standard",
-addons:{
-aeration:false,
-compost:false,
-biohum:false,
-lime:0,
-sulfur:0,
-grow:false
-}
-}
+  customer:"",
+  sqft:0,
+  houses:1,
+  package:"standard",
+
+  addons:{
+    aeration:false,
+    compost:false,
+    biohum:false,
+    lime:false,
+    sulfur:false,
+    grow:false
+  },
+
+  quantities:{
+    lime:0,
+    sulfur:0
+  }
 }
 
 // ---------- STORAGE ----------
@@ -137,25 +148,34 @@ if(data) app = JSON.parse(data)
 }
 
 // ---------- LOGIC ----------
+
 function applyPackage(){
-let j = app.job
-if(j.package==="premium"){
-j.addons.aeration=true
-j.addons.compost=true
-j.addons.biohum=true
-if(!j.addons.lime) j.addons.lime=1
-if(!j.addons.sulfur) j.addons.sulfur=1
-}
+
+  let j = app.job
+
+  if(j.package === "premium"){
+
+    j.addons.aeration = true
+    j.addons.compost = true
+    j.addons.biohum = true
+    j.addons.lime = true
+    j.addons.sulfur = true
+
+    // default quantities if empty
+    if(!j.quantities.lime) j.quantities.lime = 1
+    if(!j.quantities.sulfur) j.quantities.sulfur = 1
+
+  }
+
 }
 
 function calculate(){
 
 let j = app.job
+applyPackage()
 let sqft=j.sqft
 let houses=j.houses
 let factor=sqft/5000
-
-applyPackage()
 
 let used={}
 
@@ -233,8 +253,23 @@ render()
 }
 
 function toggle(name){
-app.job.addons[name]=!app.job.addons[name]
-render()
+
+  let j = app.job
+
+  j.addons[name] = !j.addons[name]
+
+  // If turning OFF lime/sulfur → reset qty
+  if(name === "lime" && !j.addons.lime){
+    j.quantities.lime = 0
+    el("limeQty").value = ""
+  }
+
+  if(name === "sulfur" && !j.addons.sulfur){
+    j.quantities.sulfur = 0
+    el("sulfurQty").value = ""
+  }
+
+  render()
 }
 
 // ---------- INVENTORY UI ----------
