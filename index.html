@@ -87,7 +87,13 @@ input,select,button{
 
 </div>
 
+<div class="card">
+  <h2>Results</h2>
+  <div id="results"></div>
+</div>
+
 <script>
+
 //===========================
 //==== STATE
 //===========================
@@ -104,6 +110,36 @@ let app = {
       sulfur:false
     }
   }
+}
+
+const RATES = {
+  seed: 5,        // lbs per 1000 sqft
+  fert: 4,
+  mulch: 50,      // lbs
+  tack: 3,
+
+  compost: 0.5,   // yards per 1000 sqft
+  biohum: 2,      // gallons
+
+  lime: 10,       // lbs
+  sulfur: 5
+}
+
+const COSTS = {
+  seed: 80,
+  fert: 40,
+  mulch: 35,
+  tack: 25,
+
+  compost: 60,
+  biohum: 25,
+
+  lime: 15,
+  sulfur: 20,
+
+  biochar: 30,
+  humic: 25,
+  grow: 50
 }
 
 // ==============================
@@ -126,6 +162,88 @@ function toggleAddon(el){
   // update UI
   el.classList.toggle("active")
 }
+
+//============================
+//==== FUNCTION
+//============================
+
+function calculateJob(){
+
+  let sqft = Number(document.getElementById("sqft").value) || 0
+  let houses = Number(document.getElementById("houses")?.value) || 1
+  let packageType = document.getElementById("package").value
+  let pricingMode = document.getElementById("pricingMode").value
+
+  let addons = app.job.addons
+
+  let totalSqft = sqft * houses
+  let units = totalSqft / 1000
+
+  let materialCost = 0
+
+  // BASE MATERIALS
+  materialCost += units * RATES.seed * COSTS.seed / 100
+  materialCost += units * RATES.fert * COSTS.fert / 100
+  materialCost += units * RATES.mulch * COSTS.mulch / 100
+  materialCost += units * RATES.tack * COSTS.tack / 100
+
+  // PREMIUM MATERIALS
+  if(packageType === "premium"){
+    materialCost += units * RATES.biohum * COSTS.biohum / 10
+  }
+
+  // ADDONS
+  if(addons.compost) materialCost += units * RATES.compost * COSTS.compost
+  if(addons.biohum) materialCost += units * COSTS.biohum
+  if(addons.lime) materialCost += addons.lime ? COSTS.lime * (app.job.quantities?.lime || 1) : 0
+  if(addons.sulfur) materialCost += addons.sulfur ? COSTS.sulfur * (app.job.quantities?.sulfur || 1) : 0
+
+  if(addons.biochar) materialCost += units * COSTS.biochar
+  if(addons.humic) materialCost += units * COSTS.humic
+  if(addons.grow) materialCost += units * COSTS.grow
+
+  // LABOR (simple for now)
+  let labor = totalSqft * 0.05
+
+  let totalCost = materialCost + labor
+
+  // PRICING MODES
+  let margin = 0.3
+
+  if(pricingMode === "win") margin = 0.15
+  if(pricingMode === "balanced") margin = 0.3
+  if(pricingMode === "max") margin = 0.5
+
+  let price = totalCost / (1 - margin)
+  let profit = price - totalCost
+
+  return {
+    sqft,
+    houses,
+    totalSqft,
+    cost: totalCost,
+    price,
+    profit
+  }
+}
+//=============================
+//=====RENDER
+//=============================
+
+function render(){
+
+  let r = calculateJob()
+
+  document.getElementById("results").innerHTML = `
+    Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+    Cost: $${r.cost.toFixed(2)}<br>
+    Price: $${r.price.toFixed(2)}<br>
+    Profit: $${r.profit.toFixed(2)}
+  `
+}
+
+document.addEventListener("input", render)
+document.addEventListener("change", render)
 
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
