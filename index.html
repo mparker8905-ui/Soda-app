@@ -179,12 +179,10 @@ function toggleAddon(el){
 function getBuilderMultiplier(houses){
 
   if(houses <= 1) return 1
-
   if(houses <= 5) return 0.95
   if(houses <= 10) return 0.9
   if(houses <= 20) return 0.85
-  if(houses <= 50) return 0.8
-
+  if(houses <= 50) return 0.80
   return 0.75
 }
 
@@ -202,8 +200,8 @@ function calculateJob(){
   let addons = app.job.addons
 
   let totalSqft = sqft * houses
-  let units = totalSqft / 1000
   let builderMult = getBuilderMultiplier(houses)
+  let units = totalSqft / 1000
   let materialEfficiency = 1 - ((1 - builderMult) * 0.5)
 units = units * materialEfficiency
 
@@ -233,9 +231,6 @@ if(addons.sulfur) materialCost += sulfurQty * COSTS.sulfur
   if(addons.biochar) materialCost += units * COSTS.biochar
   if(addons.humic) materialCost += units * COSTS.humic
   if(addons.grow) materialCost += units * COSTS.grow
-
-// BUILDER SCALING
-let builderMult = getBuilderMultiplier(houses)
 
 // LABOR (scaled)
 
