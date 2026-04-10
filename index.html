@@ -141,6 +141,9 @@ const COSTS = {
   humic: 25,
   grow: 50
 }
+//==============================
+//HELPERS
+//==============================
 
 // ==============================
 // SIZE BUTTONS
@@ -200,6 +203,7 @@ function calculateJob(){
 
   let totalSqft = sqft * houses
   let units = totalSqft / 1000
+  let builderMult = getBuilderMultiplier(houses)
   let materialEfficiency = 1 - ((1 - builderMult) * 0.5)
 units = units * materialEfficiency
 
@@ -234,8 +238,8 @@ if(addons.sulfur) materialCost += sulfurQty * COSTS.sulfur
 let builderMult = getBuilderMultiplier(houses)
 
 // LABOR (scaled)
-let baseLabor = totalSqft * 0.05
-let labor = baseLabor * builderMult
+
+let labor = (totalSqft * 0.05) * builderMult
 
 // APPLY MATERIAL EFFICIENCY (bulk savings)
 let materialAdjusted = materialCost * (1 - ((1 - builderMult) * 0.5))
