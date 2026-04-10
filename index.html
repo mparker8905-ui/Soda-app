@@ -150,9 +150,10 @@ const COSTS = {
 // ==============================
 // SIZE BUTTONS
 // ==============================
+
 function setSize(val){
   document.getElementById("sqft").value = val
-render()
+  render()
 }
 
 // ==============================
@@ -196,13 +197,14 @@ function getBuilderMultiplier(houses){
 
 function calculateJob(){
 
+ let builderMult = getBuilderMultiplier(houses)
+
   let sqft = Number(document.getElementById("sqft").value) || 0
   let houses = Number(document.getElementById("houses")?.value) || 1
   let packageType = document.getElementById("package").value
   let pricingMode = document.getElementById("pricingMode").value
 
   let totalSqft = sqft * houses
-  let builderMult = getBuilderMultiplier(houses)
   let units = totalSqft / 1000
   let materialEfficiency = 1 - ((1 - builderMult) * 0.5)
 units = units * materialEfficiency
@@ -278,26 +280,29 @@ if(margin < 0.1) margin = 0.1
 //=============================
 
 function render(){
+  try{
+    let r = calculateJob()
+    
+    let perHouseCost = r.cost / r.houses
+    let perHousePrice = r.price / r.houses
+    let perHouseProfit = r.profit / r.houses
 
-  let r = calculateJob()
+    document.getElementById("results").innerHTML = `
+      Total Sqft: ${r.totalSqft.toFixed(0)}<br><br>
 
-  let perHouseCost = r.cost / r.houses
-  let perHousePrice = r.price / r.houses
-  let perHouseProfit = r.profit / r.houses
+      TOTAL:<br>
+      Cost: $${r.cost.toFixed(2)}<br>
+      Price: $${r.price.toFixed(2)}<br>
+      Profit: $${r.profit.toFixed(2)}<br><br>
 
-  document.getElementById("results").innerHTML = `
-    Total Sqft: ${r.totalSqft.toFixed(0)}<br><br>
-
-    TOTAL:<br>
-    Cost: $${r.cost.toFixed(2)}<br>
-    Price: $${r.price.toFixed(2)}<br>
-    Profit: $${r.profit.toFixed(2)}<br><br>
-
-    PER HOUSE:<br>
-    Cost: $${perHouseCost.toFixed(2)}<br>
-    Price: $${perHousePrice.toFixed(2)}<br>
-    Profit: $${perHouseProfit.toFixed(2)}
-  `
+      PER HOUSE:<br>
+      Cost: $${perHouseCost.toFixed(2)}<br>
+      Price: $${perHousePrice.toFixed(2)}<br>
+      Profit: $${perHouseProfit.toFixed(2)}
+    `
+  } catch(e){
+    document.getElementById("results").innerHTML = "Error in calculation"
+  }
 }
 
 document.addEventListener("input", render)
@@ -342,8 +347,13 @@ document.getElementById("customer").addEventListener("input", function(e){
   app.job.customer = e.target.value
 })
 
-document.getElementById("limeQty")?.addEventListener("input", render)
-document.getElementById("sulfurQty")?.addEventListener("input", render)
+document.getElementById("limeQty").addEventListener("input", function(){
+  render()
+})
+
+document.getElementById("sulfurQty").addEventListener("input", function(){
+  render()
+})
 
 </script>
 
