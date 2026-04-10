@@ -7,7 +7,7 @@
 body{background:#000;color:#fff;font-family:sans-serif;padding:10px}
 .card{background:#111;padding:15px;border-radius:12px;margin-bottom:20px}
 
-input,button{
+input,select,button{
   width:100%;
   padding:12px;
   margin-top:8px;
@@ -44,6 +44,15 @@ input,button{
 <div class="card">
 <h2>Create Job</h2>
 
+<!-- NEW: CUSTOMER -->
+<input id="customer" placeholder="Customer Name">
+
+<!-- NEW: PACKAGE -->
+<select id="package" onchange="handlePackage()">
+  <option value="standard">Standard</option>
+  <option value="premium">Premium</option>
+</select>
+
 <input id="sqft" placeholder="Square Feet">
 
 <div class="row">
@@ -57,28 +66,15 @@ input,button{
 <div class="card">
 <h2>Add Ons</h2>
 
-<div class="toggle" onclick="toggleAddon(this)">Aeration</div>
-<div class="toggle" onclick="toggleAddon(this)">Compost</div>
-<div class="toggle" onclick="toggleAddon(this)">Bio / Hum Blend</div>
+<div class="toggle" data-name="aeration" onclick="toggleAddon(this)">Aeration</div>
+<div class="toggle" data-name="compost" onclick="toggleAddon(this)">Compost</div>
+<div class="toggle" data-name="biohum" onclick="toggleAddon(this)">Bio / Hum Blend</div>
 
-<div class="toggle" onclick="toggleAddon(this)">Lime</div>
+<div class="toggle" data-name="lime" onclick="toggleAddon(this)">Lime</div>
 <input id="limeQty" type="number" placeholder="Lime Quantity">
 
-<div class="toggle" onclick="toggleAddon(this)">Sulfur</div>
+<div class="toggle" data-name="sulfur" onclick="toggleAddon(this)">Sulfur</div>
 <input id="sulfurQty" type="number" placeholder="Sulfur Quantity">
-
-</div>
-
-<div class="card">
-<h2>Costs</h2>
-
-<input id="seedCost" placeholder="Seed Cost">
-<input id="fertCost" placeholder="Fertilizer Cost">
-<input id="mulchCost" placeholder="Mulch Cost">
-<input id="tackCost" placeholder="Tack Cost">
-<input id="compostCostUnit" placeholder="Compost Cost">
-
-<button onclick="saveCosts()">Save Costs</button>
 
 </div>
 
@@ -88,57 +84,45 @@ input,button{
 // SIZE BUTTONS
 // ==============================
 function setSize(val){
-  let input = document.getElementById("sqft")
-  if(input){
-    input.value = val
-  }
+  document.getElementById("sqft").value = val
 }
 
 // ==============================
-// TOGGLE BUTTONS
+// TOGGLE BUTTONS (FIXED)
 // ==============================
 function toggleAddon(el){
+  el.classList.toggle("active")
+}
 
-  if(el.classList.contains("active")){
-    el.classList.remove("active")
+// ==============================
+// PREMIUM PACKAGE AUTO-SELECT
+// ==============================
+function handlePackage(){
+
+  let pkg = document.getElementById("package").value
+  let toggles = document.querySelectorAll(".toggle")
+
+  if(pkg === "premium"){
+
+    toggles.forEach(t => {
+      let name = t.dataset.name
+
+      if(name === "aeration" ||
+         name === "compost" ||
+         name === "biohum" ||
+         name === "lime" ||
+         name === "sulfur"){
+        t.classList.add("active")
+      }
+    })
+
   } else {
-    el.classList.add("active")
+
+    // OPTIONAL: clear selections when going back to standard
+    toggles.forEach(t => t.classList.remove("active"))
+
   }
-
 }
-
-// ==============================
-// SAVE COSTS
-// ==============================
-function saveCosts(){
-
-  let costs = {
-    seed: Number(document.getElementById("seedCost")?.value) || 0,
-    fert: Number(document.getElementById("fertCost")?.value) || 0,
-    mulch: Number(document.getElementById("mulchCost")?.value) || 0,
-    tack: Number(document.getElementById("tackCost")?.value) || 0,
-    compost: Number(document.getElementById("compostCostUnit")?.value) || 0
-  };
-
-  localStorage.setItem("costs", JSON.stringify(costs));
-
-  alert("Costs Saved ✅");
-}
-
-// ==============================
-// INIT (SAFE)
-// ==============================
-function updateDashboard(){
-  console.log("dashboard ready")
-}
-
-function checkLowInventory(){
-  console.log("inventory checked")
-}
-
-// RUN
-updateDashboard()
-checkLowInventory()
 
 </script>
 
