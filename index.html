@@ -165,7 +165,6 @@ job:{
   }
 }
 }
-
 // ---------- UI ----------
 
 window.setSize = function(val){
@@ -187,7 +186,7 @@ function load(){
 let data = localStorage.getItem("app")
 if(data) app = JSON.parse(data)
 }
-
+}
 // ---------- LOGIC ----------
 
 function applyPackage(){
@@ -373,13 +372,24 @@ datasets:[{label:"Profit",data:app.jobs.map(j=>j.profit)}]
 }
 
 // ---------- BIND ----------
+
 function bind(){
-el("customer").oninput=e=>app.job.customer=e.target.value
-el("sqft").oninput=e=>{app.job.sqft=+e.target.value;render()}
-el("houses").oninput=e=>{app.job.houses=+e.target.value;render()}
-el("package").onchange=e=>{app.job.package=e.target.value;render()}
-el("limeQty").oninput=e=>{app.job.addons.lime=+e.target.value;render()}
-el("sulfurQty").oninput=e=>{app.job.addons.sulfur=+e.target.value;render()}
+
+  let c = el("customer")
+  if(c) c.oninput = e => app.job.customer = e.target.value
+
+  let s = el("sqft")
+  if(s) s.oninput = e => { app.job.sqft = +e.target.value; render() }
+
+  let h = el("houses")
+  if(h) h.oninput = e => { app.job.houses = +e.target.value; render() }
+
+  let p = el("package")
+  if(p) p.onchange = e => { app.job.package = e.target.value; render() }
+
+  let l = el("limeQty")
+  if(l) l.oninput = e => { app.job.quantities.lime = +e.target.value; render() }
+
 }
 
 // ---------- INIT ----------
