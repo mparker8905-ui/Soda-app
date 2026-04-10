@@ -129,7 +129,7 @@ window.setSize = function(val){
 
   app.job.sqft = val
 
-  let input = document.getElementById("sqft")
+  let input = document.getElementByid("sqft")
   if(input){
     input.value = val
   }
@@ -138,7 +138,7 @@ window.setSize = function(val){
 }
 
 // ---------- HELPERS ----------
-function el(id){ return document.getElementById(id) }
+function el(id){ return document.getElementByid(id) }
 
 // ---------- STATE ----------
 let app = {
