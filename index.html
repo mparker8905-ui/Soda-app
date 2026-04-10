@@ -347,7 +347,7 @@ totals.innerHTML = `
   Profit: $${Math.round(totalProfit)}<br>
   Jobs: ${app.jobs.length}
 }
-
+/*
   // ===== INVENTORY =====
   console.log("6️⃣ before inventory render")
 
@@ -367,7 +367,7 @@ ${(app.inventory.addons || []).map(i => `
   <div>${i.name} - $${i.cost} - Qty: ${i.qty}</div>
 `).join("")}
 `
-
+*/
   console.log("7️⃣ after inventory")
 
   // ===== ALERTS =====
@@ -408,7 +408,7 @@ ${(app.inventory.addons || []).map(i => `
 `).join("")
 
   console.log("11️⃣ after history")
-
+/*
   // ===== CRM =====
   console.log("12️⃣ before crm")
 
@@ -417,7 +417,7 @@ ${(app.inventory.addons || []).map(i => `
       <div>${c.name}</div>
     `).join("")}
   `
-
+*/
   console.log("13️⃣ after crm")
 
   // ===== TOTALS =====
@@ -431,7 +431,7 @@ ${(app.inventory.addons || []).map(i => `
   totals.innerHTML = `Rev: $${Math.round(totalRevenue)} | Profit: $${Math.round(totalProfit)}`
 
   console.log("15️⃣ after totals")
-
+/*
   // ===== CHART =====
   console.log("16️⃣ before chart")
 
@@ -456,7 +456,7 @@ ${(app.inventory.addons || []).map(i => `
       console.log("CHART ERROR", e)
     }
   }
-
+*/
   console.log("17️⃣ render complete")
 }
 
