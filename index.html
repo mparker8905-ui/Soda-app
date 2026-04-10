@@ -53,6 +53,12 @@ input,select,button{
   <option value="premium">Premium</option>
 </select>
 
+<select id="pricingMode">
+  <option value="balanced">Balanced</option>
+  <option value="win">Win Job</option>
+  <option value="max">Maximize Profits</option>
+</select>
+
 <input id="sqft" placeholder="Square Feet">
 
 <div class="row">
@@ -69,6 +75,9 @@ input,select,button{
 <div class="toggle" data-name="aeration" onclick="toggleAddon(this)">Aeration</div>
 <div class="toggle" data-name="compost" onclick="toggleAddon(this)">Compost</div>
 <div class="toggle" data-name="biohum" onclick="toggleAddon(this)">Bio / Hum Blend</div>
+<div class="toggle" data-name="biochar" onclick="toggleAddon(this)">Biochar 100%</div>
+<div class="toggle" data-name="humic" onclick="toggleAddon(this)">Humic Acid 100%</div>
+<div class="toggle" data-name="grow" onclick="toggleAddon(this)">Grow System</div>
 
 <div class="toggle" data-name="lime" onclick="toggleAddon(this)">Lime</div>
 <input id="limeQty" type="number" placeholder="Lime Quantity">
@@ -79,6 +88,23 @@ input,select,button{
 </div>
 
 <script>
+//===========================
+//==== STATE
+//===========================
+let app = {
+  job:{
+    addons:{
+      aeration:false,
+      compost:false,
+      biohum:false,
+      biochar:false,
+      humic:false,
+      grow:false,
+      lime:false,
+      sulfur:false
+    }
+  }
+}
 
 // ==============================
 // SIZE BUTTONS
@@ -88,9 +114,16 @@ function setSize(val){
 }
 
 // ==============================
-// TOGGLE BUTTONS (FIXED)
+// TOGGLE BUTTONS 
 // ==============================
+
 function toggleAddon(el){
+  let name = el.dataset.name
+
+  // flip true/false
+  app.job.addons[name] = !app.job.addons[name]
+
+  // update UI
   el.classList.toggle("active")
 }
 
