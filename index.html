@@ -124,20 +124,20 @@ let app = {
   }
 };
 
-// ---------- UI ----------
+// ---------- UI FUNCTIONS ----------
 function setSize(val){
-  console.log("clicked size:", val)
-
   app.job.sqft = val
 
   let input = el("sqft")
-  if(input) input.value = val
+  if(input){
+    input.value = val
+  }
 
   render()
 }
 
 function toggleAddon(elRef){
-  let name = elRef.dataset.name
+  let name = elRef.getAttribute("data-name")
 
   app.job.addons[name] = !app.job.addons[name]
 
@@ -147,40 +147,53 @@ function toggleAddon(elRef){
 // ---------- BIND ----------
 function bind(){
 
-  let c = el("customer")
-  if(c) c.oninput = e => app.job.customer = e.target.value
-
-  let s = el("sqft")
-  if(s) s.oninput = e => {
-    app.job.sqft = +e.target.value
-    render()
+  let customer = el("customer")
+  if(customer){
+    customer.oninput = function(e){
+      app.job.customer = e.target.value
+    }
   }
 
-  let h = el("houses")
-  if(h) h.oninput = e => {
-    app.job.houses = +e.target.value
-    render()
+  let sqft = el("sqft")
+  if(sqft){
+    sqft.oninput = function(e){
+      app.job.sqft = +e.target.value
+      render()
+    }
   }
 
-  let p = el("package")
-  if(p) p.onchange = e => {
-    app.job.package = e.target.value
-    applyPackage()
-    render()
+  let houses = el("houses")
+  if(houses){
+    houses.oninput = function(e){
+      app.job.houses = +e.target.value
+      render()
+    }
   }
 
-  let l = el("limeQty")
-  if(l) l.oninput = e => {
-    app.job.quantities.lime = +e.target.value
-    render()
+  let pack = el("package")
+  if(pack){
+    pack.onchange = function(e){
+      app.job.package = e.target.value
+      applyPackage()
+      render()
+    }
   }
 
-  let su = el("sulfurQty")
-  if(su) su.oninput = e => {
-    app.job.quantities.sulfur = +e.target.value
-    render()
+  let limeQty = el("limeQty")
+  if(limeQty){
+    limeQty.oninput = function(e){
+      app.job.quantities.lime = +e.target.value
+      render()
+    }
   }
 
+  let sulfurQty = el("sulfurQty")
+  if(sulfurQty){
+    sulfurQty.oninput = function(e){
+      app.job.quantities.sulfur = +e.target.value
+      render()
+    }
+  }
 }
 
 // ---------- LOGIC ----------
@@ -196,37 +209,20 @@ function applyPackage(){
     j.addons.sulfur = true
   }
 
-  if(!j.quantities.lime) j.quantities.lime = 1
-  if(!j.quantities.sulfur) j.quantities.sulfur = 1
+  // ensure quantities exist
+  if(!j.quantities.lime){ j.quantities.lime = 1 }
+  if(!j.quantities.sulfur){ j.quantities.sulfur = 1 }
 }
 
 // ---------- RENDER ----------
-
 function render(){
+
   let j = app.job
 
-  document.querySelectorAll(".toggle").forEach(elm=>{
-    let name = elm.dataset.name
+  // sync toggle UI
+  let toggles = document.querySelectorAll(".toggle")
 
-    if(j.addons[name]){
-      elm.classList.add("active")
-    } else {
-      elm.classList.remove("active")
-    }
-  })
-
-  console.log("render", j)
-}
-
-// ---------- INIT ----------
-document.addEventListener("DOMContentLoaded", () => {
-  bind()
-  render()
-})
-
-document.addEventListener("DOMContentLoaded", () => {
-  render()
-})
+  for(let i = 0;
 
 </script>
 
