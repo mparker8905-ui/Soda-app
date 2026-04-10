@@ -156,15 +156,37 @@ function setSize(val){
 function toggleAddon(el){
   let name = el.dataset.name
 
-  // flip true/false
   app.job.addons[name] = !app.job.addons[name]
 
-  // update UI
   el.classList.toggle("active")
+
+  if(name === "lime" && app.job.addons[name]){
+    document.getElementById("limeQty").value ||= 1
+  }
+
+  if(name === "sulfur" && app.job.addons[name]){
+    document.getElementById("sulfurQty").value ||= 1
+  }
+}
+
+//==============================
+//==== BUILDER MODE
+//==============================
+
+function getBuilderMultiplier(houses){
+
+  if(houses <= 1) return 1
+
+  if(houses <= 5) return 0.95
+  if(houses <= 10) return 0.9
+  if(houses <= 20) return 0.85
+  if(houses <= 50) return 0.8
+
+  return 0.75
 }
 
 //============================
-//==== FUNCTION
+//==== CALCULATE JOB
 //============================
 
 function calculateJob(){
@@ -178,6 +200,8 @@ function calculateJob(){
 
   let totalSqft = sqft * houses
   let units = totalSqft / 1000
+  let materialEfficiency = 1 - ((1 - builderMult) * 0.5)
+units = units * materialEfficiency
 
   let materialCost = 0
 
@@ -195,24 +219,43 @@ function calculateJob(){
   // ADDONS
   if(addons.compost) materialCost += units * RATES.compost * COSTS.compost
   if(addons.biohum) materialCost += units * COSTS.biohum
-  if(addons.lime) materialCost += addons.lime ? COSTS.lime * (app.job.quantities?.lime || 1) : 0
-  if(addons.sulfur) materialCost += addons.sulfur ? COSTS.sulfur * (app.job.quantities?.sulfur || 1) : 0
+
+let limeQty = Number(document.getElementById("limeQty")?.value) || 0
+let sulfurQty = Number(document.getElementById("sulfurQty")?.value) || 0
+
+if(addons.lime) materialCost += limeQty * COSTS.lime
+if(addons.sulfur) materialCost += sulfurQty * COSTS.sulfur
 
   if(addons.biochar) materialCost += units * COSTS.biochar
   if(addons.humic) materialCost += units * COSTS.humic
   if(addons.grow) materialCost += units * COSTS.grow
 
-  // LABOR (simple for now)
-  let labor = totalSqft * 0.05
+// BUILDER SCALING
+let builderMult = getBuilderMultiplier(houses)
 
-  let totalCost = materialCost + labor
+// LABOR (scaled)
+let baseLabor = totalSqft * 0.05
+let labor = baseLabor * builderMult
+
+// APPLY MATERIAL EFFICIENCY (bulk savings)
+let materialAdjusted = materialCost * (1 - ((1 - builderMult) * 0.5))
+
+let totalCost = materialAdjusted + labor
 
   // PRICING MODES
+
   let margin = 0.3
 
-  if(pricingMode === "win") margin = 0.15
-  if(pricingMode === "balanced") margin = 0.3
-  if(pricingMode === "max") margin = 0.5
+if(pricingMode === "win") margin = 0.15
+if(pricingMode === "balanced") margin = 0.3
+if(pricingMode === "max") margin = 0.5
+
+// builder volume adjustment
+if(houses >= 10) margin -= 0.03
+if(houses >= 20) margin -= 0.05
+if(houses >= 50) margin -= 0.08
+
+if(margin < 0.1) margin = 0.1
 
   let price = totalCost / (1 - margin)
   let profit = price - totalCost
@@ -234,11 +277,22 @@ function render(){
 
   let r = calculateJob()
 
+  let perHouseCost = r.cost / r.houses
+  let perHousePrice = r.price / r.houses
+  let perHouseProfit = r.profit / r.houses
+
   document.getElementById("results").innerHTML = `
-    Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+    Total Sqft: ${r.totalSqft.toFixed(0)}<br><br>
+
+    TOTAL:<br>
     Cost: $${r.cost.toFixed(2)}<br>
     Price: $${r.price.toFixed(2)}<br>
-    Profit: $${r.profit.toFixed(2)}
+    Profit: $${r.profit.toFixed(2)}<br><br>
+
+    PER HOUSE:<br>
+    Cost: $${perHouseCost.toFixed(2)}<br>
+    Price: $${perHousePrice.toFixed(2)}<br>
+    Profit: $${perHouseProfit.toFixed(2)}
   `
 }
 
