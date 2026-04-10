@@ -152,6 +152,7 @@ const COSTS = {
 // ==============================
 function setSize(val){
   document.getElementById("sqft").value = val
+render()
 }
 
 // ==============================
@@ -172,6 +173,7 @@ function toggleAddon(el){
   if(name === "sulfur" && app.job.addons[name]){
     document.getElementById("sulfurQty").value ||= 1
   }
+render()
 }
 
 //==============================
