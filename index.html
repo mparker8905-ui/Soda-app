@@ -65,6 +65,7 @@ input,select,button{
 <div class="card">
 <h2>Add Ons</h2>
 
+<div class="toggle" data-name="aeration" onclick="toggleAddon(this)">Aeration</div>
 <div class="toggle" data-name="compost" onclick="toggleAddon(this)">Compost</div>
 <div class="toggle" data-name="biohum" onclick="toggleAddon(this)">Bio / Hum Blend</div>
 
@@ -125,23 +126,23 @@ let app = {
 };
 
 // ---------- UI FUNCTIONS ----------
+
 function setSize(val){
   app.job.sqft = val
-
-  let input = el("sqft")
-  if(input){
-    input.value = val
-  }
-
-  render()
+  document.getElementById("sqft").value = val
 }
 
-function toggleAddon(elRef){
-  let name = elRef.getAttribute("data-name")
+function toggleAddon(el){
+  const name = el.dataset.name
 
   app.job.addons[name] = !app.job.addons[name]
 
-  render()
+  // direct UI update (NO render dependency)
+  if(app.job.addons[name]){
+    el.classList.add("active")
+  } else {
+    el.classList.remove("active")
+  }
 }
 
 // ---------- BIND ----------
@@ -197,21 +198,31 @@ function bind(){
 }
 
 // ---------- LOGIC ----------
+
 function applyPackage(){
 
   let j = app.job
 
   if(j.package === "premium"){
+
     j.addons.aeration = true
     j.addons.compost = true
     j.addons.biohum = true
     j.addons.lime = true
     j.addons.sulfur = true
-  }
 
-  // ensure quantities exist
-  if(!j.quantities.lime){ j.quantities.lime = 1 }
-  if(!j.quantities.sulfur){ j.quantities.sulfur = 1 }
+    j.quantities.lime = j.quantities.lime || 1
+    j.quantities.sulfur = j.quantities.sulfur || 1
+
+    // 🔥 FORCE UI update immediately
+    document.querySelectorAll(".toggle").forEach(el=>{
+      let name = el.dataset.name
+
+      if(j.addons[name]){
+        el.classList.add("active")
+      }
+    })
+  }
 }
 
 // ---------- RENDER ----------
