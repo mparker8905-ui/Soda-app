@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SoDa Outdoor Designs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:Arial;background:#0b0b0b;color:white;padding:20px}
-.card{background:#111;padding:20px;margin-bottom:20px;border-radius:12px}
-.gold{color:#d4af37;font-size:22px;font-weight:bold}
-button{background:#d4af37;border:none;padding:12px;border-radius:8px;width:100%;margin-top:10px;font-weight:bold}
-input,select{width:100%;padding:10px;margin:5px 0;background:#222;border:1px solid #333;color:white;border-radius:8px}
+body{background:#000;color:#fff;font-family:sans-serif;margin:0;padding:10px}
+.card{background:#111;padding:15px;border-radius:12px;margin-bottom:20px}
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  background:#222;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:8px
+}
 .row{display:flex;gap:10px}
 .row button{flex:1}
 
@@ -21,9 +26,8 @@ input,select{width:100%;padding:10px;margin:5px 0;background:#222;border:1px sol
   border:1px solid #2a2a2a;
   text-align:center;
   font-weight:500;
-  transition:0.2s;
+  transition:.2s;
 }
-
 .toggle.active{
   background:#d4af37;
   color:#000;
@@ -31,21 +35,11 @@ input,select{width:100%;padding:10px;margin:5px 0;background:#222;border:1px sol
   border:1px solid #d4af37;
   box-shadow:0 0 10px rgba(212,175,55,0.4);
 }
-
-.card h2{
-  margin-bottom:10px;
-}
-
-input{
-  margin-top:8px;
-}
-
 </style>
 </head>
 
 <body>
 
-<!-- CREATE JOB -->
 <div class="card">
 <h2>Create Job</h2>
 
@@ -59,66 +53,29 @@ input{
 <input id="houses" type="number" value="1" placeholder="# of Houses">
 
 <div class="row">
-  <button onclick="console.log('CLICK WORKS')">Test</button>
+  <button onclick="setSize(3000)">Small</button>
   <button onclick="setSize(6000)">Medium</button>
   <button onclick="setSize(12000)">Large</button>
 </div>
 
 <input id="sqft" type="number" placeholder="Square Feet (per house)">
+
 </div>
 
-<!-- ADD ONS -->
 <div class="card">
 <h2>Add Ons</h2>
 
-<div class="toggle" data-name="aeration" onclick="toggle('aeration')">Aeration</div>
-<div class="toggle" data-name="compost" onclick="toggle('compost')">Compost</div>
-<div class="toggle" data-name="biohum" onclick="toggle('biohum')">Bio / Hum Blend</div>
+<div class="toggle" onclick="toggleAddon('aeration',this)">Aeration</div>
+<div class="toggle" onclick="toggleAddon('compost',this)">Compost</div>
+<div class="toggle" onclick="toggleAddon('biohum',this)">Bio / Hum Blend</div>
 
-<div class="toggle" data-name="lime" onclick="toggle('lime')">Lime</div>
+<div class="toggle" onclick="toggleAddon('lime',this)">Lime</div>
 <input id="limeQty" type="number" placeholder="Lime Quantity">
 
-<div class="toggle" data-name="sulfur" onclick="toggle('sulfur')">Sulfur</div>
+<div class="toggle" onclick="toggleAddon('sulfur',this)">Sulfur</div>
 <input id="sulfurQty" type="number" placeholder="Sulfur Quantity">
 
-<div class="toggle" data-name="grow" onclick="toggle('grow')">Grow System</div>
 </div>
-
-<div class="card">
-<h2>Schedule</h2>
-<input id="quote" placeholder="Quote Date">
-<input id="soil" placeholder="Soil Test Date">
-<input id="aerationDate" placeholder="Aeration Date">
-<input id="compostDate" placeholder="Compost Date">
-<input id="hydroDate" placeholder="Hydroseed Date">
-<input id="growInstall" placeholder="Grow Install">
-<input id="growRemove" placeholder="Grow Removal">
-<input id="finalInspect" placeholder="Final Inspection">
-</div>
-
-<div class="card">
-<h2>Final Investment</h2>
-<div id="finalPrice"></div>
-<button onclick="createJob()">Create Job</button>
-</div>
-
-<div class="card">
-<h2>Inventory</h2>
-<div id="inventoryUI"></div>
-<button onclick="saveInventory()">Save Inventory</button>
-</div>
-
-<div class="card">
-<h2>Job History</h2>
-<div id="history"></div>
-</div>
-
-<div class="card">
-<h2>Analytics</h2>
-<canvas id="chart"></canvas>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
@@ -127,280 +84,135 @@ function el(id){ return document.getElementById(id) }
 
 // ---------- STATE ----------
 let app = {
-inventory:{
-standard:[
-{name:"seed",cost:80,qty:100},
-{name:"fert",cost:40,qty:100},
-{name:"mulch",cost:35,qty:100},
-{name:"tack",cost:25,qty:100}
-],
-premium:[
-{name:"bio",cost:25,qty:100},
-{name:"humic",cost:20,qty:100}
-],
-addons:[
-{name:"lime",cost:15,qty:100},
-{name:"sulfur",cost:20,qty:100}
-]
-},
-jobs:[],
-job:{
-  customer:"",
-  sqft:0,
-  houses:1,
-  package:"standard",
-
-  addons:{
-    aeration:false,
-    compost:false,
-    biohum:false,
-    lime:false,
-    sulfur:false,
-    grow:false
+  inventory:{
+    standard:[
+      {name:"seed",cost:80,qty:100},
+      {name:"fert",cost:40,qty:100},
+      {name:"mulch",cost:35,qty:100},
+      {name:"tack",cost:25,qty:100}
+    ],
+    premium:[
+      {name:"bio",cost:25,qty:100},
+      {name:"humic",cost:20,qty:100}
+    ],
+    addons:[
+      {name:"lime",cost:15,qty:100},
+      {name:"sulfur",cost:20,qty:100}
+    ]
   },
 
-  quantities:{
-    lime:0,
-    sulfur:0
-  }
-}
-}
-// ---------- UI ----------
+  jobs:[],
 
-window.setSize = function(val){
+  job:{
+    customer:"",
+    sqft:0,
+    houses:1,
+    package:"standard",
+
+    addons:{
+      aeration:false,
+      compost:false,
+      biohum:false,
+      lime:false,
+      sulfur:false,
+      grow:false
+    },
+
+    quantities:{
+      lime:0,
+      sulfur:0
+    }
+  }
+};
+
+// ---------- UI ----------
+function setSize(val){
   console.log("clicked size:", val)
 
   app.job.sqft = val
 
-  let input = document.getElementById("sqft")
-  if(input){
-    input.value = val
-  }
+  let input = el("sqft")
+  if(input) input.value = val
 
   render()
 }
 
-// ---------- STORAGE ----------
-function save(){ localStorage.setItem("app", JSON.stringify(app)) }
-function load(){
-let data = localStorage.getItem("app")
-if(data) app = JSON.parse(data)
-}
-}
-// ---------- LOGIC ----------
+function toggleAddon(name, elRef){
+  app.job.addons[name] = !app.job.addons[name]
 
-function applyPackage(){
-
-  let j = app.job
-
-  if(j.package === "premium"){
-
-    j.addons.aeration = true
-    j.addons.compost = true
-    j.addons.biohum = true
-    j.addons.lime = true
-    j.addons.sulfur = true
-
-    // default quantities if empty
-    if(!j.quantities.lime) j.quantities.lime = 1
-    if(!j.quantities.sulfur) j.quantities.sulfur = 1
-
-  }
-
-}
-
-function calculate(){
-
-let j = app.job
-applyPackage()
-let sqft=j.sqft
-let houses=j.houses
-let factor=sqft/5000
-
-let used={}
-
-// base
-used.seed=0.5*factor*houses
-used.fert=1*factor*houses
-used.mulch=1*factor*houses
-used.tack=0.5*factor*houses
-
-if(j.package==="premium"){
-used.bio=0.5*factor*houses
-used.humic=0.5*factor*houses
-}
-
-// addons
-if(j.addons.biohum){
-used.bio=(used.bio||0)+0.5*factor
-used.humic=(used.humic||0)+0.5*factor
-}
-
-if(j.addons.lime) used.lime=j.addons.lime
-if(j.addons.sulfur) used.sulfur=j.addons.sulfur
-
-let all=[...app.inventory.standard,...app.inventory.premium,...app.inventory.addons]
-
-let materialCost=0
-all.forEach(i=>{
-if(used[i.name]) materialCost+=used[i.name]*i.cost
-})
-
-let labor=(sqft<5000?200:400)*houses
-let overheadRate=(+el("overhead")?.value||15)/100
-let margin=(+el("margin")?.value||40)/100
-
-let cost=materialCost+labor
-let overhead=cost*overheadRate
-cost+=overhead
-
-let revenue=cost/(1-margin)
-let profit=revenue-cost
-
-return{used,materialCost,labor,overhead,cost,revenue,profit}
-}
-
-// ---------- INVENTORY ----------
-function findItem(name){
-return [...app.inventory.standard,...app.inventory.premium,...app.inventory.addons]
-.find(i=>i.name===name)
-}
-
-// ---------- ACTIONS ----------
-function createJob(){
-let data=calculate()
-
-Object.keys(data.used).forEach(name=>{
-let item=findItem(name)
-if(item) item.qty-=data.used[name]
-})
-
-app.jobs.push({
-name:app.job.customer||"Customer",
-revenue:data.revenue,
-profit:data.profit
-})
-
-save()
-render()
-}
-
-function toggle(name){
-
-  let j = app.job
-
-  j.addons[name] = !j.addons[name]
-
-  // If turning OFF lime/sulfur → reset qty
-  if(name === "lime" && !j.addons.lime){
-    j.quantities.lime = 0
-    el("limeQty").value = ""
-  }
-
-  if(name === "sulfur" && !j.addons.sulfur){
-    j.quantities.sulfur = 0
-    el("sulfurQty").value = ""
+  if(elRef){
+    elRef.classList.toggle("active")
   }
 
   render()
-}
-
-// ---------- INVENTORY UI ----------
-function saveInventory(){
-let inputs=document.querySelectorAll("#inventoryUI input")
-inputs.forEach(input=>{
-let t=input.dataset.type
-let i=input.dataset.idx
-let f=input.dataset.field
-app.inventory[t][i][f]=f==="name"?input.value:+input.value
-})
-save()
-render()
-}
-
-// ---------- RENDER ----------
-function render(){
-
-let data=calculate()
-
-el("finalPrice").innerHTML=`
-<div class="gold">$${Math.round(data.revenue)}</div>
-Materials: $${Math.round(data.materialCost)}<br>
-Labor: $${data.labor}<br>
-Overhead: $${Math.round(data.overhead)}<br><br>
-Cost: $${Math.round(data.cost)}<br>
-Profit: $${Math.round(data.profit)}<br>
-Margin: ${Math.round((data.profit/data.revenue)*100)}%
-`
-
-// toggles
-document.querySelectorAll(".toggle").forEach(t=>{
-let name=t.dataset.name
-t.classList.toggle("active", app.job.addons[name])
-})
-
-// inventory UI
-el("inventoryUI").innerHTML=`
-${["standard","premium","addons"].map(type=>`
-<h3>${type}</h3>
-${app.inventory[type].map((i,idx)=>`
-<input data-type="${type}" data-idx="${idx}" data-field="name" value="${i.name}">
-<input data-type="${type}" data-idx="${idx}" data-field="cost" value="${i.cost}">
-<input data-type="${type}" data-idx="${idx}" data-field="qty" value="${i.qty}">
-`).join("")}
-`).join("")}
-`
-
-// history
-el("history").innerHTML=app.jobs.map(j=>`
-<div>${j.name} - $${Math.round(j.revenue)}</div>
-`).join("")
-
-// chart
-let ctx=document.getElementById("chart")?.getContext("2d")
-if(ctx && window.Chart){
-if(window.myChart) window.myChart.destroy()
-window.myChart=new Chart(ctx,{
-type:"bar",
-data:{
-labels:app.jobs.map(j=>j.name),
-datasets:[{label:"Profit",data:app.jobs.map(j=>j.profit)}]
-}
-})
-}
-
 }
 
 // ---------- BIND ----------
-
 function bind(){
 
   let c = el("customer")
   if(c) c.oninput = e => app.job.customer = e.target.value
 
   let s = el("sqft")
-  if(s) s.oninput = e => { app.job.sqft = +e.target.value; render() }
+  if(s) s.oninput = e => {
+    app.job.sqft = +e.target.value
+    render()
+  }
 
   let h = el("houses")
-  if(h) h.oninput = e => { app.job.houses = +e.target.value; render() }
+  if(h) h.oninput = e => {
+    app.job.houses = +e.target.value
+    render()
+  }
 
   let p = el("package")
-  if(p) p.onchange = e => { app.job.package = e.target.value; render() }
+  if(p) p.onchange = e => {
+    app.job.package = e.target.value
+    applyPackage()
+    render()
+  }
 
   let l = el("limeQty")
-  if(l) l.oninput = e => { app.job.quantities.lime = +e.target.value; render() }
+  if(l) l.oninput = e => {
+    app.job.quantities.lime = +e.target.value
+    render()
+  }
+
+  let su = el("sulfurQty")
+  if(su) su.oninput = e => {
+    app.job.quantities.sulfur = +e.target.value
+    render()
+  }
 
 }
 
-// ---------- INIT ----------
-function init(){
+// ---------- LOGIC ----------
+function applyPackage(){
 
+  let j = app.job
+
+  if(j.package === "premium"){
+    j.addons.aeration = true
+    j.addons.compost = true
+    j.addons.biohum = true
+    j.addons.lime = true
+    j.addons.sulfur = true
+  }
+
+  if(!j.quantities.lime) j.quantities.lime = 1
+  if(!j.quantities.sulfur) j.quantities.sulfur = 1
+}
+
+// ---------- RENDER ----------
+function render(){
+  console.log("render", app.job)
+}
+
+// ---------- INIT ----------
 document.addEventListener("DOMContentLoaded", () => {
   bind()
   render()
 })
-
-init()
 
 </script>
 
