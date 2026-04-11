@@ -410,156 +410,152 @@ function render(){
 
     let r = calculateJob()
 
-let currentPackage = document.getElementById("package")?.value || "standard"
-let altPackage = currentPackage === "standard" ? "premium" : "standard"
+    let currentPackage = document.getElementById("package")?.value || "standard"
+    let altPackage = currentPackage === "standard" ? "premium" : "standard"
 
-// temporarily switch package
-document.getElementById("package").value =  altPackage
-let alt = calculateJob()
+    // temporarily switch package
+    document.getElementById("package").value = altPackage
+    let alt = calculateJob()
+    document.getElementById("package").value = currentPackage
 
-// switch back
-document.getElementById("package").value = currentPackage
-
-let priceDiff = alt.price - r.price
-let profitDiff = alt.profit - r.profit
-let priceDiffColor = priceDiff > 0 ? "red" : "lime"
-let profitDiffColor = profitDiff > 0 ? "lime" : "red"
+    let priceDiff = alt.price - r.price
+    let profitDiff = alt.profit - r.profit
+    let priceDiffColor = priceDiff > 0 ? "red" : "lime"
+    let profitDiffColor = profitDiff > 0 ? "lime" : "red"
 
     let a = r.addonCosts || {}
 
-let packageType = document.getElementById("package")?.value || "standard"
+    let packageType = currentPackage
 
-function isIncluded(name){
-  if(packageType !== "premium") return false
-  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
-}
+    function isIncluded(name){
+      if(packageType !== "premium") return false
+      return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+    }
 
-let savings = 0
+    // ======================
+    // ADD-ONS HTML
+    // ======================
 
-if(isIncluded("aeration")) savings += r.totalSqft * 0.04
-if(isIncluded("compost")) savings += r.totalSqft * 0.10
-if(isIncluded("biohum")) savings += r.totalSqft * 0.12
-if(isIncluded("lime")) savings += r.totalSqft * 0.004
-if(isIncluded("sulfur")) savings += r.totalSqft * 0.008
+    let addonHTML = "<b>ADD-ONS</b><br>"
 
-let addonHTML = `<b>ADD-ONS</b><br>`
+    function addLine(label, cost, included){
+      if((cost || 0) > 0 || included){
+        addonHTML += included
+          ? label + ": <span style='color:gold; font-weight:600;'>Included</span><br>"
+          : label + ": $" + cost.toFixed(2) + "<br>"
+      }
+    }
 
-// Aeration
-if(a.aeration > 0 || isIncluded("aeration")){
-  addonHTML += isIncluded("aeration")
-    ? `Aeration: <span style="color:gold; font-weight:600;">Included</span><br>`
-    : `Aeration: $${a.aeration.toFixed(2)}<br>`
-}
+    addLine("Aeration", a.aeration, isIncluded("aeration"))
+    addLine("Compost", a.compost, isIncluded("compost"))
+    addLine("Bio/Hum Blend", a.biohum, isIncluded("biohum"))
 
-// Compost
-if(a.compost > 0 || isIncluded("compost")){
-  addonHTML += isIncluded("compost")
-    ? `Compost: <span style="color:gold; font-weight:600;">Included</span><br>`
-    : `Compost: $${a.compost.toFixed(2)}<br>`
-}
+    if((a.biochar || 0) > 0){
+      addonHTML += "Biochar 100%: $" + a.biochar.toFixed(2) + "<br>"
+    }
 
-// Bio/Hum
-if(a.biohum > 0 || isIncluded("biohum")){
-  addonHTML += isIncluded("biohum")
-    ? `Bio/Hum Blend: <span style="color:gold; font-weight:600;">Included</span><br>`
-    : `Bio/Hum Blend: $${a.biohum.toFixed(2)}<br>`
-}
+    if((a.humic || 0) > 0){
+      addonHTML += "Humic Acid 100%: $" + a.humic.toFixed(2) + "<br>"
+    }
 
-if((a.biochar || 0) > 0){
-  addonHTML += `Biochar 100%: $${a.biochar.toFixed(2)}<br>`
-}
+    if((a.grow || 0) > 0){
+      addonHTML += "Grow System: $" + a.grow.toFixed(2) + "<br>"
+    }
 
-if((a.humic || 0) > 0){
-  addonHTML += `Humic Acid 100%: $${a.humic.toFixed(2)}<br>`
-}
+    addLine("Lime", a.lime, isIncluded("lime"))
+    addLine("Sulfur", a.sulfur, isIncluded("sulfur"))
 
-if((a.grow || 0) > 0){
-  addonHTML += `Grow System: $${a.grow.toFixed(2)}<br>`
-}
+    if(addonHTML === "<b>ADD-ONS</b><br>"){
+      addonHTML = ""
+    } else {
+      addonHTML += "<br>"
+    }
 
-// Lime
-if(a.lime > 0 || isIncluded("lime")){
-  addonHTML += isIncluded("lime")
-    ? `Lime: <span style="color:gold; font-weight:600;">Included</span><br>`
-    : `Lime: $${a.lime.toFixed(2)}<br>`
-}
+    // ======================
+    // SAVINGS
+    // ======================
 
-// Sulfur
-if(a.sulfur > 0 || isIncluded("sulfur")){
-  addonHTML += isIncluded("sulfur")
-    ? `Sulfur: <span style="color:gold; font-weight:600;">Included</span><br>`
-    : `Sulfur: $${a.sulfur.toFixed(2)}<br>`
-}
+    let savings = 0
 
-// hide section if empty
-if(addonHTML === `<b>ADD-ONS</b><br>`){
-  addonHTML = ""
-} else {
-  addonHTML += `<br>`
-}
+    if(isIncluded("aeration")) savings += r.totalSqft * 0.04
+    if(isIncluded("compost")) savings += r.totalSqft * 0.10
+    if(isIncluded("biohum")) savings += r.totalSqft * 0.12
+    if(isIncluded("lime")) savings += r.totalSqft * 0.004
+    if(isIncluded("sulfur")) savings += r.totalSqft * 0.008
 
- let perHouseCost = r.houses ? r.cost / r.houses : 0
-let perHousePrice = r.houses ? r.price / r.houses : 0
-let perHouseProfit = r.houses ? r.profit / r.houses : 0
-let laborPerHouse = r.houses ? r.laborCost / r.houses : 0
-let overheadPerHouse = r.houses ? r.overheadCost / r.houses : 0
+    let savingsHTML = ""
+    if(savings > 0){
+      savingsHTML = "<b>Savings with Premium:</b> " +
+        "<span style='color:gold; font-weight:700;'>$" + savings.toFixed(2) + "</span><br><br>"
+    }
 
-let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
-let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
-let marginPercent = r.price ? ((r.profit / r.price) * 100) : 0
+    // ======================
+    // SAFE MATH
+    // ======================
 
-    document.getElementById("results").innerHTML = `
+    let perHouseCost = r.houses ? r.cost / r.houses : 0
+    let perHousePrice = r.houses ? r.price / r.houses : 0
+    let perHouseProfit = r.houses ? r.profit / r.houses : 0
+    let laborPerHouse = r.houses ? r.laborCost / r.houses : 0
+    let overheadPerHouse = r.houses ? r.overheadCost / r.houses : 0
 
-<b>PROJECT SUMMARY</b><br>
-Total Sqft: ${r.totalSqft.toFixed(0)}<br>
-Houses: ${r.houses}<br><br>
+    let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+    let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
+    let marginPercent = r.price ? (r.profit / r.price) * 100 : 0
 
-${addonHTML}
+    // ======================
+    // OUTPUT
+    // ======================
 
-${savings > 0 ? `<b>Savings with Premium:</b> <span style="color:gold; font-weight:700;">$${savings.toFixed(2)}</span><br><br>` : ""}
+    document.getElementById("results").innerHTML =
 
-<b>BASE PACKAGE</b><br>
-Base Cost: $${(r.cost - r.laborCost - r.overheadCost).toFixed(2)}<br><br>
+      "<b>PROJECT SUMMARY</b><br>" +
+      "Total Sqft: " + r.totalSqft.toFixed(0) + "<br>" +
+      "Houses: " + r.houses + "<br><br>" +
 
-<b>LABOR</b><br>
-Total Hours: ${r.totalHours.toFixed(2)}<br>
-Labor Cost: $${r.laborCost.toFixed(2)}<br>
-Per House: $${laborPerHouse.toFixed(2)}<br><br>
+      addonHTML +
+      savingsHTML +
 
-<b>OVERHEAD</b><br>
-Overhead Cost: $${r.overheadCost.toFixed(2)}<br>
-Per House: $${overheadPerHouse.toFixed(2)}<br><br>
+      "<b>BASE PACKAGE</b><br>" +
+      "Base Cost: $" + (r.cost - r.laborCost - r.overheadCost).toFixed(2) + "<br><br>" +
 
-<b>COST BREAKDOWN</b><br>
-Total Cost: $${r.cost.toFixed(2)}<br>
-Cost / Sqft: $${costPerSqft.toFixed(2)}<br><br>
+      "<b>LABOR</b><br>" +
+      "Total Hours: " + r.totalHours.toFixed(2) + "<br>" +
+      "Labor Cost: $" + r.laborCost.toFixed(2) + "<br>" +
+      "Per House: $" + laborPerHouse.toFixed(2) + "<br><br>" +
 
-<b>PRICING</b><br>
-Target Price: $${r.price.toFixed(2)}<br>
-Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
-Profit: $${r.profit.toFixed(2)}<br>
-Margin: ${marginPercent.toFixed(1)}%<br><br>
+      "<b>OVERHEAD</b><br>" +
+      "Overhead Cost: $" + r.overheadCost.toFixed(2) + "<br>" +
+      "Per House: $" + overheadPerHouse.toFixed(2) + "<br><br>" +
 
-<b>PER HOUSE</b><br>
-Cost: $${perHouseCost.toFixed(2)}<br>
-Price: $${perHousePrice.toFixed(2)}<br>
-Profit: $${perHouseProfit.toFixed(2)}<br>
+      "<b>COST BREAKDOWN</b><br>" +
+      "Total Cost: $" + r.cost.toFixed(2) + "<br>" +
+      "Cost / Sqft: $" + costPerSqft.toFixed(2) + "<br><br>" +
 
-<b>PACKAGE COMPARISON</b><br>
-Current: ${currentPackage.toUpperCase()}<br>
-Other: ${altPackage.toUpperCase()}<br>
+      "<b>PRICING</b><br>" +
+      "Target Price: $" + r.price.toFixed(2) + "<br>" +
+      "Price / Sqft: $" + pricePerSqft.toFixed(2) + "<br>" +
+      "Profit: $" + r.profit.toFixed(2) + "<br>" +
+      "Margin: " + marginPercent.toFixed(1) + "%<br><br>" +
 
-Price Difference: 
-<span style="color:${priceDiffColor}; font-weight:700;">
-  $${priceDiff.toFixed(2)}
-</span><br>
+      "<b>PER HOUSE</b><br>" +
+      "Cost: $" + perHouseCost.toFixed(2) + "<br>" +
+      "Price: $" + perHousePrice.toFixed(2) + "<br>" +
+      "Profit: $" + perHouseProfit.toFixed(2) + "<br><br>" +
 
-Profit Difference: 
-<span style="color:${profitDiffColor}; font-weight:700;">
-  $${profitDiff.toFixed(2)}
-</span><br><br>
+      "<b>PACKAGE COMPARISON</b><br>" +
+      "Current: " + currentPackage.toUpperCase() + "<br>" +
+      "Other: " + altPackage.toUpperCase() + "<br>" +
 
-`
+      "Price Difference: " +
+      "<span style='color:" + priceDiffColor + "; font-weight:700;'>" +
+      "$" + priceDiff.toFixed(2) +
+      "</span><br>" +
+
+      "Profit Difference: " +
+      "<span style='color:" + profitDiffColor + "; font-weight:700;'>" +
+      "$" + profitDiff.toFixed(2) +
+      "</span><br><br>"
 
   } catch(e){
     document.getElementById("results").innerHTML = "Error in calculation"
@@ -669,77 +665,137 @@ if(showHouses){
 
 let win = window.open("", "_blank")
 
-win.document.write(
-"<html><head>" +
+let html = `
+<html>
+<head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-"<script src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'></script>" +
+<title>SoDa Outdoor Designs Quote</title>
 
-"<title>SoDa Outdoor Designs Quote</title>" +
+<style>
+body{
+  background:#000;
+  color:gold;
+  font-family:Arial;
+  padding:30px;
+  text-align:center;
+}
+.container{
+  border:2px solid gold;
+  border-radius:12px;
+  padding:25px;
+  max-width:600px;
+  margin:auto;
+}
+h1{
+  font-size:28px;
+  margin-bottom:5px;
+}
+.tagline{
+  font-size:14px;
+  margin-bottom:20px;
+  opacity:0.8;
+}
+.section{
+  margin-top:20px;
+}
+.label{
+  font-weight:bold;
+  margin-top:10px;
+}
+.footer{
+  margin-top:30px;
+  font-size:14px;
+  opacity:0.8;
+}
+</style>
+</head>
 
-"<style>" +
-"body{background:#000;color:gold;font-family:Arial;padding:30px;text-align:center;}" +
-".container{border:2px solid gold;border-radius:12px;padding:25px;max-width:600px;margin:auto;}" +
-"h1{font-size:28px;margin-bottom:5px;}" +
-".tagline{font-size:14px;margin-bottom:20px;opacity:0.8;}" +
-".section{margin-top:20px;}" +
-".label{font-weight:bold;margin-top:10px;}" +
-".footer{margin-top:30px;font-size:14px;opacity:0.8;}" +
-"</style>" +
+<body>
 
-"</head><body>" +
+<div id="clientQuote" class="container">
 
-"<div id='clientQuote' class='container'>" +
+<h1>SoDa Outdoor Designs</h1>
+<div class="tagline">'We build lawns from the soil up'</div>
 
-"<h1>SoDa Outdoor Designs</h1>" +
-"<div class='tagline'>'We build lawns from the soil up'</div>" +
+<div class="section">
+  <div>+customer+</div>
+  <div>+address+</div>
+</div>
 
-"<div class='section'>" +
-"<div>" + customer + "</div>" +
-"<div>" + address + "</div>" +
-"</div>" +
+<div class="section">
+  <div class="label">Package</div>
+  <div>+packageType.toUpperCase()+</div>
+</div>
 
-"<div class='section'>" +
-"<div class='label'>Package</div>" +
-"<div>" + packageType.toUpperCase() + "</div>" +
-"</div>" +
+<div class="section">
+  <div class="label">Add-Ons</div>
+  +(addonList || "<div>None</div>")+
 
-"<div class='section'>" +
-"<div class='label'>Add-Ons</div>" +
-(addonList || "<div>None</div>") +
-includedHTML +
-"</div>" +
+  ${includedValue > 0 ? `
+    <div style="margin-top:10px;font-weight:700;">
+      Included in Premium Package 
+      <span style="color:gold;">($${includedValue.toFixed(2)} value)</span>
+    </div>
+  ` : ""}
+</div>
 
-"<div class='section'>" +
+<div class="section">
 "<div>Total Sqft: " + r.totalSqft.toFixed(0) + "</div>" +
 housesHTML +
-"<div>Price / Sqft: $" + pricePerSqft.toFixed(2) + "</div>" +
-"</div>" +
+"<div>Price / Sqft: $" + pricePerSqft.toFixed(2) + "</div>"
+</div>
 
-"<div class='section'>" +
-"<div>Labor Cost: $" + r.laborCost.toFixed(2) + "</div>" +
-"</div>" +
+<div class="section">
+  <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
+</div>
 
-"<div class='section'>" +
-"<div class='label'>Total Price</div>" +
-"<div style='font-size:22px;font-weight:bold;'>$" + r.price.toFixed(2) + "</div>" +
-"</div>" +
+<div class="section">
+  <div class="label">Total Price</div>
+  <div style="font-size:22px;font-weight:bold;">
+    $${r.price.toFixed(2)}
+  </div>
+</div>
 
-"<div class='footer'>" +
-"SoDa Outdoor Designs<br>(256) 453-6835" +
-"</div>" +
+<div class="footer">
+  SoDa Outdoor Designs<br>
+  (256) 453-6835
+</div>
 
-"</div>" +
+</div>
 
-"<button onclick='downloadPDF()' style='margin-top:20px;padding:10px 20px;background:gold;border:none;font-weight:bold;cursor:pointer;'>Download PDF</button>" +
+<button onclick="downloadPDF()" style="
+margin-top:20px;
+padding:10px 20px;
+background:gold;
+border:none;
+font-weight:bold;
+cursor:pointer;">
+Download PDF
+</button>
 
-"<script>" +
-"function downloadPDF(){const element=document.getElementById('clientQuote');" +
-"const opt={margin:0.5,filename:'SoDa_Outdoor_Quote.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'in',format:'letter',orientation:'portrait'}};" +
-"html2pdf().set(opt).from(element).save();}" +
-"</script>" +
+<script>
+function downloadPDF(){
+  const element = document.getElementById("clientQuote")
+  const opt = {
+    margin:0.5,
+    filename:'SoDa_Outdoor_Quote.pdf',
+    image:{ type:'jpeg', quality:0.98 },
+    html2canvas:{ scale:2 },
+    jsPDF:{ unit:'in', format:'letter', orientation:'portrait' }
+  }
+  html2pdf().set(opt).from(element).save()
+}
+</script>
 
-"</body></html>"
-)
+</body>
+</html>
+`
+
+// ✅ THIS is the key difference
+win.document.open()
+win.document.write(html)
+win.document.close()
 
 }
 
