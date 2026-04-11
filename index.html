@@ -574,15 +574,16 @@ function openClientView(){
 
   let r = calculateJob()
 
+  let customer = document.getElementById("customer")?.value || "Client"
+  let address = document.getElementById("address")?.value || ""
+
+  let packageType = document.getElementById("package")?.value || "standard"
+
 function isIncluded(name){
   if(packageType !== "premium") return false
   return ["aeration","compost","biohum","lime","sulfur"].includes(name)
 }
 
-  let customer = document.getElementById("customer")?.value || "Client"
-  let address = document.getElementById("address")?.value || ""
-
-  let packageType = document.getElementById("package")?.value || "standard"
   let a = r.addonCosts || {}
 
 let includedValue = 0
