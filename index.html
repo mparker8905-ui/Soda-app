@@ -56,6 +56,9 @@ input,select,button{
 }
 
 </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 </head>
 
 <body>
@@ -657,6 +660,9 @@ if(a.sulfur > 0 || isIncluded("sulfur")){
   win.document.write(`
   <html>
   <head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <title>SoDa Outdoor Designs Quote</title>
     <style>
       body{
@@ -701,11 +707,12 @@ if(a.sulfur > 0 || isIncluded("sulfur")){
         opacity:0.8;
       }
     </style>
+
   </head>
 
   <body>
 
-    <div class="container">
+   <div id="clientQuote" class="container">
 
       <h1>SoDa Outdoor Designs</h1>
       <div class="tagline">"We build lawns from the soil up"</div>
@@ -758,6 +765,33 @@ if(a.sulfur > 0 || isIncluded("sulfur")){
 
     </div>
 
+<button onclick="downloadPDF()" style="
+  margin-bottom:20px;
+  padding:10px 20px;
+  background:gold;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+">
+  Download PDF
+</button>
+
+<script>
+function downloadPDF(){
+  const element = document.getElementById("clientQuote")
+
+  const opt = {
+    margin:       0.5,
+    filename:     'SoDa_Outdoor_Quote.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+  }
+
+  html2pdf().set(opt).from(element).save()
+}
+  
+  </script>
   </body>
   </html>
   `)
