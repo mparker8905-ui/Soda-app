@@ -653,7 +653,7 @@ if((a.sulfur || 0) > 0 || isIncluded("sulfur")){
 
   let win = window.open("", "_blank")
 
-  win.document.write(`
+  win.document.write("<div>"
   <html>
   <head>
 
@@ -790,7 +790,7 @@ function downloadPDF(){
   </script>
   </body>
   </html>
-  `)
+  "</div>")
 
   win.document.close()
 }
