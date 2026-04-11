@@ -61,10 +61,12 @@ input,select,button{
 <body>
 
 <div class="card">
-<h2>Create Job</h2>
+<h2>SoDa Outdoor Designs</h2>
 
 <!-- NEW: CUSTOMER -->
 <input id="customer" placeholder="Customer Name">
+
+<input id="address" placeholder="Client Address">
 
 <!-- NEW: PACKAGE -->
 <select id="package" onchange="handlePackage()">
@@ -121,6 +123,8 @@ input,select,button{
   <h2>Job Breakdown</h2>
   <div id="results"></div>
 </div>
+
+<button onclick="openClientView()">Client View</button>
 
 <script>
 
@@ -556,6 +560,140 @@ Profit Difference:
   } catch(e){
     document.getElementById("results").innerHTML = "Error in calculation"
   }
+}
+
+//============================
+//CLIENT VIEW
+//============================
+
+function openClientView(){
+
+  let r = calculateJob()
+
+  let customer = document.getElementById("customer")?.value || "Client"
+  let address = document.getElementById("address")?.value || ""
+
+  let packageType = document.getElementById("package")?.value || "standard"
+  let a = r.addonCosts || {}
+
+  // Build add-ons list (ONLY selected)
+  let addonList = ""
+
+  if(a.aeration > 0) addonList += `<div>Aeration</div>`
+  if(a.compost > 0) addonList += `<div>Compost</div>`
+  if(a.biohum > 0) addonList += `<div>Bio/Hum Blend</div>`
+  if(a.biochar > 0) addonList += `<div>Biochar 100%</div>`
+  if(a.humic > 0) addonList += `<div>Humic Acid 100%</div>`
+  if(a.grow > 0) addonList += `<div>Grow System</div>`
+  if(a.lime > 0) addonList += `<div>Lime</div>`
+  if(a.sulfur > 0) addonList += `<div>Sulfur</div>`
+
+  let pricePerSqft = r.totalSqft ? (r.price / r.totalSqft) : 0
+
+  let showHouses = r.houses > 1
+
+  let win = window.open("", "_blank")
+
+  win.document.write(`
+  <html>
+  <head>
+    <title>SoDa Outdoor Designs Quote</title>
+    <style>
+      body{
+        background:#000;
+        color:gold;
+        font-family:Arial;
+        padding:30px;
+        text-align:center;
+      }
+
+      .container{
+        border:2px solid gold;
+        border-radius:12px;
+        padding:25px;
+        max-width:600px;
+        margin:auto;
+      }
+
+      h1{
+        font-size:28px;
+        margin-bottom:5px;
+      }
+
+      .tagline{
+        font-size:14px;
+        margin-bottom:20px;
+        opacity:0.8;
+      }
+
+      .section{
+        margin-top:20px;
+      }
+
+      .label{
+        font-weight:bold;
+        margin-top:10px;
+      }
+
+      .footer{
+        margin-top:30px;
+        font-size:14px;
+        opacity:0.8;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <h1>SoDa Outdoor Designs</h1>
+      <div class="tagline">"We build lawns from the soil up"</div>
+
+      <div class="section">
+        <div>${customer}</div>
+        <div>${address}</div>
+      </div>
+
+      <div class="section">
+        <div class="label">Package</div>
+        <div>${packageType.toUpperCase()}</div>
+      </div>
+
+      <div class="section">
+        <div class="label">Add-Ons</div>
+        ${addonList || "<div>None</div>"}
+      </div>
+
+      <div class="section">
+        <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
+        ${showHouses ? `<div>Houses: ${r.houses}</div>` : ""}
+        <div>Price / Sqft: $${pricePerSqft.toFixed(2)}</div>
+      </div>
+
+      <div class="section">
+        <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
+      </div>
+
+      <div class="section">
+        <div class="label">Total Price</div>
+        <div style="font-size:22px; font-weight:bold;">
+          $${r.price.toFixed(2)}
+        </div>
+      </div>
+
+      <div class="footer">
+        SoDa Outdoor Designs<br>
+        (256) 453-6835
+      </div>
+
+    </div>
+
+  </body>
+  </html>
+  `)
+
+  win.document.close()
 }
 
 // ==============================
