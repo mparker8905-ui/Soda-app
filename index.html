@@ -574,6 +574,11 @@ function openClientView(){
 
   let r = calculateJob()
 
+function isIncluded(name){
+  if(packageType !== "premium") return false
+  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+}
+
   let customer = document.getElementById("customer")?.value || "Client"
   let address = document.getElementById("address")?.value || ""
 
@@ -581,11 +586,6 @@ function openClientView(){
   let a = r.addonCosts || {}
 
 let includedValue = 0
-
-function isIncluded(name){
-  if(packageType !== "premium") return false
-  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
-}
 
 if(isIncluded("aeration")) includedValue += r.totalSqft * 0.04
 if(isIncluded("compost")) includedValue += r.totalSqft * 0.10
@@ -597,56 +597,51 @@ if(isIncluded("sulfur")) includedValue += r.totalSqft * 0.008
 
 let addonList = ""
 
-function isIncluded(name){
-  if(packageType !== "premium") return false
-  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
-}
-
 // Aeration
-if(a.aeration > 0 || isIncluded("aeration")){
+if((a.aeration || 0) > 0 || isIncluded("aeration")){
   addonList += isIncluded("aeration")
     ? `<div>Aeration: <span style="color:gold;">Included</span></div>`
     : `<div>Aeration</div>`
 }
 
 // Compost
-if(a.compost > 0 || isIncluded("compost")){
+if((a.compost || 0) > 0 || isIncluded("compost")){
   addonList += isIncluded("compost")
     ? `<div>Compost: <span style="color:gold;">Included</span></div>`
     : `<div>Compost</div>`
 }
 
-// Bio/Hum
-if(a.biohum > 0 || isIncluded("biohum")){
+// Bio/Hum Blend
+if((a.biohum || 0) > 0 || isIncluded("biohum")){
   addonList += isIncluded("biohum")
     ? `<div>Bio/Hum Blend: <span style="color:gold;">Included</span></div>`
     : `<div>Bio/Hum Blend</div>`
 }
 
 // Biochar
-if(a.biochar > 0){
+if((a.biochar || 0) > 0){
   addonList += `<div>Biochar 100%</div>`
 }
 
 // Humic
-if(a.humic > 0){
+if((a.humic || 0) > 0){
   addonList += `<div>Humic Acid 100%</div>`
 }
 
-// Grow
-if(a.grow > 0){
+// Grow System
+if((a.grow || 0) > 0){
   addonList += `<div>Grow System</div>`
 }
 
 // Lime
-if(a.lime > 0 || isIncluded("lime")){
+if((a.lime || 0) > 0 || isIncluded("lime")){
   addonList += isIncluded("lime")
     ? `<div>Lime: <span style="color:gold;">Included</span></div>`
     : `<div>Lime</div>`
 }
 
 // Sulfur
-if(a.sulfur > 0 || isIncluded("sulfur")){
+if((a.sulfur || 0) > 0 || isIncluded("sulfur")){
   addonList += isIncluded("sulfur")
     ? `<div>Sulfur: <span style="color:gold;">Included</span></div>`
     : `<div>Sulfur</div>`
