@@ -419,6 +419,13 @@ let profitDiffColor = profitDiff > 0 ? "lime" : "red"
 
     let a = r.addonCosts || {}
 
+let packageType = document.getElementById("package")?.value || "standard"
+
+function isIncluded(name){
+  if(packageType !== "premium") return false
+  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+}
+
 let savings = 0
 
 if(isIncluded("aeration")) savings += r.totalSqft * 0.04
@@ -426,13 +433,6 @@ if(isIncluded("compost")) savings += r.totalSqft * 0.10
 if(isIncluded("biohum")) savings += r.totalSqft * 0.12
 if(isIncluded("lime")) savings += r.totalSqft * 0.004
 if(isIncluded("sulfur")) savings += r.totalSqft * 0.008
-
-let packageType = document.getElementById("package")?.value || "standard"
-
-function isIncluded(name){
-  if(packageType !== "premium") return false
-  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
-}
 
 let addonHTML = `<b>ADD-ONS</b><br>`
 
@@ -535,7 +535,7 @@ Margin: ${marginPercent.toFixed(1)}%<br><br>
 <b>PER HOUSE</b><br>
 Cost: $${perHouseCost.toFixed(2)}<br>
 Price: $${perHousePrice.toFixed(2)}<br>
-Profit: $${perHouseProfit.toFixed(2)}
+Profit: $${perHouseProfit.toFixed(2)}<br>
 
 <b>PACKAGE COMPARISON</b><br>
 Current: ${currentPackage.toUpperCase()}<br>
