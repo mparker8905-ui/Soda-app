@@ -575,18 +575,14 @@ function openClientView(){
   let packageType = document.getElementById("package")?.value || "standard"
 
   function isIncluded(name){
-    if(packageType !== "premium") return false
-    return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+    return packageType === "premium" &&
+      ["aeration","compost","biohum","lime","sulfur"].includes(name)
   }
 
   let a = r.addonCosts || {}
 
-  // ======================
   // INCLUDED VALUE
-  // ======================
-
   let includedValue = 0
-
   if(isIncluded("aeration")) includedValue += r.totalSqft * 0.04
   if(isIncluded("compost")) includedValue += r.totalSqft * 0.10
   if(isIncluded("biohum")) includedValue += r.totalSqft * 0.12
@@ -594,19 +590,15 @@ function openClientView(){
   if(isIncluded("sulfur")) includedValue += r.totalSqft * 0.008
 
   let includedHTML = ""
-
   if(includedValue > 0){
     includedHTML =
-      "<div style='margin-top:10px; font-weight:700;'>" +
+      "<div style='margin-top:10px;font-weight:700;'>" +
       "Included in Premium Package " +
       "<span style='color:gold;'>($" + includedValue.toFixed(2) + " value)</span>" +
       "</div>"
   }
 
-  // ======================
-  // ADD-ONS LIST
-  // ======================
-
+  // ADDONS
   let addonList = ""
 
   function addItem(label, cost, included){
@@ -621,115 +613,78 @@ function openClientView(){
   addItem("Compost", a.compost, isIncluded("compost"))
   addItem("Bio/Hum Blend", a.biohum, isIncluded("biohum"))
 
-  if((a.biochar || 0) > 0){
-    addonList += "<div>Biochar 100%</div>"
-  }
-
-  if((a.humic || 0) > 0){
-    addonList += "<div>Humic Acid 100%</div>"
-  }
-
-  if((a.grow || 0) > 0){
-    addonList += "<div>Grow System</div>"
-  }
+  if((a.biochar || 0) > 0) addonList += "<div>Biochar 100%</div>"
+  if((a.humic || 0) > 0) addonList += "<div>Humic Acid 100%</div>"
+  if((a.grow || 0) > 0) addonList += "<div>Grow System</div>"
 
   addItem("Lime", a.lime, isIncluded("lime"))
   addItem("Sulfur", a.sulfur, isIncluded("sulfur"))
 
-  // ======================
-  // SAFE VALUES
-  // ======================
+  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
-  let pricePerSqft = r.totalSqft ? (r.price / r.totalSqft) : 0
-  let showHouses = r.houses > 1
+  let housesHTML = r.houses > 1
+    ? "<div>Houses: " + r.houses + "</div>"
+    : ""
 
-  let housesHTML = ""
-  if(showHouses){
-    housesHTML = "<div>Houses: " + r.houses + "</div>"
-  }
-
-  // ======================
   // OPEN WINDOW
-  // ======================
+  let win = window.open("", "_blank")
 
-window.openedClientWindow = window.open("", "_blank")
+  win.document.write(`
+  <html>
+  <head>
+    <title>Quote</title>
+    <style>
+      body{background:#000;color:gold;font-family:Arial;padding:30px;text-align:center;}
+      .container{border:2px solid gold;border-radius:12px;padding:25px;max-width:600px;margin:auto;}
+      .section{margin-top:20px;}
+      .label{font-weight:bold;}
+    </style>
+  </head>
+  <body>
 
-window.openedClientWindow.document.write(...)
+    <div id="clientQuote" class="container">
 
-console.log("opening client view")
+      <h1>SoDa Outdoor Designs</h1>
+      <div>"We build lawns from the soil up"</div>
 
-console.log("written")
+      <div class="section">
+        <div>${customer}</div>
+        <div>${address}</div>
+      </div>
 
-  win.document.write(
+      <div class="section">
+        <div class="label">Package</div>
+        <div>${packageType.toUpperCase()}</div>
+      </div>
 
-    "<html>" +
-    "<head>" +
+      <div class="section">
+        <div class="label">Add-Ons</div>
+        ${addonList || "<div>None</div>"}
+        ${includedHTML}
+      </div>
 
+      <div class="section">
+        <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
+        ${housesHTML}
+        <div>Price / Sqft: $${pricePerSqft.toFixed(2)}</div>
+      </div>
 
-    "<title>SoDa Outdoor Designs Quote</title>" +
+      <div class="section">
+        <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
+      </div>
 
-    "<style>" +
-    "body{background:#000;color:gold;font-family:Arial;padding:30px;text-align:center;}" +
-    ".container{border:2px solid gold;border-radius:12px;padding:25px;max-width:600px;margin:auto;}" +
-    "h1{font-size:28px;margin-bottom:5px;}" +
-    ".tagline{font-size:14px;margin-bottom:20px;opacity:0.8;}" +
-    ".section{margin-top:20px;}" +
-    ".label{font-weight:bold;margin-top:10px;}" +
-    ".footer{margin-top:30px;font-size:14px;opacity:0.8;}" +
-    "</style>" +
+      <div class="section">
+        <div class="label">Total Price</div>
+        <div style="font-size:22px;font-weight:bold;">
+          $${r.price.toFixed(2)}
+        </div>
+      </div>
 
-    "</head>" +
+    </div>
 
-    "<body>" +
-
-    "<div id='clientQuote' class='container'>" +
-
-    "<h1>SoDa Outdoor Designs</h1>" +
-   "<div class='tagline'>We build lawns from the soil up</div>" +
-
-    "<div class='section'>" +
-    "<div>" + customer + "</div>" +
-    "<div>" + address + "</div>" +
-    "</div>" +
-
-    "<div class='section'>" +
-    "<div class='label'>Package</div>" +
-    "<div>" + packageType.toUpperCase() + "</div>" +
-    "</div>" +
-
-    "<div class='section'>" +
-    "<div class='label'>Add-Ons</div>" +
-    (addonList || "<div>None</div>") +
-    includedHTML +
-    "</div>" +
-
-    "<div class='section'>" +
-    "<div>Total Sqft: " + r.totalSqft.toFixed(0) + "</div>" +
-    housesHTML +
-    "<div>Price / Sqft: $" + pricePerSqft.toFixed(2) + "</div>" +
-    "</div>" +
-
-    "<div class='section'>" +
-    "<div>Labor Cost: $" + r.laborCost.toFixed(2) + "</div>" +
-    "</div>" +
-
-    "<div class='section'>" +
-    "<div class='label'>Total Price</div>" +
-    "<div style='font-size:22px;font-weight:bold;'>$" + r.price.toFixed(2) + "</div>" +
-    "</div>" +
-
-    "<div class='footer'>" +
-    "SoDa Outdoor Designs<br>(256) 453-6835" +
-    "</div>" +
-
-    "</div>" +
-
-"<button onclick='window.opener.downloadPDFFromChild()' style='margin-bottom:20px;padding:10px 20px;background:gold;border:none;font-weight:bold;cursor:pointer;'>Download PDF</button>" +
-
-   
-
-    "</body></html>"
-  )
+  </body>
+  </html>
+  `)
 
   win.document.close()
 }
