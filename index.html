@@ -71,6 +71,8 @@ input,select,button{
 
 <input id="houses" type="number" value="1" min="1" placeholder="# of Houses">
 
+<input id="targetMargin" type="number" placeholder="Target Profit Margin (%)">
+
 <div class="card">
 <h2>Add Ons</h2>
 
@@ -202,41 +204,85 @@ function calculateJob(){
   let builderMult = getBuilderMultiplier(houses)
   let packageType = document.getElementById("package").value
   let pricingMode = document.getElementById("pricingMode").value
+  let targetMarginInput = Number(document.getElementById("targetMargin")?.value)
 
   let totalSqft = sqft * houses
   let units = totalSqft / 1000
   let materialEfficiency = 1 - ((1 - builderMult) * 0.5)
 units = units * materialEfficiency
 
-  let materialCost = 0
+// ==========================
+// BASE COST
+// ==========================
 
-  // BASE MATERIALS
-  materialCost += units * RATES.seed * COSTS.seed / 100
-  materialCost += units * RATES.fert * COSTS.fert / 100
-  materialCost += units * RATES.mulch * COSTS.mulch / 100
-  materialCost += units * RATES.tack * COSTS.tack / 100
+let baseRate = 0
 
-  // PREMIUM MATERIALS
-  if(packageType === "premium"){
-    materialCost += units * RATES.biohum * COSTS.biohum / 10
+if(packageType === "standard") baseRate = 0.18
+if(packageType === "premium") baseRate = 0.30
+
+let baseCost = totalSqft * baseRate
+
+if(baseCost < 500) baseCost = 500
+
+let materialCost = baseCost
+
+
+// ==========================
+// ADDONS (per sqft pricing)
+// ==========================
+
+let addons = app.job.addons
+
+function isIncluded(name){
+  if(packageType !== "premium") return false
+  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+}
+
+// Aeration
+if(addons.aeration && !isIncluded("aeration")){
+  materialCost += totalSqft * 0.04
+}
+
+// Compost
+if(addons.compost && !isIncluded("compost")){
+  materialCost += totalSqft * 0.10
+}
+
+// Bio/Hum Blend
+if(addons.biohum && !isIncluded("biohum")){
+  materialCost += totalSqft * 0.12
+}
+
+// Biochar
+if(addons.biochar){
+  materialCost += totalSqft * 0.20
+}
+
+// Humic
+if(addons.humic){
+  materialCost += totalSqft * 0.01
+}
+
+// Grow System
+if(addons.grow){
+  let growCost = totalSqft * (0.02 * 3)
+
+  if(packageType === "standard"){
+    growCost += totalSqft * 0.05
   }
 
-  // ADDONS
+  materialCost += growCost
+}
 
- let addons = app.job.addons
+// Lime
+if(addons.lime && !isIncluded("lime")){
+  materialCost += totalSqft * 0.004
+}
 
-  if(addons.compost) materialCost += units * RATES.compost * COSTS.compost
-  if(addons.biohum) materialCost += units * COSTS.biohum
-
-let limeQty = Number(document.getElementById("limeQty")?.value) || 0
-let sulfurQty = Number(document.getElementById("sulfurQty")?.value) || 0
-
-if(addons.lime) materialCost += limeQty * COSTS.lime
-if(addons.sulfur) materialCost += sulfurQty * COSTS.sulfur
-
-  if(addons.biochar) materialCost += units * COSTS.biochar
-  if(addons.humic) materialCost += units * COSTS.humic
-  if(addons.grow) materialCost += units * COSTS.grow
+// Sulfur
+if(addons.sulfur && !isIncluded("sulfur")){
+  materialCost += totalSqft * 0.008
+}
 
 // LABOR (scaled)
 
@@ -248,11 +294,19 @@ let totalCost = materialCost + labor
 
   // PRICING MODES
 
-  let margin = 0.3
+ let margin
 
-if(pricingMode === "win") margin = 0.15
-if(pricingMode === "balanced") margin = 0.3
-if(pricingMode === "max") margin = 0.5
+// If user entered a custom margin → use it
+if(targetMarginInput && targetMarginInput > 0){
+  margin = targetMarginInput / 100
+} else {
+  // fallback to dropdown
+  margin = 0.3
+
+  if(pricingMode === "win") margin = 0.15
+  if(pricingMode === "balanced") margin = 0.3
+  if(pricingMode === "max") margin = 0.5
+}
 
 // builder volume adjustment
 if(houses >= 10) margin -= 0.03
@@ -352,6 +406,8 @@ document.getElementById("limeQty").addEventListener("input", function(){
 document.getElementById("sulfurQty").addEventListener("input", function(){
   render()
 })
+
+document.getElementById("targetMargin")?.addEventListener("input", render)
 
 </script>
 
