@@ -172,12 +172,16 @@ function setSize(val){
 function toggleAddon(el){
   let name = el.dataset.name
 
+  // safety check
+  if(!app.job.addons){
+    app.job.addons = {}
+  }
+
   app.job.addons[name] = !app.job.addons[name]
 
   el.classList.toggle("active")
 
-
-render()
+  render()
 }
 
 //==============================
@@ -367,7 +371,7 @@ Profit: $${(r.profit / r.houses).toFixed(2)}
 
 
 }
-
+}
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
 // ==============================
