@@ -200,152 +200,135 @@ function getBuilderMultiplier(houses){
 
 function calculateJob(){
 
-  let sqft = Number(document.getElementById("sqft").value) || 0
+  let sqft = Number(document.getElementById("sqft")?.value) || 0
   let houses = Number(document.getElementById("houses")?.value) || 1
-  let builderMult = getBuilderMultiplier(houses)
-  let packageType = document.getElementById("package").value
-  let pricingMode = document.getElementById("pricingMode").value
+  let packageType = document.getElementById("package")?.value || "standard"
+  let pricingMode = document.getElementById("pricingMode")?.value || "balanced"
   let targetMarginInput = Number(document.getElementById("targetMargin")?.value)
+
+  let builderMult = getBuilderMultiplier(houses)
 
   let totalSqft = sqft * houses
 
-// ==============================
-// LABOR + OVERHEAD
-// ==============================
+  // ==============================
+  // LABOR INPUTS
+  // ==============================
 
-let hourlyRate = Number(document.getElementById("hourlyRate")?.value) || 0
-let hoursPerHouse = Number(document.getElementById("hoursPerHouse")?.value) || 0
-let crewSize = Number(document.getElementById("crewSize")?.value) || 1
-let overheadPct = Number(document.getElementById("overhead")?.value) || 0
+  let hourlyRate = Number(document.getElementById("hourlyRate")?.value) || 0
+  let hoursPerHouse = Number(document.getElementById("hoursPerHouse")?.value) || 0
+  let crewSize = Number(document.getElementById("crewSize")?.value) || 1
+  let overheadPct = Number(document.getElementById("overhead")?.value) || 0
 
-// Builder scaling (efficiency increases with volume)
-let laborEfficiency = 1 - ((1 - builderMult) * 0.5)
+  let laborEfficiency = 1 - ((1 - builderMult) * 0.5)
+  let totalHours = hoursPerHouse * houses * laborEfficiency
+  let laborCost = totalHours * hourlyRate * crewSize
 
-// Total hours across job
-let totalHours = hoursPerHouse * houses * laborEfficiency
+  // ==========================
+  // BASE COST
+  // ==========================
 
-// Labor cost
-let laborCost = totalHours * hourlyRate * crewSize
+  let baseRate = 0
 
-// ==========================
-// BASE COST
-// ==========================
+  if(packageType === "standard") baseRate = 0.18
+  if(packageType === "premium") baseRate = 0.30
 
-let baseRate = 0
+  let baseCost = totalSqft * baseRate
+  if(baseCost < 500) baseCost = 500
 
-if(packageType === "standard") baseRate = 0.18
-if(packageType === "premium") baseRate = 0.30
+  let materialCost = baseCost
 
-let baseCost = totalSqft * baseRate
+  // ==========================
+  // ADDONS
+  // ==========================
 
-if(baseCost < 500) baseCost = 500
+  let addons = app.job.addons || {}
 
-let materialCost = baseCost
-
-
-// ==========================
-// ADDONS (per sqft pricing)
-// ==========================
-
-let addons = app.job.addons
-
-function isIncluded(name){
-  if(packageType !== "premium") return false
-  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
-}
-
-// Aeration
-if(addons.aeration && !isIncluded("aeration")){
-  materialCost += totalSqft * 0.04
-}
-
-// Compost
-if(addons.compost && !isIncluded("compost")){
-  materialCost += totalSqft * 0.10
-}
-
-// Bio/Hum Blend
-if(addons.biohum && !isIncluded("biohum")){
-  materialCost += totalSqft * 0.12
-}
-
-// Biochar
-if(addons.biochar){
-  materialCost += totalSqft * 0.20
-}
-
-// Humic
-if(addons.humic){
-  materialCost += totalSqft * 0.01
-}
-
-// Grow System
-if(addons.grow){
-  let growCost = totalSqft * (0.02 * 3)
-
-  if(packageType === "standard"){
-    growCost += totalSqft * 0.05
+  function isIncluded(name){
+    if(packageType !== "premium") return false
+    return ["aeration","compost","biohum","lime","sulfur"].includes(name)
   }
 
-  materialCost += growCost
-}
+  if(addons.aeration && !isIncluded("aeration")){
+    materialCost += totalSqft * 0.04
+  }
 
-// Lime
-if(addons.lime && !isIncluded("lime")){
-  materialCost += totalSqft * 0.004
-}
+  if(addons.compost && !isIncluded("compost")){
+    materialCost += totalSqft * 0.10
+  }
 
-// Sulfur
-if(addons.sulfur && !isIncluded("sulfur")){
-  materialCost += totalSqft * 0.008
-}
+  if(addons.biohum && !isIncluded("biohum")){
+    materialCost += totalSqft * 0.12
+  }
 
-//OVERHEAD
-let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
+  if(addons.biochar){
+    materialCost += totalSqft * 0.20
+  }
 
-// APPLY MATERIAL EFFICIENCY (bulk savings)
+  if(addons.humic){
+    materialCost += totalSqft * 0.01
+  }
 
-let totalCost = materialCost + laborCost + overheadCost
+  if(addons.grow){
+    let growCost = totalSqft * (0.02 * 3)
+    if(packageType === "standard"){
+      growCost += totalSqft * 0.05
+    }
+    materialCost += growCost
+  }
 
-  // PRICING MODES
+  if(addons.lime && !isIncluded("lime")){
+    materialCost += totalSqft * 0.004
+  }
 
- let margin
+  if(addons.sulfur && !isIncluded("sulfur")){
+    materialCost += totalSqft * 0.008
+  }
 
-// If user entered a custom margin → use it
-if(targetMarginInput && targetMarginInput > 0){
-  margin = targetMarginInput / 100
-} else {
-  // fallback to dropdown
-  margin = 0.3
+  // ==========================
+  // OVERHEAD (AFTER MATERIAL)
+  // ==========================
 
-  if(pricingMode === "win") margin = 0.15
-  if(pricingMode === "balanced") margin = 0.3
-  if(pricingMode === "max") margin = 0.5
-}
+  let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
 
-// builder volume adjustment
-if(houses >= 10) margin -= 0.03
-if(houses >= 20) margin -= 0.05
-if(houses >= 50) margin -= 0.08
+  let totalCost = materialCost + laborCost + overheadCost
 
-if(margin < 0.1) margin = 0.1
+  // ==========================
+  // PRICING
+  // ==========================
+
+  let margin
+
+  if(targetMarginInput && targetMarginInput > 0){
+    margin = targetMarginInput / 100
+  } else {
+    margin = 0.3
+    if(pricingMode === "win") margin = 0.15
+    if(pricingMode === "balanced") margin = 0.3
+    if(pricingMode === "max") margin = 0.5
+  }
+
+  if(houses >= 10) margin -= 0.03
+  if(houses >= 20) margin -= 0.05
+  if(houses >= 50) margin -= 0.08
+
+  if(margin < 0.1) margin = 0.1
 
   let price = totalCost / (1 - margin)
   let profit = price - totalCost
 
- return {
-  sqft,
-  houses,
-  totalSqft,
-  cost: totalCost,
-  price,
-  profit,
+  return {
+    sqft,
+    houses,
+    totalSqft,
+    cost: totalCost,
+    price,
+    profit,
+    laborCost,
+    overheadCost,
+    totalHours
+  }
+}
 
-  laborCost,
-  overheadCost,
-  totalHours
-}
-}
 //=============================
 //=====RENDER
 //=============================
