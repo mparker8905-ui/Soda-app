@@ -384,7 +384,6 @@ function render(){
     let r = calculateJob()
     let a = r.addonCosts || {}
 
-let a = r.addonCosts || {}
 
 let addonHTML = `<b>ADD-ONS</b><br>`
 
@@ -427,15 +426,15 @@ if(addonHTML === `<b>ADD-ONS</b><br>`){
   addonHTML += `<br>`
 }
 
-    let perHouseCost = r.cost / r.houses
-    let perHousePrice = r.price / r.houses
-    let perHouseProfit = r.profit / r.houses
-    let laborPerHouse = r.laborCost / r.houses
-    let overheadPerHouse = r.overheadCost / r.houses
+ let perHouseCost = r.houses ? r.cost / r.houses : 0
+let perHousePrice = r.houses ? r.price / r.houses : 0
+let perHouseProfit = r.houses ? r.profit / r.houses : 0
+let laborPerHouse = r.houses ? r.laborCost / r.houses : 0
+let overheadPerHouse = r.houses ? r.overheadCost / r.houses : 0
 
-    let pricePerSqft = r.price / r.totalSqft
-    let costPerSqft = r.cost / r.totalSqft
-    let marginPercent = ((r.profit / r.price) * 100)
+let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
+let marginPercent = r.price ? ((r.profit / r.price) * 100) : 0
 
     document.getElementById("results").innerHTML = `
 
