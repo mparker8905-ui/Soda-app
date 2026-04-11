@@ -227,13 +227,6 @@ let totalHours = hoursPerHouse * houses * laborEfficiency
 // Labor cost
 let laborCost = totalHours * hourlyRate * crewSize
 
-// Overhead applied to labor + materials
-let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
-
-  let units = totalSqft / 1000
-  let materialEfficiency = 1 - ((1 - builderMult) * 0.5)
-units = units * materialEfficiency
-
 // ==========================
 // BASE COST
 // ==========================
@@ -307,9 +300,8 @@ if(addons.sulfur && !isIncluded("sulfur")){
   materialCost += totalSqft * 0.008
 }
 
-// LABOR (scaled)
-
-let labor = (totalSqft * 0.05) * builderMult
+//OVERHEAD
+let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
 
 // APPLY MATERIAL EFFICIENCY (bulk savings)
 
@@ -389,10 +381,7 @@ Price: $${(r.price / r.houses).toFixed(2)}<br>
 Profit: $${(r.profit / r.houses).toFixed(2)}
 `
 
-catch(err){
-  console.log(err)
-  document.getElementById("results").innerHTML = "Error: " + err.message
-}
+
 
 }
 
