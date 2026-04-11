@@ -652,7 +652,8 @@ function openClientView(){
   // OPEN WINDOW
   // ======================
 
-  let win = window.open("", "_blank")
+ window.openedClientWindow = window.open("", "_blank")
+let win = window.openedClientWindow
 
   win.document.write(
     "<html>" +
@@ -729,7 +730,7 @@ function openClientView(){
 }
 
 function downloadPDFFromChild(){
-  let element = document.getElementById("clientQuote")
+  let element = window.openedClientWindow.document.getElementById("clientQuote")
 
   let opt = {
     margin:0.5,
