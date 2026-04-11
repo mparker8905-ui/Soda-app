@@ -718,20 +718,28 @@ function openClientView(){
 
     "</div>" +
 
-    "<button onclick='downloadPDF()' style='margin-bottom:20px;padding:10px 20px;background:gold;border:none;font-weight:bold;cursor:pointer;'>Download PDF</button>" +
+"<button onclick='window.opener.downloadPDFFromChild()' style='margin-bottom:20px;padding:10px 20px;background:gold;border:none;font-weight:bold;cursor:pointer;'>Download PDF</button>" +
 
-    "<script>" +
-    "function downloadPDF(){" +
-    "var element = document.getElementById('clientQuote');" +
-    "var opt = {margin:0.5,filename:'SoDa_Outdoor_Quote.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'in',format:'letter',orientation:'portrait'}};" +
-    "html2pdf().set(opt).from(element).save();" +
-    "}" +
-    "<\ /script>" +
+   
 
     "</body></html>"
   )
 
   win.document.close()
+}
+
+function downloadPDFFromChild(){
+  let element = document.getElementById("clientQuote")
+
+  let opt = {
+    margin:0.5,
+    filename:'SoDa_Outdoor_Quote.pdf',
+    image:{ type:'jpeg', quality:0.98 },
+    html2canvas:{ scale:2 },
+    jsPDF:{ unit:'in', format:'letter', orientation:'portrait' }
+  }
+
+  html2pdf().set(opt).from(element).save()
 }
 
 // ==============================
