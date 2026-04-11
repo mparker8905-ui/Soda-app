@@ -730,17 +730,17 @@ if((a.sulfur || 0) > 0 || isIncluded("sulfur")){
 
   ${
     includedValue > 0
-      ? `<div style="margin-top:10px; font-weight:700;">
+      ? "<div style="margin-top:10px; font-weight:700;">
            Included in Premium Package 
            <span style="color:gold;">($${includedValue.toFixed(2)} value)</span>
-         </div>`
+         “</div>”
       : ""
   }
 </div>
 
       <div class="section">
         <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
-        ${showHouses ? `<div>Houses: ${r.houses}</div>` : ""}
+        ${showHouses ? "<div>Houses: "${r.houses}</div>": ""}
         <div>Price / Sqft: $${pricePerSqft.toFixed(2)}</div>
       </div>
 
