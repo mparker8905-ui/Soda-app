@@ -388,9 +388,12 @@ Cost: $${(r.cost / r.houses).toFixed(2)}<br>
 Price: $${(r.price / r.houses).toFixed(2)}<br>
 Profit: $${(r.profit / r.houses).toFixed(2)}
 `
-  } catch(e){
-    document.getElementById("results").innerHTML = "Error in calculation"
-  }
+
+catch(err){
+  console.log(err)
+  document.getElementById("results").innerHTML = "Error: " + err.message
+}
+
 }
 
 // ==============================
