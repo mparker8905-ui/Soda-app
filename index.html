@@ -84,11 +84,18 @@ input,select,button{
 <div class="toggle" data-name="grow" onclick="toggleAddon(this)">Grow System</div>
 
 <div class="toggle" data-name="lime" onclick="toggleAddon(this)">Lime</div>
-<input id="limeQty" type="number" placeholder="Lime Quantity">
 
 <div class="toggle" data-name="sulfur" onclick="toggleAddon(this)">Sulfur</div>
-<input id="sulfurQty" type="number" placeholder="Sulfur Quantity">
 
+</div>
+
+<div class="card">
+  <h2>Labor & Overhead</h2>
+
+  <input id="hourlyRate" type="number" placeholder="Hourly Rate ($)">
+  <input id="hoursPerHouse" type="number" placeholder="Hours per House">
+  <input id="crewSize" type="number" placeholder="Crew Size">
+  <input id="overhead" type="number" placeholder="Overhead (%)">
 </div>
 
 <div class="card">
@@ -169,13 +176,7 @@ function toggleAddon(el){
 
   el.classList.toggle("active")
 
-  if(name === "lime" && app.job.addons[name]){
-    document.getElementById("limeQty").value ||= 1
-  }
 
-  if(name === "sulfur" && app.job.addons[name]){
-    document.getElementById("sulfurQty").value ||= 1
-  }
 render()
 }
 
@@ -207,6 +208,28 @@ function calculateJob(){
   let targetMarginInput = Number(document.getElementById("targetMargin")?.value)
 
   let totalSqft = sqft * houses
+
+// ==============================
+// LABOR + OVERHEAD
+// ==============================
+
+let hourlyRate = Number(document.getElementById("hourlyRate")?.value) || 0
+let hoursPerHouse = Number(document.getElementById("hoursPerHouse")?.value) || 0
+let crewSize = Number(document.getElementById("crewSize")?.value) || 1
+let overheadPct = Number(document.getElementById("overhead")?.value) || 0
+
+// Builder scaling (efficiency increases with volume)
+let laborEfficiency = 1 - ((1 - builderMult) * 0.5)
+
+// Total hours across job
+let totalHours = hoursPerHouse * houses * laborEfficiency
+
+// Labor cost
+let laborCost = totalHours * hourlyRate * crewSize
+
+// Overhead applied to labor + materials
+let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
+
   let units = totalSqft / 1000
   let materialEfficiency = 1 - ((1 - builderMult) * 0.5)
 units = units * materialEfficiency
@@ -290,7 +313,7 @@ let labor = (totalSqft * 0.05) * builderMult
 
 // APPLY MATERIAL EFFICIENCY (bulk savings)
 
-let totalCost = materialCost + labor
+let totalCost = materialCost + laborCost + overheadCost
 
   // PRICING MODES
 
@@ -318,14 +341,18 @@ if(margin < 0.1) margin = 0.1
   let price = totalCost / (1 - margin)
   let profit = price - totalCost
 
-  return {
-    sqft,
-    houses,
-    totalSqft,
-    cost: totalCost,
-    price,
-    profit
-  }
+ return {
+  sqft,
+  houses,
+  totalSqft,
+  cost: totalCost,
+  price,
+  profit,
+
+  laborCost,
+  overheadCost,
+  totalHours
+}
 }
 //=============================
 //=====RENDER
@@ -338,27 +365,33 @@ function render(){
     let perHouseCost = r.cost / r.houses
     let perHousePrice = r.price / r.houses
     let perHouseProfit = r.profit / r.houses
+    let laborPerHouse = r.laborCost / r.houses
+    let overheadPerHouse = r.overheadCost / r.houses
+    
+     document.getElementById("results").innerHTML = `
+Total Sqft: ${r.totalSqft.toFixed(0)}<br><br>
 
-    document.getElementById("results").innerHTML = `
-      Total Sqft: ${r.totalSqft.toFixed(0)}<br><br>
+LABOR:<br>
+Total Hours: ${r.totalHours.toFixed(2)}<br>
+Labor Cost: $${r.laborCost.toFixed(2)}<br>
+Overhead: $${r.overheadCost.toFixed(2)}<br><br>
 
-      TOTAL:<br>
-      Cost: $${r.cost.toFixed(2)}<br>
-      Price: $${r.price.toFixed(2)}<br>
-      Profit: $${r.profit.toFixed(2)}<br><br>
+TOTAL:<br>
+Cost: $${r.cost.toFixed(2)}<br>
+Price: $${r.price.toFixed(2)}<br>
+Profit: $${r.profit.toFixed(2)}<br><br>
 
-      PER HOUSE:<br>
-      Cost: $${perHouseCost.toFixed(2)}<br>
-      Price: $${perHousePrice.toFixed(2)}<br>
-      Profit: $${perHouseProfit.toFixed(2)}
-    `
+PER HOUSE:<br>
+Labor: $${laborPerHouse.toFixed(2)}<br>
+Overhead: $${overheadPerHouse.toFixed(2)}<br>
+Cost: $${(r.cost / r.houses).toFixed(2)}<br>
+Price: $${(r.price / r.houses).toFixed(2)}<br>
+Profit: $${(r.profit / r.houses).toFixed(2)}
+`
   } catch(e){
     document.getElementById("results").innerHTML = "Error in calculation"
   }
 }
-
-document.addEventListener("input", render)
-document.addEventListener("change", render)
 
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
@@ -399,15 +432,10 @@ document.getElementById("customer").addEventListener("input", function(e){
   app.job.customer = e.target.value
 })
 
-document.getElementById("limeQty").addEventListener("input", function(){
-  render()
-})
-
-document.getElementById("sulfurQty").addEventListener("input", function(){
-  render()
-})
-
 document.getElementById("targetMargin")?.addEventListener("input", render)
+
+document.addEventListener("input", render)
+document.addEventListener("change", render)
 
 </script>
 
