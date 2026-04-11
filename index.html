@@ -36,6 +36,25 @@ input,select,button{
   color:#000;
   border:1px solid #d4af37;
 }
+
+.results-card {
+  border: 2px solid gold;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  color: gold;
+  background: #111; /* optional dark background */
+}
+
+.results-card h2 {
+  color: gold;
+  margin-bottom: 10px;
+}
+
+#results {
+  color: gold;
+}
+
 </style>
 </head>
 
@@ -98,8 +117,8 @@ input,select,button{
   <input id="overhead" type="number" placeholder="Overhead (%)">
 </div>
 
-<div class="card">
-  <h2>Results</h2>
+<div class="card results-card">
+  <h2>Job Breakdown</h2>
   <div id="results"></div>
 </div>
 
@@ -382,7 +401,31 @@ function render(){
   try{
 
     let r = calculateJob()
+
+let currentPackage = document.getElementById("package")?.value || "standard"
+let altPackage = currentPackage === "standard" ? "premium" : "standard"
+
+// temporarily switch package
+document.getElementById("package").value =  altPackage
+let alt = calculateJob()
+
+// switch back
+document.getElementById("package").value = currentPackage
+
+let priceDiff = alt.price - r.price
+let profitDiff = alt.profit - r.profit
+let priceDiffColor = priceDiff > 0 ? "red" : "lime"
+let profitDiffColor = profitDiff > 0 ? "lime" : "red"
+
     let a = r.addonCosts || {}
+
+let savings = 0
+
+if(isIncluded("aeration")) savings += r.totalSqft * 0.04
+if(isIncluded("compost")) savings += r.totalSqft * 0.10
+if(isIncluded("biohum")) savings += r.totalSqft * 0.12
+if(isIncluded("lime")) savings += r.totalSqft * 0.004
+if(isIncluded("sulfur")) savings += r.totalSqft * 0.008
 
 let packageType = document.getElementById("package")?.value || "standard"
 
@@ -396,21 +439,21 @@ let addonHTML = `<b>ADD-ONS</b><br>`
 // Aeration
 if(a.aeration > 0 || isIncluded("aeration")){
   addonHTML += isIncluded("aeration")
-    ? `Aeration: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    ? `Aeration: <span style="color:gold; font-weight:600;">Included</span><br>`
     : `Aeration: $${a.aeration.toFixed(2)}<br>`
 }
 
 // Compost
 if(a.compost > 0 || isIncluded("compost")){
   addonHTML += isIncluded("compost")
-    ? `Compost: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    ? `Compost: <span style="color:gold; font-weight:600;">Included</span><br>`
     : `Compost: $${a.compost.toFixed(2)}<br>`
 }
 
 // Bio/Hum
 if(a.biohum > 0 || isIncluded("biohum")){
   addonHTML += isIncluded("biohum")
-    ? `Bio/Hum Blend: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    ? `Bio/Hum Blend: <span style="color:gold; font-weight:600;">Included</span><br>`
     : `Bio/Hum Blend: $${a.biohum.toFixed(2)}<br>`
 }
 
@@ -429,14 +472,14 @@ if((a.grow || 0) > 0){
 // Lime
 if(a.lime > 0 || isIncluded("lime")){
   addonHTML += isIncluded("lime")
-    ? `Lime: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    ? `Lime: <span style="color:gold; font-weight:600;">Included</span><br>`
     : `Lime: $${a.lime.toFixed(2)}<br>`
 }
 
 // Sulfur
 if(a.sulfur > 0 || isIncluded("sulfur")){
   addonHTML += isIncluded("sulfur")
-    ? `Sulfur: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    ? `Sulfur: <span style="color:gold; font-weight:600;">Included</span><br>`
     : `Sulfur: $${a.sulfur.toFixed(2)}<br>`
 }
 
@@ -465,6 +508,8 @@ Houses: ${r.houses}<br><br>
 
 ${addonHTML}
 
+${savings > 0 ? `<b>Savings with Premium:</b> <span style="color:gold; font-weight:700;">$${savings.toFixed(2)}</span><br><br>` : ""}
+
 <b>BASE PACKAGE</b><br>
 Base Cost: $${(r.cost - r.laborCost - r.overheadCost).toFixed(2)}<br><br>
 
@@ -491,6 +536,20 @@ Margin: ${marginPercent.toFixed(1)}%<br><br>
 Cost: $${perHouseCost.toFixed(2)}<br>
 Price: $${perHousePrice.toFixed(2)}<br>
 Profit: $${perHouseProfit.toFixed(2)}
+
+<b>PACKAGE COMPARISON</b><br>
+Current: ${currentPackage.toUpperCase()}<br>
+Other: ${altPackage.toUpperCase()}<br>
+
+Price Difference: 
+<span style="color:${priceDiffColor}; font-weight:700;">
+  $${priceDiff.toFixed(2)}
+</span><br>
+
+Profit Difference: 
+<span style="color:${profitDiffColor}; font-weight:700;">
+  $${profitDiff.toFixed(2)}
+</span><br><br>
 
 `
 
