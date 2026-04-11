@@ -384,19 +384,34 @@ function render(){
     let r = calculateJob()
     let a = r.addonCosts || {}
 
+let packageType = document.getElementById("package")?.value || "standard"
+
+function isIncluded(name){
+  if(packageType !== "premium") return false
+  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+}
 
 let addonHTML = `<b>ADD-ONS</b><br>`
 
-if((a.aeration || 0) > 0){
-  addonHTML += `Aeration: $${a.aeration.toFixed(2)}<br>`
+// Aeration
+if(a.aeration > 0 || isIncluded("aeration")){
+  addonHTML += isIncluded("aeration")
+    ? `Aeration: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    : `Aeration: $${a.aeration.toFixed(2)}<br>`
 }
 
-if((a.compost || 0) > 0){
-  addonHTML += `Compost: $${a.compost.toFixed(2)}<br>`
+// Compost
+if(a.compost > 0 || isIncluded("compost")){
+  addonHTML += isIncluded("compost")
+    ? `Compost: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    : `Compost: $${a.compost.toFixed(2)}<br>`
 }
 
-if((a.biohum || 0) > 0){
-  addonHTML += `Bio/Hum Blend: $${a.biohum.toFixed(2)}<br>`
+// Bio/Hum
+if(a.biohum > 0 || isIncluded("biohum")){
+  addonHTML += isIncluded("biohum")
+    ? `Bio/Hum Blend: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    : `Bio/Hum Blend: $${a.biohum.toFixed(2)}<br>`
 }
 
 if((a.biochar || 0) > 0){
@@ -411,12 +426,18 @@ if((a.grow || 0) > 0){
   addonHTML += `Grow System: $${a.grow.toFixed(2)}<br>`
 }
 
-if((a.lime || 0) > 0){
-  addonHTML += `Lime: $${a.lime.toFixed(2)}<br>`
+// Lime
+if(a.lime > 0 || isIncluded("lime")){
+  addonHTML += isIncluded("lime")
+    ? `Lime: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    : `Lime: $${a.lime.toFixed(2)}<br>`
 }
 
-if((a.sulfur || 0) > 0){
-  addonHTML += `Sulfur: $${a.sulfur.toFixed(2)}<br>`
+// Sulfur
+if(a.sulfur > 0 || isIncluded("sulfur")){
+  addonHTML += isIncluded("sulfur")
+    ? `Sulfur: <span style="color:#4CAF50; font-weight:600;">Included</span><br>`
+    : `Sulfur: $${a.sulfur.toFixed(2)}<br>`
 }
 
 // hide section if empty
