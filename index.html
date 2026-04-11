@@ -385,17 +385,48 @@ function render(){
     let r = calculateJob()
     let a = r.addonCosts || {}
 
-let addonHTML = `
-<b>ADD-ONS</b><br>
-Aeration: $${a.aeration.toFixed(2)}<br>
-Compost: $${a.compost.toFixed(2)}<br>
-Bio/Hum Blend: $${a.biohum.toFixed(2)}<br>
-Biochar: $${a.biochar.toFixed(2)}<br>
-Humic: $${a.humic.toFixed(2)}<br>
-Grow System: $${a.grow.toFixed(2)}<br>
-Lime: $${a.lime.toFixed(2)}<br>
-Sulfur: $${a.sulfur.toFixed(2)}<br><br>
-`
+let a = r.addonCosts || {}
+
+let addonHTML = `<b>ADD-ONS</b><br>`
+
+if((a.aeration || 0) > 0){
+  addonHTML += `Aeration: $${a.aeration.toFixed(2)}<br>`
+}
+
+if((a.compost || 0) > 0){
+  addonHTML += `Compost: $${a.compost.toFixed(2)}<br>`
+}
+
+if((a.biohum || 0) > 0){
+  addonHTML += `Bio/Hum Blend: $${a.biohum.toFixed(2)}<br>`
+}
+
+if((a.biochar || 0) > 0){
+  addonHTML += `Biochar 100%: $${a.biochar.toFixed(2)}<br>`
+}
+
+if((a.humic || 0) > 0){
+  addonHTML += `Humic Acid 100%: $${a.humic.toFixed(2)}<br>`
+}
+
+if((a.grow || 0) > 0){
+  addonHTML += `Grow System: $${a.grow.toFixed(2)}<br>`
+}
+
+if((a.lime || 0) > 0){
+  addonHTML += `Lime: $${a.lime.toFixed(2)}<br>`
+}
+
+if((a.sulfur || 0) > 0){
+  addonHTML += `Sulfur: $${a.sulfur.toFixed(2)}<br>`
+}
+
+// hide section if empty
+if(addonHTML === `<b>ADD-ONS</b><br>`){
+  addonHTML = ""
+} else {
+  addonHTML += `<br>`
+}
 
     let perHouseCost = r.cost / r.houses
     let perHousePrice = r.price / r.houses
