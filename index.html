@@ -240,6 +240,16 @@ function calculateJob(){
   if(baseCost < 500) baseCost = 500
 
   let materialCost = baseCost
+  let addonCosts = {
+  aeration: 0,
+  compost: 0,
+  biohum: 0,
+  biochar: 0,
+  humic: 0,
+  grow: 0,
+  lime: 0,
+  sulfur: 0
+}
 
   // ==========================
   // ADDONS
@@ -252,58 +262,71 @@ function calculateJob(){
     return ["aeration","compost","biohum","lime","sulfur"].includes(name)
   }
 
-  if(addons.aeration && !isIncluded("aeration")){
-    materialCost += totalSqft * 0.04
-  }
+// Aeration
+if(addons.aeration && !isIncluded("aeration")){
+  let cost = totalSqft * 0.04
+  materialCost += cost
+  addonCosts.aeration = cost
+}
 
-  if(addons.compost && !isIncluded("compost")){
-    materialCost += totalSqft * 0.10
-  }
+// Compost
+if(addons.compost && !isIncluded("compost")){
+  let cost = totalSqft * 0.10
+  materialCost += cost
+  addonCosts.compost = cost
+}
 
-  if(addons.biohum && !isIncluded("biohum")){
-    materialCost += totalSqft * 0.12
-  }
+// Bio/Hum Blend
+if(addons.biohum && !isIncluded("biohum")){
+  let cost = totalSqft * 0.12
+  materialCost += cost
+  addonCosts.biohum = cost
+}
 
-  if(addons.biochar){
-    materialCost += totalSqft * 0.20
-  }
+// Biochar
+if(addons.biochar){
+  let cost = totalSqft * 0.20
+  materialCost += cost
+  addonCosts.biochar = cost
+}
 
-  if(addons.humic){
-    materialCost += totalSqft * 0.01
-  }
+// Humic
+if(addons.humic){
+  let cost = totalSqft * 0.01
+  materialCost += cost
+  addonCosts.humic = cost
+}
 
-let growCost = 0
-
+// Grow System
 if(addons.grow){
 
-  let weeklyCostPerHouse = 50 * 3
-  let weeklyCost = weeklyCostPerHouse * houses
-
+  let weeklyCost = (50 * 3) * houses
   let installCost = 0
 
   if(packageType === "standard"){
-    if(houses <= 1){
-      installCost = totalSqft * 0.05
-    } else {
-      installCost = totalSqft * 0.03
-    }
+    installCost = houses <= 1 
+      ? totalSqft * 0.05 
+      : totalSqft * 0.03
   }
 
-  if(packageType === "premium"){
-    installCost = 0
-  }
-
-  growCost = weeklyCost + installCost
-  materialCost += growCost
+  let cost = weeklyCost + installCost
+  materialCost += cost
+  addonCosts.grow = cost
 }
 
-  if(addons.lime && !isIncluded("lime")){
-    materialCost += totalSqft * 0.004
-  }
+// Lime
+if(addons.lime && !isIncluded("lime")){
+  let cost = totalSqft * 0.004
+  materialCost += cost
+  addonCosts.lime = cost
+}
 
-  if(addons.sulfur && !isIncluded("sulfur")){
-    materialCost += totalSqft * 0.008
-  }
+// Sulfur
+if(addons.sulfur && !isIncluded("sulfur")){
+  let cost = totalSqft * 0.008
+  materialCost += cost
+  addonCosts.sulfur = cost
+}
 
   // ==========================
   // OVERHEAD (AFTER MATERIAL)
@@ -347,7 +370,8 @@ if(addons.grow){
     laborCost,
     overheadCost,
     totalHours,
-    growCost 
+    growCost,
+    addonCosts
   }
 }
 
@@ -359,6 +383,19 @@ function render(){
   try{
 
     let r = calculateJob()
+    let a = r.addonCosts || {}
+
+let addonHTML = `
+<b>ADD-ONS</b><br>
+Aeration: $${a.aeration.toFixed(2)}<br>
+Compost: $${a.compost.toFixed(2)}<br>
+Bio/Hum Blend: $${a.biohum.toFixed(2)}<br>
+Biochar: $${a.biochar.toFixed(2)}<br>
+Humic: $${a.humic.toFixed(2)}<br>
+Grow System: $${a.grow.toFixed(2)}<br>
+Lime: $${a.lime.toFixed(2)}<br>
+Sulfur: $${a.sulfur.toFixed(2)}<br><br>
+`
 
     let perHouseCost = r.cost / r.houses
     let perHousePrice = r.price / r.houses
@@ -376,11 +413,10 @@ function render(){
 Total Sqft: ${r.totalSqft.toFixed(0)}<br>
 Houses: ${r.houses}<br><br>
 
+${addonHTML}
+
 <b>BASE PACKAGE</b><br>
 Base Cost: $${(r.cost - r.laborCost - r.overheadCost).toFixed(2)}<br><br>
-
-<b>ADD-ONS</b><br>
-Grow System: $${r.growCost?.toFixed(2) || "0.00"}<br><br>
 
 <b>LABOR</b><br>
 Total Hours: ${r.totalHours.toFixed(2)}<br>
