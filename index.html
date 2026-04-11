@@ -339,6 +339,7 @@ function calculateJob(){
 
 function render(){
   try{
+
     let r = calculateJob()
     
     let perHouseCost = r.cost / r.houses
@@ -347,7 +348,7 @@ function render(){
     let laborPerHouse = r.laborCost / r.houses
     let overheadPerHouse = r.overheadCost / r.houses
     
-     document.getElementById("results").innerHTML = `
+    document.getElementById("results").innerHTML = `
 Total Sqft: ${r.totalSqft.toFixed(0)}<br><br>
 
 LABOR:<br>
@@ -363,15 +364,16 @@ Profit: $${r.profit.toFixed(2)}<br><br>
 PER HOUSE:<br>
 Labor: $${laborPerHouse.toFixed(2)}<br>
 Overhead: $${overheadPerHouse.toFixed(2)}<br>
-Cost: $${(r.cost / r.houses).toFixed(2)}<br>
-Price: $${(r.price / r.houses).toFixed(2)}<br>
-Profit: $${(r.profit / r.houses).toFixed(2)}
+Cost: $${perHouseCost.toFixed(2)}<br>
+Price: $${perHousePrice.toFixed(2)}<br>
+Profit: $${perHouseProfit.toFixed(2)}
 `
 
-
-
+  } catch(e){
+    document.getElementById("results").innerHTML = "Error in calculation"
+  }
 }
-}
+
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
 // ==============================
@@ -390,14 +392,17 @@ function handlePackage(){
          name === "biohum" ||
          name === "lime" ||
          name === "sulfur"){
-        t.classList.add("active")
+         t.classList.add("active")
+         app.job.addons[name] = true
       }
     })
 
   } else {
 
-    // OPTIONAL: clear selections when going back to standard
-    toggles.forEach(t => t.classList.remove("active"))
+  toggles.forEach(t => {
+  t.classList.remove("active")
+  app.job.addons[t.dataset.name] = false
+})
 
   }
 }
