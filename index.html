@@ -652,77 +652,78 @@ if((a.sulfur || 0) > 0 || isIncluded("sulfur")){
 
   let showHouses = r.houses > 1
 
-  let win = window.open("", "_blank")
+let win = window.open("", "_blank")
 
-  win.document.write( `
-  <html>
-  <head>
+win.document.write(`
+<html>
+<head>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <title>SoDa Outdoor Designs Quote</title>
-    <style>
-      body{
-        background:#000;
-        color:gold;
-        font-family:Arial;
-        padding:30px;
-        text-align:center;
-      }
+<title>SoDa Outdoor Designs Quote</title>
 
-      .container{
-        border:2px solid gold;
-        border-radius:12px;
-        padding:25px;
-        max-width:600px;
-        margin:auto;
-      }
+<style>
+body{
+  background:#000;
+  color:gold;
+  font-family:Arial;
+  padding:30px;
+  text-align:center;
+}
 
-      h1{
-        font-size:28px;
-        margin-bottom:5px;
-      }
+.container{
+  border:2px solid gold;
+  border-radius:12px;
+  padding:25px;
+  max-width:600px;
+  margin:auto;
+}
 
-      .tagline{
-        font-size:14px;
-        margin-bottom:20px;
-        opacity:0.8;
-      }
+h1{
+  font-size:28px;
+  margin-bottom:5px;
+}
 
-      .section{
-        margin-top:20px;
-      }
+.tagline{
+  font-size:14px;
+  margin-bottom:20px;
+  opacity:0.8;
+}
 
-      .label{
-        font-weight:bold;
-        margin-top:10px;
-      }
+.section{
+  margin-top:20px;
+}
 
-      .footer{
-        margin-top:30px;
-        font-size:14px;
-        opacity:0.8;
-      }
-    </style>
+.label{
+  font-weight:bold;
+  margin-top:10px;
+}
 
-  </head>
+.footer{
+  margin-top:30px;
+  font-size:14px;
+  opacity:0.8;
+}
+</style>
 
-  <body>
+</head>
 
-   <div id="clientQuote" class="container">
+<body>
 
-      <h1>SoDa Outdoor Designs</h1>
-      <div class="tagline">"We build lawns from the soil up"</div>
+<div id="clientQuote" class="container">
 
-      <div class="section">
-        <div>${customer}</div>
-        <div>${address}</div>
-      </div>
+<h1>SoDa Outdoor Designs</h1>
+<div class="tagline">"We build lawns from the soil up"</div>
 
-      <div class="section">
-        <div class="label">Package</div>
-        <div>${packageType.toUpperCase()}</div>
-      </div>
+<div class="section">
+  <div>${customer}</div>
+  <div>${address}</div>
+</div>
+
+<div class="section">
+  <div class="label">Package</div>
+  <div>${packageType.toUpperCase()}</div>
+</div>
 
 <div class="section">
   <div class="label">Add-Ons</div>
@@ -730,10 +731,7 @@ if((a.sulfur || 0) > 0 || isIncluded("sulfur")){
 
   ${
     includedValue > 0
-      ? "<div style='margin-top:10px; font-weight:700;'>\
-Included in Premium Package \
-<span style='color:gold;'>($" + includedValue.toFixed(2) + " value)</span>\
-</div>"
+      ? "<div style='margin-top:10px; font-weight:700;'>Included in Premium Package <span style='color:gold;'>($" + includedValue.toFixed(2) + " value)</span></div>"
       : ""
   }
 </div>
@@ -744,33 +742,33 @@ Included in Premium Package \
   <div>Price / Sqft: $${pricePerSqft.toFixed(2)}</div>
 </div>
 
-      <div class="section">
-        <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
-      </div>
+<div class="section">
+  <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
+</div>
 
-      <div class="section">
-        <div class="label">Total Price</div>
-        <div style="font-size:22px; font-weight:bold;">
-          $${r.price.toFixed(2)}
-        </div>
-      </div>
+<div class="section">
+  <div class="label">Total Price</div>
+  <div style="font-size:22px; font-weight:bold;">
+    $${r.price.toFixed(2)}
+  </div>
+</div>
 
-      <div class="footer">
-        SoDa Outdoor Designs<br>
-        (256) 453-6835
-      </div>
+<div class="footer">
+  SoDa Outdoor Designs<br>
+  (256) 453-6835
+</div>
 
-    </div>
+</div>
 
 <button onclick="downloadPDF()" style="
-  margin-bottom:20px;
-  padding:10px 20px;
-  background:gold;
-  border:none;
-  font-weight:bold;
-  cursor:pointer;
+margin-top:20px;
+padding:10px 20px;
+background:gold;
+border:none;
+font-weight:bold;
+cursor:pointer;
 ">
-  Download PDF
+Download PDF
 </button>
 
 <script>
@@ -778,22 +776,23 @@ function downloadPDF(){
   const element = document.getElementById("clientQuote")
 
   const opt = {
-    margin:       0.5,
-    filename:     'SoDa_Outdoor_Quote.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    margin:0.5,
+    filename:'SoDa_Outdoor_Quote.pdf',
+    image:{ type:'jpeg', quality:0.98 },
+    html2canvas:{ scale:2 },
+    jsPDF:{ unit:'in', format:'letter', orientation:'portrait' }
   }
 
   html2pdf().set(opt).from(element).save()
 }
-  
-  </script>
-  </body>
-  </html>
-  ` )
+</script>
 
-  win.document.close()
+</body>
+</html>
+`)
+
+win.document.close()
+
 }
 
 // ==============================
