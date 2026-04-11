@@ -576,17 +576,77 @@ function openClientView(){
   let packageType = document.getElementById("package")?.value || "standard"
   let a = r.addonCosts || {}
 
-  // Build add-ons list (ONLY selected)
-  let addonList = ""
+let includedValue = 0
 
-  if(a.aeration > 0) addonList += `<div>Aeration</div>`
-  if(a.compost > 0) addonList += `<div>Compost</div>`
-  if(a.biohum > 0) addonList += `<div>Bio/Hum Blend</div>`
-  if(a.biochar > 0) addonList += `<div>Biochar 100%</div>`
-  if(a.humic > 0) addonList += `<div>Humic Acid 100%</div>`
-  if(a.grow > 0) addonList += `<div>Grow System</div>`
-  if(a.lime > 0) addonList += `<div>Lime</div>`
-  if(a.sulfur > 0) addonList += `<div>Sulfur</div>`
+function isIncluded(name){
+  if(packageType !== "premium") return false
+  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+}
+
+if(isIncluded("aeration")) includedValue += r.totalSqft * 0.04
+if(isIncluded("compost")) includedValue += r.totalSqft * 0.10
+if(isIncluded("biohum")) includedValue += r.totalSqft * 0.12
+if(isIncluded("lime")) includedValue += r.totalSqft * 0.004
+if(isIncluded("sulfur")) includedValue += r.totalSqft * 0.008
+
+  // Build add-ons list (ONLY selected)
+
+let addonList = ""
+
+function isIncluded(name){
+  if(packageType !== "premium") return false
+  return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+}
+
+// Aeration
+if(a.aeration > 0 || isIncluded("aeration")){
+  addonList += isIncluded("aeration")
+    ? `<div>Aeration: <span style="color:gold;">Included</span></div>`
+    : `<div>Aeration</div>`
+}
+
+// Compost
+if(a.compost > 0 || isIncluded("compost")){
+  addonList += isIncluded("compost")
+    ? `<div>Compost: <span style="color:gold;">Included</span></div>`
+    : `<div>Compost</div>`
+}
+
+// Bio/Hum
+if(a.biohum > 0 || isIncluded("biohum")){
+  addonList += isIncluded("biohum")
+    ? `<div>Bio/Hum Blend: <span style="color:gold;">Included</span></div>`
+    : `<div>Bio/Hum Blend</div>`
+}
+
+// Biochar
+if(a.biochar > 0){
+  addonList += `<div>Biochar 100%</div>`
+}
+
+// Humic
+if(a.humic > 0){
+  addonList += `<div>Humic Acid 100%</div>`
+}
+
+// Grow
+if(a.grow > 0){
+  addonList += `<div>Grow System</div>`
+}
+
+// Lime
+if(a.lime > 0 || isIncluded("lime")){
+  addonList += isIncluded("lime")
+    ? `<div>Lime: <span style="color:gold;">Included</span></div>`
+    : `<div>Lime</div>`
+}
+
+// Sulfur
+if(a.sulfur > 0 || isIncluded("sulfur")){
+  addonList += isIncluded("sulfur")
+    ? `<div>Sulfur: <span style="color:gold;">Included</span></div>`
+    : `<div>Sulfur</div>`
+}
 
   let pricePerSqft = r.totalSqft ? (r.price / r.totalSqft) : 0
 
@@ -660,10 +720,19 @@ function openClientView(){
         <div>${packageType.toUpperCase()}</div>
       </div>
 
-      <div class="section">
-        <div class="label">Add-Ons</div>
-        ${addonList || "<div>None</div>"}
-      </div>
+     <div class="section">
+  <div class="label">Add-Ons</div>
+  ${addonList || "<div>None</div>"}
+
+  ${
+    includedValue > 0
+      ? `<div style="margin-top:10px; font-weight:700;">
+           Included in Premium Package 
+           <span style="color:gold;">($${includedValue.toFixed(2)} value)</span>
+         </div>`
+      : ""
+  }
+</div>
 
       <div class="section">
         <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
