@@ -652,14 +652,19 @@ function openClientView(){
   // OPEN WINDOW
   // ======================
 
- window.openedClientWindow = window.open("", "_blank")
-let win = window.openedClientWindow
+window.openedClientWindow = window.open("", "_blank")
+
+window.openedClientWindow.document.write(...)
+
+console.log("opening client view")
+
+console.log("written")
 
   win.document.write(
+
     "<html>" +
     "<head>" +
 
-   "<script src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'><\\/script>" +
 
     "<title>SoDa Outdoor Designs Quote</title>" +
 
@@ -680,7 +685,7 @@ let win = window.openedClientWindow
     "<div id='clientQuote' class='container'>" +
 
     "<h1>SoDa Outdoor Designs</h1>" +
-    "<div class='tagline'>\"We build lawns from the soil up\"</div>" +
+   "<div class='tagline'>We build lawns from the soil up</div>" +
 
     "<div class='section'>" +
     "<div>" + customer + "</div>" +
