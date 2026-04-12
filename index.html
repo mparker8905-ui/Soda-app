@@ -102,6 +102,45 @@ input,select,button{
   margin:10px 0 20px 0;
 }
 
+.inventory-section{
+  margin-top:15px;
+  padding:12px;
+  border:1px solid #333;
+  border-radius:10px;
+  background:#0d0d0d;
+}
+
+.inventory-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+
+.inventory-header button{
+  width:32px;
+  height:32px;
+  font-size:20px;
+  padding:0;
+  background:#d4af37;
+  color:#000;
+  border:none;
+  border-radius:6px;
+}
+
+.material-row{
+  display:flex;
+  gap:6px;
+  margin-bottom:8px;
+}
+
+.material-row input{
+  flex:1;
+  padding:10px;
+  font-size:12px;
+}
+
 </style>
 
 </head>
@@ -183,6 +222,38 @@ input,select,button{
 <button onclick="openClientView()">Client View</button>
 
 <button onclick="sendProposal()">Send Proposal</button>
+
+<div class="card">
+  <h2>Inventory</h2>
+
+  <!-- STANDARD -->
+  <div class="inventory-section">
+    <div class="inventory-header">
+      <span>Standard Package</span>
+      <button onclick="addMaterialRow('standard')">+</button>
+    </div>
+    <div id="standardMaterials"></div>
+  </div>
+
+  <!-- PREMIUM -->
+  <div class="inventory-section">
+    <div class="inventory-header">
+      <span>Premium Package</span>
+      <button onclick="addMaterialRow('premium')">+</button>
+    </div>
+    <div id="premiumMaterials"></div>
+  </div>
+
+  <!-- ADD-ONS -->
+  <div class="inventory-section">
+    <div class="inventory-header">
+      <span>Add-On Materials</span>
+      <button onclick="addMaterialRow('addons')">+</button>
+    </div>
+    <div id="addonMaterials"></div>
+  </div>
+
+</div>
 
 <script>
 
@@ -1098,6 +1169,37 @@ function handlePackage(){
 
   }
 }
+//===============================
+//===INVENTORY
+//===============================
+
+function addMaterialRow(type){
+
+  let container
+
+  if(type === "standard"){
+    container = document.getElementById("standardMaterials")
+  }
+
+  if(type === "premium"){
+    container = document.getElementById("premiumMaterials")
+  }
+
+  if(type === "addons"){
+    container = document.getElementById("addonMaterials")
+  }
+
+  let row = document.createElement("div")
+  row.className = "material-row"
+
+  row.innerHTML = `
+    <input placeholder="Material Name">
+    <input type="number" placeholder="Cost ($)">
+    <input type="number" placeholder="Qty">
+  `
+
+  container.appendChild(row)
+}
 
 document.getElementById("houses").addEventListener("input", function(e){
   app.job.houses = Number(e.target.value) || 1
@@ -1112,6 +1214,10 @@ document.getElementById("targetMargin")?.addEventListener("input", render)
 
 document.addEventListener("input", render)
 document.addEventListener("change", render)
+
+addMaterialRow("standard")
+addMaterialRow("premium")
+addMaterialRow("addons")
 
 </script>
 
