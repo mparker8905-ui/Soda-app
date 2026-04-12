@@ -712,26 +712,25 @@ body{
 
 <button onclick="downloadPDF()">Download PDF</button>
 
-<script>
-window.onload = function(){
-  window.downloadPDF = function(){
-    var element = document.getElementById('clientQuote');
-
-    html2pdf().set({
-      margin:0.3,
-      filename:'SoDa_Quote.pdf',
-      html2canvas:{ scale:3 },
-      jsPDF:{ unit:'in', format:'letter' }
-    }).from(element).save();
-  }
-}
-</script>
-
 </body>
 </html>
 `)
 
   win.document.close()
+
+setTimeout(() => {
+  win.downloadPDF = function(){
+    let element = win.document.getElementById('clientQuote')
+
+    win.html2pdf().set({
+      margin:0.3,
+      filename:'SoDa_Quote.pdf',
+      html2canvas:{ scale:3 },
+      jsPDF:{ unit:'in', format:'letter' }
+    }).from(element).save()
+  }
+}, 500)
+
 }
 
 // ==============================
