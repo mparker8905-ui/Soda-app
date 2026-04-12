@@ -750,16 +750,19 @@ button:active{
 setTimeout(() => {
 
 win.sendProposal = function(){
+
   let element = win.document.getElementById('clientQuote')
+
+  // ✅ GET NAME FIRST (OUTSIDE OBJECT)
+  let name = win.document.querySelector(".section div")?.innerText || "Client"
 
   win.html2pdf().set({
     margin:0.3,
-  let name = win.document.querySelector(".section div")?.innerText || "Client"
-
-filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
+    filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
     html2canvas:{ scale:3 },
     jsPDF:{ unit:'in', format:'letter' }
   }).from(element).save()
+
 }
 
 // ==============================
