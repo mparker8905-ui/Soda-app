@@ -749,40 +749,31 @@ button:active{
 
 win.document.close()
 
-setTimeout(function(){
-
 win.sendProposal = function(){
-
-  let original = win.document.getElementById('clientQuote')
-
-  // ✅ CLONE the content
-  let clone = original.cloneNode(true)
-
-  // ✅ FORCE PDF-FRIENDLY STYLES
-  clone.style.background = "#fff"
-  clone.style.color = "#000"
-  clone.style.padding = "20px"
-
-  // remove fixed button if copied
-  let btn = clone.querySelector(".pdf-wrap")
-  if(btn) btn.remove()
-
-  let wrapper = document.createElement("div")
-  wrapper.appendChild(clone)
 
   let name = win.document.querySelector(".section div")?.innerText || "Client"
 
-  html2pdf().set({
-    margin:0.3,
-    filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
-    html2canvas:{
-      scale:2,
-      backgroundColor:"#ffffff"
-    },
-    jsPDF:{ unit:'in', format:'letter' }
-  }).from(wrapper).save()
-}
-}, 500)
+  // ⬇️ delay render (CRITICAL for iPhone)
+  setTimeout(() => {
+
+    let element = win.document.getElementById('clientQuote')
+
+    if(!element){
+      alert("Quote not found")
+      return
+    }
+
+    html2pdf().set({
+      margin:0.3,
+      filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
+      html2canvas:{
+        scale:2,
+        backgroundColor:"#ffffff"
+      },
+      jsPDF:{ unit:'in', format:'letter' }
+    }).from(element).save()
+
+  }, 300) // 👈 this is the magic
 
 }
 
