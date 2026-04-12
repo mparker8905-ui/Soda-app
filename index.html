@@ -738,7 +738,7 @@ button:active{
 </div>
 
 <div class="pdf-wrap">
-  <button onclick="downloadPDF()">Save Proposal </button>
+ <button onclick="sendProposal()">Send Proposal</button>
 </div>
 
 </body>
@@ -748,18 +748,18 @@ button:active{
   win.document.close()
 
 setTimeout(() => {
-  win.downloadPDF = function(){
-    let element = win.document.getElementById('clientQuote')
 
-    win.html2pdf().set({
-      margin:0.3,
-     filename: customer.replace(/\s+/g, "_") + "_Proposal.pdf",
-      html2canvas:{ scale:3 },
-      jsPDF:{ unit:'in', format:'letter' }
-    }).from(element).save()
-  }
-}, 500)
+win.sendProposal = function(){
+  let element = win.document.getElementById('clientQuote')
 
+  win.html2pdf().set({
+    margin:0.3,
+  let name = win.document.querySelector(".section div")?.innerText || "Client"
+
+filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
+    html2canvas:{ scale:3 },
+    jsPDF:{ unit:'in', format:'letter' }
+  }).from(element).save()
 }
 
 // ==============================
