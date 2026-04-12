@@ -765,65 +765,92 @@ function sendProposal(){
 
   let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
-  let template = `
-    <div style="padding:30px;font-family:Arial;background:#fff;color:#000;">
-      
-      <h1>SoDa Outdoor Designs</h1>
-      <div style="margin-bottom:20px;">"We build lawns from the soil up"</div>
+  let win = window.open("", "_blank")
 
-      <div style="margin-bottom:15px;">
+  if(!win){
+    alert("Popup blocked")
+    return
+  }
+
+  win.document.write(`
+  <html>
+  <head>
+    <title>Proposal</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+      body{
+        font-family:Arial;
+        padding:30px;
+        background:#fff;
+        color:#000;
+      }
+      h1{margin-bottom:10px}
+      .section{margin-top:20px}
+      .total{
+        margin-top:30px;
+        border-top:2px solid #000;
+        padding-top:10px;
+        font-size:24px;
+        font-weight:bold;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div id="pdf">
+
+      <h1>SoDa Outdoor Designs</h1>
+      <div>"We build lawns from the soil up"</div>
+
+      <div class="section">
         <b>${customer}</b><br>
         ${address}
       </div>
 
-      <div style="margin-top:20px;">
+      <div class="section">
         <b>PACKAGE</b><br>
         ${packageType.toUpperCase()}
       </div>
 
-      <div style="margin-top:20px;">
-        <b>PROJECT</b><br>
+      <div class="section">
         Total Sqft: ${r.totalSqft.toFixed(0)}<br>
         Houses: ${r.houses}
       </div>
 
-      <div style="margin-top:20px;">
+      <div class="section">
         Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
         Labor Cost: $${r.laborCost.toFixed(2)}
       </div>
 
-      <div style="margin-top:30px;border-top:2px solid #000;padding-top:10px;">
-        <div style="font-size:14px;">TOTAL INVESTMENT</div>
-        <div style="font-size:36px;font-weight:bold;">
-          $${r.price.toFixed(2)}
-        </div>
+      <div class="total">
+        TOTAL: $${r.price.toFixed(2)}
       </div>
 
     </div>
-  `
 
-  let container = document.getElementById("pdfTemplate")
+    <script>
+      setTimeout(function(){
 
-  // ✅ FORCE VISIBILITY (CRITICAL FIX)
-  container.style.display = "block"
-  container.innerHTML = template
+        var element = document.getElementById('pdf')
 
-  // ✅ DOUBLE DELAY (Safari fix)
-  setTimeout(() => {
-    setTimeout(() => {
+        html2pdf().set({
+          margin:0.3,
+          filename: "${customer.replace(/\s+/g, "_")}_Proposal.pdf",
+          html2canvas:{ scale:2 },
+          jsPDF:{ unit:'in', format:'letter' }
+        }).from(element).save()
 
-      html2pdf().set({
-        margin:0.3,
-        filename: customer.replace(/\s+/g, "_") + "_Proposal.pdf",
-        html2canvas:{ scale:2 },
-        jsPDF:{ unit:'in', format:'letter' }
-      }).from(container).save()
+      }, 500)
+    <\/script>
 
-      // hide again after export
-      container.style.display = "none"
+  </body>
+  </html>
+  `)
 
-    }, 100)
-  }, 100)
+  win.document.close()
 }
 
 // ==============================
