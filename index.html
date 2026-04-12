@@ -684,7 +684,7 @@ body{
 
 <div class="section">
   <div><b>ADD-ONS</b></div>
-  ${addonList || "<div>None</div>"}
+ ${addonList ? addonList : "<div>None</div>"}
 </div>
 
 <div class="section">
