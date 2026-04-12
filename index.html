@@ -582,15 +582,13 @@ function openClientView(){
   let a = r.addonCosts || {}
 
   // ======================
-  // ADD-ONS LIST (SAFE)
+  // ADD-ONS (WITH VALUE)
   // ======================
 
   let addonList = ""
 
   function getValue(name, cost, rate){
-    if(isIncluded(name)){
-      return r.totalSqft * rate
-    }
+    if(isIncluded(name)) return r.totalSqft * rate
     return cost || 0
   }
 
@@ -601,71 +599,51 @@ function openClientView(){
 
     if(value > 0 || included){
 
-      let valueText = value > 0
-        ? `<span class="addon-price">($${value.toFixed(2)})</span>`
-        : ""
-
       addonList += `
         <div class="line">
           <span>${label}</span>
           <span class="${included ? "included" : ""}">
             ${included ? "Included" : "$" + value.toFixed(2)}
-            ${included ? valueText : ""}
+            ${included ? `<span class="addon-price">($${value.toFixed(2)} value)</span>` : ""}
           </span>
         </div>
       `
     }
   }
 
-  addItem("Aeration", "aeration", a.aeration, 0.04)
-  addItem("Compost", "compost", a.compost, 0.10)
-  addItem("Bio/Hum Blend", "biohum", a.biohum, 0.12)
-  addItem("Lime", "lime", a.lime, 0.004)
-  addItem("Sulfur", "sulfur", a.sulfur, 0.008)
+  addItem("Aeration","aeration",a.aeration,0.04)
+  addItem("Compost","compost",a.compost,0.10)
+  addItem("Bio/Hum Blend","biohum",a.biohum,0.12)
+  addItem("Lime","lime",a.lime,0.004)
+  addItem("Sulfur","sulfur",a.sulfur,0.008)
 
-  if((a.biochar || 0) > 0){
-    addonList += `<div class="line"><span>Biochar</span><span>$${a.biochar.toFixed(2)}</span></div>`
-  }
-
-  if((a.humic || 0) > 0){
-    addonList += `<div class="line"><span>Humic Acid</span><span>$${a.humic.toFixed(2)}</span></div>`
-  }
-
-  if((a.grow || 0) > 0){
-    addonList += `<div class="line"><span>Grow System</span><span>$${a.grow.toFixed(2)}</span></div>`
-  }
+  if(a.biochar > 0) addonList += `<div class="line"><span>Biochar</span><span>$${a.biochar.toFixed(2)}</span></div>`
+  if(a.humic > 0) addonList += `<div class="line"><span>Humic Acid</span><span>$${a.humic.toFixed(2)}</span></div>`
+  if(a.grow > 0) addonList += `<div class="line"><span>Grow System</span><span>$${a.grow.toFixed(2)}</span></div>`
 
   // ======================
-  // INCLUDED TOTAL VALUE
+  // INCLUDED VALUE
   // ======================
 
   let includedValue = 0
-
   if(isIncluded("aeration")) includedValue += r.totalSqft * 0.04
   if(isIncluded("compost")) includedValue += r.totalSqft * 0.10
   if(isIncluded("biohum")) includedValue += r.totalSqft * 0.12
   if(isIncluded("lime")) includedValue += r.totalSqft * 0.004
   if(isIncluded("sulfur")) includedValue += r.totalSqft * 0.008
 
-  let includedHTML = ""
-
-  if(includedValue > 0){
-    includedHTML = `
-      <div style="margin-top:15px;text-align:center;font-weight:700;">
-        Included Value: <span style="font-size:18px;">$${includedValue.toFixed(2)}</span>
-      </div>
-    `
-  }
+  let includedHTML = includedValue > 0 ? `
+    <div class="included-total">
+      Premium Package Value: $${includedValue.toFixed(2)}
+    </div>
+  ` : ""
 
   // ======================
-  // SAFE VALUES
+  // VALUES
   // ======================
 
   let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
-
-  let housesHTML = r.houses > 1
-    ? `<div>Houses: ${r.houses}</div>`
-    : ""
+  let housesHTML = r.houses > 1 ? `<div>Houses: ${r.houses}</div>` : ""
 
   // ======================
   // OPEN WINDOW
@@ -676,134 +654,170 @@ function openClientView(){
   win.document.write(`
   <html>
   <head>
-    <title>Quote</title>
 
-    <style>
-      html, body{
-        margin:0;
-        padding:0;
-        background:#000;
-        color:gold;
-        font-family:Arial;
-        height:100%;
-        letter-spacing:0.5px;
-      }
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-      body{
-        display:flex;
-        justify-content:center;
-        align-items:center;
-      }
+  <title>SoDa Quote</title>
 
-      .container{
-        width:100%;
-        height:100%;
-        padding:40px;
-        box-sizing:border-box;
+  <style>
+    html, body{
+      margin:0;
+      padding:0;
+      background:#000;
+      color:gold;
+      font-family:Arial;
+      letter-spacing:0.5px;
+    }
 
-        display:flex;
-        flex-direction:column;
-        justify-content:center;
+    .container{
+      width:100%;
+      min-height:100vh;
+      padding:40px;
+      box-sizing:border-box;
+      border-left:2px solid gold;
+      border-right:2px solid gold;
+    }
 
-        border-left:2px solid gold;
-        border-right:2px solid gold;
-      }
+    h1{
+      font-size:36px;
+      letter-spacing:2px;
+      margin-bottom:5px;
+    }
 
-      h1{
-        font-size:34px;
-        letter-spacing:1.5px;
-      }
+    .tagline{
+      opacity:0.8;
+      margin-bottom:30px;
+    }
 
-      .tagline{
-        opacity:0.8;
-        margin-bottom:30px;
-      }
+    .section{
+      margin-top:25px;
+      padding-top:15px;
+      border-top:1px solid rgba(255,215,0,0.25);
+    }
 
-      .section{
-        margin-top:25px;
-        padding-top:15px;
-        border-top:1px solid rgba(255,215,0,0.25);
-      }
+    .label{
+      font-size:12px;
+      letter-spacing:2px;
+      opacity:0.7;
+      margin-bottom:10px;
+    }
 
-      .label{
-        font-size:13px;
-        letter-spacing:2px;
-        opacity:0.7;
-        margin-bottom:8px;
-      }
+    .line{
+      display:flex;
+      justify-content:space-between;
+      margin:6px 0;
+    }
 
-      .line{
-        display:flex;
-        justify-content:space-between;
-        margin:4px 0;
-      }
+    .included{
+      font-weight:600;
+    }
 
-      .included{
-        font-weight:600;
-      }
+    .addon-price{
+      font-size:12px;
+      opacity:0.6;
+      margin-left:6px;
+    }
 
-      .addon-price{
-        opacity:0.6;
-        font-size:12px;
-        margin-left:6px;
-      }
+    .included-total{
+      margin-top:15px;
+      font-weight:700;
+      text-align:center;
+      font-size:16px;
+    }
 
-      .total{
-        margin-top:30px;
-        padding-top:20px;
-        border-top:2px solid gold;
-        text-align:center;
-      }
+    .total{
+      margin-top:35px;
+      padding-top:20px;
+      border-top:2px solid gold;
+      text-align:center;
+    }
 
-      .total-price{
-        font-size:42px;
-        font-weight:bold;
-        letter-spacing:2px;
-        margin-top:10px;
-      }
-    </style>
+    .total-price{
+      font-size:48px;
+      font-weight:bold;
+      letter-spacing:2px;
+      margin-top:10px;
+    }
+
+    .cta{
+      margin-top:30px;
+      text-align:center;
+      font-size:14px;
+      opacity:0.85;
+    }
+
+    button{
+      margin-top:30px;
+      padding:14px 26px;
+      background:gold;
+      border:none;
+      font-weight:bold;
+      cursor:pointer;
+      width:100%;
+      font-size:16px;
+    }
+  </style>
 
   </head>
 
   <body>
 
-    <div class="container">
+  <div id="clientQuote" class="container">
 
-      <h1>SoDa Outdoor Designs</h1>
-      <div class="tagline">"We build lawns from the soil up"</div>
+    <h1>SoDa Outdoor Designs</h1>
+    <div class="tagline">"We build lawns from the soil up"</div>
 
-      <div class="section">
-        <div>${customer}</div>
-        <div>${address}</div>
-      </div>
-
-      <div class="section">
-        <div class="label">PACKAGE</div>
-        <div>${packageType.toUpperCase()}</div>
-      </div>
-
-      <div class="section">
-        <div class="label">ADD-ONS</div>
-        ${addonList || "<div>None</div>"}
-        ${includedHTML}
-      </div>
-
-      <div class="section">
-        <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
-        ${housesHTML}
-        <div>Price / Sqft: $${pricePerSqft.toFixed(2)}</div>
-      </div>
-
-      <div class="section">
-        <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
-      </div>
-
-      <div class="section total">
-        <div class="label">TOTAL PRICE</div>
-        <div class="total-price">$${r.price.toFixed(2)}</div>
-      </div>
-
+    <div class="section">
+      <div>${customer}</div>
+      <div>${address}</div>
     </div>
+
+    <div class="section">
+      <div class="label">PACKAGE</div>
+      <div>${packageType.toUpperCase()}</div>
+    </div>
+
+    <div class="section">
+      <div class="label">ADD-ONS</div>
+      ${addonList || "<div>None</div>"}
+      ${includedHTML}
+    </div>
+
+    <div class="section">
+      <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
+      ${housesHTML}
+      <div>Price / Sqft: $${pricePerSqft.toFixed(2)}</div>
+    </div>
+
+    <div class="section">
+      <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
+    </div>
+
+    <div class="total">
+      <div class="label">TOTAL INVESTMENT</div>
+      <div class="total-price">$${r.price.toFixed(2)}</div>
+    </div>
+
+    <div class="cta">
+      Premium lawn installation designed for long-term growth and soil health.
+    </div>
+
+  </div>
+
+  <button onclick="downloadPDF()">Download PDF</button>
+
+  <script>
+    function downloadPDF(){
+      const element = document.getElementById("clientQuote")
+
+      html2pdf().set({
+        margin:0.5,
+        filename:'SoDa_Quote.pdf',
+        html2canvas:{scale:2},
+        jsPDF:{unit:'in',format:'letter'}
+      }).from(element).save()
+    }
+  <\/script>
 
   </body>
   </html>
