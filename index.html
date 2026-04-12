@@ -1,9 +1,915 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Test</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{background:#000;color:#fff;font-family:sans-serif;padding:10px}
+.card{background:#111;padding:15px;border-radius:12px;margin-bottom:20px}
+
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  background:#222;
+  border:1px solid #333;
+  color:#fff;
+  border-radius:8px
+}
+
+.row{display:flex;gap:10px}
+.row button{flex:1}
+
+/* TOGGLES */
+.toggle{
+  background:#1a1a1a;
+  padding:14px;
+  border-radius:12px;
+  margin:10px 0;
+  border:1px solid #2a2a2a;
+  text-align:center;
+  transition:.2s;
+}
+
+.toggle.active{
+  background:#d4af37;
+  color:#000;
+  border:1px solid #d4af37;
+}
+
+.results-card {
+  border: 2px solid gold;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  color: gold;
+  background: #111; /* optional dark background */
+}
+
+.results-card h2 {
+  color: gold;
+  margin-bottom: 10px;
+}
+
+#results {
+  color: gold;
+}
+
+</style>
+
 </head>
+
 <body>
-  <h1>IT WORKS</h1>
+
+<div class="card">
+<h2>SoDa Outdoor Designs</h2>
+
+<!-- NEW: CUSTOMER -->
+<input id="customer" placeholder="Customer Name">
+
+<input id="address" placeholder="Client Address">
+
+<!-- NEW: PACKAGE -->
+<select id="package" onchange="handlePackage()">
+  <option value="standard">Standard</option>
+  <option value="premium">Premium</option>
+</select>
+
+<select id="pricingMode">
+  <option value="balanced">Balanced</option>
+  <option value="win">Win Job</option>
+  <option value="max">Maximize Profits</option>
+</select>
+
+<input id="sqft" placeholder="Square Feet">
+
+<div class="row">
+  <button onclick="setSize(3000)">Small</button>
+  <button onclick="setSize(6000)">Medium</button>
+  <button onclick="setSize(12000)">Large</button>
+</div>
+
+</div>
+
+<input id="houses" type="number" value="1" min="1" placeholder="# of Houses">
+
+<input id="targetMargin" type="number" placeholder="Target Profit Margin (%)">
+
+<div class="card">
+<h2>Add Ons</h2>
+
+<div class="toggle" data-name="aeration" onclick="toggleAddon(this)">Aeration</div>
+<div class="toggle" data-name="compost" onclick="toggleAddon(this)">Compost</div>
+<div class="toggle" data-name="biohum" onclick="toggleAddon(this)">Bio / Hum Blend</div>
+<div class="toggle" data-name="biochar" onclick="toggleAddon(this)">Biochar 100%</div>
+<div class="toggle" data-name="humic" onclick="toggleAddon(this)">Humic Acid 100%</div>
+<div class="toggle" data-name="grow" onclick="toggleAddon(this)">Grow System</div>
+
+<div class="toggle" data-name="lime" onclick="toggleAddon(this)">Lime</div>
+
+<div class="toggle" data-name="sulfur" onclick="toggleAddon(this)">Sulfur</div>
+
+</div>
+
+<div class="card">
+  <h2>Labor & Overhead</h2>
+
+  <input id="hourlyRate" type="number" placeholder="Hourly Rate ($)">
+  <input id="hoursPerHouse" type="number" placeholder="Hours per House">
+  <input id="crewSize" type="number" placeholder="Crew Size">
+  <input id="overhead" type="number" placeholder="Overhead (%)">
+</div>
+
+<div class="card results-card">
+  <h2>Job Breakdown</h2>
+  <div id="results"></div>
+</div>
+
+<button onclick="openClientView()">Client View</button>
+
+<button onclick="sendProposal()">Send Proposal</button>
+
+<div style="text-align:center;margin-bottom:20px;">
+  <img src="/logo.PNG" style="max-width:180px;">
+</div>
+
+<script>
+
+//===========================
+//==== STATE
+//===========================
+let app = {
+  job:{
+    addons:{
+      aeration:false,
+      compost:false,
+      biohum:false,
+      biochar:false,
+      humic:false,
+      grow:false,
+      lime:false,
+      sulfur:false
+    }
+  }
+}
+
+const RATES = {
+  seed: 5,        // lbs per 1000 sqft
+  fert: 4,
+  mulch: 50,      // lbs
+  tack: 3,
+
+  compost: 0.5,   // yards per 1000 sqft
+  biohum: 2,      // gallons
+
+  lime: 10,       // lbs
+  sulfur: 5
+}
+
+const COSTS = {
+  seed: 80,
+  fert: 40,
+  mulch: 35,
+  tack: 25,
+
+  compost: 60,
+  biohum: 25,
+
+  lime: 15,
+  sulfur: 20,
+
+  biochar: 30,
+  humic: 25,
+  grow: 50
+}
+//==============================
+//HELPERS
+//==============================
+
+// ==============================
+// SIZE BUTTONS
+// ==============================
+
+function setSize(val){
+  document.getElementById("sqft").value = val
+  render()
+}
+
+// ==============================
+// TOGGLE BUTTONS 
+// ==============================
+
+function toggleAddon(el){
+  let name = el.dataset.name
+
+  // safety check
+  if(!app.job.addons){
+    app.job.addons = {}
+  }
+
+  app.job.addons[name] = !app.job.addons[name]
+
+  el.classList.toggle("active")
+
+  render()
+}
+
+//==============================
+//==== BUILDER MODE
+//==============================
+
+function getBuilderMultiplier(houses){
+
+  if(houses <= 1) return 1
+  if(houses <= 5) return 0.95
+  if(houses <= 10) return 0.9
+  if(houses <= 20) return 0.85
+  if(houses <= 50) return 0.80
+  return 0.75
+}
+
+//============================
+//==== CALCULATE JOB
+//============================
+
+function calculateJob(){
+
+  let sqft = Number(document.getElementById("sqft")?.value) || 0
+  let houses = Number(document.getElementById("houses")?.value) || 1
+  let packageType = document.getElementById("package")?.value || "standard"
+  let pricingMode = document.getElementById("pricingMode")?.value || "balanced"
+  let targetMarginInput = Number(document.getElementById("targetMargin")?.value)
+
+  let builderMult = getBuilderMultiplier(houses)
+
+  let totalSqft = sqft * houses
+
+  // ==============================
+  // LABOR INPUTS
+  // ==============================
+
+  let hourlyRate = Number(document.getElementById("hourlyRate")?.value) || 0
+  let hoursPerHouse = Number(document.getElementById("hoursPerHouse")?.value) || 0
+  let crewSize = Number(document.getElementById("crewSize")?.value) || 1
+  let overheadPct = Number(document.getElementById("overhead")?.value) || 0
+
+  let laborEfficiency = 1 - ((1 - builderMult) * 0.5)
+  let totalHours = hoursPerHouse * houses * laborEfficiency
+  let laborCost = totalHours * hourlyRate * crewSize
+
+  // ==========================
+  // BASE COST
+  // ==========================
+
+  let baseRate = 0
+
+  if(packageType === "standard") baseRate = 0.18
+  if(packageType === "premium") baseRate = 0.30
+
+  let baseCost = totalSqft * baseRate
+  if(baseCost < 500) baseCost = 500
+
+  let materialCost = baseCost
+  let addonCosts = {
+  aeration: 0,
+  compost: 0,
+  biohum: 0,
+  biochar: 0,
+  humic: 0,
+  grow: 0,
+  lime: 0,
+  sulfur: 0
+}
+
+  // ==========================
+  // ADDONS
+  // ==========================
+
+  let addons = app.job.addons || {}
+
+  function isIncluded(name){
+    if(packageType !== "premium") return false
+    return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+  }
+
+// Aeration
+if(addons.aeration && !isIncluded("aeration")){
+  let cost = totalSqft * 0.04
+  materialCost += cost
+  addonCosts.aeration = cost
+}
+
+// Compost
+if(addons.compost && !isIncluded("compost")){
+  let cost = totalSqft * 0.10
+  materialCost += cost
+  addonCosts.compost = cost
+}
+
+// Bio/Hum Blend
+if(addons.biohum && !isIncluded("biohum")){
+  let cost = totalSqft * 0.12
+  materialCost += cost
+  addonCosts.biohum = cost
+}
+
+// Biochar
+if(addons.biochar){
+  let cost = totalSqft * 0.20
+  materialCost += cost
+  addonCosts.biochar = cost
+}
+
+// Humic
+if(addons.humic){
+  let cost = totalSqft * 0.01
+  materialCost += cost
+  addonCosts.humic = cost
+}
+
+// Grow System
+if(addons.grow){
+
+  let weeklyCost = (50 * 3) * houses
+  let installCost = 0
+
+  if(packageType === "standard"){
+    installCost = houses <= 1 
+      ? totalSqft * 0.05 
+      : totalSqft * 0.03
+  }
+
+  let cost = weeklyCost + installCost
+  materialCost += cost
+  addonCosts.grow = cost
+}
+
+// Lime
+if(addons.lime && !isIncluded("lime")){
+  let cost = totalSqft * 0.004
+  materialCost += cost
+  addonCosts.lime = cost
+}
+
+// Sulfur
+if(addons.sulfur && !isIncluded("sulfur")){
+  let cost = totalSqft * 0.008
+  materialCost += cost
+  addonCosts.sulfur = cost
+}
+
+  // ==========================
+  // OVERHEAD (AFTER MATERIAL)
+  // ==========================
+
+  let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
+
+  let totalCost = materialCost + laborCost + overheadCost
+
+  // ==========================
+  // PRICING
+  // ==========================
+
+  let margin
+
+  if(targetMarginInput && targetMarginInput > 0){
+    margin = targetMarginInput / 100
+  } else {
+    margin = 0.3
+    if(pricingMode === "win") margin = 0.15
+    if(pricingMode === "balanced") margin = 0.3
+    if(pricingMode === "max") margin = 0.5
+  }
+
+  if(houses >= 10) margin -= 0.03
+  if(houses >= 20) margin -= 0.05
+  if(houses >= 50) margin -= 0.08
+
+  if(margin < 0.1) margin = 0.1
+
+  let price = totalCost / (1 - margin)
+  let profit = price - totalCost
+
+  return {
+    sqft,
+    houses,
+    totalSqft,
+    cost: totalCost,
+    price,
+    profit,
+    laborCost,
+    overheadCost,
+    totalHours,
+    addonCosts
+  }
+}
+
+//=============================
+//=====RENDER
+//=============================
+
+function render(){
+  try{
+
+    let r = calculateJob()
+
+    let currentPackage = document.getElementById("package")?.value || "standard"
+    let altPackage = currentPackage === "standard" ? "premium" : "standard"
+
+    // temporarily switch package
+    document.getElementById("package").value = altPackage
+    let alt = calculateJob()
+    document.getElementById("package").value = currentPackage
+
+    let priceDiff = alt.price - r.price
+    let profitDiff = alt.profit - r.profit
+    let priceDiffColor = priceDiff > 0 ? "red" : "lime"
+    let profitDiffColor = profitDiff > 0 ? "lime" : "red"
+
+    let a = r.addonCosts || {}
+
+    let packageType = currentPackage
+
+    function isIncluded(name){
+      if(packageType !== "premium") return false
+      return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+    }
+
+    // ======================
+    // ADD-ONS HTML
+    // ======================
+
+    let addonHTML = "<b>ADD-ONS</b><br>"
+
+    function addLine(label, cost, included){
+      if((cost || 0) > 0 || included){
+        addonHTML += included
+          ? label + ": <span style='color:gold; font-weight:600;'>Included</span><br>"
+          : label + ": $" + cost.toFixed(2) + "<br>"
+      }
+    }
+
+    addLine("Aeration", a.aeration, isIncluded("aeration"))
+    addLine("Compost", a.compost, isIncluded("compost"))
+    addLine("Bio/Hum Blend", a.biohum, isIncluded("biohum"))
+
+    if((a.biochar || 0) > 0){
+      addonHTML += "Biochar 100%: $" + a.biochar.toFixed(2) + "<br>"
+    }
+
+    if((a.humic || 0) > 0){
+      addonHTML += "Humic Acid 100%: $" + a.humic.toFixed(2) + "<br>"
+    }
+
+    if((a.grow || 0) > 0){
+      addonHTML += "Grow System: $" + a.grow.toFixed(2) + "<br>"
+    }
+
+    addLine("Lime", a.lime, isIncluded("lime"))
+    addLine("Sulfur", a.sulfur, isIncluded("sulfur"))
+
+    if(addonHTML === "<b>ADD-ONS</b><br>"){
+      addonHTML = ""
+    } else {
+      addonHTML += "<br>"
+    }
+
+    // ======================
+    // SAVINGS
+    // ======================
+
+    let savings = 0
+
+    if(isIncluded("aeration")) savings += r.totalSqft * 0.04
+    if(isIncluded("compost")) savings += r.totalSqft * 0.10
+    if(isIncluded("biohum")) savings += r.totalSqft * 0.12
+    if(isIncluded("lime")) savings += r.totalSqft * 0.004
+    if(isIncluded("sulfur")) savings += r.totalSqft * 0.008
+
+    let savingsHTML = ""
+    if(savings > 0){
+      savingsHTML = "<b>Savings with Premium:</b> " +
+        "<span style='color:gold; font-weight:700;'>$" + savings.toFixed(2) + "</span><br><br>"
+    }
+
+    // ======================
+    // SAFE MATH
+    // ======================
+
+    let perHouseCost = r.houses ? r.cost / r.houses : 0
+    let perHousePrice = r.houses ? r.price / r.houses : 0
+    let perHouseProfit = r.houses ? r.profit / r.houses : 0
+    let laborPerHouse = r.houses ? r.laborCost / r.houses : 0
+    let overheadPerHouse = r.houses ? r.overheadCost / r.houses : 0
+
+    let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+    let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
+    let marginPercent = r.price ? (r.profit / r.price) * 100 : 0
+
+    // ======================
+    // OUTPUT
+    // ======================
+
+    document.getElementById("results").innerHTML =
+
+      "<b>PROJECT SUMMARY</b><br>" +
+      "Total Sqft: " + r.totalSqft.toFixed(0) + "<br>" +
+      "Houses: " + r.houses + "<br><br>" +
+
+      addonHTML +
+      savingsHTML +
+
+      "<b>BASE PACKAGE</b><br>" +
+      "Base Cost: $" + (r.cost - r.laborCost - r.overheadCost).toFixed(2) + "<br><br>" +
+
+      "<b>LABOR</b><br>" +
+      "Total Hours: " + r.totalHours.toFixed(2) + "<br>" +
+      "Labor Cost: $" + r.laborCost.toFixed(2) + "<br>" +
+      "Per House: $" + laborPerHouse.toFixed(2) + "<br><br>" +
+
+      "<b>OVERHEAD</b><br>" +
+      "Overhead Cost: $" + r.overheadCost.toFixed(2) + "<br>" +
+      "Per House: $" + overheadPerHouse.toFixed(2) + "<br><br>" +
+
+      "<b>COST BREAKDOWN</b><br>" +
+      "Total Cost: $" + r.cost.toFixed(2) + "<br>" +
+      "Cost / Sqft: $" + costPerSqft.toFixed(2) + "<br><br>" +
+
+      "<b>PRICING</b><br>" +
+      "Target Price: $" + r.price.toFixed(2) + "<br>" +
+      "Price / Sqft: $" + pricePerSqft.toFixed(2) + "<br>" +
+      "Profit: $" + r.profit.toFixed(2) + "<br>" +
+      "Margin: " + marginPercent.toFixed(1) + "%<br><br>" +
+
+      "<b>PER HOUSE</b><br>" +
+      "Cost: $" + perHouseCost.toFixed(2) + "<br>" +
+      "Price: $" + perHousePrice.toFixed(2) + "<br>" +
+      "Profit: $" + perHouseProfit.toFixed(2) + "<br><br>" +
+
+      "<b>PACKAGE COMPARISON</b><br>" +
+      "Current: " + currentPackage.toUpperCase() + "<br>" +
+      "Other: " + altPackage.toUpperCase() + "<br>" +
+
+      "Price Difference: " +
+      "<span style='color:" + priceDiffColor + "; font-weight:700;'>" +
+      "$" + priceDiff.toFixed(2) +
+      "</span><br>" +
+
+      "Profit Difference: " +
+      "<span style='color:" + profitDiffColor + "; font-weight:700;'>" +
+      "$" + profitDiff.toFixed(2) +
+      "</span><br><br>"
+
+  } catch(e){
+    document.getElementById("results").innerHTML = "Error in calculation"
+  }
+}
+
+//============================
+//CLIENT VIEW
+//============================
+
+function openClientView(){
+
+  let r = calculateJob()
+
+  let customer = document.getElementById("customer")?.value || "Client"
+  let address = document.getElementById("address")?.value || ""
+  let packageType = document.getElementById("package")?.value || "standard"
+
+  function isIncluded(name){
+    return packageType === "premium" &&
+      ["aeration","compost","biohum","lime","sulfur"].includes(name)
+  }
+
+  let a = r.addonCosts || {}
+  let addonList = ""
+
+  function addItem(label, name, cost, rate){
+    let included = isIncluded(name)
+    let value = included ? r.totalSqft * rate : (cost || 0)
+
+    if(value > 0 || included){
+      addonList += `
+        <div style="display:flex;justify-content:space-between;">
+          <span>${label}</span>
+          <span>
+            ${included ? "Included" : "$" + value.toFixed(2)}
+            ${included ? ` ($${value.toFixed(2)} value)` : ""}
+          </span>
+        </div>
+      `
+    }
+  }
+
+  addItem("Aeration","aeration",a.aeration,0.04)
+  addItem("Compost","compost",a.compost,0.10)
+  addItem("Bio/Hum Blend","biohum",a.biohum,0.12)
+  addItem("Lime","lime",a.lime,0.004)
+  addItem("Sulfur","sulfur",a.sulfur,0.008)
+
+  if(a.biochar > 0) addonList += `<div>Biochar: $${a.biochar.toFixed(2)}</div>`
+  if(a.humic > 0) addonList += `<div>Humic Acid: $${a.humic.toFixed(2)}</div>`
+  if(a.grow > 0) addonList += `<div>Grow System: $${a.grow.toFixed(2)}</div>`
+
+  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+  let housesHTML = r.houses > 1 ? `<div>Houses: ${r.houses}</div>` : ""
+
+  let win = window.open("", "_blank")
+
+  if(!win){
+    alert("Popup blocked. Please allow popups.")
+    return
+  }
+
+  win.document.write(`
+<html>
+<head>
+<title>Quote</title>
+
+<style>
+body{
+  margin:0;
+  background:#000;
+  color:gold;
+  font-family:Arial;
+}
+
+.container{
+  width:100%;
+  min-height:100vh;
+  padding:40px 25px;
+  box-sizing:border-box;
+}
+
+.section{
+  margin-top:20px;
+  border-top:1px solid rgba(255,215,0,0.25);
+  padding-top:10px;
+}
+
+.line{
+  display:flex;
+  justify-content:space-between;
+}
+
+.total{
+  margin-top:25px;
+  border-top:2px solid gold;
+  padding-top:15px;
+}
+
+.total-price{
+  font-size:42px;
+  font-weight:bold;
+  text-align:right;
+}
+
+.pdf-wrap{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  max-width:400px;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  font-size:16px;
+  font-weight:bold;
+  background:gold;
+  color:#000;
+  border:none;
+  border-radius:8px;
+  box-shadow:0 0 10px rgba(255,215,0,0.4);
+}
+
+button:active{
+  transform:scale(0.97);
+  box-shadow:0 0 4px rgba(255,215,0,0.6);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="clientQuote" class="container">
+
+<h1>SoDa Outdoor Designs</h1>
+<div>"We build lawns from the soil up"</div>
+
+<div class="section">
+  <div>${customer}</div>
+  <div>${address}</div>
+</div>
+
+<div class="section">
+  <div><b>PACKAGE</b></div>
+  <div>${packageType.toUpperCase()}</div>
+</div>
+
+<div class="section">
+  <div><b>ADD-ONS</b></div>
+ ${addonList ? addonList : "<div>None</div>"}
+</div>
+
+<div class="section">
+  <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
+  ${housesHTML}
+
+  <div class="line">
+    <span>Price / Sqft</span>
+    <span>$${pricePerSqft.toFixed(2)}</span>
+  </div>
+
+  <div class="line">
+    <span>Labor Cost</span>
+    <span>$${r.laborCost.toFixed(2)}</span>
+  </div>
+
+  <div class="total">
+    <div>TOTAL INVESTMENT</div>
+    <div class="total-price">$${r.price.toFixed(2)}</div>
+  </div>
+
+</div>
+
+</body>
+
+</html>
+`)
+
+win.document.close()
+} 
+
+//============================
+//SEND PROPOSAL 
+//============================
+
+function sendProposal(){
+
+  let r = calculateJob()
+
+  let customer = document.getElementById("customer")?.value || "Client"
+  let address = document.getElementById("address")?.value || ""
+  let packageType = document.getElementById("package")?.value || "standard"
+
+  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+
+  let win = window.open("", "_blank")
+
+  if(!win){
+    alert("Popup blocked")
+    return
+  }
+
+  let html = `
+  <html>
+  <head>
+    <title>Proposal</title>
+    <style>
+      body{
+        font-family: Arial;
+        padding: 30px;
+        background: #fff;
+        color: #000;
+      }
+      h1{margin-bottom:10px}
+      .section{margin-top:20px}
+      .total{
+        margin-top:30px;
+        border-top:2px solid #000;
+        padding-top:10px;
+        font-size:24px;
+        font-weight:bold;
+      }
+    </style>
+  </head>
+
+<body>
+
+  <div style="text-align:center;margin-bottom:20px;">
+    <img src="/logo.PNG" style="max-width:180px;">
+  </div>
+
+  <h1 style="text-align:center;">SoDa Outdoor Designs</h1>
+
+   <div style="text-align:center;color:#666;margin-bottom:20px;">
+  "We build lawns from the soil up"
+</div>
+
+    <div class="section">
+      <b>${customer}</b><br>
+      ${address}
+    </div>
+
+    <div class="section">
+      <b>PACKAGE</b><br>
+      ${packageType.toUpperCase()}
+    </div>
+
+<div class="section">
+  <b>PACKAGE</b><br>
+  ${packageType.toUpperCase()}
+</div>
+
+${packageType === "standard" ? `
+<div style="margin-top:20px;padding:15px;border:2px solid gold;border-radius:8px;background:#fff8e1;">
+  <b>Upgrade to Premium</b><br>
+  Includes aeration, compost, and soil conditioning for stronger, longer-lasting growth.
+</div>
+` : ""}
+
+    <div class="section">
+      Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+      Houses: ${r.houses}
+    </div>
+
+    <div class="section">
+      Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
+      Labor Cost: $${r.laborCost.toFixed(2)}
+    </div>
+
+  <div class="total">
+  TOTAL: $${r.price.toFixed(2)}
+</div>
+
+<div style="margin-top:40px;">
+  <button onclick="window.print()" style="
+    width:100%;
+    padding:16px;
+    font-size:18px;
+    font-weight:bold;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:8px;
+  ">
+    Save / Print Proposal
+  </button>
+</div>
+
+</body>
+</html>
+`
+
+  win.document.open()
+  win.document.write(html)
+  win.document.close()
+
+// ==============================
+// PREMIUM PACKAGE AUTO-SELECT
+// ==============================
+function handlePackage(){
+
+  let pkg = document.getElementById("package").value
+  let toggles = document.querySelectorAll(".toggle")
+
+  if(pkg === "premium"){
+
+    toggles.forEach(t => {
+      let name = t.dataset.name
+
+      if(name === "aeration" ||
+         name === "compost" ||
+         name === "biohum" ||
+         name === "lime" ||
+         name === "sulfur"){
+         t.classList.add("active")
+         app.job.addons[name] = true
+      }
+    })
+
+  } else {
+
+  toggles.forEach(t => {
+  t.classList.remove("active")
+  app.job.addons[t.dataset.name] = false
+})
+
+  }
+}
+
+document.getElementById("houses").addEventListener("input", function(e){
+  app.job.houses = Number(e.target.value) || 1
+  render()
+})
+
+document.getElementById("customer").addEventListener("input", function(e){
+  app.job.customer = e.target.value
+})
+
+document.getElementById("targetMargin")?.addEventListener("input", render)
+
+document.addEventListener("input", render)
+document.addEventListener("change", render)
+
+</script>
+
 </body>
 </html>
