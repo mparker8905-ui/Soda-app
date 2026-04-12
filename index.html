@@ -741,31 +741,27 @@ button:active{
  <button onclick="sendProposal()">Send Proposal</button>
 </div>
 
+<script>
+function sendProposal(){
+  var element = document.getElementById('clientQuote')
+
+  var name = document.querySelector(".section div")?.innerText || "Client"
+
+  html2pdf().set({
+    margin:0.3,
+    filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
+    html2canvas:{ scale:3 },
+    jsPDF:{ unit:'in', format:'letter' }
+  }).from(element).save()
+}
+</script>
+
 </body>
+
 </html>
 `)
 
   win.document.close()
-
-setTimeout(() => {
-
-  win.sendProposal = function(){
-
-    let element = win.document.getElementById('clientQuote')
-
-    let name = win.document.querySelector(".section div")?.innerText || "Client"
-
-    win.html2pdf().set({
-      margin:0.3,
-      filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
-      html2canvas:{ scale:3 },
-      jsPDF:{ unit:'in', format:'letter' }
-    }).from(element).save()
-
-  }
-
-}, 500)
-}
 
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
