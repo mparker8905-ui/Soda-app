@@ -581,8 +581,66 @@ function openClientView(){
 
   let a = r.addonCosts || {}
 
-  // INCLUDED VALUE
+  // ======================
+  // ADD-ONS LIST (SAFE)
+  // ======================
+
+  let addonList = ""
+
+  function getValue(name, cost, rate){
+    if(isIncluded(name)){
+      return r.totalSqft * rate
+    }
+    return cost || 0
+  }
+
+  function addItem(label, name, cost, rate){
+
+    let included = isIncluded(name)
+    let value = getValue(name, cost, rate)
+
+    if(value > 0 || included){
+
+      let valueText = value > 0
+        ? `<span class="addon-price">($${value.toFixed(2)})</span>`
+        : ""
+
+      addonList += `
+        <div class="line">
+          <span>${label}</span>
+          <span class="${included ? "included" : ""}">
+            ${included ? "Included" : "$" + value.toFixed(2)}
+            ${included ? valueText : ""}
+          </span>
+        </div>
+      `
+    }
+  }
+
+  addItem("Aeration", "aeration", a.aeration, 0.04)
+  addItem("Compost", "compost", a.compost, 0.10)
+  addItem("Bio/Hum Blend", "biohum", a.biohum, 0.12)
+  addItem("Lime", "lime", a.lime, 0.004)
+  addItem("Sulfur", "sulfur", a.sulfur, 0.008)
+
+  if((a.biochar || 0) > 0){
+    addonList += `<div class="line"><span>Biochar</span><span>$${a.biochar.toFixed(2)}</span></div>`
+  }
+
+  if((a.humic || 0) > 0){
+    addonList += `<div class="line"><span>Humic Acid</span><span>$${a.humic.toFixed(2)}</span></div>`
+  }
+
+  if((a.grow || 0) > 0){
+    addonList += `<div class="line"><span>Grow System</span><span>$${a.grow.toFixed(2)}</span></div>`
+  }
+
+  // ======================
+  // INCLUDED TOTAL VALUE
+  // ======================
+
   let includedValue = 0
+
   if(isIncluded("aeration")) includedValue += r.totalSqft * 0.04
   if(isIncluded("compost")) includedValue += r.totalSqft * 0.10
   if(isIncluded("biohum")) includedValue += r.totalSqft * 0.12
@@ -590,57 +648,29 @@ function openClientView(){
   if(isIncluded("sulfur")) includedValue += r.totalSqft * 0.008
 
   let includedHTML = ""
+
   if(includedValue > 0){
-    includedHTML =
-      "<div style='margin-top:10px;font-weight:700;'>" +
-      "Included in Premium Package " +
-      "<span style='color:gold;'>($" + includedValue.toFixed(2) + " value)</span>" +
-      "</div>"
+    includedHTML = `
+      <div style="margin-top:15px;text-align:center;font-weight:700;">
+        Included Value: <span style="font-size:18px;">$${includedValue.toFixed(2)}</span>
+      </div>
+    `
   }
 
-  // ADDONS
+  // ======================
+  // SAFE VALUES
+  // ======================
 
-function addItem(label, cost, included){
-  if((cost || 0) > 0 || included){
-
-    let valueText = cost > 0
-      ? " <span class='addon-price'>($" + cost.toFixed(2) + ")</span>"
-      : ""
-
-    if(included){
-      addonList +=
-        "<div class='line'>" +
-          "<span>" + label + "</span>" +
-          "<span class='included'>Included" + valueText + "</span>" +
-        "</div>"
-    } else {
-      addonList +=
-        "<div class='line'>" +
-          "<span>" + label + "</span>" +
-          "<span>$" + cost.toFixed(2) + "</span>" +
-        "</div>"
-    }
-  }
-}
-
-addItem("Aeration", a.aeration, isIncluded("aeration"), 0.04)
-addItem("Compost", a.compost, isIncluded("compost"), 0.10)
-addItem("Bio/Hum Blend", a.biohum, isIncluded("biohum"), 0.12)
-
-addItem("Lime", a.lime, isIncluded("lime"), 0.004)
-addItem("Sulfur", a.sulfur, isIncluded("sulfur"), 0.008)
-
-  if((a.biochar || 0) > 0) addonList += "<div>Biochar 100%</div>"
-  if((a.humic || 0) > 0) addonList += "<div>Humic Acid 100%</div>"
-  if((a.grow || 0) > 0) addonList += "<div>Grow System</div>"
-
-  Olet pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
   let housesHTML = r.houses > 1
-    ? "<div>Houses: " + r.houses + "</div>"
+    ? `<div>Houses: ${r.houses}</div>`
     : ""
 
+  // ======================
   // OPEN WINDOW
+  // ======================
+
   let win = window.open("", "_blank")
 
   win.document.write(`
@@ -648,112 +678,99 @@ addItem("Sulfur", a.sulfur, isIncluded("sulfur"), 0.008)
   <head>
     <title>Quote</title>
 
-<style>
-  html, body{
-    margin:0;
-    padding:0;
-    background:#000;
-    color:gold;
-    font-family:Arial;
-    height:100%;
-    letter-spacing:0.5px;
-  }
+    <style>
+      html, body{
+        margin:0;
+        padding:0;
+        background:#000;
+        color:gold;
+        font-family:Arial;
+        height:100%;
+        letter-spacing:0.5px;
+      }
 
-  body{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-  }
+      body{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+      }
 
-  .container{
-    width:100%;
-    height:100%;
-    padding:40px;
-    box-sizing:border-box;
+      .container{
+        width:100%;
+        height:100%;
+        padding:40px;
+        box-sizing:border-box;
 
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
 
-    border-left:2px solid gold;
-    border-right:2px solid gold;
-  }
+        border-left:2px solid gold;
+        border-right:2px solid gold;
+      }
 
-  h1{
-    font-size:34px;
-    letter-spacing:1.5px;
-    margin-bottom:10px;
-  }
+      h1{
+        font-size:34px;
+        letter-spacing:1.5px;
+      }
 
-  .tagline{
-    font-size:16px;
-    opacity:0.8;
-    margin-bottom:30px;
-  }
+      .tagline{
+        opacity:0.8;
+        margin-bottom:30px;
+      }
 
-  .section{
-    margin-top:25px;
-    padding-top:15px;
-    border-top:1px solid rgba(255,215,0,0.25);
-  }
+      .section{
+        margin-top:25px;
+        padding-top:15px;
+        border-top:1px solid rgba(255,215,0,0.25);
+      }
 
-  .label{
-    font-size:13px;
-    letter-spacing:2px;
-    opacity:0.7;
-    margin-bottom:8px;
-  }
+      .label{
+        font-size:13px;
+        letter-spacing:2px;
+        opacity:0.7;
+        margin-bottom:8px;
+      }
 
-  .line{
-    display:flex;
-    justify-content:space-between;
-    margin:4px 0;
-  }
+      .line{
+        display:flex;
+        justify-content:space-between;
+        margin:4px 0;
+      }
 
-  .value{
-    opacity:0.85;
-  }
+      .included{
+        font-weight:600;
+      }
 
-  .included{
-    color:gold;
-    font-weight:600;
-  }
+      .addon-price{
+        opacity:0.6;
+        font-size:12px;
+        margin-left:6px;
+      }
 
-  .addon-price{
-    opacity:0.6;
-    font-size:13px;
-    margin-left:8px;
-  }
+      .total{
+        margin-top:30px;
+        padding-top:20px;
+        border-top:2px solid gold;
+        text-align:center;
+      }
 
-  .total{
-    margin-top:30px;
-    padding-top:20px;
-    border-top:2px solid gold;
-    text-align:center;
-  }
-
-  .total-price{
-    font-size:42px;
-    font-weight:bold;
-    letter-spacing:2px;
-    margin-top:10px;
-  }
-
-  .footer{
-    margin-top:40px;
-    font-size:13px;
-    opacity:0.6;
-    text-align:center;
-  }
-</style>
+      .total-price{
+        font-size:42px;
+        font-weight:bold;
+        letter-spacing:2px;
+        margin-top:10px;
+      }
+    </style>
 
   </head>
+
   <body>
 
-    <div id="clientQuote" class="container">
+    <div class="container">
 
       <h1>SoDa Outdoor Designs</h1>
-      <div>"We build lawns from the soil up"</div>
+      <div class="tagline">"We build lawns from the soil up"</div>
 
       <div class="section">
         <div>${customer}</div>
@@ -761,12 +778,12 @@ addItem("Sulfur", a.sulfur, isIncluded("sulfur"), 0.008)
       </div>
 
       <div class="section">
-        <div class="label">Package</div>
+        <div class="label">PACKAGE</div>
         <div>${packageType.toUpperCase()}</div>
       </div>
 
       <div class="section">
-        <div class="label">Add-Ons</div>
+        <div class="label">ADD-ONS</div>
         ${addonList || "<div>None</div>"}
         ${includedHTML}
       </div>
@@ -781,12 +798,10 @@ addItem("Sulfur", a.sulfur, isIncluded("sulfur"), 0.008)
         <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
       </div>
 
- <div class="section total">
-  <div class="label">Total Price</div>
-  <div class="total-price">
-    $${r.price.toFixed(2)}
-  </div>
-</div>
+      <div class="section total">
+        <div class="label">TOTAL PRICE</div>
+        <div class="total-price">$${r.price.toFixed(2)}</div>
+      </div>
 
     </div>
 
