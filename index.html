@@ -599,15 +599,29 @@ function openClientView(){
   }
 
   // ADDONS
-  let addonList = ""
 
-  function addItem(label, cost, included){
-    if((cost || 0) > 0 || included){
-      addonList += included
-        ? "<div>" + label + ": <span style='color:gold;'>Included</span></div>"
-        : "<div>" + label + "</div>"
+function addItem(label, cost, included){
+  if((cost || 0) > 0 || included){
+
+    let valueText = cost > 0
+      ? " <span class='addon-price'>($" + cost.toFixed(2) + ")</span>"
+      : ""
+
+    if(included){
+      addonList +=
+        "<div class='line'>" +
+          "<span>" + label + "</span>" +
+          "<span class='included'>Included" + valueText + "</span>" +
+        "</div>"
+    } else {
+      addonList +=
+        "<div class='line'>" +
+          "<span>" + label + "</span>" +
+          "<span>$" + cost.toFixed(2) + "</span>" +
+        "</div>"
     }
   }
+}
 
   addItem("Aeration", a.aeration, isIncluded("aeration"))
   addItem("Compost", a.compost, isIncluded("compost"))
@@ -633,7 +647,8 @@ function openClientView(){
   <html>
   <head>
     <title>Quote</title>
- <style>
+
+<style>
   html, body{
     margin:0;
     padding:0;
@@ -641,7 +656,7 @@ function openClientView(){
     color:gold;
     font-family:Arial;
     height:100%;
-    letter-spacing:0.5px; /* subtle premium spacing */
+    letter-spacing:0.5px;
   }
 
   body{
@@ -666,48 +681,72 @@ function openClientView(){
 
   h1{
     font-size:34px;
+    letter-spacing:1.5px;
     margin-bottom:10px;
-    letter-spacing:1px;
   }
 
   .tagline{
     font-size:16px;
+    opacity:0.8;
     margin-bottom:30px;
-    opacity:0.85;
   }
 
   .section{
     margin-top:25px;
     padding-top:15px;
-    border-top:1px solid rgba(255,215,0,0.3); /* thin gold divider */
+    border-top:1px solid rgba(255,215,0,0.25);
   }
 
   .label{
-    font-weight:bold;
+    font-size:13px;
+    letter-spacing:2px;
+    opacity:0.7;
     margin-bottom:8px;
-    letter-spacing:1px;
+  }
+
+  .line{
+    display:flex;
+    justify-content:space-between;
+    margin:4px 0;
+  }
+
+  .value{
+    opacity:0.85;
+  }
+
+  .included{
+    color:gold;
+    font-weight:600;
+  }
+
+  .addon-price{
+    opacity:0.6;
+    font-size:13px;
+    margin-left:8px;
   }
 
   .total{
     margin-top:30px;
     padding-top:20px;
     border-top:2px solid gold;
+    text-align:center;
   }
 
   .total-price{
-    font-size:36px; /* BIG number */
+    font-size:42px;
     font-weight:bold;
-    letter-spacing:1.5px;
+    letter-spacing:2px;
     margin-top:10px;
   }
 
   .footer{
     margin-top:40px;
-    font-size:14px;
-    opacity:0.7;
-    letter-spacing:1px;
+    font-size:13px;
+    opacity:0.6;
+    text-align:center;
   }
 </style>
+
   </head>
   <body>
 
