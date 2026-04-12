@@ -661,6 +661,33 @@ body{
   font-weight:bold;
   text-align:right;
 }
+
+.pdf-wrap{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  max-width:400px;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  font-size:16px;
+  font-weight:bold;
+  background:gold;
+  color:#000;
+  border:none;
+  border-radius:8px;
+  box-shadow:0 0 10px rgba(255,215,0,0.4);
+}
+
+button:active{
+  transform:scale(0.97);
+  box-shadow:0 0 4px rgba(255,215,0,0.6);
+}
+
 </style>
 
 </head>
@@ -710,7 +737,9 @@ body{
 
 </div>
 
-<button onclick="downloadPDF()">Download PDF</button>
+<div class="pdf-wrap">
+  <button onclick="downloadPDF()">Save Proposal </button>
+</div>
 
 </body>
 </html>
@@ -724,7 +753,7 @@ setTimeout(() => {
 
     win.html2pdf().set({
       margin:0.3,
-      filename:'SoDa_Quote.pdf',
+     filename: customer.replace(/\s+/g, "_") + "_Proposal.pdf",
       html2canvas:{ scale:3 },
       jsPDF:{ unit:'in', format:'letter' }
     }).from(element).save()
