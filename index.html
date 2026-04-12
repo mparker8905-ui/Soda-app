@@ -255,6 +255,8 @@ input,select,button{
 
 </div>
 
+<button onclick="saveInventory()">Save Inventory</button>
+
 <script>
 
 //===========================
@@ -1251,6 +1253,79 @@ function getInventoryCost(){
   }
 }
 
+//==================
+//==SAVE INVENTORY 
+//==================
+
+function saveInventory(){
+
+  function getSection(id){
+    let container = document.getElementById(id)
+    let rows = container.querySelectorAll(".material-row")
+
+    let data = []
+
+    rows.forEach(row => {
+      let inputs = row.querySelectorAll("input")
+
+      data.push({
+        name: inputs[0]?.value || "",
+        cost: inputs[1]?.value || "",
+        qty: inputs[2]?.value || ""
+      })
+    })
+
+    return data
+  }
+
+  let inventory = {
+    standard: getSection("standardMaterials"),
+    premium: getSection("premiumMaterials"),
+    addons: getSection("addonMaterials")
+  }
+
+  localStorage.setItem("soda_inventory", JSON.stringify(inventory))
+
+  alert("Inventory Saved")
+}
+
+//==================
+//==LOAD INVENTORY
+//==================
+
+function loadInventory(){
+
+  let saved = localStorage.getItem("soda_inventory")
+
+  if(!saved) return
+
+  let inventory = JSON.parse(saved)
+
+  function loadSection(id, items){
+
+    let container = document.getElementById(id)
+    container.innerHTML = ""
+
+    items.forEach(item => {
+
+      let row = document.createElement("div")
+      row.className = "material-row"
+
+      row.innerHTML = `
+        <input value="${item.name}" placeholder="Material Name">
+        <input type="number" value="${item.cost}" placeholder="Cost ($)">
+        <input type="number" value="${item.qty}" placeholder="Qty">
+      `
+
+      container.appendChild(row)
+    })
+  }
+
+  loadSection("standardMaterials", inventory.standard || [])
+  loadSection("premiumMaterials", inventory.premium || [])
+  loadSection("addonMaterials", inventory.addons || [])
+}
+
 document.getElementById("houses").addEventListener("input", function(e){
   app.job.houses = Number(e.target.value) || 1
   render()
@@ -1265,9 +1340,14 @@ document.getElementById("targetMargin")?.addEventListener("input", render)
 document.addEventListener("input", render)
 document.addEventListener("change", render)
 
-addMaterialRow("standard")
-addMaterialRow("premium")
-addMaterialRow("addons")
+loadInventory()
+
+// fallback if empty
+if(!localStorage.getItem("soda_inventory")){
+  addMaterialRow("standard")
+  addMaterialRow("premium")
+  addMaterialRow("addons")
+}
 
 </script>
 
