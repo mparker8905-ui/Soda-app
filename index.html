@@ -132,6 +132,8 @@ input,select,button{
 
 <button onclick="sendProposal()">Send Proposal</button>
 
+<div id="pdfTemplate" style="display:none;"></div>
+
 <script>
 
 //===========================
@@ -755,21 +757,62 @@ win.document.close()
 
 function sendProposal(){
 
-  let element = document.getElementById('results') // or build a hidden quote div
+  let r = calculateJob()
 
-  if(!element){
-    alert("No quote available")
-    return
-  }
+  let customer = document.getElementById("customer")?.value || "Client"
+  let address = document.getElementById("address")?.value || ""
+  let packageType = document.getElementById("package")?.value || "standard"
 
-  let name = document.getElementById("customer")?.value || "Client"
+  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
-  html2pdf().set({
-    margin:0.3,
-    filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
-    html2canvas:{ scale:2 },
-    jsPDF:{ unit:'in', format:'letter' }
-  }).from(element).save()
+  let template = `
+    <div style="padding:30px;font-family:Arial;background:#fff;color:#000;">
+      
+      <h1>SoDa Outdoor Designs</h1>
+      <div style="margin-bottom:20px;">"We build lawns from the soil up"</div>
+
+      <div style="margin-bottom:15px;">
+        <b>${customer}</b><br>
+        ${address}
+      </div>
+
+      <div style="margin-top:20px;">
+        <b>PACKAGE</b><br>
+        ${packageType.toUpperCase()}
+      </div>
+
+      <div style="margin-top:20px;">
+        <b>PROJECT</b><br>
+        Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+        Houses: ${r.houses}
+      </div>
+
+      <div style="margin-top:20px;">
+        Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
+        Labor Cost: $${r.laborCost.toFixed(2)}
+      </div>
+
+      <div style="margin-top:30px;border-top:2px solid #000;padding-top:10px;">
+        <div style="font-size:14px;">TOTAL INVESTMENT</div>
+        <div style="font-size:36px;font-weight:bold;">
+          $${r.price.toFixed(2)}
+        </div>
+      </div>
+
+    </div>
+  `
+
+  let container = document.getElementById("pdfTemplate")
+  container.innerHTML = template
+
+  setTimeout(() => {
+    html2pdf().set({
+      margin:0.3,
+      filename: customer.replace(/\s+/g, "_") + "_Proposal.pdf",
+      html2canvas:{ scale:2 },
+      jsPDF:{ unit:'in', format:'letter' }
+    }).from(container).save()
+  }, 200)
 
 }
 
