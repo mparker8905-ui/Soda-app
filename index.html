@@ -742,6 +742,38 @@ button:active{
   box-shadow:0 0 4px rgba(255,215,0,0.6);
 }
 
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+}
+
+.brand h1{
+  margin:0;
+  font-size:22px;
+}
+
+.tagline{
+  font-size:12px;
+  color:#aaa
+}
+
+.logo{
+  width:55px;
+}
+
+.gold-line{
+  height:2px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    #d4af37,
+    transparent
+  );
+  margin:10px 0 20px 0;
+}
+
 </style>
 
 </head>
@@ -750,8 +782,16 @@ button:active{
 
 <div id="clientQuote" class="container">
 
-<h1>SoDa Outdoor Designs</h1>
-<div>"We build lawns from the soil up"</div>
+<div class="header">
+  <div class="brand">
+    <h1>SoDa Outdoor Designs</h1>
+    <div class="tagline">We build lawns from the soil up</div>
+  </div>
+
+  <img src="/logo.PNG" class="logo">
+</div>
+
+<div class="gold-line"></div>
 
 <div class="section">
   <div>${customer}</div>
@@ -854,22 +894,39 @@ function sendProposal(){
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:10px;
+  padding:10px 0;
 }
 
 .header h1{
   margin:0;
 }
 
-.logo{
-  width:60px;
-  height:auto;
+.brand h1{
+  margin:0;
+  font-size:22px;
+}
+
+.tagline{
+  font-size:12px;
+  color:#666;
 }
 
 .logo{
   width:55px;
+  height:auto;
   border-radius:6px;
   box-shadow:0 0 10px rgba(255,215,0,0.3);
+}
+
+.gold-line{
+  height:2px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    #d4af37,
+    transparent
+  );
+  margin:10px 0 20px 0;
 }
 
   </style>
@@ -878,9 +935,15 @@ function sendProposal(){
 <body>
 
  <div class="header">
-  <h1>SoDa Outdoor Designs</h1>
+  <div class="brand">
+    <h1>SoDa Outdoor Designs</h1>
+    <div class="tagline">We build lawns from the soil up</div>
+  </div>
+
   <img src="/logo.PNG" class="logo">
 </div>
+
+<div class="gold-line"></div>
 
 <div style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">
   "We build lawns from the soil up"
