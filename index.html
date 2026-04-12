@@ -753,43 +753,54 @@ win.document.close()
 
 function sendProposal(){
 
-  let r = calculateJob()
+  try{
 
-  let customer = document.getElementById("customer")?.value || "Client"
-  let address = document.getElementById("address")?.value || ""
-  let packageType = document.getElementById("package")?.value || "standard"
+    let r = calculateJob()
 
-  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+    let customer = document.getElementById("customer")?.value || "Client"
+    let address = document.getElementById("address")?.value || ""
+    let packageType = document.getElementById("package")?.value || "standard"
 
-  let win = window.open("", "_blank")
+    let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
-  if(!win){
-    alert("Popup blocked")
-    return
-  }
+    let win = window.open("", "_blank")
 
-  let html = `
-  <html>
-  <head>
-    <title>Proposal</title>
-    <style>
-      body{
-        font-family: Arial;
-        padding: 30px;
-        background: #fff;
-        color: #000;
-      }
-      h1{margin-bottom:10px}
-      .section{margin-top:20px}
-      .total{
-        margin-top:30px;
-        border-top:2px solid #000;
-        padding-top:10px;
-        font-size:24px;
-        font-weight:bold;
-      }
-    </style>
-  </head>
+    if(!win){
+      alert("Popup blocked")
+      return
+    }
+
+    // ✅ BUILD HTML SAFELY
+    let html = `
+<html>
+<head>
+  <title>Proposal</title>
+  <style>
+    body{
+      font-family: Arial;
+      padding: 30px;
+      background: #fff;
+      color: #000;
+    }
+    h1{text-align:center;margin-bottom:10px}
+    .section{margin-top:20px}
+    .total{
+      margin-top:30px;
+      border-top:2px solid #000;
+      padding-top:10px;
+      font-size:24px;
+      font-weight:bold;
+    }
+    .upsell{
+      margin-top:20px;
+      padding:15px;
+      border:2px solid gold;
+      border-radius:8px;
+      background:#fff8e1;
+      color:#000;
+    }
+  </style>
+</head>
 
 <body>
 
@@ -797,67 +808,89 @@ function sendProposal(){
     <img src="/logo.PNG" style="max-width:180px;">
   </div>
 
-  <h1 style="text-align:center;">SoDa Outdoor Designs</h1>
+  <h1>SoDa Outdoor Designs</h1>
 
-   <div style="text-align:center;color:#666;margin-bottom:20px;">
-  "We build lawns from the soil up"
-</div>
+  <div style="text-align:center;color:#666;margin-bottom:20px;">
+    "We build lawns from the soil up"
+  </div>
 
-    <div class="section">
-      <b>${customer}</b><br>
-      ${address}
-    </div>
+  <div class="section">
+    <b>${customer}</b><br>
+    ${address}
+  </div>
 
-    <div class="section">
-      <b>PACKAGE</b><br>
-      ${packageType.toUpperCase()}
-    </div>
+  <div class="section">
+    <b>PACKAGE</b><br>
+    ${packageType.toUpperCase()}
+  </div>
+`
 
-    <div class="section">
-      Total Sqft: ${r.totalSqft.toFixed(0)}<br>
-      Houses: ${r.houses}
-    </div>
+    // ✅ SAFE UPSSELL (NO TEMPLATE BREAKING)
+    if(packageType === "standard"){
+      html += `
+      <div class="upsell">
+        <b>Upgrade to Premium</b><br>
+        Includes aeration, compost, and soil conditioning for stronger, longer-lasting growth.
+      </div>
+      `
+    }
 
-    <div class="section">
-      Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
-      Labor Cost: $${r.laborCost.toFixed(2)}
-    </div>
+    // ✅ CONTINUE HTML
+    html += `
+  <div class="section">
+    Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+    Houses: ${r.houses}
+  </div>
+
+  <div class="section">
+    Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
+    Labor Cost: $${r.laborCost.toFixed(2)}
+  </div>
 
   <div class="total">
-  TOTAL: $${r.price.toFixed(2)}
-</div>
+    TOTAL: $${r.price.toFixed(2)}
+  </div>
 
-<div style="margin-top:40px;">
-  <button onclick="window.print()" style="
-    width:100%;
-    padding:16px;
-    font-size:18px;
-    font-weight:bold;
-    background:black;
-    color:white;
-    border:none;
-    border-radius:8px;
-  ">
-    Save / Print Proposal
-  </button>
-</div>
+  <div style="margin-top:40px;">
+    <button onclick="window.print()" style="
+      width:100%;
+      padding:16px;
+      font-size:18px;
+      font-weight:bold;
+      background:black;
+      color:white;
+      border:none;
+      border-radius:8px;
+    ">
+      Save / Print Proposal
+    </button>
+  </div>
 
 </body>
 </html>
 `
 
-win.document.open()
-win.document.write(html)
-win.document.close()
+    // ✅ WRITE TO NEW WINDOW
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
 
-// trigger print AFTER load
-win.onload = function(){
-  setTimeout(function(){
-    win.focus()
-    win.print()
-  }, 300)
+    // ✅ SAFARI SAFE PRINT TRIGGER
+    setTimeout(function(){
+      try{
+        win.focus()
+        win.print()
+      } catch(e){
+        console.log("Print failed", e)
+      }
+    }, 500)
+
+  } catch(e){
+    alert("Proposal error")
+    console.log(e)
+  }
 }
-}
+
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
 // ==============================
