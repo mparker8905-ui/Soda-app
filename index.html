@@ -846,10 +846,18 @@ function sendProposal(){
 </html>
 `
 
-  win.document.open()
-  win.document.write(html)
-  win.document.close()
+win.document.open()
+win.document.write(html)
+win.document.close()
 
+// trigger print AFTER load
+win.onload = function(){
+  setTimeout(function(){
+    win.focus()
+    win.print()
+  }, 300)
+}
+}
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
 // ==============================
