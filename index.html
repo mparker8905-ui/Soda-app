@@ -738,9 +738,7 @@ button:active{
 </div>
 
 <div class="pdf-wrap">
- //<button onclick="sendProposal()">Send Proposal</button> //
-
-<button onclick="alert('clicked')">Send Proposal</button>
+ <button onclick="sendProposal()">Send Proposal</button> 
 
 </div>
 
@@ -759,7 +757,7 @@ setTimeout(function(){
 
     let name = win.document.querySelector(".section div")?.innerText || "Client"
 
-    win.html2pdf().set({
+      window.html2pdf().set({
       margin:0.3,
       filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
       html2canvas:{ scale:3 },
