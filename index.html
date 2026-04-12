@@ -861,133 +861,92 @@ function sendProposal(){
     }
 
     // ✅ BUILD HTML SAFELY
-    let html = `
+   
+
+let html = `
 <html>
 <head>
   <title>Proposal</title>
+
   <style>
     body{
-      font-family: Arial;
-      padding: 30px;
-      background: #fff;
-      color: #000;
-    }
-    h1{text-align:center;margin-bottom:10px}
-    .section{margin-top:20px}
-    .total{
-      margin-top:30px;
-      border-top:2px solid #000;
-      padding-top:10px;
-      font-size:24px;
-      font-weight:bold;
-    }
-    .upsell{
-      margin-top:20px;
-      padding:15px;
-      border:2px solid gold;
-      border-radius:8px;
-      background:#fff8e1;
+      font-family: -apple-system, BlinkMacSystemFont, Arial;
+      padding:40px 25px;
+      background:#fff;
       color:#000;
+      max-width:700px;
+      margin:auto;
     }
 
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 0;
-}
-
-.header h1{
-  margin:0;
-}
-
-.brand h1{
-  margin:0;
-  font-size:22px;
-}
-
-.tagline{
-  font-size:12px;
-  color:#666;
-}
-
-.logo{
-  width:55px;
-  height:auto;
-  border-radius:6px;
-  box-shadow:0 0 10px rgba(255,215,0,0.3);
-}
-
-.gold-line{
-  height:2px;
-  background:linear-gradient(
-    90deg,
-    transparent,
-    #d4af37,
-    transparent
-  );
-  margin:10px 0 20px 0;
-}
-
-  </style>
-</head>
-
-<body>
-
- <div class="header">
-  <div class="brand">
-    <h1>SoDa Outdoor Designs</h1>
-    <div class="tagline">We build lawns from the soil up</div>
-  </div>
-
-  <img src="/logo.PNG" class="logo">
-</div>
-
-<div class="gold-line"></div>
-
-<div style="text-align:center;color:#666;margin-bottom:20px;font-size:14px;">
-  "We build lawns from the soil up"
-</div>
-
-  <div class="section">
-    <b>${customer}</b><br>
-    ${address}
-  </div>
-
-  <div class="section">
-    <b>PACKAGE</b><br>
-    ${packageType.toUpperCase()}
-  </div>
-`
-
-    // ✅ SAFE UPSSELL (NO TEMPLATE BREAKING)
-    if(packageType === "standard"){
-      html += `
-      <div class="upsell">
-        <b>Upgrade to Premium</b><br>
-        Includes aeration, compost, and soil conditioning for stronger, longer-lasting growth.
-      </div>
-      `
+    /* HEADER */
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     }
 
-    // ✅ CONTINUE HTML
-    html += `
-  <div class="section">
-    Total Sqft: ${r.totalSqft.toFixed(0)}<br>
-    Houses: ${r.houses}
-  </div>
+    .brand h1{
+      margin:0;
+      font-size:26px;
+    }
 
-  <div class="section">
-    Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
-    Labor Cost: $${r.laborCost.toFixed(2)}
-  </div>
+    .tagline{
+      font-size:13px;
+      color:#666;
+      margin-top:3px;
+    }
 
-  <div class="total">
-    TOTAL: $${r.price.toFixed(2)}
-  </div>
+    .logo{
+      width:60px;
+    }
 
-  <div style="margin-top:40px;">
-    <button onclick="window.print()" style="
+    .gold-line{
+      height:2px;
+      background:linear-gradient(90deg, transparent, #d4af37, transparent);
+      margin:15px 0 25px 0;
+    }
+
+    /* SECTIONS */
+    .section{
+      margin-top:20px;
+    }
+
+    .section-title{
+      font-weight:bold;
+      margin-bottom:6px;
+      letter-spacing:0.5px;
+    }
+
+    .line{
+      display:flex;
+      justify-content:space-between;
+      margin:4px 0;
+    }
+
+    /* HIGHLIGHT BOX */
+    .highlight{
+      margin-top:25px;
+      padding:20px;
+      border:2px solid #d4af37;
+      border-radius:10px;
+      background:#fffdf6;
+    }
+
+    /* TOTAL */
+    .total{
+      margin-top:15px;
+      font-size:28px;
+      font-weight:bold;
+      text-align:right;
+    }
+
+    /* CTA */
+    .cta{
+      margin-top:40px;
+      text-align:center;
+    }
+
+    .cta button{
       width:100%;
       padding:16px;
       font-size:18px;
@@ -996,9 +955,93 @@ function sendProposal(){
       color:white;
       border:none;
       border-radius:8px;
-    ">
-      Save / Print Proposal
-    </button>
+    }
+
+    .signature{
+      margin-top:50px;
+      border-top:1px solid #000;
+      width:250px;
+      padding-top:5px;
+      font-size:12px;
+      color:#444;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <h1>SoDa Outdoor Designs</h1>
+      <div class="tagline">We build lawns from the soil up</div>
+    </div>
+
+    <img src="/logo.PNG" class="logo">
+  </div>
+
+  <div class="gold-line"></div>
+
+  <!-- CLIENT -->
+  <div class="section">
+    <div class="section-title">CLIENT</div>
+    <div><b>${customer}</b></div>
+    <div>${address}</div>
+  </div>
+
+  <!-- PACKAGE -->
+  <div class="section">
+    <div class="section-title">PACKAGE</div>
+    <div>${packageType.toUpperCase()}</div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="section">
+    <div class="section-title">PROJECT DETAILS</div>
+
+    <div class="line">
+      <span>Total Sqft</span>
+      <span>${r.totalSqft.toFixed(0)}</span>
+    </div>
+
+    <div class="line">
+      <span>Houses</span>
+      <span>${r.houses}</span>
+    </div>
+
+    <div class="line">
+      <span>Price / Sqft</span>
+      <span>$${pricePerSqft.toFixed(2)}</span>
+    </div>
+
+    <div class="line">
+      <span>Labor</span>
+      <span>$${r.laborCost.toFixed(2)}</span>
+    </div>
+  </div>
+
+  <!-- TOTAL BOX -->
+  <div class="highlight">
+
+    <div style="font-weight:bold;margin-bottom:10px;">
+      TOTAL INVESTMENT
+    </div>
+
+    <div class="total">
+      $${r.price.toFixed(2)}
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <button onclick="window.print()">Approve & Save Proposal</button>
+  </div>
+
+  <!-- SIGNATURE -->
+  <div class="signature">
+    Client Signature
   </div>
 
 </body>
