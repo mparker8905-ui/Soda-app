@@ -578,7 +578,6 @@ function openClientView(){
   }
 
   let a = r.addonCosts || {}
-
   let addonList = ""
 
   function addItem(label, name, cost, rate){
@@ -613,18 +612,53 @@ function openClientView(){
 
   let win = window.open("", "_blank")
 
-if(!win){
-  alert("Popup blocked. Please allow popups.")
-  return
-}
+  if(!win){
+    alert("Popup blocked. Please allow popups.")
+    return
+  }
 
-win.document.write(`
+  win.document.write(`
 <html>
 <head>
 <title>Quote</title>
 
 <style>
-/* your styles unchanged */
+body{
+  margin:0;
+  background:#000;
+  color:gold;
+  font-family:Arial;
+}
+
+.container{
+  width:100%;
+  min-height:100vh;
+  padding:40px 25px;
+  box-sizing:border-box;
+}
+
+.section{
+  margin-top:20px;
+  border-top:1px solid rgba(255,215,0,0.25);
+  padding-top:10px;
+}
+
+.line{
+  display:flex;
+  justify-content:space-between;
+}
+
+.total{
+  margin-top:25px;
+  border-top:2px solid gold;
+  padding-top:15px;
+}
+
+.total-price{
+  font-size:42px;
+  font-weight:bold;
+  text-align:right;
+}
 </style>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -650,7 +684,7 @@ win.document.write(`
 
 <div class="section">
   <div><b>ADD-ONS</b></div>
-  ${addonList ? addonList : "<div>None</div>"}
+  ${addonList || "<div>None</div>"}
 </div>
 
 <div class="section">
@@ -668,7 +702,7 @@ win.document.write(`
   </div>
 
   <div class="total">
-    <div class="total-label">TOTAL INVESTMENT</div>
+    <div>TOTAL INVESTMENT</div>
     <div class="total-price">$${r.price.toFixed(2)}</div>
   </div>
 
@@ -695,8 +729,7 @@ function downloadPDF(){
 </html>
 `)
 
-win.document.close()
-
+  win.document.close()
 }
 
 // ==============================
