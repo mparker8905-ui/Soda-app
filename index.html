@@ -748,8 +748,7 @@ button:active{
 
 win.document.close()
 
-// wait for window to fully load
-win.onload = function(){
+setTimeout(function(){
 
   win.sendProposal = function(){
 
@@ -766,7 +765,7 @@ win.onload = function(){
 
   }
 
-}
+}, 300)
 
 // ==============================
 // PREMIUM PACKAGE AUTO-SELECT
