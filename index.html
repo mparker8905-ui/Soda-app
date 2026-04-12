@@ -306,6 +306,18 @@ const COSTS = {
   humic: 25,
   grow: 50
 }
+
+const MATERIAL_USAGE = {
+  seed: 5,        // lbs per 1000 sqft
+  fertilizer: 4,
+  mulch: 50,
+  tack: 3,
+  compost: 0.5,
+  biohum: 2,
+  lime: 10,
+  sulfur: 5
+}
+
 //==============================
 //HELPERS
 //==============================
@@ -540,7 +552,9 @@ function render(){
 
     let r = calculateJob()
     let inv = getInventoryCost()
-
+    let needs = calculateMaterialNeeds(r.totalSqft)
+    let inventoryTotals = getInventoryTotals()
+    let comparison = compareInventory(needs, inventoryTotals)
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
 
@@ -648,6 +662,23 @@ function render(){
 "Premium: $" + inv.premium.toFixed(2) + "<br>" +
 "Add-Ons: $" + inv.addons.toFixed(2) + "<br>" +
 "Total Materials: $" + inv.total.toFixed(2) + "<br><br>" +
+
+"<b>MATERIAL REQUIREMENTS</b><br>" +
+Object.keys(comparison).map(k => {
+  let item = comparison[k]
+
+  let color = item.status === "short" ? "red" : "lime"
+
+  return `
+    ${k.toUpperCase()}: 
+    Need ${item.required.toFixed(1)} | 
+    Have ${item.available.toFixed(1)} | 
+    <span style="color:${color}">
+      ${item.status === "short" ? "BUY " + item.shortage.toFixed(1) : "OK"}
+    </span>
+    <br>
+  `
+}).join("") + "<br>"
 
       addonHTML +
       savingsHTML +
@@ -1324,6 +1355,77 @@ function loadInventory(){
   loadSection("standardMaterials", inventory.standard || [])
   loadSection("premiumMaterials", inventory.premium || [])
   loadSection("addonMaterials", inventory.addons || [])
+}
+
+//=========================
+//=== MATERIAL NEEDS
+//=========================
+
+function calculateMaterialNeeds(totalSqft){
+
+  let factor = totalSqft / 1000
+
+  return {
+    seed: MATERIAL_USAGE.seed * factor,
+    fertilizer: MATERIAL_USAGE.fertilizer * factor,
+    mulch: MATERIAL_USAGE.mulch * factor,
+    tack: MATERIAL_USAGE.tack * factor,
+    compost: MATERIAL_USAGE.compost * factor,
+    biohum: MATERIAL_USAGE.biohum * factor,
+    lime: MATERIAL_USAGE.lime * factor,
+    sulfur: MATERIAL_USAGE.sulfur * factor
+  }
+}
+
+//===================
+//==INVENTORY TOTAL
+//===================
+
+function getInventoryTotals(){
+
+  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+
+  let totals = {}
+
+  function process(section){
+    (section || []).forEach(item => {
+      let name = item.name.toLowerCase()
+      let qty = Number(item.qty) || 0
+
+      totals[name] = (totals[name] || 0) + qty
+    })
+  }
+
+  process(saved.standard)
+  process(saved.premium)
+  process(saved.addons)
+
+  return totals
+}
+
+//===================
+//==COMPARE INVENTORY
+//===================
+
+function compareInventory(needs, inventory){
+
+  let results = {}
+
+  for(let key in needs){
+
+    let required = needs[key]
+    let available = inventory[key] || 0
+    let shortage = required - available
+
+    results[key] = {
+      required,
+      available,
+      shortage: shortage > 0 ? shortage : 0,
+      status: shortage > 0 ? "short" : "ok"
+    }
+  }
+
+  return results
 }
 
 document.getElementById("houses").addEventListener("input", function(e){
