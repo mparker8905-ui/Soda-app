@@ -623,18 +623,18 @@ function addItem(label, cost, included){
   }
 }
 
-  addItem("Aeration", a.aeration, isIncluded("aeration"))
-  addItem("Compost", a.compost, isIncluded("compost"))
-  addItem("Bio/Hum Blend", a.biohum, isIncluded("biohum"))
+addItem("Aeration", a.aeration, isIncluded("aeration"), 0.04)
+addItem("Compost", a.compost, isIncluded("compost"), 0.10)
+addItem("Bio/Hum Blend", a.biohum, isIncluded("biohum"), 0.12)
+
+addItem("Lime", a.lime, isIncluded("lime"), 0.004)
+addItem("Sulfur", a.sulfur, isIncluded("sulfur"), 0.008)
 
   if((a.biochar || 0) > 0) addonList += "<div>Biochar 100%</div>"
   if((a.humic || 0) > 0) addonList += "<div>Humic Acid 100%</div>"
   if((a.grow || 0) > 0) addonList += "<div>Grow System</div>"
 
-  addItem("Lime", a.lime, isIncluded("lime"))
-  addItem("Sulfur", a.sulfur, isIncluded("sulfur"))
-
-  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+  Olet pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
   let housesHTML = r.houses > 1
     ? "<div>Houses: " + r.houses + "</div>"
