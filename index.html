@@ -772,70 +772,73 @@ function sendProposal(){
     return
   }
 
-  win.document.write(`
-    <html>
-    <head>
-      <title>Proposal</title>
+  let html = `
+  <html>
+  <head>
+    <title>Proposal</title>
+    <style>
+      body{
+        font-family: Arial;
+        padding: 30px;
+        background: #fff;
+        color: #000;
+      }
+      h1{margin-bottom:10px}
+      .section{margin-top:20px}
+      .total{
+        margin-top:30px;
+        border-top:2px solid #000;
+        padding-top:10px;
+        font-size:24px;
+        font-weight:bold;
+      }
+    </style>
+  </head>
 
-      <style>
-        body{
-          font-family: Arial;
-          padding: 30px;
-          background: #fff;
-          color: #000;
-        }
-        h1{margin-bottom:10px}
-        .section{margin-top:20px}
-        .total{
-          margin-top:30px;
-          border-top:2px solid #000;
-          padding-top:10px;
-          font-size:24px;
-          font-weight:bold;
-        }
-      </style>
-    </head>
+  <body>
 
-    <body>
+    <h1>SoDa Outdoor Designs</h1>
+    <div>"We build lawns from the soil up"</div>
 
-      <h1>SoDa Outdoor Designs</h1>
-      <div>"We build lawns from the soil up"</div>
+    <div class="section">
+      <b>${customer}</b><br>
+      ${address}
+    </div>
 
-      <div class="section">
-        <b>${customer}</b><br>
-        ${address}
-      </div>
+    <div class="section">
+      <b>PACKAGE</b><br>
+      ${packageType.toUpperCase()}
+    </div>
 
-      <div class="section">
-        <b>PACKAGE</b><br>
-        ${packageType.toUpperCase()}
-      </div>
+    <div class="section">
+      Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+      Houses: ${r.houses}
+    </div>
 
-      <div class="section">
-        Total Sqft: ${r.totalSqft.toFixed(0)}<br>
-        Houses: ${r.houses}
-      </div>
+    <div class="section">
+      Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
+      Labor Cost: $${r.laborCost.toFixed(2)}
+    </div>
 
-      <div class="section">
-        Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
-        Labor Cost: $${r.laborCost.toFixed(2)}
-      </div>
+    <div class="total">
+      TOTAL: $${r.price.toFixed(2)}
+    </div>
 
-      <div class="total">
-        TOTAL: $${r.price.toFixed(2)}
-      </div>
+  </body>
+  </html>
+  `
 
-      <script>
-        setTimeout(function(){
-          window.print()
-        }, 500)
-      <\/script>
-
-    </body>
-    </html>
-  `)
-
+  win.document.open()
+  win.document.write(html)
   win.document.close()
+
+  // ✅ CRITICAL FIX — WAIT FOR LOAD
+  win.onload = function(){
+    setTimeout(function(){
+      win.focus()
+      win.print()
+    }, 500)
+  }
 }
 
 // ==============================
