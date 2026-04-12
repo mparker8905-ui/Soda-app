@@ -713,15 +713,17 @@ body{
 <button onclick="downloadPDF()">Download PDF</button>
 
 <script>
-function downloadPDF(){
-  var element = document.getElementById('clientQuote');
+window.onload = function(){
+  window.downloadPDF = function(){
+    var element = document.getElementById('clientQuote');
 
-  html2pdf().set({
-    margin:0.3,
-    filename:'SoDa_Quote.pdf',
-    html2canvas:{ scale:3 },
-    jsPDF:{ unit:'in', format:'letter' }
-  }).from(element).save();
+    html2pdf().set({
+      margin:0.3,
+      filename:'SoDa_Quote.pdf',
+      html2canvas:{ scale:3 },
+      jsPDF:{ unit:'in', format:'letter' }
+    }).from(element).save();
+  }
 }
 </script>
 
