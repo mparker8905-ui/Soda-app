@@ -613,10 +613,10 @@ function openClientView(){
 
   let win = window.open("", "_blank")
 
-customer = customer || "Client"
-address = address || ""
-addonList = addonList || ""
-housesHTML = housesHTML || ""
+if(!win){
+  alert("Popup blocked. Please allow popups.")
+  return
+}
 
 win.document.write(`
 <html>
@@ -694,6 +694,8 @@ function downloadPDF(){
 </body>
 </html>
 `)
+
+win.document.close()
 
 }
 
