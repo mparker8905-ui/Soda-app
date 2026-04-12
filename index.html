@@ -869,14 +869,14 @@ let html = `
   <title>Proposal</title>
 
   <style>
-    body{
-      font-family: -apple-system, BlinkMacSystemFont, Arial;
-      padding:40px 25px;
-      background:#fff;
-      color:#000;
-      max-width:700px;
-      margin:auto;
-    }
+ body{
+  font-family: -apple-system, BlinkMacSystemFont, Arial;
+  padding:40px 25px;
+  background:#000;
+  color:#d4af37;
+  max-width:700px;
+  margin:auto;
+}
 
     /* HEADER */
     .header{
@@ -884,7 +884,9 @@ let html = `
       justify-content:space-between;
       align-items:center;
     }
-
+    .header{
+    padding-bottom:5px;
+    }
     .brand h1{
       margin:0;
       font-size:26px;
@@ -892,17 +894,17 @@ let html = `
 
     .tagline{
       font-size:13px;
-      color:#666;
+      color:#aaa;
       margin-top:3px;
     }
 
     .logo{
-      width:60px;
+      width:65px;
     }
 
     .gold-line{
       height:2px;
-      background:linear-gradient(90deg, transparent, #d4af37, transparent);
+      background:linear-gradient(90deg, transparent,     #d4af37, transparent);
       margin:15px 0 25px 0;
     }
 
@@ -925,12 +927,10 @@ let html = `
 
     /* HIGHLIGHT BOX */
     .highlight{
-      margin-top:25px;
-      padding:20px;
-      border:2px solid #d4af37;
-      border-radius:10px;
-      background:#fffdf6;
-    }
+  background:#111;
+  border:2px solid #d4af37;
+  box-shadow:0 0 12px rgba(212,175,55,0.25);
+}
 
     /* TOTAL */
     .total{
@@ -941,10 +941,11 @@ let html = `
     }
 
     /* CTA */
-    .cta{
-      margin-top:40px;
-      text-align:center;
-    }
+    .cta button{
+  background:#d4af37;
+  color:#000;
+  box-shadow:0 0 10px rgba(212,175,55,0.4);
+}
 
     .cta button{
       width:100%;
@@ -958,13 +959,9 @@ let html = `
     }
 
     .signature{
-      margin-top:50px;
-      border-top:1px solid #000;
-      width:250px;
-      padding-top:5px;
-      font-size:12px;
-      color:#444;
-    }
+  border-top:1px solid #d4af37;
+  color:#aaa;
+}
 
   </style>
 </head>
