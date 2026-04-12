@@ -751,49 +751,35 @@ win.document.close()
 
 win.sendProposal = function(){
 
-  let source = win.document.getElementById('clientQuote')
+  try{
 
-  if(!source){
-    alert("Quote not found")
-    return
+    let element = win.document.getElementById('clientQuote')
+
+    if(!element){
+      alert("Quote not found")
+      return
+    }
+
+    let name = win.document.querySelector(".section div")?.innerText || "Client"
+
+    // small delay for Safari render
+    setTimeout(function(){
+
+      html2pdf().set({
+        margin:0.3,
+        filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
+        html2canvas:{
+          scale:2
+        },
+        jsPDF:{ unit:'in', format:'letter' }
+      }).from(element).save()
+
+    }, 200)
+
+  } catch(e){
+    alert("PDF error")
+    console.log(e)
   }
-
-  // ✅ clone into MAIN window
-  let clone = source.cloneNode(true)
-
-  clone.style.background = "#fff"
-  clone.style.color = "#000"
-  clone.style.padding = "20px"
-
-  // remove button if it exists
-  let btn = clone.querySelector(".pdf-wrap")
-  if(btn) btn.remove()
-
-  // attach temporarily to main page
-  let temp = document.createElement("div")
-  temp.style.position = "fixed"
-  temp.style.left = "-9999px"
-  temp.appendChild(clone)
-  document.body.appendChild(temp)
-
-  let name = win.document.querySelector(".section div")?.innerText || "Client"
-
-  setTimeout(() => {
-
-    html2pdf().set({
-      margin:0.3,
-      filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
-      html2canvas:{
-        scale:2,
-        backgroundColor:"#ffffff"
-      },
-      jsPDF:{ unit:'in', format:'letter' }
-    }).from(clone).save()
-
-    // cleanup
-    document.body.removeChild(temp)
-
-  }, 300)
 
 }
 
