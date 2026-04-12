@@ -56,14 +56,28 @@ input,select,button{
   color: gold;
 }
 
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.logo{
+  width:60px;
+  height:auto;
+}
+
 </style>
 
 </head>
 
 <body>
 
-<div class="card">
-<h2>SoDa Outdoor Designs</h2>
+<div class="header">
+  <h1>SoDa Outdoor Designs</h1>
+  <img src="/logo.PNG" class="logo">
+</div>
 
 <!-- NEW: CUSTOMER -->
 <input id="customer" placeholder="Customer Name">
@@ -129,10 +143,6 @@ input,select,button{
 <button onclick="openClientView()">Client View</button>
 
 <button onclick="sendProposal()">Send Proposal</button>
-
-<div style="text-align:center;margin-bottom:20px;">
-  <img src="/logo.PNG" style="max-width:180px;">
-</div>
 
 <script>
 
