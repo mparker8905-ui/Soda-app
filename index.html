@@ -820,13 +820,28 @@ function sendProposal(){
       Labor Cost: $${r.laborCost.toFixed(2)}
     </div>
 
-    <div class="total">
-      TOTAL: $${r.price.toFixed(2)}
-    </div>
+  <div class="total">
+  TOTAL: $${r.price.toFixed(2)}
+</div>
 
-  </body>
-  </html>
-  `
+<div style="margin-top:40px;">
+  <button onclick="window.print()" style="
+    width:100%;
+    padding:16px;
+    font-size:18px;
+    font-weight:bold;
+    background:black;
+    color:white;
+    border:none;
+    border-radius:8px;
+  ">
+    Save / Print Proposal
+  </button>
+</div>
+
+</body>
+</html>
+`
 
   win.document.open()
   win.document.write(html)
