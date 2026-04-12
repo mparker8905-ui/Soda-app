@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{background:#000;color:#fff;font-family:sans-serif;padding:10px}
+
+body{
+  background:#000;
+  color:#fff;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 .card{background:#111;padding:15px;border-radius:12px;margin-bottom:20px}
 
 input,select,button{
@@ -56,16 +62,44 @@ input,select,button{
   color: gold;
 }
 
+/* ===== HEADER ===== */
+
 .header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:10px;
+  padding:10px 5px;
 }
 
+.brand h1{
+  margin:0;
+  font-size:22px;
+  letter-spacing:0.5px;
+}
+
+.tagline{
+  font-size:12px;
+  color:#aaa;
+  margin-top:2px;
+}
+
+/* LOGO */
 .logo{
-  width:60px;
+  width:55px;
   height:auto;
+  filter: drop-shadow(0 0 6px rgba(212,175,55,0.4));
+}
+
+/* GOLD DIVIDER */
+.gold-line{
+  height:2px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    #d4af37,
+    transparent
+  );
+  margin:10px 0 20px 0;
 }
 
 </style>
@@ -75,9 +109,15 @@ input,select,button{
 <body>
 
 <div class="header">
-  <h1>SoDa Outdoor Designs</h1>
+  <div class="brand">
+    <h1>SoDa Outdoor Designs</h1>
+    <div class="tagline">We build lawns from the soil up</div>
+  </div>
+
   <img src="/logo.PNG" class="logo">
 </div>
+
+<div class="gold-line"></div>
 
 <!-- NEW: CUSTOMER -->
 <input id="customer" placeholder="Customer Name">
