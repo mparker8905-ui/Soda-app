@@ -58,6 +58,8 @@ input,select,button{
 
 </style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 </head>
 
 <body>
@@ -622,8 +624,6 @@ function openClientView(){
 <head>
 <title>Quote</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <style>
 body{
   margin:0;
@@ -738,7 +738,10 @@ button:active{
 </div>
 
 <div class="pdf-wrap">
- <button onclick="sendProposal()">Send Proposal</button>
+ //<button onclick="sendProposal()">Send Proposal</button> //
+
+<button onclick="alert('clicked')">Send Proposal</button>
+
 </div>
 
 </body>
