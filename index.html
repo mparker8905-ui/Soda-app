@@ -751,23 +751,26 @@ win.document.close()
 
 setTimeout(function(){
 
- win.sendProposal = function(){
+  win.sendProposal = function(){
 
-  let content = win.document.getElementById('clientQuote').outerHTML
+    let content = win.document.getElementById('clientQuote').outerHTML
 
-  let wrapper = document.createElement("div")
-  wrapper.innerHTML = content
+    let wrapper = document.createElement("div")
+    wrapper.innerHTML = content
 
-  let name = win.document.querySelector(".section div")?.innerText || "Client"
+    let name = win.document.querySelector(".section div")?.innerText || "Client"
 
-  html2pdf().set({
-    margin:0.3,
-    filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
-    html2canvas:{ scale:3 },
-    jsPDF:{ unit:'in', format:'letter' }
-  }).from(wrapper).save()
+    html2pdf().set({
+      margin:0.3,
+      filename: name.replace(/\s+/g, "_") + "_Proposal.pdf",
+      html2canvas:{ scale:3 },
+      jsPDF:{ unit:'in', format:'letter' }
+    }).from(wrapper).save()
 
-}
+  }
+
+}, 500)
+
 }
 
 // ==============================
