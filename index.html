@@ -388,10 +388,13 @@ function calculateJob(){
   if(packageType === "standard") baseRate = 0.18
   if(packageType === "premium") baseRate = 0.30
 
-  let baseCost = totalSqft * baseRate
-  if(baseCost < 500) baseCost = 500
+ let inventory = getInventoryCost()
 
-  let materialCost = baseCost
+let baseCost = totalSqft * baseRate
+if(baseCost < 500) baseCost = 500
+
+// 🔥 NEW LOGIC
+let materialCost = baseCost + inventory.total
   let addonCosts = {
   aeration: 0,
   compost: 0,
@@ -534,6 +537,7 @@ function render(){
   try{
 
     let r = calculateJob()
+    let inv = getInventoryCost()
 
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
@@ -637,6 +641,11 @@ function render(){
       "<b>PROJECT SUMMARY</b><br>" +
       "Total Sqft: " + r.totalSqft.toFixed(0) + "<br>" +
       "Houses: " + r.houses + "<br><br>" +
+      
+       "<b>INVENTORY COST</b><br>" +    "Standard: $" + inv.standard.toFixed(2) + "<br>" +
+"Premium: $" + inv.premium.toFixed(2) + "<br>" +
+"Add-Ons: $" + inv.addons.toFixed(2) + "<br>" +
+"Total Materials: $" + inv.total.toFixed(2) + "<br><br>" +
 
       addonHTML +
       savingsHTML +
@@ -1169,10 +1178,14 @@ function handlePackage(){
 
   }
 }
+
 //===============================
 //===INVENTORY
 //===============================
 
+//=================
+// ADD MATERIAL ROW
+//=================
 function addMaterialRow(type){
 
   let container
@@ -1199,6 +1212,43 @@ function addMaterialRow(type){
   `
 
   container.appendChild(row)
+}
+
+//==================
+// GET INVENTORY COST
+//==================
+
+function getInventoryCost(){
+
+  function sumSection(id){
+    let container = document.getElementById(id)
+    if(!container) return 0
+
+    let rows = container.querySelectorAll(".material-row")
+    let total = 0
+
+    rows.forEach(row => {
+      let inputs = row.querySelectorAll("input")
+
+      let cost = Number(inputs[1]?.value) || 0
+      let qty = Number(inputs[2]?.value) || 0
+
+      total += cost * qty
+    })
+
+    return total
+  }
+
+  let standard = sumSection("standardMaterials")
+  let premium = sumSection("premiumMaterials")
+  let addons = sumSection("addonMaterials")
+
+  return {
+    standard,
+    premium,
+    addons,
+    total: standard + premium + addons
+  }
 }
 
 document.getElementById("houses").addEventListener("input", function(e){
