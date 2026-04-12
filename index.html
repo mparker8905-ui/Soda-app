@@ -2,8 +2,6 @@
 <html>
 <head>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -729,11 +727,16 @@ button{
 }
 
     </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   </head>
 
   <body>
 
-    <div class="container">
+   <div id="clientQuote" class="container">
+
+  
 
       <h1>SoDa Outdoor Designs</h1>
       <div>"We build lawns from the soil up"</div>
@@ -773,6 +776,21 @@ button{
 </div>
 
     </div>
+
+ <button onclick="downloadPDF()">Download PDF</button>
+
+<script>
+function downloadPDF(){
+  var element = document.getElementById('clientQuote');
+
+  html2pdf().set({
+    margin:0.3,
+    filename:'SoDa_Quote.pdf',
+    html2canvas:{ scale:3 },
+    jsPDF:{ unit:'in', format:'letter' }
+  }).from(element).save();
+}
+</script>
 
   </body>
   </html>
