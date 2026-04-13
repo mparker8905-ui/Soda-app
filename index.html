@@ -2044,8 +2044,6 @@ function exportInventory(){
 
 function generateInventoryPDF(){
 
- alert("PDF clicked")
-
   try {
 
     let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
@@ -2137,19 +2135,35 @@ window.fixLowMargin = function(){
 }
 
 window.fixLowPrice = function(){
-  let mode = document.getElementById("pricingMode")
 
-  if(mode.value === "win"){
-    mode.value = "balanced"
-  } else {
-    mode.value = "max"
-  }
+alert("clicked")
+
+  let marginInput = document.getElementById("targetMargin")
+  let pricingMode = document.getElementById("pricingMode")
+
+  // Always force a noticeable improvement
+  marginInput.value = 35
+  pricingMode.value = "max"
 
   render()
 }
 
 window.fixInventory = function(type, amount){
-  alert(`Add ${amount.toFixed(1)} more ${type}`)
+
+  let section = document.getElementById("standardMaterials")
+
+  addMaterialRow("standard")
+
+  let lastRow = section.lastElementChild
+  let inputs = lastRow.querySelectorAll("input")
+  let select = lastRow.querySelector("select")
+
+  select.value = type
+  inputs[2].value = amount.toFixed(1)
+
+  updateUnitLabel(select)
+
+  alert(`${type.toUpperCase()} added to inventory`)
 }
 
 </script>
