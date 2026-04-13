@@ -2122,7 +2122,7 @@ function generateInventoryPDF(){
 //== FIX LOW MARGIN
 //=================
 
-function fixLowMargin(){
+window.fixLowMargin = function(){
   let input = document.getElementById("targetMargin")
 
   let current = Number(input.value) || 30
@@ -2136,7 +2136,7 @@ function fixLowMargin(){
   render()
 }
 
-function fixLowPrice(){
+window.fixLowPrice = function(){
   let mode = document.getElementById("pricingMode")
 
   if(mode.value === "win"){
@@ -2148,11 +2148,8 @@ function fixLowPrice(){
   render()
 }
 
-function fixInventory(type, amount){
-
-  alert(`Add ${amount.toFixed(1)} more ${type} to inventory`)
-
-  // optional future: auto-add to inventory
+window.fixInventory = function(type, amount){
+  alert(`Add ${amount.toFixed(1)} more ${type}`)
 }
 
 </script>
