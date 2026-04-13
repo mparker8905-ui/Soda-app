@@ -1982,7 +1982,7 @@ function generateAlerts(r, comparison){
 
     let item = comparison[k]
 
-    if(item.status === "short"){
+    if(item.shortage > 0.5){
 
       alerts.danger.push({
         text: `${k.toUpperCase()} short by ${item.shortage.toFixed(1)}`,
@@ -2201,55 +2201,27 @@ window.fixInventory = function(type, amount){
 
 window.fixAllIssues = function(){
 
-  // 1. Fix pricing / margin
-  let marginInput = document.getElementById("targetMargin")
-  let pricingMode = document.getElementById("pricingMode")
+  // Fix pricing
+  fixLowMargin()
+  fixLowPrice()
 
-  marginInput.value = 35
-  pricingMode.value = "max"
-
-  // 2. Get current job + needs
+  // Fix inventory shortages
   let r = calculateJob()
   let needs = getMaterialNeeds(r)
   let inventory = getInventoryTotals()
 
-  // 3. Auto-add missing inventory
   Object.keys(needs).forEach(type => {
+    let shortage = (needs[type] || 0) - (inventory[type] || 0)
 
-    let required = needs[type] || 0
-    let available = inventory[type] || 0
-
-    if(required > available){
-
-      let shortage = required - available
-
-      // add to standard section
-    let existing = document.querySelector(`.mat-select[value="${type}"]`)
-
-if(!existing){
-  addMaterialRow("standard")
-}
-
-      let container = document.getElementById("standardMaterials")
-      let row = container.lastElementChild
-
-      let select = row.querySelector("select")
-      let inputs = row.querySelectorAll("input")
-
-      select.value = type
-
-      // leave name blank or auto label
-      inputs[0].value = MATERIAL_LABELS[type] || type
-
-      inputs[2].value = shortage.toFixed(1)
-
-      updateUnitLabel(select)
+    if(shortage > 0){
+      fixInventory(type, shortage)
     }
   })
 
-  alert("All issues fixed 🚀")
-
-  render()
+  // 🔥 CRITICAL: force fresh render AFTER everything
+  setTimeout(() => {
+    render()
+  }, 50)
 }
 
 //========================
