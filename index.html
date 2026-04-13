@@ -131,8 +131,15 @@ input,select,button{
 
 .material-row{
   display:flex;
-  gap:6px;
-  margin-bottom:8px;
+  flex-direction:column; /* KEY FIX */
+  gap:8px;
+
+  background:#111;
+  border:1px solid #2a2a2a;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:10px;
+  box-shadow:0 0 8px rgba(212,175,55,0.15);
 }
 
 .material-row input{
@@ -150,24 +157,15 @@ input,select,button{
   box-shadow:0 0 8px rgba(212,175,55,0.15);
 }
 
-.mat-select{
-  width:100%;
-  margin-bottom:8px;
-  padding:10px;
-  border-radius:6px;
-  background:#222;
-  color:#fff;
-  border:1px solid #333;
-}
-
+.mat-select,
 .mat-input{
   width:100%;
-  margin-bottom:6px;
-  padding:10px;
-  border-radius:6px;
+  padding:12px;
+  border-radius:8px;
   background:#222;
   color:#fff;
   border:1px solid #333;
+  font-size:14px;
 }
 
 </style>
@@ -1365,9 +1363,9 @@ row.innerHTML = `
     <option value="sprinklers">Sprinklers</option>
   </select>
 
-  <input class="mat-input" placeholder="Material Name">
-  <input class="mat-input" type="number" placeholder="Cost ($)">
-  <input class="mat-input" type="number" placeholder="Quantity">
+  <input class="mat-input" placeholder="Material Name (optional)">
+  <input class="mat-input" type="number" placeholder="Cost per unit ($)">
+  <input class="mat-input" type="number" placeholder="Quantity available">
 `
 
   container.appendChild(row)
