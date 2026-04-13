@@ -1819,6 +1819,8 @@ let labelMap = {
 
 function generateInventoryPDF(){
 
+ alert("PDF clicked")
+
   try {
 
     let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
@@ -1847,7 +1849,7 @@ function generateInventoryPDF(){
     process("Premium", saved.premium)
     process("Add-On", saved.addons)
 
-    let win = window.open("", "_blank")
+    let win = window.open()
 
     if(!win){
       alert("Popup blocked")
