@@ -331,6 +331,8 @@ input,select,button{
 
 <input id="targetMargin" type="number" placeholder="Target Profit Margin (%)">
 
+<input id="targetProfit" type="number" placeholder="Target Profit ($)">
+
 <div class="card">
 <h2>Add Ons</h2>
 
@@ -350,6 +352,12 @@ input,select,button{
 <div class="card">
   <h2>Labor & Overhead</h2>
 
+  <input id="hourlyRate" type="number" placeholder="Hourly Rate ($)">
+  <input id="hoursPerHouse" type="number" placeholder="Hours per House">
+  <input id="crewSize" type="number" placeholder="Crew Size">
+  <input id="overhead" type="number" placeholder="Overhead (%)">
+</div>
+
 <button onclick="fixAllIssues()" style="
   background:#d4af37;
   color:#000;
@@ -368,11 +376,14 @@ input,select,button{
   💰 Optimize for Profit
 </button>
 
-  <input id="hourlyRate" type="number" placeholder="Hourly Rate ($)">
-  <input id="hoursPerHouse" type="number" placeholder="Hours per House">
-  <input id="crewSize" type="number" placeholder="Crew Size">
-  <input id="overhead" type="number" placeholder="Overhead (%)">
-</div>
+<button onclick="optimizeForTargetProfit()" style="
+  background:#00e5ff;
+  color:#000;
+  font-weight:bold;
+  margin-bottom:10px;
+">
+  🎯 Hit Target Profit
+</button>
 
 <div class="card results-card">
   <h2>Job Breakdown</h2>
@@ -2288,6 +2299,48 @@ window.optimizeForProfit = function(){
   alert("Optimized for maximum profit 💰")
 
   render()
+}
+
+//================================
+//==== TARGET PROFIT
+//================================
+
+window.optimizeForTargetProfit = function(){
+
+  let targetProfit = Number(document.getElementById("targetProfit")?.value) || 0
+
+  if(targetProfit <= 0){
+    alert("Enter target profit")
+    return
+  }
+
+  let pricingMode = document.getElementById("pricingMode")
+  let marginInput = document.getElementById("targetMargin")
+
+  // start with a base margin
+  let margin = 25
+
+  let attempts = 0
+  let maxAttempts = 20
+
+  while(attempts < maxAttempts){
+
+    marginInput.value = margin
+    pricingMode.value = "max"
+
+    let r = calculateJob()
+
+    if(r.profit >= targetProfit){
+      break
+    }
+
+    margin += 2
+    attempts++
+  }
+
+  render()
+
+ alert(`Target hit at ${margin}% margin 💰`)
 }
 
 </script>
