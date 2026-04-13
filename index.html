@@ -1965,17 +1965,21 @@ ${addonsHTML}
   Generated on ${new Date().toLocaleDateString()}
 </div>
 
-<script>
-setTimeout(function(){
-  window.print()
-}, 500)
-</script>
-
 </body>
 </html>
 `)
 
   win.document.close()
+
+setTimeout(function(){
+  try{
+    win.focus()
+    win.print()
+  } catch(e){
+    console.log("Print failed", e)
+  }
+}, 500)
+
 }
 
   process("Standard", saved.standard)
