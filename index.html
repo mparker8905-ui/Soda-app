@@ -230,6 +230,42 @@ input,select,button{
   gap:10px;
 }
 
+.alert-box{
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:12px;
+  font-size:13px;
+  text-align:left;
+  border-left:4px solid;
+}
+
+.alert-danger{
+  background:#2a0000;
+  border-color:#ff4d4d;
+  color:#ff8080;
+}
+
+.alert-warning{
+  background:#2a2200;
+  border-color:#ffc107;
+  color:#ffd966;
+}
+
+.alert-success{
+  background:#002a00;
+  border-color:#00cc66;
+  color:#66ff99;
+}
+
+.alert-title{
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.alert-line{
+  margin:3px 0;
+}
+
 </style>
 
 </head>
@@ -882,15 +918,25 @@ materialHTML += "<br>"
 
 let alertsHTML = ""
 
-if(alerts.length > 0){
-  alertsHTML = "<b style='color:red;'>⚠ ALERTS</b><br>"
+function buildAlertBox(title, items, className){
 
-  alerts.forEach(a => {
-    alertsHTML += "• " + a + "<br>"
+  if(items.length === 0) return ""
+
+  let html = `<div class="alert-box ${className}">`
+  html += `<div class="alert-title">${title}</div>`
+
+  items.forEach(i => {
+    html += `<div class="alert-line">• ${i}</div>`
   })
 
-  alertsHTML += "<br>"
+  html += `</div>`
+
+  return html
 }
+
+alertsHTML += buildAlertBox("🚨 Critical Issues", alerts.danger, "alert-danger")
+alertsHTML += buildAlertBox("⚠ Warnings", alerts.warning, "alert-warning")
+alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success")
 
 document.getElementById("results").innerHTML =
   alertsHTML +
@@ -1838,32 +1884,78 @@ if(addons.humic){
 //================
 
 function generateAlerts(r, comparison){
-  let alerts = []
-  // logic here
+
+  let alerts = {
+    danger: [],
+    warning: [],
+    success: []
+  }
+
+  let margin = r.price ? (r.profit / r.price) : 0
+
+  // =========================
+  // 🚨 DANGER
+  // =========================
+
+  if(r.profit <= 0){
+    alerts.danger.push("Losing money on this job")
+  }
+
+  if(margin < 0.15){
+    alerts.danger.push("Very low margin (<15%)")
+  }
+
+  // =========================
+  // ⚠ WARNING
+  // =========================
+
+  if(margin < 0.25){
+    alerts.warning.push("Margin below target (25%)")
+  }
+
+  if(r.price < r.cost * 1.2){
+    alerts.warning.push("Price too close to cost")
+  }
+
+  for(let key in comparison){
+    let item = comparison[key]
+
+    if(item.status === "short"){
+      alerts.warning.push(`Need more ${key.toUpperCase()} (short ${item.shortage.toFixed(1)})`)
+    }
+  }
+
+  // =========================
+  // 💰 OPPORTUNITIES
+  // =========================
+
+  if(margin > 0.5){
+    alerts.success.push("High margin — you can increase price")
+  }
+
+  if(r.houses >= 10 && margin > 0.3){
+    alerts.success.push("Builder job — push pricing slightly")
+  }
+
+  if(r.totalSqft > 10000 && margin < 0.25){
+    alerts.warning.push("Large job — efficiency not optimized")
+  }
+
+  let addons = app.job.addons || {}
+
+  if(!addons.aeration){
+    alerts.success.push("Upsell: Aeration improves results")
+  }
+
+  if(!addons.biochar && r.totalSqft > 5000){
+    alerts.success.push("Upsell: Biochar for soil health")
+  }
+
+  if(!addons.grow && r.totalSqft > 3000){
+    alerts.success.push("Upsell: Grow system")
+  }
+
   return alerts
-}
-
-document.getElementById("houses").addEventListener("input", function(e){
-  app.job.houses = Number(e.target.value) || 1
-  render()
-})
-
-document.getElementById("customer").addEventListener("input", function(e){
-  app.job.customer = e.target.value
-})
-
-document.getElementById("targetMargin")?.addEventListener("input", render)
-
-document.addEventListener("input", render)
-document.addEventListener("change", render)
-
-loadInventory()
-
-// fallback if empty
-if(!localStorage.getItem("soda_inventory")){
-  addMaterialRow("standard")
-  addMaterialRow("premium")
-  addMaterialRow("addons")
 }
 
 //====================
