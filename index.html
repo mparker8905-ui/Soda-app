@@ -362,6 +362,26 @@ const MATERIAL_RATES = {
 //HELPERS
 //==============================
 
+//==================
+//== UNIT LABEL
+//==================
+
+function updateUnitLabel(selectEl){
+
+  let row = selectEl.closest(".material-row")
+  let label = row.querySelector(".unit-label")
+
+  let type = selectEl.value
+
+  let unit = MATERIAL_RATES[type]?.unit || ""
+
+  if(unit){
+    label.innerText = `Quantity Available (${unit})`
+  } else {
+    label.innerText = "Quantity Available"
+  }
+}
+
 // ==============================
 // SIZE BUTTONS
 // ==============================
@@ -1356,7 +1376,7 @@ function addMaterialRow(type){
   row.className = "material-row"
 
 row.innerHTML = `
-  <select class="mat-select">
+  <select class="mat-select" onchange="updateUnitLabel(this)">
     <option value="seed">Seed</option>
     <option value="fertilizer">Fertilizer</option>
     <option value="mulch">Mulch</option>
@@ -1375,12 +1395,14 @@ row.innerHTML = `
   <label class="mat-label">Cost per Unit ($)</label>
   <input class="mat-input" type="number">
 
-  <label class="mat-label">Quantity Available</label>
+  <label class="mat-label unit-label">Quantity Available</label>
   <input class="mat-input" type="number">
 `
 
   container.appendChild(row)
 }
+
+updateUnitLabel(row.querySelector(".mat-select"))
 
 //==================
 // GET INVENTORY COST
