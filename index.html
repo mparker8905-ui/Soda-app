@@ -350,6 +350,24 @@ input,select,button{
 <div class="card">
   <h2>Labor & Overhead</h2>
 
+<button onclick="fixAllIssues()" style="
+  background:#d4af37;
+  color:#000;
+  font-weight:bold;
+  margin-bottom:10px;
+">
+  ⚡ Fix All Issues
+</button>
+
+<button onclick="optimizeForProfit()" style="
+  background:#00c853;
+  color:#000;
+  font-weight:bold;
+  margin-bottom:10px;
+">
+  💰 Optimize for Profit
+</button>
+
   <input id="hourlyRate" type="number" placeholder="Hourly Rate ($)">
   <input id="hoursPerHouse" type="number" placeholder="Hours per House">
   <input id="crewSize" type="number" placeholder="Crew Size">
@@ -2164,6 +2182,112 @@ window.fixInventory = function(type, amount){
   updateUnitLabel(select)
 
   alert(`${type.toUpperCase()} added to inventory`)
+}
+
+//=========================
+//===FIX ALL ISSUES
+//=========================
+
+window.fixAllIssues = function(){
+
+  // 1. Fix pricing / margin
+  let marginInput = document.getElementById("targetMargin")
+  let pricingMode = document.getElementById("pricingMode")
+
+  marginInput.value = 35
+  pricingMode.value = "max"
+
+  // 2. Get current job + needs
+  let r = calculateJob()
+  let needs = getMaterialNeeds(r)
+  let inventory = getInventoryTotals()
+
+  // 3. Auto-add missing inventory
+  Object.keys(needs).forEach(type => {
+
+    let required = needs[type] || 0
+    let available = inventory[type] || 0
+
+    if(required > available){
+
+      let shortage = required - available
+
+      // add to standard section
+    let existing = document.querySelector(`.mat-select[value="${type}"]`)
+
+if(!existing){
+  addMaterialRow("standard")
+}
+
+      let container = document.getElementById("standardMaterials")
+      let row = container.lastElementChild
+
+      let select = row.querySelector("select")
+      let inputs = row.querySelectorAll("input")
+
+      select.value = type
+
+      // leave name blank or auto label
+      inputs[0].value = MATERIAL_LABELS[type] || type
+
+      inputs[2].value = shortage.toFixed(1)
+
+      updateUnitLabel(select)
+    }
+  })
+
+  alert("All issues fixed 🚀")
+
+  render()
+}
+
+//========================
+//== OPTIMIZE FOR PROFIT
+//========================
+
+window.optimizeForProfit = function(){
+
+  let r = calculateJob()
+
+  let sqft = r.totalSqft
+  let currentMargin = r.price ? (r.profit / r.price) * 100 : 0
+
+  let marginInput = document.getElementById("targetMargin")
+  let pricingMode = document.getElementById("pricingMode")
+
+  let targetMargin = 30
+
+  // 🔥 Smart scaling based on job size
+  if(sqft < 3000){
+    targetMargin = 40
+  }
+  else if(sqft < 8000){
+    targetMargin = 35
+  }
+  else if(sqft < 20000){
+    targetMargin = 30
+  }
+  else {
+    targetMargin = 25
+  }
+
+  // 🔥 Boost if profit too low
+  if(r.profit < 200){
+    targetMargin += 5
+  }
+
+  // 🔥 Don’t reduce margin if already higher
+  if(currentMargin > targetMargin){
+    targetMargin = currentMargin
+  }
+
+  // Apply
+  marginInput.value = Math.round(targetMargin)
+  pricingMode.value = "max"
+
+  alert("Optimized for maximum profit 💰")
+
+  render()
 }
 
 </script>
