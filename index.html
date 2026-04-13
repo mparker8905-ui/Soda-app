@@ -325,7 +325,7 @@ const COSTS = {
   seed: 80,
   fert: 40,
   mulch: 35,
-  tack: 25,
+  tackifier: 25,
 
   compost: 60,
   biohum: 25,
@@ -709,13 +709,7 @@ materialHTML += `
   </span>
   <br>
 `
-    <span style="color:${color}">
-      ${item.status === "short"
-        ? "BUY " + item.shortage.toFixed(1)
-        : "OK"}
-    </span>
-    <br>
-  `
+
 })
 
 materialHTML += "<br><b>MATERIAL USAGE</b><br>"
@@ -1645,13 +1639,13 @@ if(addons.sulfur){
 }
 
 if(addons.biochar){
-  needs.biochar = (needs.biochar || 0) +
-    (sqft / 1000) * MATERIAL_RATES.biochar
+ needs.biochar = (needs.biochar || 0) +
+  (sqft / 1000) * MATERIAL_RATES.biochar.rate
 }
 
 if(addons.humic){
   needs.humic = (needs.humic || 0) +
-    (sqft / 1000) * MATERIAL_RATES.humic
+  (sqft / 1000) * MATERIAL_RATES.humic.rate
 }
 
   return needs
