@@ -1814,75 +1814,50 @@ let labelMap = {
   }
 
 //=======================
-//==GENERATE INVENTORY
+//==GENERATE INVENTORY PDF
 //=======================
 
 function generateInventoryPDF(){
 
-let labelMap = {
-  timers: "Sprinkler Timers"
-}
+  try{
 
-  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+    let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
 
-  function buildSection(title, items){
+    let rows = []
 
-    let html = `<div class="section">
-      <div class="section-title">${title}</div>
-    `
+    function process(sectionName, items){
+      (items || []).forEach(item => {
 
-    if(!items || items.length === 0){
-      html += `<div>None</div></div>`
-      return html
+        let name = item.name || item.type || ""
+        let cost = Number(item.cost) || 0
+        let qty = Number(item.qty) || 0
+        let total = cost * qty
+
+        rows.push(`
+          <tr>
+            <td>${sectionName}</td>
+            <td>${item.type}</td>
+            <td>${name}</td>
+            <td>$${cost.toFixed(2)}</td>
+            <td>${qty}</td>
+            <td>$${total.toFixed(2)}</td>
+          </tr>
+        `)
+      })
     }
 
-    items.forEach(item => {
+    process("Standard", saved.standard)
+    process("Premium", saved.premium)
+    process("Add-On", saved.addons)
 
-      let type = item.type || ""
-      let name = item.name || MATERIAL_LABELS[item.type] || item.type
-      let cost = Number(item.cost) || 0
-      let qty = Number(item.qty) || 0
-      let unit = MATERIAL_RATES[type]?.unit || ""
+    let win = window.open("", "_blank")
 
-      let total = cost * qty
+    if(!win){
+      alert("Popup blocked")
+      return
+    }
 
-      html += `
-        <div class="line">
-          <span>${name} (${unit})</span>
-          <span>${qty} × $${cost.toFixed(2)} = $${total.toFixed(2)}</span>
-        </div>
-      `
-    })
-
-    html += `</div>`
-    return html
-  }
-
-  let standardHTML = buildSection("Standard Package", saved.standard)
-  let premiumHTML = buildSection("Premium Package", saved.premium)
-  let addonsHTML = buildSection("Add-On Materials", saved.addons)
-
-  // TOTAL INVENTORY VALUE
-  let totalValue = 0
-
-  function sum(items){
-    (items || []).forEach(i => {
-      totalValue += (Number(i.cost)||0) * (Number(i.qty)||0)
-    })
-  }
-
-  sum(saved.standard)
-  sum(saved.premium)
-  sum(saved.addons)
-
-  let win = window.open("", "_blank")
-
-  if(!win){
-    alert("Popup blocked")
-    return
-  }
-
-  win.document.write(`
+    win.document.write(`
 <html>
 <head>
 <title>Inventory Sheet</title>
@@ -1890,114 +1865,66 @@ let labelMap = {
 <style>
 body{
   font-family: Arial;
-  padding:40px 25px;
-  background:#000;
-  color:#d4af37;
-  max-width:700px;
-  margin:auto;
+  padding:20px;
 }
 
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+h1{
+  text-align:center;
 }
 
-.brand h1{
-  margin:0;
-  font-size:26px;
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
 }
 
-.tagline{
-  font-size:13px;
-  color:#aaa;
-  margin-top:3px;
+th, td{
+  border:1px solid #000;
+  padding:8px;
+  text-align:left;
 }
 
-.logo{
-  width:65px;
+th{
+  background:#eee;
 }
-
-.gold-line{
-  height:2px;
-  background:linear-gradient(90deg, transparent, #d4af37, transparent);
-  margin:15px 0 25px 0;
-}
-
-.section{
-  margin-top:25px;
-}
-
-.section-title{
-  font-weight:bold;
-  margin-bottom:8px;
-  font-size:16px;
-}
-
-.line{
-  display:flex;
-  justify-content:space-between;
-  margin:5px 0;
-  border-bottom:1px solid rgba(212,175,55,0.15);
-  padding-bottom:4px;
-}
-
-.total-box{
-  margin-top:30px;
-  border:2px solid #d4af37;
-  padding:15px;
-}
-
-.total{
-  font-size:28px;
-  font-weight:bold;
-  text-align:right;
-}
-
 </style>
+
 </head>
 
 <body>
 
-<div class="header">
-  <div class="brand">
-    <h1>SoDa Outdoor Designs</h1>
-    <div class="tagline">Inventory Sheet</div>
-  </div>
+<h1>Inventory Sheet</h1>
 
-  <img src="/logo.PNG" class="logo">
-</div>
+<table>
+<tr>
+  <th>Section</th>
+  <th>Type</th>
+  <th>Name</th>
+  <th>Cost</th>
+  <th>Qty</th>
+  <th>Total</th>
+</tr>
 
-<div class="gold-line"></div>
+${rows.join("")}
 
-${standardHTML}
-${premiumHTML}
-${addonsHTML}
+</table>
 
-<div class="total-box">
-  <div>Total Inventory Value</div>
-  <div class="total">$${totalValue.toFixed(2)}</div>
-</div>
-
-<div style="margin-top:30px; font-size:12px; color:#aaa;">
-  Generated on ${new Date().toLocaleDateString()}
-</div>
+<script>
+setTimeout(function(){
+  window.print()
+}, 500)
+</script>
 
 </body>
 </html>
-`)
+    `)
 
-  win.document.close()
+    win.document.close()
 
-setTimeout(function(){
-  try{
-    win.focus()
-    win.print()
   } catch(e){
-    console.log("Print failed", e)
+    console.log(e)
+    alert("PDF error")
   }
-}, 500)
-
 }
 
   process("Standard", saved.standard)
