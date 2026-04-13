@@ -108,6 +108,9 @@ input,select,button{
   border:1px solid #333;
   border-radius:10px;
   background:#0d0d0d;
+
+  display:flex;
+  flex-direction:column;
 }
 
 .inventory-header{
@@ -115,7 +118,11 @@ input,select,button{
   justify-content:space-between;
   align-items:center;
   margin-bottom:10px;
-  font-weight:bold;
+}
+
+.inventory-actions{
+  display:flex;
+  gap:8px;
 }
 
 .inventory-header button{
@@ -149,17 +156,22 @@ input,select,button{
 }
 
 .material-row{
+  width:100%;
+  box-sizing:border-box;
+
   background:#111;
   border:1px solid #2a2a2a;
   border-radius:10px;
   padding:12px;
-  margin-bottom:10px;
+  margin-bottom:12px;
+
   box-shadow:0 0 8px rgba(212,175,55,0.15);
 }
 
 .mat-select,
 .mat-input{
   width:100%;
+  box-sizing:border-box; /* 👈 ADD THIS */
   padding:12px;
   border-radius:8px;
   background:#222;
@@ -178,10 +190,12 @@ input,select,button{
   display:flex;
   gap:8px;
   align-items:center;
+  width:100%;
 }
 
 .row-top .mat-select{
   flex:1;
+  min-width:0; /* 🔥 prevents overflow */
 }
 
 .delete-btn{
@@ -199,6 +213,14 @@ input,select,button{
 
 .delete-btn:active{
   transform:scale(0.95);
+}
+
+#standardMaterials,
+#premiumMaterials,
+#addonMaterials{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 
 </style>
@@ -291,7 +313,13 @@ input,select,button{
   <!-- STANDARD -->
   <div class="inventory-section">
     <div class="inventory-header">
-      <span>Standard Package</span>
+  <span>Standard Package</span>
+
+  <div class="inventory-actions">
+    <button onclick="addMaterialRow('standard')">+</button>
+    <button onclick="removeMaterialRow('standard')">−</button>
+  </div>
+</div>
    <div style="display:flex; gap:6px;">
   <button onclick="addMaterialRow('standard')">+</button>
   <button onclick="removeMaterialRow('standard')">-</button>
@@ -301,8 +329,14 @@ input,select,button{
 
   <!-- PREMIUM -->
   <div class="inventory-section">
-    <div class="inventory-header">
-      <span>Premium Package</span>
+ <div class="inventory-header">
+  <span>Premium Package</span>
+
+  <div class="inventory-actions">
+    <button onclick="addMaterialRow('standard')">+</button>
+    <button onclick="removeMaterialRow('standard')">−</button>
+  </div>
+</div>
       <div style="display:flex; gap:6px;">
   <button onclick="addMaterialRow('premium')">+</button>
   <button onclick="removeMaterialRow('premium')">-</button>
@@ -313,7 +347,13 @@ input,select,button{
   <!-- ADD-ONS -->
   <div class="inventory-section">
     <div class="inventory-header">
-      <span>Add-On Materials</span>
+  <span>Add-On Materials</span>
+
+  <div class="inventory-actions">
+    <button onclick="addMaterialRow('standard')">+</button>
+    <button onclick="removeMaterialRow('standard')">−</button>
+  </div>
+</div>
     <div style="display:flex; gap:6px;">
   <button onclick="addMaterialRow('addons')">+</button>
   <button onclick="removeMaterialRow('addons')">-</button>
