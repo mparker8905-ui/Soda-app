@@ -384,6 +384,10 @@ let app = {
   }
 }
 
+//===============
+//== CONSTANTS
+//===============
+
 const RATES = {
   seed: 5,        // lbs per 1000 sqft
   fert: 4,
@@ -427,8 +431,12 @@ const MATERIAL_RATES = {
   lime:       { rate: 4, unit: "lbs" },
   sulfur:     { rate: 8, unit: "lbs" },
 
-  sprinklers: { rate: 1, unit: "units" }
+  sprinklers: { rate: 1, unit: "units" },
   timers: { rate: 1, unit: "units" }
+}
+
+const MATERIAL_LABELS = {
+  timers: "Sprinkler Timers"
 }
 
 //==============================
@@ -1790,7 +1798,7 @@ let labelMap = {
     (items || []).forEach(item => {
 
       let type = item.type || ""
-     let name = item.name || labelMap[item.type] || item.type
+      let name = item.name || MATERIAL_LABELS[item.type] || item.type
       let cost = item.cost || 0
       let qty = item.qty || 0
       let unit = MATERIAL_RATES[type]?.unit || ""
@@ -1831,7 +1839,7 @@ let labelMap = {
     items.forEach(item => {
 
       let type = item.type || ""
-     let name = item.name || labelMap[item.type] || item.type
+      let name = item.name || MATERIAL_LABELS[item.type] || item.type
       let cost = Number(item.cost) || 0
       let qty = Number(item.qty) || 0
       let unit = MATERIAL_RATES[type]?.unit || ""
