@@ -121,7 +121,7 @@ input,select,button{
 .inventory-header button{
   width:32px;
   height:32px;
-  font-size:20px;
+  font-size:18px;
   padding:0;
   background:#d4af37;
   color:#000;
@@ -172,6 +172,33 @@ input,select,button{
   font-size:12px;
   color:#aaa;
   margin-top:4px;
+}
+
+.row-top{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.row-top .mat-select{
+  flex:1;
+}
+
+.delete-btn{
+  width:40px;
+  height:40px;
+  background:#ff4d4d;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.delete-btn:active{
+  transform:scale(0.95);
 }
 
 </style>
@@ -265,8 +292,10 @@ input,select,button{
   <div class="inventory-section">
     <div class="inventory-header">
       <span>Standard Package</span>
-      <button onclick="addMaterialRow('standard')">+</button>
-    </div>
+   <div style="display:flex; gap:6px;">
+  <button onclick="addMaterialRow('standard')">+</button>
+  <button onclick="removeMaterialRow('standard')">-</button>
+</div>
     <div id="standardMaterials"></div>
   </div>
 
@@ -274,8 +303,10 @@ input,select,button{
   <div class="inventory-section">
     <div class="inventory-header">
       <span>Premium Package</span>
-      <button onclick="addMaterialRow('premium')">+</button>
-    </div>
+      <div style="display:flex; gap:6px;">
+  <button onclick="addMaterialRow('premium')">+</button>
+  <button onclick="removeMaterialRow('premium')">-</button>
+</div>
     <div id="premiumMaterials"></div>
   </div>
 
@@ -283,8 +314,10 @@ input,select,button{
   <div class="inventory-section">
     <div class="inventory-header">
       <span>Add-On Materials</span>
-      <button onclick="addMaterialRow('addons')">+</button>
-    </div>
+    <div style="display:flex; gap:6px;">
+  <button onclick="addMaterialRow('addons')">+</button>
+  <button onclick="removeMaterialRow('addons')">-</button>
+</div
     <div id="addonMaterials"></div>
   </div>
 
@@ -1376,18 +1409,22 @@ function addMaterialRow(type){
   row.className = "material-row"
 
 row.innerHTML = `
-  <select class="mat-select" onchange="updateUnitLabel(this)">
-    <option value="seed">Seed</option>
-    <option value="fertilizer">Fertilizer</option>
-    <option value="mulch">Mulch</option>
-    <option value="tackifier">Tackifier</option>
-    <option value="compost">Compost</option>
-    <option value="biochar">Biochar</option>
-    <option value="humic">Humic Acid</option>
-    <option value="lime">Lime</option>
-    <option value="sulfur">Sulfur</option>
-    <option value="sprinklers">Sprinklers</option>
-  </select>
+  <div class="row-top">
+    <select class="mat-select" onchange="updateUnitLabel(this)">
+      <option value="seed">Seed</option>
+      <option value="fertilizer">Fertilizer</option>
+      <option value="mulch">Mulch</option>
+      <option value="tackifier">Tackifier</option>
+      <option value="compost">Compost</option>
+      <option value="biochar">Biochar</option>
+      <option value="humic">Humic Acid</option>
+      <option value="lime">Lime</option>
+      <option value="sulfur">Sulfur</option>
+      <option value="sprinklers">Sprinklers</option>
+    </select>
+
+    <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
+  </div>
 
   <label class="mat-label">Material Name</label>
   <input class="mat-input" placeholder="e.g. Ryegrass Seed">
@@ -1403,6 +1440,35 @@ row.innerHTML = `
 }
 
 updateUnitLabel(row.querySelector(".mat-select"))
+
+//=====================
+//== REMOVE MATERIAL
+//=====================
+
+function removeMaterialRow(type){
+
+  let container
+
+  if(type === "standard"){
+    container = document.getElementById("standardMaterials")
+  }
+
+  if(type === "premium"){
+    container = document.getElementById("premiumMaterials")
+  }
+
+  if(type === "addons"){
+    container = document.getElementById("addonMaterials")
+  }
+
+  if(!container) return
+
+  let rows = container.querySelectorAll(".material-row")
+
+  if(rows.length > 0){
+    container.removeChild(rows[rows.length - 1])
+  }
+}
 
 //==================
 // GET INVENTORY COST
@@ -1680,6 +1746,17 @@ if(addons.humic){
 }
 
   return needs
+}
+
+//====================
+//=== DELETE ROW
+//====================
+
+function deleteRow(btn){
+  let row = btn.closest(".material-row")
+  if(row){
+    row.remove()
+  }
 }
 
 document.getElementById("houses").addEventListener("input", function(e){
