@@ -264,6 +264,15 @@ input,select,button{
   <option value="max">Maximize Profits</option>
 </select>
 
+<select id="pricingStrategy">
+  <option value="normal">Normal</option>
+  <option value="market">Market Rate</option>
+  <option value="undercut">Undercut Competitor</option>
+  <option value="builder">Builder Aggressive</option>
+</select>
+
+<input id="competitorPrice" type="number" placeholder="Competitor Price ($)">
+
 <input id="sqft" placeholder="Square Feet">
 
 <div class="row">
@@ -677,8 +686,38 @@ if(addons.sulfur && !isIncluded("sulfur")){
 
   if(margin < 0.1) margin = 0.1
 
-  let price = totalCost / (1 - margin)
-  let profit = price - totalCost
+ let strategy = document.getElementById("pricingStrategy")?.value || "normal"
+let competitor = Number(document.getElementById("competitorPrice")?.value) || 0
+
+let price = totalCost / (1 - margin)
+
+// ==========================
+// PRICING POWER MODE
+// ==========================
+
+if(strategy === "market"){
+  let marketRate = 0.35 // $/sqft target
+  let marketPrice = totalSqft * marketRate
+
+  if(marketPrice > price){
+    price = marketPrice
+  }
+}
+
+if(strategy === "undercut" && competitor > 0){
+  price = competitor * 0.97 // 3% undercut
+}
+
+if(strategy === "builder"){
+  price *= 0.92 // aggressive builder pricing
+}
+
+// SAFETY FLOOR (never lose money)
+if(price < totalCost * 1.1){
+  price = totalCost * 1.1
+}
+
+let profit = price - totalCost
 
   return {
     sqft,
