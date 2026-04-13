@@ -746,6 +746,7 @@ function render(){
     let inventoryTotals = getInventoryTotals()
     let materialNeeds = getMaterialNeeds(r)
     let comparison = compareInventory(needs, inventoryTotals)
+    let alerts = generateAlerts(r, comparison)
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
 
@@ -879,11 +880,24 @@ Object.keys(materialNeeds).forEach(k => {
 
 materialHTML += "<br>"
 
-    document.getElementById("results").innerHTML =
+let alertsHTML = ""
 
-      "<b>PROJECT SUMMARY</b><br>" +
-      "Total Sqft: " + r.totalSqft.toFixed(0) + "<br>" +
-      "Houses: " + r.houses + "<br><br>" +
+if(alerts.length > 0){
+  alertsHTML = "<b style='color:red;'>⚠ ALERTS</b><br>"
+
+  alerts.forEach(a => {
+    alertsHTML += "• " + a + "<br>"
+  })
+
+  alertsHTML += "<br>"
+}
+
+document.getElementById("results").innerHTML =
+  alertsHTML +
+  "<b>PROJECT SUMMARY</b><br>" +
+  "Total Sqft: " + r.totalSqft.toFixed(0) + "<br>" +
+  "Houses: " + r.houses + "<br><br>" +
+
       
        "<b>INVENTORY COST</b><br>" +    "Standard: $" + inv.standard.toFixed(2) + "<br>" +
 "Premium: $" + inv.premium.toFixed(2) + "<br>" +
@@ -1819,6 +1833,39 @@ if(addons.humic){
   return needs
 }
 
+//================
+//== ALERTS
+//================
+
+function generateAlerts(r, comparison){
+  let alerts = []
+  // logic here
+  return alerts
+}
+
+document.getElementById("houses").addEventListener("input", function(e){
+  app.job.houses = Number(e.target.value) || 1
+  render()
+})
+
+document.getElementById("customer").addEventListener("input", function(e){
+  app.job.customer = e.target.value
+})
+
+document.getElementById("targetMargin")?.addEventListener("input", render)
+
+document.addEventListener("input", render)
+document.addEventListener("change", render)
+
+loadInventory()
+
+// fallback if empty
+if(!localStorage.getItem("soda_inventory")){
+  addMaterialRow("standard")
+  addMaterialRow("premium")
+  addMaterialRow("addons")
+}
+
 //====================
 //=== DELETE ROW
 //====================
@@ -1960,29 +2007,6 @@ function generateInventoryPDF(){
     alert("PDF error")
   }
 
-}
-
-document.getElementById("houses").addEventListener("input", function(e){
-  app.job.houses = Number(e.target.value) || 1
-  render()
-})
-
-document.getElementById("customer").addEventListener("input", function(e){
-  app.job.customer = e.target.value
-})
-
-document.getElementById("targetMargin")?.addEventListener("input", render)
-
-document.addEventListener("input", render)
-document.addEventListener("change", render)
-
-loadInventory()
-
-// fallback if empty
-if(!localStorage.getItem("soda_inventory")){
-  addMaterialRow("standard")
-  addMaterialRow("premium")
-  addMaterialRow("addons")
 }
 
 </script>
