@@ -231,39 +231,47 @@ input,select,button{
 }
 
 .alert-box{
+  margin-bottom:12px;
   padding:12px;
   border-radius:10px;
-  margin-bottom:12px;
   font-size:13px;
-  text-align:left;
-  border-left:4px solid;
-}
-
-.alert-danger{
-  background:#2a0000;
-  border-color:#ff4d4d;
-  color:#ff8080;
-}
-
-.alert-warning{
-  background:#2a2200;
-  border-color:#ffc107;
-  color:#ffd966;
-}
-
-.alert-success{
-  background:#002a00;
-  border-color:#00cc66;
-  color:#66ff99;
 }
 
 .alert-title{
-  font-weight:bold;
+  font-weight:700;
   margin-bottom:6px;
 }
 
 .alert-line{
-  margin:3px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:4px 0;
+}
+
+.alert-line button{
+  background:#d4af37;
+  color:#000;
+  border:none;
+  border-radius:6px;
+  padding:4px 8px;
+  font-size:11px;
+  font-weight:600;
+}
+
+.alert-danger{
+  background:rgba(255,60,60,0.1);
+  border:1px solid rgba(255,60,60,0.4);
+}
+
+.alert-warning{
+  background:rgba(255,180,0,0.1);
+  border:1px solid rgba(255,180,0,0.4);
+}
+
+.alert-success{
+  background:rgba(0,255,120,0.1);
+  border:1px solid rgba(0,255,120,0.4);
 }
 
 </style>
@@ -918,6 +926,10 @@ materialHTML += "<br>"
 
 let alertsHTML = ""
 
+//==================
+//== Build Alert
+//==================
+
 function buildAlertBox(title, items, className){
 
   if(items.length === 0) return ""
@@ -926,7 +938,27 @@ function buildAlertBox(title, items, className){
   html += `<div class="alert-title">${title}</div>`
 
   items.forEach(i => {
-    html += `<div class="alert-line">• ${i}</div>`
+
+    let actionBtn = ""
+
+    if(i.fix === "margin"){
+      actionBtn = `<button onclick="fixLowMargin()">Fix</button>`
+    }
+
+    if(i.fix === "price"){
+      actionBtn = `<button onclick="fixLowPrice()">Fix</button>`
+    }
+
+    if(i.fix === "inventory"){
+      actionBtn = `<button onclick="fixInventory('${i.type}', ${i.amount})">Fix</button>`
+    }
+
+    html += `
+      <div class="alert-line">
+        <span>${i.text}</span>
+        ${actionBtn}
+      </div>
+    `
   })
 
   html += `</div>`
@@ -1891,68 +1923,53 @@ function generateAlerts(r, comparison){
     success: []
   }
 
-  let margin = r.price ? (r.profit / r.price) : 0
+  let margin = r.price ? (r.profit / r.price) * 100 : 0
 
-  // =========================
-  // 🚨 DANGER
-  // =========================
-
-  if(r.profit <= 0){
-    alerts.danger.push("Losing money on this job")
+  // 🚨 LOW MARGIN
+  if(margin < 20){
+    alerts.danger.push({
+      text: `Low profit margin (${margin.toFixed(1)}%)`,
+      fix: "margin"
+    })
   }
 
-  if(margin < 0.15){
-    alerts.danger.push("Very low margin (<15%)")
+  // ⚠️ MEDIUM MARGIN
+  else if(margin < 30){
+    alerts.warning.push({
+      text: `Margin could be improved (${margin.toFixed(1)}%)`,
+      fix: "margin"
+    })
   }
 
-  // =========================
-  // ⚠ WARNING
-  // =========================
-
-  if(margin < 0.25){
-    alerts.warning.push("Margin below target (25%)")
+  // 💰 HIGH PROFIT
+  if(margin > 40){
+    alerts.success.push({
+      text: `High profit margin (${margin.toFixed(1)}%)`
+    })
   }
 
-  if(r.price < r.cost * 1.2){
-    alerts.warning.push("Price too close to cost")
-  }
+  // 🚨 INVENTORY SHORTAGES
+  Object.keys(comparison).forEach(k => {
 
-  for(let key in comparison){
-    let item = comparison[key]
+    let item = comparison[k]
 
     if(item.status === "short"){
-      alerts.warning.push(`Need more ${key.toUpperCase()} (short ${item.shortage.toFixed(1)})`)
+
+      alerts.danger.push({
+        text: `${k.toUpperCase()} short by ${item.shortage.toFixed(1)}`,
+        fix: "inventory",
+        type: k,
+        amount: item.shortage
+      })
     }
-  }
+  })
 
-  // =========================
-  // 💰 OPPORTUNITIES
-  // =========================
-
-  if(margin > 0.5){
-    alerts.success.push("High margin — you can increase price")
-  }
-
-  if(r.houses >= 10 && margin > 0.3){
-    alerts.success.push("Builder job — push pricing slightly")
-  }
-
-  if(r.totalSqft > 10000 && margin < 0.25){
-    alerts.warning.push("Large job — efficiency not optimized")
-  }
-
-  let addons = app.job.addons || {}
-
-  if(!addons.aeration){
-    alerts.success.push("Upsell: Aeration improves results")
-  }
-
-  if(!addons.biochar && r.totalSqft > 5000){
-    alerts.success.push("Upsell: Biochar for soil health")
-  }
-
-  if(!addons.grow && r.totalSqft > 3000){
-    alerts.success.push("Upsell: Grow system")
+  // ⚠️ LOW PROFIT $
+  if(r.profit < 200){
+    alerts.warning.push({
+      text: `Low total profit ($${r.profit.toFixed(0)})`,
+      fix: "price"
+    })
   }
 
   return alerts
@@ -2099,6 +2116,43 @@ function generateInventoryPDF(){
     alert("PDF error")
   }
 
+}
+
+//=================
+//== FIX LOW MARGIN
+//=================
+
+function fixLowMargin(){
+  let input = document.getElementById("targetMargin")
+
+  let current = Number(input.value) || 30
+
+  if(current < 35){
+    input.value = 35
+  } else {
+    input.value = current + 5
+  }
+
+  render()
+}
+
+function fixLowPrice(){
+  let mode = document.getElementById("pricingMode")
+
+  if(mode.value === "win"){
+    mode.value = "balanced"
+  } else {
+    mode.value = "max"
+  }
+
+  render()
+}
+
+function fixInventory(type, amount){
+
+  alert(`Add ${amount.toFixed(1)} more ${type} to inventory`)
+
+  // optional future: auto-add to inventory
 }
 
 </script>
