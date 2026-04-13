@@ -1447,6 +1447,7 @@ function handlePackage(){
 //=================
 // ADD MATERIAL ROW
 //=================
+
 function addMaterialRow(type){
 
   let container
@@ -1466,39 +1467,40 @@ function addMaterialRow(type){
   let row = document.createElement("div")
   row.className = "material-row"
 
-row.innerHTML = `
-  <div class="row-top">
-   <select class="mat-select">
-  <option value="seed">Seed</option>
-  <option value="fertilizer">Fertilizer</option>
-  <option value="mulch">Mulch</option>
-  <option value="tackifier">Tackifier</option>
-  <option value="compost">Compost</option>
-  <option value="biochar">Biochar</option>
-  <option value="humic">Humic Acid</option>
-  <option value="lime">Lime</option>
-  <option value="sulfur">Sulfur</option>
-  <option value="sprinklers">Sprinklers</option>
-  <option value="timers">Sprinkler Timers</option>
-</select>
+  row.innerHTML = `
+    <div class="row-top">
+      <select class="mat-select" onchange="updateUnitLabel(this)">
+        <option value="seed">Seed</option>
+        <option value="fertilizer">Fertilizer</option>
+        <option value="mulch">Mulch</option>
+        <option value="tackifier">Tackifier</option>
+        <option value="compost">Compost</option>
+        <option value="biochar">Biochar</option>
+        <option value="humic">Humic Acid</option>
+        <option value="lime">Lime</option>
+        <option value="sulfur">Sulfur</option>
+        <option value="sprinklers">Sprinklers</option>
+        <option value="timers">Sprinkler Timers</option>
+      </select>
 
-    <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
-  </div>
+      <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
+    </div>
 
-  <label class="mat-label">Material Name</label>
-  <input class="mat-input" placeholder="e.g. Ryegrass Seed">
+    <label class="mat-label">Material Name</label>
+    <input class="mat-input" placeholder="e.g. Ryegrass Seed">
 
-  <label class="mat-label">Cost per Unit ($)</label>
-  <input class="mat-input" type="number">
+    <label class="mat-label">Cost per Unit ($)</label>
+    <input class="mat-input" type="number">
 
-  <label class="mat-label unit-label">Quantity Available</label>
-  <input class="mat-input" type="number">
-`
+    <label class="mat-label unit-label">Quantity Available</label>
+    <input class="mat-input" type="number">
+  `
 
   container.appendChild(row)
-}
 
-updateUnitLabel(row.querySelector(".mat-select"))
+  // ✅ FIX: NOW it's in correct scope
+  updateUnitLabel(row.querySelector(".mat-select"))
+}
 
 //==================
 // GET INVENTORY COST
@@ -1919,22 +1921,6 @@ function generateInventoryPDF(){
     alert("PDF error")
   }
 
-}
-
-  // Convert to CSV
-  let csvContent = rows.map(e => e.join(",")).join("\n")
-
-  // Create file
-  let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-  let url = URL.createObjectURL(blob)
-
-  let link = document.createElement("a")
-  link.href = url
-  link.download = "inventory.csv"
-
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
 }
 
 document.getElementById("houses").addEventListener("input", function(e){
