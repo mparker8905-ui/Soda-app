@@ -2177,22 +2177,46 @@ alert("clicked")
   render()
 }
 
+//================
+//== FIX INVENTORY
+//================
+
 window.fixInventory = function(type, amount){
 
-  let section = document.getElementById("standardMaterials")
+  let container = document.getElementById("standardMaterials")
 
-  addMaterialRow("standard")
+  if(!container) return
 
-  let lastRow = section.lastElementChild
-  let inputs = lastRow.querySelectorAll("input")
-  let select = lastRow.querySelector("select")
+  let row = document.createElement("div")
+  row.className = "material-row"
 
-  select.value = type
-  inputs[2].value = amount.toFixed(1)
+  row.innerHTML = `
+    <div class="row-top">
+      <select class="mat-select">
+        <option value="${type}" selected>${MATERIAL_LABELS[type] || type}</option>
+      </select>
+      <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
+    </div>
 
-  updateUnitLabel(select)
+    <label class="mat-label">Material Name</label>
+    <input class="mat-input" value="${MATERIAL_LABELS[type] || type}">
 
-  alert(`${type.toUpperCase()} added to inventory`)
+    <label class="mat-label">Cost per Unit ($)</label>
+    <input class="mat-input" type="number" value="0">
+
+    <label class="mat-label unit-label">Quantity Available</label>
+    <input class="mat-input" type="number" value="${Math.ceil(amount)}">
+  `
+
+  container.appendChild(row)
+
+  // 🔥 CRITICAL: SAVE + RELOAD BEFORE RENDER
+  saveInventory()
+  loadInventory()
+
+  setTimeout(() => {
+    render()
+  }, 50)
 }
 
 //=========================
@@ -2201,27 +2225,26 @@ window.fixInventory = function(type, amount){
 
 window.fixAllIssues = function(){
 
-  // Fix pricing
   fixLowMargin()
   fixLowPrice()
 
-  // Fix inventory shortages
   let r = calculateJob()
   let needs = getMaterialNeeds(r)
   let inventory = getInventoryTotals()
 
   Object.keys(needs).forEach(type => {
+
     let shortage = (needs[type] || 0) - (inventory[type] || 0)
 
-    if(shortage > 0){
+    if(shortage > 0.5){
       fixInventory(type, shortage)
     }
   })
 
-  // 🔥 CRITICAL: force fresh render AFTER everything
+  // 🔥 FINAL FORCE REFRESH
   setTimeout(() => {
     render()
-  }, 50)
+  }, 100)
 }
 
 //========================
