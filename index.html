@@ -141,6 +141,35 @@ input,select,button{
   font-size:12px;
 }
 
+.material-row{
+  background:#111;
+  border:1px solid #2a2a2a;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:10px;
+  box-shadow:0 0 8px rgba(212,175,55,0.15);
+}
+
+.mat-select{
+  width:100%;
+  margin-bottom:8px;
+  padding:10px;
+  border-radius:6px;
+  background:#222;
+  color:#fff;
+  border:1px solid #333;
+}
+
+.mat-input{
+  width:100%;
+  margin-bottom:6px;
+  padding:10px;
+  border-radius:6px;
+  background:#222;
+  color:#fff;
+  border:1px solid #333;
+}
+
 </style>
 
 </head>
@@ -1245,8 +1274,8 @@ function addMaterialRow(type){
   let row = document.createElement("div")
   row.className = "material-row"
 
- row.innerHTML = `
-  <select>
+row.innerHTML = `
+  <select class="mat-select">
     <option value="seed">Seed</option>
     <option value="fertilizer">Fertilizer</option>
     <option value="mulch">Mulch</option>
@@ -1259,9 +1288,9 @@ function addMaterialRow(type){
     <option value="sprinklers">Sprinklers</option>
   </select>
 
-  <input placeholder="Material Name">
-  <input type="number" placeholder="Cost ($)">
-  <input type="number" placeholder="Qty">
+  <input class="mat-input" placeholder="Material Name">
+  <input class="mat-input" type="number" placeholder="Cost ($)">
+  <input class="mat-input" type="number" placeholder="Quantity">
 `
 
   container.appendChild(row)
@@ -1363,8 +1392,8 @@ function loadInventory(){
       let row = document.createElement("div")
       row.className = "material-row"
 
-     row.innerHTML = `
-  <select>
+row.innerHTML = `
+  <select class="mat-select">
     <option value="seed" ${item.type==="seed"?"selected":""}>Seed</option>
     <option value="fertilizer" ${item.type==="fertilizer"?"selected":""}>Fertilizer</option>
     <option value="mulch" ${item.type==="mulch"?"selected":""}>Mulch</option>
@@ -1377,9 +1406,9 @@ function loadInventory(){
     <option value="sprinklers" ${item.type==="sprinklers"?"selected":""}>Sprinklers</option>
   </select>
 
-  <input value="${item.name}">
-  <input type="number" value="${item.cost}">
-  <input type="number" value="${item.qty}">
+  <input class="mat-input" value="${item.name}">
+  <input class="mat-input" type="number" value="${item.cost}">
+  <input class="mat-input" type="number" value="${item.qty}">
 `
 
       container.appendChild(row)
