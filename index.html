@@ -696,12 +696,19 @@ Object.keys(comparison).forEach(k => {
   let item = comparison[k]
   let color = item.status === "short" ? "red" : "lime"
 
-  materialHTML += `
-    ${k.toUpperCase()}:
-   let unit = MATERIAL_RATES[k]?.unit || ""
+ let unit = MATERIAL_RATES[k]?.unit || ""
 
-Need ${item.required.toFixed(1)} ${unit} |
-Have ${item.available.toFixed(1)} ${unit}
+materialHTML += `
+  ${k.toUpperCase()}:
+  Need ${item.required.toFixed(1)} ${unit} |
+  Have ${item.available.toFixed(1)} ${unit}
+  <span style="color:${color}">
+    ${item.status === "short"
+      ? "BUY " + item.shortage.toFixed(1)
+      : "OK"}
+  </span>
+  <br>
+`
     <span style="color:${color}">
       ${item.status === "short"
         ? "BUY " + item.shortage.toFixed(1)
@@ -1604,10 +1611,10 @@ function getMaterialNeeds(r){
   // BASE MATERIALS
   // =========================
 
- needs.seed       = (sqft / 1000) * MATERIAL_RATES.seed
-needs.fertilizer = (sqft / 1000) * MATERIAL_RATES.fertilizer
-needs.mulch      = (sqft / 1000) * MATERIAL_RATES.mulch
-needs.tackifier  = (sqft / 1000) * MATERIAL_RATES.tackifier
+needs.seed       = (sqft / 1000) * MATERIAL_RATES.seed.rate
+needs.fertilizer = (sqft / 1000) * MATERIAL_RATES.fertilizer.rate
+needs.mulch      = (sqft / 1000) * MATERIAL_RATES.mulch.rate
+needs.tackifier  = (sqft / 1000) * MATERIAL_RATES.tackifier.rate
 
   // =========================
   // PREMIUM ADDITIONS
@@ -1616,11 +1623,11 @@ needs.tackifier  = (sqft / 1000) * MATERIAL_RATES.tackifier
   let packageType = document.getElementById("package")?.value || "standard"
 
   if(packageType === "premium"){
-   needs.compost = (sqft / 1000) * MATERIAL_RATES.compost
+  needs.compost = (sqft / 1000) * MATERIAL_RATES.compost.rate
 
     // Bio/Hum blend = split usage
-    needs.biochar = (sqft / 1000) * (MATERIAL_RATES.biochar * 0.5)
-needs.humic   = (sqft / 1000) * (MATERIAL_RATES.humic * 0.5)
+    needs.biochar = (sqft / 1000) * (MATERIAL_RATES.biochar.rate * 0.5)
+needs.humic   = (sqft / 1000) * (MATERIAL_RATES.humic.rate * 0.5)
   }
 
   // =========================
@@ -1630,11 +1637,11 @@ needs.humic   = (sqft / 1000) * (MATERIAL_RATES.humic * 0.5)
   let addons = app.job.addons || {}
 
 if(addons.lime){
-  needs.lime = (sqft / 1000) * MATERIAL_RATES.lime
+ needs.lime = (sqft / 1000) * MATERIAL_RATES.lime.rate
 }
 
 if(addons.sulfur){
-  needs.sulfur = (sqft / 1000) * MATERIAL_RATES.sulfur
+  needs.sulfur = (sqft / 1000) * MATERIAL_RATES.sulfur.rate
 }
 
 if(addons.biochar){
