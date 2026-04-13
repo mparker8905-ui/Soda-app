@@ -339,17 +339,19 @@ const COSTS = {
 }
 
 const MATERIAL_RATES = {
-  seed: 5,          // lbs / 1000 sqft
-  fertilizer: 4,    // lbs
-  mulch: 50,        // lbs
-  tackifier: 3,     // lbs
+  seed:       { rate: 5, unit: "lbs" },
+  fertilizer: { rate: 4, unit: "lbs" },
+  mulch:      { rate: 50, unit: "lbs" },
+  tackifier:  { rate: 3, unit: "lbs" },
 
-  compost: 0.5,     // cubic yards
-  biochar: 10,      // lbs
-  humic: 1,         // lbs
+  compost:    { rate: 0.5, unit: "yd³" },
+  biochar:    { rate: 10, unit: "lbs" },
+  humic:      { rate: 1, unit: "lbs" },
 
-  lime: 4,          // lbs
-  sulfur: 8         // lbs
+  lime:       { rate: 4, unit: "lbs" },
+  sulfur:     { rate: 8, unit: "lbs" },
+
+  sprinklers: { rate: 1, unit: "units" }
 }
 
 //==============================
@@ -696,8 +698,10 @@ Object.keys(comparison).forEach(k => {
 
   materialHTML += `
     ${k.toUpperCase()}:
-    Need ${item.required.toFixed(1)} |
-    Have ${item.available.toFixed(1)} |
+   let unit = MATERIAL_RATES[k]?.unit || ""
+
+Need ${item.required.toFixed(1)} ${unit} |
+Have ${item.available.toFixed(1)} ${unit}
     <span style="color:${color}">
       ${item.status === "short"
         ? "BUY " + item.shortage.toFixed(1)
@@ -710,7 +714,12 @@ Object.keys(comparison).forEach(k => {
 materialHTML += "<br><b>MATERIAL USAGE</b><br>"
 
 Object.keys(materialNeeds).forEach(k => {
-  materialHTML += `${k}: ${materialNeeds[k].toFixed(1)}<br>`
+
+  let unit = MATERIAL_RATES[k]?.unit || ""
+
+  materialHTML += `
+    ${k.toUpperCase()}: ${materialNeeds[k].toFixed(1)} ${unit}<br>
+  `
 })
 
 materialHTML += "<br>"
@@ -783,6 +792,24 @@ materialHTML += "<br>"
 function openClientView(){
 
   let r = calculateJob()
+
+let materialCost = getInventoryCost().total
+
+let materialNeeds = getMaterialNeeds(r)
+
+let materialHTML = ""
+
+Object.keys(materialNeeds).forEach(k => {
+
+  let unit = MATERIAL_RATES[k]?.unit || ""
+
+  materialHTML += `
+    <div class="line">
+      <span>${k.toUpperCase()}</span>
+      <span>${materialNeeds[k].toFixed(1)} ${unit}</span>
+    </div>
+  `
+})
 
   let customer = document.getElementById("customer")?.value || "Client"
   let address = document.getElementById("address")?.value || ""
@@ -969,6 +996,16 @@ button:active{
 </div>
 
 <div class="section">
+  <div><b>MATERIALS USED</b></div>
+  ${materialHTML}
+</div>
+
+<div class="line">
+  <span>Material Cost</span>
+  <span>$${materialCost.toFixed(2)}</span>
+</div>
+
+<div class="section">
   <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
   ${housesHTML}
 
@@ -1006,6 +1043,24 @@ function sendProposal(){
   try{
 
     let r = calculateJob()
+
+let materialCost = getInventoryCost().total
+
+let materialNeeds = getMaterialNeeds(r)
+
+let materialHTML = ""
+
+Object.keys(materialNeeds).forEach(k => {
+
+  let unit = MATERIAL_RATES[k]?.unit || ""
+
+  materialHTML += `
+    <div class="line">
+      <span>${k.toUpperCase()}</span>
+      <span>${materialNeeds[k].toFixed(1)} ${unit}</span>
+    </div>
+  `
+})
 
     let customer = document.getElementById("customer")?.value || "Client"
     let address = document.getElementById("address")?.value || ""
@@ -1177,6 +1232,16 @@ let html = `
       <span>$${r.laborCost.toFixed(2)}</span>
     </div>
   </div>
+
+<div class="section">
+  <div class="section-title">MATERIALS USED</div>
+  ${materialHTML}
+</div>
+
+<div class="line">
+  <span>Material Cost</span>
+  <span>$${materialCost.toFixed(2)}</span>
+</div>
 
   <!-- TOTAL BOX -->
   <div class="highlight">
