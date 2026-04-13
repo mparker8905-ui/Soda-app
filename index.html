@@ -1712,13 +1712,14 @@ function saveInventory(){
     let data = []
 
     rows.forEach(row => {
-      let inputs = row.querySelectorAll("input")
+     let select = row.querySelector("select")
+let inputs = row.querySelectorAll("input")
 
-     data.push({
-  type: inputs[0]?.value || "",
-  name: inputs[1]?.value || "",
-  cost: inputs[2]?.value || "",
-  qty: inputs[3]?.value || ""
+data.push({
+  type: select?.value || "",   // ✅ FIXED
+  name: inputs[0]?.value || "",
+  cost: inputs[1]?.value || "",
+  qty: inputs[2]?.value || ""
 })
     })
 
@@ -1770,6 +1771,8 @@ row.innerHTML = `
     <option value="lime" ${item.type==="lime"?"selected":""}>Lime</option>
     <option value="sulfur" ${item.type==="sulfur"?"selected":""}>Sulfur</option>
     <option value="sprinklers" ${item.type==="sprinklers"?"selected":""}>Sprinklers</option>
+    <option value="timers" ${item.type==="timers"?"selected":""}>Sprinkler Timers</option>
+
   </select>
 
   <input class="mat-input" value="${item.name}">
