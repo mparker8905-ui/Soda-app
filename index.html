@@ -668,25 +668,24 @@ function render(){
 
 "<b>MATERIAL REQUIREMENTS</b><br>" +
 Object.keys(comparison).map(k => {
+
   let item = comparison[k]
-
-"<b>MATERIAL USAGE</b><br>" +
-Object.keys(materialNeeds).map(k => 
-  k + ": " + materialNeeds[k].toFixed(1) + "<br>"
-).join("") + "<br>"
-
   let color = item.status === "short" ? "red" : "lime"
 
   return `
-    ${k.toUpperCase()}: 
-    Need ${item.required.toFixed(1)} | 
-    Have ${item.available.toFixed(1)} | 
+    ${k.toUpperCase()}:
+    Need ${item.required.toFixed(1)} |
+    Have ${item.available.toFixed(1)} |
     <span style="color:${color}">
       ${item.status === "short" ? "BUY " + item.shortage.toFixed(1) : "OK"}
-    </span>
-    <br>
+    </span><br>
   `
-}).join("") + "<br>"
+}).join("") +
+
+"<br><b>MATERIAL USAGE</b><br>" +
+Object.keys(materialNeeds).map(k =>
+  k + ": " + materialNeeds[k].toFixed(1) + "<br>"
+).join("") + "<br>"
 
       addonHTML +
       savingsHTML +
@@ -1392,26 +1391,6 @@ function loadInventory(){
   loadSection("addonMaterials", inventory.addons || [])
 }
 
-//=========================
-//=== MATERIAL NEEDS
-//=========================
-
-function calculateMaterialNeeds(totalSqft){
-
-  let factor = totalSqft / 1000
-
-  return {
-    seed: MATERIAL_USAGE.seed * factor,
-    fertilizer: MATERIAL_USAGE.fertilizer * factor,
-    mulch: MATERIAL_USAGE.mulch * factor,
-    tack: MATERIAL_USAGE.tack * factor,
-    compost: MATERIAL_USAGE.compost * factor,
-    biohum: MATERIAL_USAGE.biohum * factor,
-    lime: MATERIAL_USAGE.lime * factor,
-    sulfur: MATERIAL_USAGE.sulfur * factor
-  }
-}
-
 //===================
 //==INVENTORY TOTAL
 //===================
@@ -1424,7 +1403,7 @@ function getInventoryTotals(){
 
   function process(section){
     (section || []).forEach(item => {
-      let name = item.name.toLowerCase()
+      let name = item.type
       let qty = Number(item.qty) || 0
 
       totals[name] = (totals[name] || 0) + qty
@@ -1464,7 +1443,7 @@ function compareInventory(needs, inventory){
 }
 //=========================
 //===USE INVENTORY FOR JOB
-/=========================
+//=========================
 
 function useInventoryForJob(){
 
