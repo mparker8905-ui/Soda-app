@@ -223,6 +223,8 @@ input,select,button{
 
 <button onclick="sendProposal()">Send Proposal</button>
 
+<button onclick="useInventoryForJob()">Use Inventory for Job</button>
+
 <div class="card">
   <h2>Inventory</h2>
 
@@ -554,6 +556,7 @@ function render(){
     let inv = getInventoryCost()
     let needs = calculateMaterialNeeds(r.totalSqft)
     let inventoryTotals = getInventoryTotals()
+    let materialNeeds = getMaterialNeeds(r)
     let comparison = compareInventory(needs, inventoryTotals)
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
@@ -666,6 +669,11 @@ function render(){
 "<b>MATERIAL REQUIREMENTS</b><br>" +
 Object.keys(comparison).map(k => {
   let item = comparison[k]
+
+"<b>MATERIAL USAGE</b><br>" +
+Object.keys(materialNeeds).map(k => 
+  k + ": " + materialNeeds[k].toFixed(1) + "<br>"
+).join("") + "<br>"
 
   let color = item.status === "short" ? "red" : "lime"
 
@@ -1238,11 +1246,24 @@ function addMaterialRow(type){
   let row = document.createElement("div")
   row.className = "material-row"
 
-  row.innerHTML = `
-    <input placeholder="Material Name">
-    <input type="number" placeholder="Cost ($)">
-    <input type="number" placeholder="Qty">
-  `
+ row.innerHTML = `
+  <select>
+    <option value="seed">Seed</option>
+    <option value="fertilizer">Fertilizer</option>
+    <option value="mulch">Mulch</option>
+    <option value="tackifier">Tackifier</option>
+    <option value="compost">Compost</option>
+    <option value="biochar">Biochar</option>
+    <option value="humic">Humic Acid</option>
+    <option value="lime">Lime</option>
+    <option value="sulfur">Sulfur</option>
+    <option value="sprinklers">Sprinklers</option>
+  </select>
+
+  <input placeholder="Material Name">
+  <input type="number" placeholder="Cost ($)">
+  <input type="number" placeholder="Qty">
+`
 
   container.appendChild(row)
 }
@@ -1299,11 +1320,12 @@ function saveInventory(){
     rows.forEach(row => {
       let inputs = row.querySelectorAll("input")
 
-      data.push({
-        name: inputs[0]?.value || "",
-        cost: inputs[1]?.value || "",
-        qty: inputs[2]?.value || ""
-      })
+     data.push({
+  type: inputs[0]?.value || "",
+  name: inputs[1]?.value || "",
+  cost: inputs[2]?.value || "",
+  qty: inputs[3]?.value || ""
+})
     })
 
     return data
@@ -1342,11 +1364,24 @@ function loadInventory(){
       let row = document.createElement("div")
       row.className = "material-row"
 
-      row.innerHTML = `
-        <input value="${item.name}" placeholder="Material Name">
-        <input type="number" value="${item.cost}" placeholder="Cost ($)">
-        <input type="number" value="${item.qty}" placeholder="Qty">
-      `
+     row.innerHTML = `
+  <select>
+    <option value="seed" ${item.type==="seed"?"selected":""}>Seed</option>
+    <option value="fertilizer" ${item.type==="fertilizer"?"selected":""}>Fertilizer</option>
+    <option value="mulch" ${item.type==="mulch"?"selected":""}>Mulch</option>
+    <option value="tackifier" ${item.type==="tackifier"?"selected":""}>Tackifier</option>
+    <option value="compost" ${item.type==="compost"?"selected":""}>Compost</option>
+    <option value="biochar" ${item.type==="biochar"?"selected":""}>Biochar</option>
+    <option value="humic" ${item.type==="humic"?"selected":""}>Humic Acid</option>
+    <option value="lime" ${item.type==="lime"?"selected":""}>Lime</option>
+    <option value="sulfur" ${item.type==="sulfur"?"selected":""}>Sulfur</option>
+    <option value="sprinklers" ${item.type==="sprinklers"?"selected":""}>Sprinklers</option>
+  </select>
+
+  <input value="${item.name}">
+  <input type="number" value="${item.cost}">
+  <input type="number" value="${item.qty}">
+`
 
       container.appendChild(row)
     })
@@ -1426,6 +1461,111 @@ function compareInventory(needs, inventory){
   }
 
   return results
+}
+//=========================
+//===USE INVENTORY FOR JOB
+/=========================
+
+function useInventoryForJob(){
+
+  if(!confirm("Use inventory for this job?")){
+    return
+  }
+
+  let r = calculateJob()
+  let needs = getMaterialNeeds(r)
+
+  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+
+  function deduct(section){
+
+    (section || []).forEach(item => {
+
+     let type = item.type
+let qty = Number(item.qty) || 0
+
+if(needs[type] !== undefined){
+
+  let used = Math.min(qty, needs[type])
+
+  item.qty = qty - used
+
+  needs[type] -= used
+}
+    })
+  }
+
+  deduct(saved.standard)
+  deduct(saved.premium)
+  deduct(saved.addons)
+
+  localStorage.setItem("soda_inventory", JSON.stringify(saved))
+
+  loadInventory()
+
+  alert("Inventory Updated")
+}
+
+ //=====================
+//==MATERIAL NEEDS
+//======================
+
+function getMaterialNeeds(r){
+
+  let needs = {}
+
+  let sqft = r.totalSqft
+
+  // =========================
+  // BASE MATERIALS
+  // =========================
+
+  needs.seed = (sqft / 1000) * 5
+  needs.fertilizer = (sqft / 1000) * 4
+  needs.mulch = (sqft / 1000) * 50
+  needs.tackifier = (sqft / 1000) * 3
+
+  // =========================
+  // PREMIUM ADDITIONS
+  // =========================
+
+  let packageType = document.getElementById("package")?.value || "standard"
+
+  if(packageType === "premium"){
+    needs.compost = (sqft / 1000) * 0.5
+
+    // Bio/Hum blend = split usage
+    needs.biochar = (sqft * 0.5)
+    needs.humic = (sqft * 0.5)
+  }
+
+  // =========================
+  // ADD-ONS
+  // =========================
+
+  let addons = app.job.addons || {}
+
+  if(addons.lime){
+    needs.lime = sqft * 0.004
+  }
+
+  if(addons.sulfur){
+    needs.sulfur = sqft * 0.008
+  }
+
+  if(addons.biochar){
+    needs.biochar = (needs.biochar || 0) + (sqft * 1)
+  }
+
+  if(addons.humic){
+    needs.humic = (needs.humic || 0) + (sqft * 1)
+  }
+
+  if(addons.grow){
+    needs.sprinklers = r.houses
+  }
+
+  return needs
 }
 
 document.getElementById("houses").addEventListener("input", function(e){
