@@ -1785,13 +1785,9 @@ function deleteRow(btn){
 
 function exportInventory(){
 
-let labelMap = {
-  timers: "Sprinkler Timers"
-}
-
   let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
 
-  let rows = [["Type","Material","Cost","Quantity","Unit"]]
+  let rows = [["Section","Material","Cost","Quantity","Unit"]]
 
   function process(sectionName, items){
 
@@ -1811,8 +1807,30 @@ let labelMap = {
         unit
       ])
     })
-  }
-}
+
+  } // ✅ CLOSE process()
+
+  // 👇 YOU ALSO NEED TO CALL IT
+  process("Standard", saved.standard)
+  process("Premium", saved.premium)
+  process("Add-On", saved.addons)
+
+  // 👇 CSV BUILD
+  let csvContent = rows.map(r => r.join(",")).join("\n")
+
+  let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  let url = URL.createObjectURL(blob)
+
+  let link = document.createElement("a")
+  link.href = url
+  link.download = "inventory.csv"
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+} // ✅ CLOSE exportInventory()
+
 //=======================
 //==GENERATE INVENTORY PDF
 //=======================
