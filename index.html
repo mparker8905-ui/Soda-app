@@ -360,6 +360,10 @@ input,select,button{
 
 <button onclick="saveInventory()">Save Inventory</button>
 
+<button onclick="exportInventory()">Export Inventory</button>
+
+<button onclick="generateInventoryPDF()">Inventory PDF</button>
+
 <script>
 
 //===========================
@@ -1763,6 +1767,235 @@ function deleteRow(btn){
   if(row){
     row.remove()
   }
+}
+
+//====================
+//== EXPORT INVENTORY
+//====================
+
+function exportInventory(){
+
+  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+
+  let rows = [["Type","Material","Cost","Quantity","Unit"]]
+
+  function process(sectionName, items){
+
+    (items || []).forEach(item => {
+
+      let type = item.type || ""
+      let name = item.name || ""
+      let cost = item.cost || 0
+      let qty = item.qty || 0
+      let unit = MATERIAL_RATES[type]?.unit || ""
+
+      rows.push([
+        sectionName,
+        name,
+        cost,
+        qty,
+        unit
+      ])
+    })
+  }
+
+//=======================
+//==GENERATE INVENTORY
+//=======================
+
+function generateInventoryPDF(){
+
+  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+
+  function buildSection(title, items){
+
+    let html = `<div class="section">
+      <div class="section-title">${title}</div>
+    `
+
+    if(!items || items.length === 0){
+      html += `<div>None</div></div>`
+      return html
+    }
+
+    items.forEach(item => {
+
+      let type = item.type || ""
+      let name = item.name || "Material"
+      let cost = Number(item.cost) || 0
+      let qty = Number(item.qty) || 0
+      let unit = MATERIAL_RATES[type]?.unit || ""
+
+      let total = cost * qty
+
+      html += `
+        <div class="line">
+          <span>${name} (${unit})</span>
+          <span>${qty} × $${cost.toFixed(2)} = $${total.toFixed(2)}</span>
+        </div>
+      `
+    })
+
+    html += `</div>`
+    return html
+  }
+
+  let standardHTML = buildSection("Standard Package", saved.standard)
+  let premiumHTML = buildSection("Premium Package", saved.premium)
+  let addonsHTML = buildSection("Add-On Materials", saved.addons)
+
+  // TOTAL INVENTORY VALUE
+  let totalValue = 0
+
+  function sum(items){
+    (items || []).forEach(i => {
+      totalValue += (Number(i.cost)||0) * (Number(i.qty)||0)
+    })
+  }
+
+  sum(saved.standard)
+  sum(saved.premium)
+  sum(saved.addons)
+
+  let win = window.open("", "_blank")
+
+  if(!win){
+    alert("Popup blocked")
+    return
+  }
+
+  win.document.write(`
+<html>
+<head>
+<title>Inventory Sheet</title>
+
+<style>
+body{
+  font-family: Arial;
+  padding:40px 25px;
+  background:#000;
+  color:#d4af37;
+  max-width:700px;
+  margin:auto;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.brand h1{
+  margin:0;
+  font-size:26px;
+}
+
+.tagline{
+  font-size:13px;
+  color:#aaa;
+  margin-top:3px;
+}
+
+.logo{
+  width:65px;
+}
+
+.gold-line{
+  height:2px;
+  background:linear-gradient(90deg, transparent, #d4af37, transparent);
+  margin:15px 0 25px 0;
+}
+
+.section{
+  margin-top:25px;
+}
+
+.section-title{
+  font-weight:bold;
+  margin-bottom:8px;
+  font-size:16px;
+}
+
+.line{
+  display:flex;
+  justify-content:space-between;
+  margin:5px 0;
+  border-bottom:1px solid rgba(212,175,55,0.15);
+  padding-bottom:4px;
+}
+
+.total-box{
+  margin-top:30px;
+  border:2px solid #d4af37;
+  padding:15px;
+}
+
+.total{
+  font-size:28px;
+  font-weight:bold;
+  text-align:right;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="brand">
+    <h1>SoDa Outdoor Designs</h1>
+    <div class="tagline">Inventory Sheet</div>
+  </div>
+
+  <img src="/logo.PNG" class="logo">
+</div>
+
+<div class="gold-line"></div>
+
+${standardHTML}
+${premiumHTML}
+${addonsHTML}
+
+<div class="total-box">
+  <div>Total Inventory Value</div>
+  <div class="total">$${totalValue.toFixed(2)}</div>
+</div>
+
+<div style="margin-top:30px; font-size:12px; color:#aaa;">
+  Generated on ${new Date().toLocaleDateString()}
+</div>
+
+<script>
+setTimeout(function(){
+  window.print()
+}, 500)
+</script>
+
+</body>
+</html>
+`)
+
+  win.document.close()
+}
+
+  process("Standard", saved.standard)
+  process("Premium", saved.premium)
+  process("Add-On", saved.addons)
+
+  // Convert to CSV
+  let csvContent = rows.map(e => e.join(",")).join("\n")
+
+  // Create file
+  let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  let url = URL.createObjectURL(blob)
+
+  let link = document.createElement("a")
+  link.href = url
+  link.download = "inventory.csv"
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 document.getElementById("houses").addEventListener("input", function(e){
