@@ -118,11 +118,18 @@ input,select,button{
   justify-content:space-between;
   align-items:center;
   margin-bottom:10px;
+
+  flex-wrap:wrap; /* 🔥 ADD THIS */
+}
+
+.inventory-header span{
+  flex:1;
 }
 
 .inventory-actions{
   display:flex;
   gap:8px;
+  flex-shrink:0; /* prevents squishing */
 }
 
 .inventory-header button{
@@ -313,27 +320,25 @@ input,select,button{
   <!-- STANDARD -->
   <div class="inventory-section">
     <div class="inventory-header">
-  <span>Standard Package</span>
+      <span>Standard Package</span>
 
-  <div class="inventory-actions">
-    <button onclick="addMaterialRow('standard')">+</button>
-    <button
-</div>
-   <div style="display:flex; gap:6px;">
+      <div class="inventory-actions">
+        <button onclick="addMaterialRow('standard')">+</button>
+      </div>
+    </div>
 
     <div id="standardMaterials"></div>
   </div>
 
   <!-- PREMIUM -->
   <div class="inventory-section">
- <div class="inventory-header">
-  <span>Premium Package</span>
+    <div class="inventory-header">
+      <span>Premium Package</span>
 
-  <div class="inventory-actions">
-    <button onclick="addMaterialRow('standard')">+</button>
-    <button
-</div>
-      <div style="display:flex; gap:6px;">
+      <div class="inventory-actions">
+        <button onclick="addMaterialRow('premium')">+</button>
+      </div>
+    </div>
 
     <div id="premiumMaterials"></div>
   </div>
@@ -341,13 +346,13 @@ input,select,button{
   <!-- ADD-ONS -->
   <div class="inventory-section">
     <div class="inventory-header">
-  <span>Add-On Materials</span>
+      <span>Add-On Materials</span>
 
-  <div class="inventory-actions">
-    <button onclick="addMaterialRow('standard')">+</button>
-    <button
-</div>
-    <div style="display:flex; gap:6px;">
+      <div class="inventory-actions">
+        <button onclick="addMaterialRow('addons')">+</button>
+      </div>
+    </div>
+
     <div id="addonMaterials"></div>
   </div>
 
