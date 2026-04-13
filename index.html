@@ -684,6 +684,34 @@ function render(){
     // OUTPUT
     // ======================
 
+let materialHTML = "<b>MATERIAL REQUIREMENTS</b><br>"
+
+Object.keys(comparison).forEach(k => {
+
+  let item = comparison[k]
+  let color = item.status === "short" ? "red" : "lime"
+
+  materialHTML += `
+    ${k.toUpperCase()}:
+    Need ${item.required.toFixed(1)} |
+    Have ${item.available.toFixed(1)} |
+    <span style="color:${color}">
+      ${item.status === "short"
+        ? "BUY " + item.shortage.toFixed(1)
+        : "OK"}
+    </span>
+    <br>
+  `
+})
+
+materialHTML += "<br><b>MATERIAL USAGE</b><br>"
+
+Object.keys(materialNeeds).forEach(k => {
+  materialHTML += `${k}: ${materialNeeds[k].toFixed(1)}<br>`
+})
+
+materialHTML += "<br>"
+
     document.getElementById("results").innerHTML =
 
       "<b>PROJECT SUMMARY</b><br>" +
@@ -695,29 +723,9 @@ function render(){
 "Add-Ons: $" + inv.addons.toFixed(2) + "<br>" +
 "Total Materials: $" + inv.total.toFixed(2) + "<br><br>" +
 
-"<b>MATERIAL REQUIREMENTS</b><br>" +
-Object.keys(comparison).map(k => {
-
-  let item = comparison[k]
-  let color = item.status === "short" ? "red" : "lime"
-
-  return `
-    ${k.toUpperCase()}:
-    Need ${item.required.toFixed(1)} |
-    Have ${item.available.toFixed(1)} |
-    <span style="color:${color}">
-      ${item.status === "short" ? "BUY " + item.shortage.toFixed(1) : "OK"}
-    </span><br>
-  `
-}).join("") +
-
-"<br><b>MATERIAL USAGE</b><br>" +
-Object.keys(materialNeeds).map(k =>
-  k + ": " + materialNeeds[k].toFixed(1) + "<br>"
-).join("") + "<br>"
-
       addonHTML +
       savingsHTML +
+      materialHTML +
 
       "<b>BASE PACKAGE</b><br>" +
       "Base Cost: $" + (r.cost - r.laborCost - r.overheadCost).toFixed(2) + "<br><br>" +
