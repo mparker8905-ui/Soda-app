@@ -583,7 +583,7 @@ function render(){
 
     let r = calculateJob()
     let inv = getInventoryCost()
-    let needs = calculateMaterialNeeds(r.totalSqft)
+    let needs = getMaterialNeeds(r)
     let inventoryTotals = getInventoryTotals()
     let materialNeeds = getMaterialNeeds(r)
     let comparison = compareInventory(needs, inventoryTotals)
