@@ -428,6 +428,7 @@ const MATERIAL_RATES = {
   sulfur:     { rate: 8, unit: "lbs" },
 
   sprinklers: { rate: 1, unit: "units" }
+  timers: { rate: 1, unit: "units" }
 }
 
 //==============================
@@ -1449,18 +1450,19 @@ function addMaterialRow(type){
 
 row.innerHTML = `
   <div class="row-top">
-    <select class="mat-select" onchange="updateUnitLabel(this)">
-      <option value="seed">Seed</option>
-      <option value="fertilizer">Fertilizer</option>
-      <option value="mulch">Mulch</option>
-      <option value="tackifier">Tackifier</option>
-      <option value="compost">Compost</option>
-      <option value="biochar">Biochar</option>
-      <option value="humic">Humic Acid</option>
-      <option value="lime">Lime</option>
-      <option value="sulfur">Sulfur</option>
-      <option value="sprinklers">Sprinklers</option>
-    </select>
+   <select class="mat-select">
+  <option value="seed">Seed</option>
+  <option value="fertilizer">Fertilizer</option>
+  <option value="mulch">Mulch</option>
+  <option value="tackifier">Tackifier</option>
+  <option value="compost">Compost</option>
+  <option value="biochar">Biochar</option>
+  <option value="humic">Humic Acid</option>
+  <option value="lime">Lime</option>
+  <option value="sulfur">Sulfur</option>
+  <option value="sprinklers">Sprinklers</option>
+  <option value="timers">Sprinkler Timers</option>
+</select>
 
     <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
   </div>
@@ -1775,6 +1777,10 @@ function deleteRow(btn){
 
 function exportInventory(){
 
+let labelMap = {
+  timers: "Sprinkler Timers"
+}
+
   let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
 
   let rows = [["Type","Material","Cost","Quantity","Unit"]]
@@ -1784,7 +1790,7 @@ function exportInventory(){
     (items || []).forEach(item => {
 
       let type = item.type || ""
-      let name = item.name || ""
+     let name = item.name || labelMap[item.type] || item.type
       let cost = item.cost || 0
       let qty = item.qty || 0
       let unit = MATERIAL_RATES[type]?.unit || ""
@@ -1805,6 +1811,10 @@ function exportInventory(){
 
 function generateInventoryPDF(){
 
+let labelMap = {
+  timers: "Sprinkler Timers"
+}
+
   let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
 
   function buildSection(title, items){
@@ -1821,7 +1831,7 @@ function generateInventoryPDF(){
     items.forEach(item => {
 
       let type = item.type || ""
-      let name = item.name || "Material"
+     let name = item.name || labelMap[item.type] || item.type
       let cost = Number(item.cost) || 0
       let qty = Number(item.qty) || 0
       let unit = MATERIAL_RATES[type]?.unit || ""
