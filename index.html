@@ -168,6 +168,12 @@ input,select,button{
   font-size:14px;
 }
 
+.mat-label{
+  font-size:12px;
+  color:#aaa;
+  margin-top:4px;
+}
+
 </style>
 
 </head>
@@ -1363,9 +1369,14 @@ row.innerHTML = `
     <option value="sprinklers">Sprinklers</option>
   </select>
 
-  <input class="mat-input" placeholder="Material Name (optional)">
-  <input class="mat-input" type="number" placeholder="Cost per unit ($)">
-  <input class="mat-input" type="number" placeholder="Quantity available">
+  <label class="mat-label">Material Name</label>
+  <input class="mat-input" placeholder="e.g. Ryegrass Seed">
+
+  <label class="mat-label">Cost per Unit ($)</label>
+  <input class="mat-input" type="number">
+
+  <label class="mat-label">Quantity Available</label>
+  <input class="mat-input" type="number">
 `
 
   container.appendChild(row)
