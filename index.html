@@ -338,15 +338,18 @@ const COSTS = {
   grow: 50
 }
 
-const MATERIAL_USAGE = {
-  seed: 5,        // lbs per 1000 sqft
-  fertilizer: 4,
-  mulch: 50,
-  tack: 3,
-  compost: 0.5,
-  biohum: 2,
-  lime: 10,
-  sulfur: 5
+const MATERIAL_RATES = {
+  seed: 5,          // lbs / 1000 sqft
+  fertilizer: 4,    // lbs
+  mulch: 50,        // lbs
+  tackifier: 3,     // lbs
+
+  compost: 0.5,     // cubic yards
+  biochar: 10,      // lbs
+  humic: 1,         // lbs
+
+  lime: 4,          // lbs
+  sulfur: 8         // lbs
 }
 
 //==============================
@@ -1536,10 +1539,10 @@ function getMaterialNeeds(r){
   // BASE MATERIALS
   // =========================
 
-  needs.seed = (sqft / 1000) * 5
-  needs.fertilizer = (sqft / 1000) * 4
-  needs.mulch = (sqft / 1000) * 50
-  needs.tackifier = (sqft / 1000) * 3
+ needs.seed       = (sqft / 1000) * MATERIAL_RATES.seed
+needs.fertilizer = (sqft / 1000) * MATERIAL_RATES.fertilizer
+needs.mulch      = (sqft / 1000) * MATERIAL_RATES.mulch
+needs.tackifier  = (sqft / 1000) * MATERIAL_RATES.tackifier
 
   // =========================
   // PREMIUM ADDITIONS
@@ -1548,11 +1551,11 @@ function getMaterialNeeds(r){
   let packageType = document.getElementById("package")?.value || "standard"
 
   if(packageType === "premium"){
-    needs.compost = (sqft / 1000) * 0.5
+   needs.compost = (sqft / 1000) * MATERIAL_RATES.compost
 
     // Bio/Hum blend = split usage
-    needs.biochar = (sqft * 0.5)
-    needs.humic = (sqft * 0.5)
+    needs.biochar = (sqft / 1000) * (MATERIAL_RATES.biochar * 0.5)
+needs.humic   = (sqft / 1000) * (MATERIAL_RATES.humic * 0.5)
   }
 
   // =========================
@@ -1561,25 +1564,23 @@ function getMaterialNeeds(r){
 
   let addons = app.job.addons || {}
 
-  if(addons.lime){
-    needs.lime = sqft * 0.004
-  }
+if(addons.lime){
+  needs.lime = (sqft / 1000) * MATERIAL_RATES.lime
+}
 
-  if(addons.sulfur){
-    needs.sulfur = sqft * 0.008
-  }
+if(addons.sulfur){
+  needs.sulfur = (sqft / 1000) * MATERIAL_RATES.sulfur
+}
 
-  if(addons.biochar){
-    needs.biochar = (needs.biochar || 0) + (sqft * 1)
-  }
+if(addons.biochar){
+  needs.biochar = (needs.biochar || 0) +
+    (sqft / 1000) * MATERIAL_RATES.biochar
+}
 
-  if(addons.humic){
-    needs.humic = (needs.humic || 0) + (sqft * 1)
-  }
-
-  if(addons.grow){
-    needs.sprinklers = r.houses
-  }
+if(addons.humic){
+  needs.humic = (needs.humic || 0) +
+    (sqft / 1000) * MATERIAL_RATES.humic
+}
 
   return needs
 }
