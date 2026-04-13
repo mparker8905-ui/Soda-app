@@ -2183,7 +2183,15 @@ alert("clicked")
 
 window.fixInventory = function(type, amount){
 
-  let container = document.getElementById("standardMaterials")
+  let container
+
+if(type === "seed" || type === "fertilizer" || type === "mulch" || type === "tackifier"){
+  container = document.getElementById("standardMaterials")
+} else if(type === "compost" || type === "biochar" || type === "humic"){
+  container = document.getElementById("premiumMaterials")
+} else {
+  container = document.getElementById("addonMaterials")
+}
 
   if(!container) return
 
@@ -2192,8 +2200,21 @@ window.fixInventory = function(type, amount){
 
   row.innerHTML = `
     <div class="row-top">
-      <select class="mat-select">
-        <option value="${type}" selected>${MATERIAL_LABELS[type] || type}</option>
+    <select class="mat-select">
+  <option value="seed" ${type==="seed"?"selected":""}>Seed</option>
+  <option value="fertilizer" ${type==="fertilizer"?"selected":""}>Fertilizer</option>
+  <option value="mulch" ${type==="mulch"?"selected":""}>Mulch</option>
+  <option value="tackifier" ${type==="tackifier"?"selected":""}>Tackifier</option>
+  <option value="compost" ${type==="compost"?"selected":""}>Compost</option>
+  <option value="biochar" ${type==="biochar"?"selected":""}>Biochar</option>
+  <option value="humic" ${type==="humic"?"selected":""}>Humic Acid</option>
+  <option value="lime" ${type==="lime"?"selected":""}>Lime</option>
+  <option value="sulfur" ${type==="sulfur"?"selected":""}>Sulfur</option>
+  <option value="sprinklers" ${type==="sprinklers"?"selected":""}>Sprinklers</option>
+  <option value="timers" ${type==="timers"?"selected":""}>Sprinkler Timers</option>
+</select>
+
+{MATERIAL_LABELS[type] || type}</option>
       </select>
       <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
     </div>
