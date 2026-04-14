@@ -363,9 +363,23 @@ button:active{
   letter-spacing:0.5px;
 }
 
-b{
+.glass-card{
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(212,175,55,0.25);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 14px 0;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 12px rgba(212,175,55,0.08);
+}
+
+.section-title{
   color:#d4af37;
   font-weight:700;
+  margin-bottom:8px;
+  font-size:14px;
+  letter-spacing:.5px;
+  text-transform:uppercase;
 }
 
 </style>
@@ -1178,64 +1192,122 @@ alertsHTML += buildAlertBox("🚨 Critical Issues", alerts.danger, "alert-danger
 alertsHTML += buildAlertBox("⚠ Warnings", alerts.warning, "alert-warning")
 alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success")
 
+let summaryHTML = `
+  <div class="glass-card">
+    <div class="section-title">PROJECT SUMMARY</div>
+    Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+    Houses: ${r.houses}
+  </div>
+`
+
+let inventoryHTML = `
+<div class="glass-card">
+  <div class="section-title">Inventory Cost</div>
+  Standard: $${inv.standard.toFixed(2)}<br>
+  Premium: $${inv.premium.toFixed(2)}<br>
+  Add-Ons: $${inv.addons.toFixed(2)}<br>
+  <br>
+  <b>Total Materials:</b> $${inv.total.toFixed(2)}
+</div>
+`
+
+let materialReqHTML = `
+<div class="glass-card">
+  <div class="section-title">Material Requirements</div>
+  ${materialHTML}
+</div>
+`
+
+let usageHTML = `
+<div class="glass-card">
+  <div class="section-title">Material Usage</div>
+  ${usageHTMLInner}
+</div>
+`
+
+let laborHTML = `
+<div class="glass-card">
+  <div class="section-title">Labor</div>
+  Total Hours: ${r.totalHours.toFixed(2)}<br>
+  Labor Cost: $${r.laborCost.toFixed(2)}<br>
+  Per House: $${laborPerHouse.toFixed(2)}
+</div>
+`
+
+let overheadHTML = `
+<div class="glass-card">
+  <div class="section-title">Overhead</div>
+  Overhead Cost: $${r.overheadCost.toFixed(2)}<br>
+  Per House: $${overheadPerHouse.toFixed(2)}
+</div>
+`
+
+let costHTML = `
+<div class="glass-card">
+  <div class="section-title">Cost Breakdown</div>
+  Total Cost: $${r.cost.toFixed(2)}<br>
+  Cost / Sqft: $${costPerSqft.toFixed(2)}
+</div>
+`
+
+let pricingHTML = `
+<div class="glass-card">
+  <div class="section-title">Pricing</div>
+
+  ${profitBarHTML}
+
+  Target Price: $${r.price.toFixed(2)}<br>
+  Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
+  Profit: $${r.profit.toFixed(2)}<br>
+  Margin: ${marginPercent.toFixed(1)}%
+</div>
+`
+
+let perHouseHTML = `
+<div class="glass-card">
+  <div class="section-title">Per House</div>
+  Cost: $${perHouseCost.toFixed(2)}<br>
+  Price: $${perHousePrice.toFixed(2)}<br>
+  Profit: $${perHouseProfit.toFixed(2)}
+</div>
+`
+
+let comparisonHTML = `
+<div class="glass-card">
+  <div class="section-title">Package Comparison</div>
+
+  Current: ${currentPackage.toUpperCase()}<br>
+  Other: ${altPackage.toUpperCase()}<br><br>
+
+  Price Difference:
+  <span style="color:${priceDiffColor};font-weight:700;">
+    $${priceDiff.toFixed(2)}
+  </span><br>
+
+  Profit Difference:
+  <span style="color:${profitDiffColor};font-weight:700;">
+    $${profitDiff.toFixed(2)}
+  </span>
+</div>
+`
+
 document.getElementById("results").innerHTML =
   alertsHTML +
-recommendationHTML +
-  "<b>PROJECT SUMMARY</b><br>" +
-  "Total Sqft: " + r.totalSqft.toFixed(0) + "<br>" +
-  "Houses: " + r.houses + "<br><br>" +
+  recommendationHTML +
+  summaryHTML +
+  inventoryHTML +
+  materialReqHTML +
+  usageHTML +
+  laborHTML +
+  overheadHTML +
+  costHTML +
+  pricingHTML +
+  perHouseHTML +
+  comparisonHTML
 
-      
-       "<b>INVENTORY COST</b><br>" +    "Standard: $" + inv.standard.toFixed(2) + "<br>" +
-"Premium: $" + inv.premium.toFixed(2) + "<br>" +
-"Add-Ons: $" + inv.addons.toFixed(2) + "<br>" +
-"Total Materials: $" + inv.total.toFixed(2) + "<br><br>" +
+   
 
-      addonHTML +
-      savingsHTML +
-      materialHTML +
-
-      "<b>BASE PACKAGE</b><br>" +
-      "Base Cost: $" + (r.cost - r.laborCost - r.overheadCost).toFixed(2) + "<br><br>" +
-
-      "<b>LABOR</b><br>" +
-      "Total Hours: " + r.totalHours.toFixed(2) + "<br>" +
-      "Labor Cost: $" + r.laborCost.toFixed(2) + "<br>" +
-      "Per House: $" + laborPerHouse.toFixed(2) + "<br><br>" +
-
-      "<b>OVERHEAD</b><br>" +
-      "Overhead Cost: $" + r.overheadCost.toFixed(2) + "<br>" +
-      "Per House: $" + overheadPerHouse.toFixed(2) + "<br><br>" +
-
-      "<b>COST BREAKDOWN</b><br>" +
-     "Total Cost: <span style='color:#fff;'>$" + r.cost.toFixed(2) + "</span><br>" +
-      "Cost / Sqft: $" + costPerSqft.toFixed(2) + "<br><br>" +
-
-      "<b>PRICING</b><br>" +
-      profitBarHTML +
-      "Target Price: $" + r.price.toFixed(2) + "<br>" +
-      "Price / Sqft: $" + pricePerSqft.toFixed(2) + "<br>" +
-     "Profit: <span style='color:#4cff9a;font-weight:700;'>$" + r.profit.toFixed(2) + "</span><br>" +
-    "Margin: <span style='color:" + (marginPercent < 20 ? "#ff4d4d" : marginPercent < 30 ? "#ffd24d" : "#4cff9a") + ";font-weight:700;'>" + marginPercent.toFixed(1) + "%</span><br><br>" +
-
-      "<b>PER HOUSE</b><br>" +
-      "Cost: $" + perHouseCost.toFixed(2) + "<br>" +
-      "Price: $" + perHousePrice.toFixed(2) + "<br>" +
-      "Profit: $" + perHouseProfit.toFixed(2) + "<br><br>" +
-
-      "<b>PACKAGE COMPARISON</b><br>" +
-      "Current: " + currentPackage.toUpperCase() + "<br>" +
-      "Other: " + altPackage.toUpperCase() + "<br>" +
-
-      "Price Difference: " +
-      "<span style='color:" + priceDiffColor + "; font-weight:700;'>" +
-      "$" + priceDiff.toFixed(2) +
-      "</span><br>" +
-
-      "Profit Difference: " +
-      "<span style='color:" + profitDiffColor + "; font-weight:700;'>" +
-      "$" + profitDiff.toFixed(2) +
-      "</span><br><br>"
+    
 
 setTimeout(() => {
   let bar = document.querySelector(".profit-bar-fill")
