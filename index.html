@@ -1770,7 +1770,12 @@ data.push({
 
   localStorage.setItem("soda_inventory", JSON.stringify(inventory))
 
-  alert("Inventory Saved")
+function saveInventory(){
+  // existing logic...
+
+  showToast("Inventory saved")
+}
+
 }
 
 //==================
@@ -1916,7 +1921,7 @@ if(needs[type] !== undefined){
 
   loadInventory()
 
-  alert("Inventory Updated")
+ 
 }
 
  //=====================
@@ -2189,31 +2194,36 @@ function generateInventoryPDF(){
 //=================
 
 window.fixLowMargin = function(){
+
   let input = document.getElementById("targetMargin")
+  let current = Number(input.value) || 0
 
-  let current = Number(input.value) || 30
-
-  if(current < 35){
+  if(current < 30){
     input.value = 35
   } else {
     input.value = current + 5
   }
 
   render()
+
+  showToast("📈 Margin improved")
 }
 
-window.fixLowPrice = function(){
+//===================
+//== FIX LOW PRICE
+//===================
 
-alert("clicked")
+window.fixLowPrice = function(){
 
   let marginInput = document.getElementById("targetMargin")
   let pricingMode = document.getElementById("pricingMode")
 
-  // Always force a noticeable improvement
   marginInput.value = 35
   pricingMode.value = "max"
 
   render()
+
+  showToast("💰 Price optimized")
 }
 
 //================
@@ -2322,6 +2332,12 @@ window.fixAllIssues = function(){
       fixInventory(type, shortage)
     }
   })
+
+window.fixAllIssues = function(){
+  // logic...
+
+  showToast("All issues fixed")
+}
 
   // 🔥 FINAL FORCE REFRESH
   setTimeout(() => {
