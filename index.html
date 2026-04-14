@@ -417,6 +417,32 @@ button:active{
   transform: rotate(180deg);
 }
 
+.history-card{
+  background: rgba(255,255,255,0.03);
+  border:1px solid rgba(255,215,0,0.2);
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+.history-top{
+  display:flex;
+  justify-content:space-between;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.history-details{
+  font-size:13px;
+  color:#ccc;
+}
+
+.history-date{
+  font-size:11px;
+  color:#777;
+  margin-top:6px;
+}
+
 </style>
 
 </head>
@@ -536,11 +562,18 @@ button:active{
   <div id="results"></div>
 </div>
 
+<button onclick="saveJob()" class="primary-btn">
+  💾 Save Job
+</button>
+
+<div id="jobHistorySection" class="glass-card">
+  <div class="section-title">JOB HISTORY</div>
+  <div id="jobHistory"></div>
+</div>
+
 <button onclick="openClientView()">Client View</button>
 
 <button onclick="sendProposal()">Send Proposal</button>
-
-<button onclick="useInventoryForJob()">Use Inventory for Job</button>
 
 <div class="card">
   <span class='gold-text'>Inventory</span>
@@ -1208,6 +1241,65 @@ Object.keys(materialNeeds).forEach(k => {
 materialHTML += "<br>"
 
 let alertsHTML = ""
+
+//=======================
+//=== SAVE JOB
+//=======================
+
+function saveJob(){
+
+  let r = calculateJob()
+  let needs = getMaterialNeeds(r)
+  let inventory = getInventoryTotals()
+
+  // =========================
+  // BUILD JOB OBJECT
+  // =========================
+
+  let job = {
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+
+    sqft: r.totalSqft,
+    houses: r.houses,
+
+    price: r.price,
+    cost: r.cost,
+    profit: r.profit,
+    margin: r.price ? (r.profit / r.price * 100) : 0,
+
+    materials: needs
+  }
+
+  // =========================
+  // SAVE JOB HISTORY
+  // =========================
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+  history.unshift(job) // newest first
+
+  localStorage.setItem("jobHistory", JSON.stringify(history))
+
+  // =========================
+  // DEDUCT INVENTORY
+  // =========================
+
+  Object.keys(needs).forEach(k => {
+    let used = needs[k] || 0
+    inventory[k] = Math.max((inventory[k] || 0) - used, 0)
+  })
+
+  localStorage.setItem("inventory", JSON.stringify(inventory))
+
+  // =========================
+  // FEEDBACK
+  // =========================
+
+  showToast("💾 Job saved + inventory updated", "success")
+
+  renderHistory()
+  render()
+}
 
 //==================
 //== Build Alert
@@ -2923,6 +3015,51 @@ function toggleCard(el){
     card.scrollIntoView({ behavior: "smooth", block: "start" })
   }, 200)
 }
+
+//========================
+//=== RENDER HISTORY
+//========================
+
+function renderHistory(){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+
+  let html = ""
+
+  history.forEach(job => {
+
+    let color =
+      job.margin < 20 ? "#ff4d4d" :
+      job.margin < 30 ? "#ffd24d" :
+      "#4cff9a"
+
+    html += `
+      <div class="history-card">
+        
+        <div class="history-top">
+          <b>${job.sqft} sqft</b>
+          <span style="color:${color}">
+            ${job.margin.toFixed(1)}%
+          </span>
+        </div>
+
+        <div class="history-details">
+          💰 $${job.price.toFixed(2)} |
+          Profit: $${job.profit.toFixed(2)}
+        </div>
+
+        <div class="history-date">
+          ${job.date}
+        </div>
+
+      </div>
+    `
+  })
+
+  document.getElementById("jobHistory").innerHTML = html
+}
+
+renderHistory()
 
 </script>
 
