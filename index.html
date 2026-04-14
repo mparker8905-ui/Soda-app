@@ -681,22 +681,46 @@ const MATERIAL_LABELS = {
 //== TOAST SYSTEM
 //=====================
 
-function showToast(message, type = "success"){
+function showToast(message, type = "success", targetCard = null){
 
   let toast = document.createElement("div")
   toast.className = `toast toast-${type}`
   toast.innerText = message
 
+  // 👉 CLICK HANDLER
+  if(targetCard){
+    toast.style.cursor = "pointer"
+
+    toast.onclick = () => {
+      let card = document.querySelector(`[data-card="${targetCard}"]`)
+
+      if(card){
+        // open it
+        card.classList.add("open")
+
+        // scroll to it
+        card.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        })
+
+        // temporary glow boost
+        card.classList.add("highlight")
+        setTimeout(() => {
+          card.classList.remove("highlight")
+        }, 2000)
+      }
+    }
+  }
+
   document.body.appendChild(toast)
 
-  setTimeout(() => {
-    toast.classList.add("show")
-  }, 50)
+  setTimeout(() => toast.classList.add("show"), 10)
 
   setTimeout(() => {
     toast.classList.remove("show")
     setTimeout(() => toast.remove(), 300)
-  }, 2000)
+  }, 3000)
 }
 
 //==================
@@ -976,6 +1000,8 @@ let profit = price - totalCost
 
 function render(){
   try{
+
+    let shownToasts = new Set()
 
     let r = calculateJob()
     let inv = getInventoryCost()
@@ -1442,22 +1468,46 @@ document.getElementById("results").innerHTML =
 setTimeout(() => {
   let cards = document.querySelectorAll(".glass-card")
 
-  let problemCards = []
+let problemCards = []
 
-  // Inventory issues
-  if(Object.values(comparison).some(i => i.status === "short")){
-    problemCards.push("materials")
-  }
+// Inventory issues
+if(Object.values(comparison).some(i => i.status === "short")){
+  problemCards.push("materials")
+ if(!shownToasts.has("materials")){
+  showToast("⚠ Inventory shortage detected", "error", "materials")
+  shownToasts.add("materials")
+}
+}
 
-  // Low margin
-  if(marginPercent < 25){
-    problemCards.push("pricing")
-  }
+// Low margin
+if(marginPercent < 25){
+  problemCards.push("pricing")
 
-  // Missing data
-  if(inv.total === 0) problemCards.push("inventory")
-  if(r.laborCost === 0) problemCards.push("labor")
-  if(r.overheadCost === 0) problemCards.push("overhead")
+if(!shownToasts.has("pricing")){
+  showToast("⚠ Low margin detected", "warning", "pricing")
+  shownToasts.add("pricing")
+}
+
+}
+
+// Missing data
+if(inv.total === 0){
+  problemCards.push("inventory")
+  showToast("⚠ Add inventory costs", "warning", "inventory")
+}
+
+if(r.laborCost === 0){
+  problemCards.push("labor")
+ if(r.laborCost === 0 && !shownToasts.has("labor")){
+  showToast("⚠ Add labor cost", "warning", "labor")
+  shownToasts.add("labor")
+}
+}
+
+if(r.overheadCost === 0){
+  problemCards.push("overhead")
+  showToast("⚠ Add overhead cost", "warning", "overhead")
+}
 
   cards.forEach(card => {
     let type = card.dataset.card
@@ -2608,7 +2658,7 @@ window.fixLowMargin = function(){
 
   render()
 
-  showToast("📈 Margin improved", "success")
+ showToast("📈 Margin improved", "success", "pricing")
 }
 
 //===================
@@ -2630,7 +2680,7 @@ window.fixLowPrice = function(){
 
   render()
 
-  showToast("💰 Price optimized", "warning")
+  showToast("💰 Profit optimized", "success", "pricing")
 }
 
 //================
