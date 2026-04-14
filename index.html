@@ -863,7 +863,7 @@ if(baseCost < 500) baseCost = 500
 
 // 🔥 NEW LOGIC
 
-let materialCost = inventory.total || baseCost
+let materialCost = inventory.total > 0 ? inventory.total : baseCost
 
   let addonCosts = {
   aeration: 0,
@@ -1036,7 +1036,8 @@ let profit = price - totalCost
 function render(){
   try{
 
-    let shownToasts = new Set()
+    window.shownToasts = window.shownToasts || new Set()
+let shownToasts = window.shownToasts
 
     let r = calculateJob()
     let inv = getInventoryCost()
@@ -1244,11 +1245,6 @@ materialHTML += "<br>"
 
 let alertsHTML = ""
 
-alertsHTML += buildAlertBox("🚨 Critical Issues", alerts.danger, "alert-danger")
-alertsHTML += buildAlertBox("⚠ Warnings", alerts.warning, "alert-warning")
-alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success")
-}
-
 //=======================
 //=== SAVE JOB
 //=======================
@@ -1256,7 +1252,6 @@ alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success
 function saveJob(){
 
   let r = calculateJob()
-  let needs = getMaterialNeeds(r)
   let inventory = getInventoryTotals()
 
   // ======================
@@ -1661,8 +1656,6 @@ function openClientView(){
   let r = calculateJob()
 
 let materialCost = getInventoryCost().total
-
-let materialNeeds = getMaterialNeeds(r)
 
 let materialHTML = ""
 
