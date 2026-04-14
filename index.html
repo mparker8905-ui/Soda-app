@@ -1251,9 +1251,11 @@ let alertsHTML = ""
 
 function saveJob(){
 
+let needs = getMaterialNeeds(r)
+
   let r = calculateJob()
   let inventory = getInventoryTotals()
-
+}
   // ======================
   // BUILD JOB FIRST ✅
   // ======================
@@ -1311,7 +1313,7 @@ localStorage.setItem("inventory_full", JSON.stringify(full))
   renderHistory()
   render()
 
-  showToast("Job saved + inventory updated", "success")
+  showToast("Job saved + inventory updated","success")
 }
 
 //==================
@@ -1654,6 +1656,8 @@ setTimeout(() => {
 function openClientView(){
 
   let r = calculateJob()
+
+let materialNeeds = getMaterialNeeds(r)
 
 let materialCost = getInventoryCost().total
 
