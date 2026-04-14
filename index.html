@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
- 
+
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -1353,6 +1353,28 @@ let costHTML = `
 </div>
 `
 
+let pricingHTML = `
+<div class="glass-card collapsible" data-card="pricing">
+
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>PRICING</span>
+    <span class="chevron">⌄</span>
+  </div>
+
+  <div class="card-body">
+
+    ${profitBarHTML}
+
+    Target Price: $${r.price.toFixed(2)}<br>
+    Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
+    Profit: $${r.profit.toFixed(2)}<br>
+    Margin: ${marginPercent.toFixed(1)}%
+
+  </div>
+
+</div>
+`
+
 let perHouseHTML = `
 <div class="glass-card collapsible" data-card="perhouse">
   
@@ -1405,6 +1427,7 @@ document.getElementById("results").innerHTML =
   summaryHTML +
   inventoryHTML +
   materialReqHTML +
+  usageHTML+
   laborHTML +
   overheadHTML +
   costHTML +
@@ -1419,13 +1442,38 @@ document.getElementById("results").innerHTML =
 setTimeout(() => {
   let cards = document.querySelectorAll(".glass-card")
 
+  let problemCards = []
+
+  // Inventory issues
+  if(Object.values(comparison).some(i => i.status === "short")){
+    problemCards.push("materials")
+  }
+
+  // Low margin
+  if(marginPercent < 25){
+    problemCards.push("pricing")
+  }
+
+  // Missing data
+  if(inv.total === 0) problemCards.push("inventory")
+  if(r.laborCost === 0) problemCards.push("labor")
+  if(r.overheadCost === 0) problemCards.push("overhead")
+
   cards.forEach(card => {
-    if(card.dataset.card === "pricing"){
-      card.classList.add("open")
+    let type = card.dataset.card
+
+    if(problemCards.includes(type)){
+      card.classList.add("open", "highlight")
+    } else {
+      card.classList.remove("highlight")
     }
   })
 
-  cards[0]?.classList.add("open")
+  // fallback open first if nothing triggered
+  if(problemCards.length === 0){
+    cards[0]?.classList.add("open")
+  }
+
 }, 50)
 
     
