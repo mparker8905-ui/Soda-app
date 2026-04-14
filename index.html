@@ -1241,6 +1241,7 @@ Object.keys(materialNeeds).forEach(k => {
 materialHTML += "<br>"
 
 let alertsHTML = ""
+}
 
 //=======================
 //=== SAVE JOB
@@ -1252,53 +1253,64 @@ function saveJob(){
   let needs = getMaterialNeeds(r)
   let inventory = getInventoryTotals()
 
-  // =========================
-  // BUILD JOB OBJECT
-  // =========================
+  // ======================
+  // BUILD JOB FIRST ✅
+  // ======================
 
   let job = {
     id: Date.now(),
     date: new Date().toLocaleString(),
-
     sqft: r.totalSqft,
-    houses: r.houses,
-
     price: r.price,
     cost: r.cost,
     profit: r.profit,
-    margin: r.price ? (r.profit / r.price * 100) : 0,
-
-    materials: needs
+    margin: r.price ? (r.profit / r.price) * 100 : 0
   }
 
-  // =========================
-  // SAVE JOB HISTORY
-  // =========================
+  // ======================
+  // SAVE JOB HISTORY ✅
+  // ======================
 
   let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
-  history.unshift(job) // newest first
-
+  history.unshift(job)
   localStorage.setItem("jobHistory", JSON.stringify(history))
 
-  // =========================
-  // DEDUCT INVENTORY
-  // =========================
+  // ======================
+  // DEDUCT INVENTORY ✅
+  // ======================
 
-  Object.keys(needs).forEach(k => {
-    let used = needs[k] || 0
-    inventory[k] = Math.max((inventory[k] || 0) - used, 0)
+ let full = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+Object.keys(needs).forEach(type => {
+
+  let remaining = needs[type] || 0
+
+  ["standard","premium","addons"].forEach(section => {
+
+    (full[section] || []).forEach(item => {
+
+      if(item.type === type && remaining > 0){
+
+        let used = Math.min(item.qty, remaining)
+
+        item.qty -= used
+        remaining -= used
+      }
+
+    })
   })
+})
 
-  localStorage.setItem("inventory", JSON.stringify(inventory))
+localStorage.setItem("inventory_full", JSON.stringify(full))
 
-  // =========================
-  // FEEDBACK
-  // =========================
-
-  showToast("💾 Job saved + inventory updated", "success")
+  // ======================
+  // UPDATE UI ✅
+  // ======================
 
   renderHistory()
   render()
+
+  showToast("Job saved + inventory updated", "success")
 }
 
 //==================
@@ -2242,35 +2254,27 @@ function addMaterialRow(type){
 
 function getInventoryCost(){
 
-  function sumSection(id){
-    let container = document.getElementById(id)
-    if(!container) return 0
+  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
-    let rows = container.querySelectorAll(".material-row")
-    let total = 0
+  let totals = {
+    standard: 0,
+    premium: 0,
+    addons: 0
+  }
 
-    rows.forEach(row => {
-      let inputs = row.querySelectorAll("input")
-
-      let cost = Number(inputs[1]?.value) || 0
-      let qty = Number(inputs[2]?.value) || 0
-
-      total += cost * qty
+  function sum(section){
+    (section || []).forEach(item => {
+      totals.total = (totals.total || 0) + (item.cost * item.qty)
     })
-
-    return total
   }
 
-  let standard = sumSection("standardMaterials")
-  let premium = sumSection("premiumMaterials")
-  let addons = sumSection("addonMaterials")
+  sum(saved.standard)
+  sum(saved.premium)
+  sum(saved.addons)
 
-  return {
-    standard,
-    premium,
-    addons,
-    total: standard + premium + addons
-  }
+  totals.total = (totals.standard || 0) + (totals.premium || 0) + (totals.addons || 0)
+
+  return totals
 }
 
 //==================
@@ -2286,15 +2290,15 @@ function saveInventory(){
     let data = []
 
     rows.forEach(row => {
-     let select = row.querySelector("select")
-let inputs = row.querySelectorAll("input")
+      let select = row.querySelector("select")
+      let inputs = row.querySelectorAll("input")
 
-data.push({
-  type: select?.value || "",   // ✅ FIXED
-  name: inputs[0]?.value || "",
-  cost: inputs[1]?.value || "",
-  qty: inputs[2]?.value || ""
-})
+      data.push({
+        type: select?.value || "",
+        name: inputs[0]?.value || "",
+        cost: parseFloat(inputs[1]?.value) || 0,
+        qty: parseFloat(inputs[2]?.value) || 0
+      })
     })
 
     return data
@@ -2306,14 +2310,11 @@ data.push({
     addons: getSection("addonMaterials")
   }
 
-  localStorage.setItem("soda_inventory", JSON.stringify(inventory))
+  // ✅ SAVE FULL DATA
 
-function saveInventory(){
-  // existing logic...
+let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
-  showToast("Inventory saved")
-}
-
+ // silent autosave (no toast)
 }
 
 //==================
@@ -2322,9 +2323,7 @@ function saveInventory(){
 
 function loadInventory(){
 
-  let saved = localStorage.getItem("soda_inventory")
-
-  if(!saved) return
+  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
   let inventory = JSON.parse(saved)
 
@@ -2338,28 +2337,38 @@ function loadInventory(){
       let row = document.createElement("div")
       row.className = "material-row"
 
-row.innerHTML = `
-  <select class="mat-select">
-    <option value="seed" ${item.type==="seed"?"selected":""}>Seed</option>
-    <option value="fertilizer" ${item.type==="fertilizer"?"selected":""}>Fertilizer</option>
-    <option value="mulch" ${item.type==="mulch"?"selected":""}>Mulch</option>
-    <option value="tackifier" ${item.type==="tackifier"?"selected":""}>Tackifier</option>
-    <option value="compost" ${item.type==="compost"?"selected":""}>Compost</option>
-    <option value="biochar" ${item.type==="biochar"?"selected":""}>Biochar</option>
-    <option value="humic" ${item.type==="humic"?"selected":""}>Humic Acid</option>
-    <option value="lime" ${item.type==="lime"?"selected":""}>Lime</option>
-    <option value="sulfur" ${item.type==="sulfur"?"selected":""}>Sulfur</option>
-    <option value="sprinklers" ${item.type==="sprinklers"?"selected":""}>Sprinklers</option>
-    <option value="timers" ${item.type==="timers"?"selected":""}>Sprinkler Timers</option>
+      row.innerHTML = `
+        <div class="row-top">
+          <select class="mat-select" onchange="updateUnitLabel(this)">
+            <option value="seed" ${item.type==="seed"?"selected":""}>Seed</option>
+            <option value="fertilizer" ${item.type==="fertilizer"?"selected":""}>Fertilizer</option>
+            <option value="mulch" ${item.type==="mulch"?"selected":""}>Mulch</option>
+            <option value="tackifier" ${item.type==="tackifier"?"selected":""}>Tackifier</option>
+            <option value="compost" ${item.type==="compost"?"selected":""}>Compost</option>
+            <option value="biochar" ${item.type==="biochar"?"selected":""}>Biochar</option>
+            <option value="humic" ${item.type==="humic"?"selected":""}>Humic Acid</option>
+            <option value="lime" ${item.type==="lime"?"selected":""}>Lime</option>
+            <option value="sulfur" ${item.type==="sulfur"?"selected":""}>Sulfur</option>
+            <option value="sprinklers" ${item.type==="sprinklers"?"selected":""}>Sprinklers</option>
+            <option value="timers" ${item.type==="timers"?"selected":""}>Sprinkler Timers</option>
+          </select>
 
-  </select>
+          <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
+        </div>
 
-  <input class="mat-input" value="${item.name}">
-  <input class="mat-input" type="number" value="${item.cost}">
-  <input class="mat-input" type="number" value="${item.qty}">
-`
+        <label class="mat-label">Material Name</label>
+        <input class="mat-input" value="${item.name}">
+
+        <label class="mat-label">Cost per Unit ($)</label>
+        <input class="mat-input" type="number" value="${item.cost}">
+
+        <label class="mat-label unit-label">Quantity Available</label>
+        <input class="mat-input" type="number" value="${item.qty}">
+      `
 
       container.appendChild(row)
+
+      updateUnitLabel(row.querySelector("select"))
     })
   }
 
@@ -2374,22 +2383,21 @@ row.innerHTML = `
 
 function getInventoryTotals(){
 
-  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  let inventory = JSON.parse(saved)
 
   let totals = {}
 
-  function process(section){
-    (section || []).forEach(item => {
-      let name = item.type
-      let qty = Number(item.qty) || 0
+  Object.values(inventory).forEach(section => {
+    section.forEach(item => {
 
-      totals[name] = (totals[name] || 0) + qty
+      let type = item.type
+      let qty = item.qty || 0
+
+      totals[type] = (totals[type] || 0) + qty
     })
-  }
-
-  process(saved.standard)
-  process(saved.premium)
-  process(saved.addons)
+  })
 
   return totals
 }
@@ -2424,42 +2432,40 @@ function compareInventory(needs, inventory){
 
 function useInventoryForJob(){
 
-  if(!confirm("Use inventory for this job?")){
-    return
-  }
+  if(!confirm("Use inventory for this job?")) return
 
   let r = calculateJob()
   let needs = getMaterialNeeds(r)
 
-  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+  let full = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
   function deduct(section){
 
     (section || []).forEach(item => {
 
-     let type = item.type
-let qty = Number(item.qty) || 0
+      let type = item.type
+      let qty = Number(item.qty) || 0
 
-if(needs[type] !== undefined){
+      if(needs[type] !== undefined){
 
-  let used = Math.min(qty, needs[type])
+        let used = Math.min(qty, needs[type])
 
-  item.qty = qty - used
-
-  needs[type] -= used
-}
+        item.qty -= used
+        needs[type] -= used
+      }
     })
   }
 
-  deduct(saved.standard)
-  deduct(saved.premium)
-  deduct(saved.addons)
+  deduct(full.standard)
+  deduct(full.premium)
+  deduct(full.addons)
 
-  localStorage.setItem("soda_inventory", JSON.stringify(saved))
+  localStorage.setItem("inventory_full", JSON.stringify(full))
 
   loadInventory()
+  render()
 
- 
+  showToast("Inventory applied to job", "success")
 }
 
  //=====================
@@ -2603,7 +2609,7 @@ function deleteRow(btn){
 
 function exportInventory(){
 
-  let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+ let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
   let rows = [["Section","Material","Cost","Quantity","Unit"]]
 
@@ -2657,7 +2663,7 @@ function generateInventoryPDF(){
 
   try {
 
-    let saved = JSON.parse(localStorage.getItem("soda_inventory") || "{}")
+  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
     let rows = []
 
@@ -3059,7 +3065,19 @@ function renderHistory(){
   document.getElementById("jobHistory").innerHTML = html
 }
 
+
+
+loadInventory()
 renderHistory()
+render()
+
+document.addEventListener("input", (e) => {
+
+  if(e.target.closest(".material-row")){
+    saveInventory()
+  }
+
+})
 
 </script>
 
