@@ -274,6 +274,36 @@ input,select,button{
   border:1px solid rgba(0,255,120,0.4);
 }
 
+/* ===== TOAST ===== */
+.toast-container{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:9999;
+}
+
+.toast{
+  background:#111;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:10px;
+  border:1px solid #d4af37;
+  box-shadow:0 0 10px rgba(212,175,55,0.25);
+  font-size:14px;
+  opacity:0;
+  transform:translateY(20px);
+  transition:all 0.3s ease;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
 </style>
 
 </head>
@@ -1302,6 +1332,8 @@ button:active{
 
 </div>
 
+<div id="toastContainer" class="toast-container"></div>
+
 </body>
 
 </html>
@@ -2188,53 +2220,75 @@ window.fixInventory = function(type, amount){
 
   let container
 
-if(type === "seed" || type === "fertilizer" || type === "mulch" || type === "tackifier"){
-  container = document.getElementById("standardMaterials")
-} else if(type === "compost" || type === "biochar" || type === "humic"){
-  container = document.getElementById("premiumMaterials")
-} else {
-  container = document.getElementById("addonMaterials")
-}
+  if(type === "seed" || type === "fertilizer" || type === "mulch" || type === "tackifier"){
+    container = document.getElementById("standardMaterials")
+  } else if(type === "compost" || type === "biochar" || type === "humic"){
+    container = document.getElementById("premiumMaterials")
+  } else {
+    container = document.getElementById("addonMaterials")
+  }
 
   if(!container) return
 
-  let row = document.createElement("div")
-  row.className = "material-row"
+  let rows = container.querySelectorAll(".material-row")
+  let found = false
 
-  row.innerHTML = `
-    <div class="row-top">
-    <select class="mat-select">
-  <option value="seed" ${type==="seed"?"selected":""}>Seed</option>
-  <option value="fertilizer" ${type==="fertilizer"?"selected":""}>Fertilizer</option>
-  <option value="mulch" ${type==="mulch"?"selected":""}>Mulch</option>
-  <option value="tackifier" ${type==="tackifier"?"selected":""}>Tackifier</option>
-  <option value="compost" ${type==="compost"?"selected":""}>Compost</option>
-  <option value="biochar" ${type==="biochar"?"selected":""}>Biochar</option>
-  <option value="humic" ${type==="humic"?"selected":""}>Humic Acid</option>
-  <option value="lime" ${type==="lime"?"selected":""}>Lime</option>
-  <option value="sulfur" ${type==="sulfur"?"selected":""}>Sulfur</option>
-  <option value="sprinklers" ${type==="sprinklers"?"selected":""}>Sprinklers</option>
-  <option value="timers" ${type==="timers"?"selected":""}>Sprinkler Timers</option>
-</select>
+  // 🔍 CHECK EXISTING ROWS
+  rows.forEach(row => {
 
-{MATERIAL_LABELS[type] || type}</option>
-      </select>
-      <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
-    </div>
+    let select = row.querySelector("select")
+    let inputs = row.querySelectorAll("input")
 
-    <label class="mat-label">Material Name</label>
-    <input class="mat-input" value="${MATERIAL_LABELS[type] || type}">
+    if(select && select.value === type){
 
-    <label class="mat-label">Cost per Unit ($)</label>
-    <input class="mat-input" type="number" value="0">
+      let currentQty = Number(inputs[2]?.value) || 0
+      inputs[2].value = Math.ceil(currentQty + amount)
+      showToast(`${MATERIAL_LABELS[type]} +${Math.ceil(amount)} added`)
+      found = true
+    }
 
-    <label class="mat-label unit-label">Quantity Available</label>
-    <input class="mat-input" type="number" value="${Math.ceil(amount)}">
-  `
+  })
 
-  container.appendChild(row)
+  // ➕ IF NOT FOUND → CREATE NEW ROW
+  if(!found){
 
-  // 🔥 CRITICAL: SAVE + RELOAD BEFORE RENDER
+    let row = document.createElement("div")
+    row.className = "material-row"
+
+    row.innerHTML = `
+      <div class="row-top">
+        <select class="mat-select">
+          <option value="seed" ${type==="seed"?"selected":""}>Seed</option>
+          <option value="fertilizer" ${type==="fertilizer"?"selected":""}>Fertilizer</option>
+          <option value="mulch" ${type==="mulch"?"selected":""}>Mulch</option>
+          <option value="tackifier" ${type==="tackifier"?"selected":""}>Tackifier</option>
+          <option value="compost" ${type==="compost"?"selected":""}>Compost</option>
+          <option value="biochar" ${type==="biochar"?"selected":""}>Biochar</option>
+          <option value="humic" ${type==="humic"?"selected":""}>Humic Acid</option>
+          <option value="lime" ${type==="lime"?"selected":""}>Lime</option>
+          <option value="sulfur" ${type==="sulfur"?"selected":""}>Sulfur</option>
+          <option value="sprinklers" ${type==="sprinklers"?"selected":""}>Sprinklers</option>
+          <option value="timers" ${type==="timers"?"selected":""}>Sprinkler Timers</option>
+        </select>
+
+        <button class="delete-btn" onclick="deleteRow(this)">🗑</button>
+      </div>
+
+      <label class="mat-label">Material Name</label>
+      <input class="mat-input" value="${MATERIAL_LABELS[type] || type}">
+
+      <label class="mat-label">Cost per Unit ($)</label>
+      <input class="mat-input" type="number" value="0">
+
+      <label class="mat-label unit-label">Quantity Available</label>
+      <input class="mat-input" type="number" value="${Math.ceil(amount)}">
+    `
+
+    container.appendChild(row)
+    showToast(`${MATERIAL_LABELS[type]} +${Math.ceil(amount)} added`)
+  }
+
+  // 💾 SAVE + REFRESH
   saveInventory()
   loadInventory()
 
@@ -2315,7 +2369,8 @@ window.optimizeForProfit = function(){
   marginInput.value = Math.round(targetMargin)
   pricingMode.value = "max"
 
-  alert("Optimized for maximum profit 💰")
+
+showToast("All issues fixed ✅")
 
   render()
 }
@@ -2360,6 +2415,37 @@ window.optimizeForTargetProfit = function(){
   render()
 
  alert(`Target hit at ${margin}% margin 💰`)
+}
+
+//=======================
+//== SHOW TOAST
+//=======================
+
+function showToast(message){
+
+  let container = document.getElementById("toastContainer")
+  if(!container) return
+
+  let toast = document.createElement("div")
+  toast.className = "toast"
+  toast.innerText = message
+
+  container.appendChild(toast)
+
+  // trigger animation
+  setTimeout(() => {
+    toast.classList.add("show")
+  }, 10)
+
+  // remove after delay
+  setTimeout(() => {
+    toast.classList.remove("show")
+
+    setTimeout(() => {
+      toast.remove()
+    }, 300)
+
+  }, 2500)
 }
 
 </script>
