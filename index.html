@@ -382,6 +382,41 @@ button:active{
   text-transform:uppercase;
 }
 
+/* COLLAPSIBLE CARD */
+.collapsible .card-body{
+  max-height: 0;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  opacity: 0;
+}
+
+/* OPEN STATE */
+.collapsible.open .card-body{
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+/* HEADER */
+.card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:700;
+  color:#d4af37;
+  cursor:pointer;
+  font-size:14px;
+}
+
+/* CHEVRON */
+.chevron{
+  transition: transform 0.3s ease;
+}
+
+.collapsible.open .chevron{
+  transform: rotate(180deg);
+}
+
 </style>
 
 </head>
@@ -1193,111 +1228,174 @@ alertsHTML += buildAlertBox("⚠ Warnings", alerts.warning, "alert-warning")
 alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success")
 
 let summaryHTML = `
-  <div class="glass-card">
-    <div class="section-title">PROJECT SUMMARY</div>
-    Total Sqft: ${r.totalSqft.toFixed(0)}<br>
-    Houses: ${r.houses}
+<div class="glass-card collapsible" data-card="summary">
+
+    
+    <div class="card-header" onclick="toggleCard(this)">
+      <span>PROJECT SUMMARY</span>
+      <span class="chevron">⌄</span>
+    </div>
+
+    <div class="card-body">
+      Total Sqft: ${r.totalSqft.toFixed(0)}<br>
+      Houses: ${r.houses}
+    </div>
+
   </div>
 `
 
 let inventoryHTML = `
-<div class="glass-card">
-  <div class="section-title">Inventory Cost</div>
-  Standard: $${inv.standard.toFixed(2)}<br>
-  Premium: $${inv.premium.toFixed(2)}<br>
-  Add-Ons: $${inv.addons.toFixed(2)}<br>
-  <br>
-  <b>Total Materials:</b> $${inv.total.toFixed(2)}
+<div class="glass-card collapsible" data-card="inventory">
+
+  
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>INVENTORY COST</span>
+    <span class="chevron">⌄</span>
+  </div>
+
+  <div class="card-body">
+    Standard: $${inv.standard.toFixed(2)}<br>
+    Premium: $${inv.premium.toFixed(2)}<br>
+    Add-Ons: $${inv.addons.toFixed(2)}<br>
+    <br>
+    <b>Total Materials:</b> $${inv.total.toFixed(2)}
+  </div>
+
 </div>
 `
 
 let materialReqHTML = `
-<div class="glass-card">
-  <div class="section-title">Material Requirements</div>
-  ${materialHTML}
+<div class="glass-card collapsible" data-card="materials">
+
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>MATERIAL REQUIREMENTS</span>
+    <span class="chevron">⌄</span>
+  </div>
+
+  <div class="card-body">
+    ${materialHTML}
+  </div>
+
 </div>
 `
 
-let usageHTMLInner = ""
-
-Object.keys(materialNeeds).forEach(k => {
+let usageHTMLInner = Object.keys(materialNeeds).map(k => {
   let unit = MATERIAL_RATES[k]?.unit || ""
-
-  usageHTMLInner += `
-    ${k.toUpperCase()}: ${materialNeeds[k].toFixed(1)} ${unit}<br>
-  `
-})
+  return `${k.toUpperCase()}: ${materialNeeds[k].toFixed(1)} ${unit}<br>`
+}).join("")
 
 let usageHTML = `
-<div class="glass-card">
-  <div class="section-title">Material Usage</div>
-  ${usageHTMLInner}
+
+<div class="glass-card collapsible" data-card="materials">
+
+  
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>MATERIAL USAGE</span>
+    <span class="chevron">⌄</span>
+  </div>
+
+  <div class="card-body">
+    ${usageHTMLInner}
+  </div>
+
 </div>
 `
 
 let laborHTML = `
-<div class="glass-card">
-  <div class="section-title">Labor</div>
-  Total Hours: ${r.totalHours.toFixed(2)}<br>
-  Labor Cost: $${r.laborCost.toFixed(2)}<br>
-  Per House: $${laborPerHouse.toFixed(2)}
+<div class="glass-card collapsible" data-card="labor">
+
+  
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>LABOR</span>
+    <span class="chevron">⌄</span>
+  </div>
+
+  <div class="card-body">
+    Total Hours: ${r.totalHours.toFixed(2)}<br>
+    Labor Cost: $${r.laborCost.toFixed(2)}<br>
+    Per House: $${laborPerHouse.toFixed(2)}
+  </div>
+
 </div>
 `
 
 let overheadHTML = `
-<div class="glass-card">
-  <div class="section-title">Overhead</div>
-  Overhead Cost: $${r.overheadCost.toFixed(2)}<br>
-  Per House: $${overheadPerHouse.toFixed(2)}
+<div class="glass-card collapsible" data-card="overhead">
+
+  
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>OVERHEAD</span>
+    <span class="chevron">⌄</span>
+  </div>
+
+  <div class="card-body">
+    Overhead Cost: $${r.overheadCost.toFixed(2)}<br>
+    Per House: $${overheadPerHouse.toFixed(2)}
+  </div>
+
 </div>
 `
 
 let costHTML = `
-<div class="glass-card">
-  <div class="section-title">Cost Breakdown</div>
-  Total Cost: $${r.cost.toFixed(2)}<br>
-  Cost / Sqft: $${costPerSqft.toFixed(2)}
-</div>
-`
+<div class="glass-card collapsible" data-card="cost">
 
-let pricingHTML = `
-<div class="glass-card">
-  <div class="section-title">Pricing</div>
+  
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>COST BREAKDOWN</span>
+    <span class="chevron">⌄</span>
+  </div>
 
-  ${profitBarHTML}
+  <div class="card-body">
+    Total Cost: $${r.cost.toFixed(2)}<br>
+    Cost / Sqft: $${costPerSqft.toFixed(2)}
+  </div>
 
-  Target Price: $${r.price.toFixed(2)}<br>
-  Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
-  Profit: $${r.profit.toFixed(2)}<br>
-  Margin: ${marginPercent.toFixed(1)}%
 </div>
 `
 
 let perHouseHTML = `
-<div class="glass-card">
-  <div class="section-title">Per House</div>
-  Cost: $${perHouseCost.toFixed(2)}<br>
-  Price: $${perHousePrice.toFixed(2)}<br>
-  Profit: $${perHouseProfit.toFixed(2)}
+<div class="glass-card collapsible" data-card="perhouse">
+  
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>PER HOUSE</span>
+    <span class="chevron">⌄</span>
+  </div>
+
+  <div class="card-body">
+    Cost: $${perHouseCost.toFixed(2)}<br>
+    Price: $${perHousePrice.toFixed(2)}<br>
+    Profit: $${perHouseProfit.toFixed(2)}
+  </div>
+
 </div>
 `
 
 let comparisonHTML = `
-<div class="glass-card">
-  <div class="section-title">Package Comparison</div>
+<div class="glass-card collapsible" data-card="comparison">
 
-  Current: ${currentPackage.toUpperCase()}<br>
-  Other: ${altPackage.toUpperCase()}<br><br>
+  
+  <div class="card-header" onclick="toggleCard(this)">
+    <span>PACKAGE COMPARISON</span>
+    <span class="chevron">⌄</span>
+  </div>
 
-  Price Difference:
-  <span style="color:${priceDiffColor};font-weight:700;">
-    $${priceDiff.toFixed(2)}
-  </span><br>
+  <div class="card-body">
 
-  Profit Difference:
-  <span style="color:${profitDiffColor};font-weight:700;">
-    $${profitDiff.toFixed(2)}
-  </span>
+    Current: ${currentPackage.toUpperCase()}<br>
+    Other: ${altPackage.toUpperCase()}<br><br>
+
+    Price Difference:
+    <span style="color:${priceDiffColor};font-weight:700;">
+      $${priceDiff.toFixed(2)}
+    </span><br>
+
+    Profit Difference:
+    <span style="color:${profitDiffColor};font-weight:700;">
+      $${profitDiff.toFixed(2)}
+    </span>
+
+  </div>
+
 </div>
 `
 
@@ -1315,6 +1413,20 @@ document.getElementById("results").innerHTML =
   comparisonHTML
 
    
+
+// 🔥 AUTO OPEN CARDS (CORRECT SPOT)
+
+setTimeout(() => {
+  let cards = document.querySelectorAll(".glass-card")
+
+  cards.forEach(card => {
+    if(card.dataset.card === "pricing"){
+      card.classList.add("open")
+    }
+  })
+
+  cards[0]?.classList.add("open")
+}, 50)
 
     
 
@@ -2694,6 +2806,24 @@ window.winJob = function(){
   showToast("🔥 Competitive pricing applied", "warning")
 
   render()
+}
+
+//========================
+//===TOGGLE CARD 
+//========================
+
+function toggleCard(el){
+  let card = el.parentElement
+
+  document.querySelectorAll(".collapsible").forEach(c => {
+    if(c !== card) c.classList.remove("open")
+  })
+
+  card.classList.toggle("open")
+
+  setTimeout(() => {
+    card.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, 200)
 }
 
 </script>
