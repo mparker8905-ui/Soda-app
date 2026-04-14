@@ -2256,25 +2256,24 @@ function getInventoryCost(){
 
   let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
-  let totals = {
-    standard: 0,
-    premium: 0,
-    addons: 0
-  }
-
   function sum(section){
-    (section || []).forEach(item => {
-      totals.total = (totals.total || 0) + (item.cost * item.qty)
+    let total = 0
+    ;(section || []).forEach(item => {
+      total += (item.cost || 0) * (item.qty || 0)
     })
+    return total
   }
 
-  sum(saved.standard)
-  sum(saved.premium)
-  sum(saved.addons)
+  let standard = sum(saved.standard)
+  let premium = sum(saved.premium)
+  let addons = sum(saved.addons)
 
-  totals.total = (totals.standard || 0) + (totals.premium || 0) + (totals.addons || 0)
-
-  return totals
+  return {
+    standard,
+    premium,
+    addons,
+    total: standard + premium + addons
+  }
 }
 
 //==================
@@ -2312,8 +2311,6 @@ function saveInventory(){
 
   // ✅ SAVE FULL DATA
 
-let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
  // silent autosave (no toast)
 }
 
@@ -2323,9 +2320,7 @@ let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
 function loadInventory(){
 
-  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
-  let inventory = JSON.parse(saved)
+  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
   function loadSection(id, items){
 
@@ -2383,9 +2378,7 @@ function loadInventory(){
 
 function getInventoryTotals(){
 
-  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
-  let inventory = JSON.parse(saved)
+  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
   let totals = {}
 
