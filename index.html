@@ -1037,7 +1037,7 @@ function render(){
   try{
 
     window.shownToasts = window.shownToasts || new Set()
-let shownToasts = window.shownToasts
+    let shownToasts = window.shownToasts
 
     let r = calculateJob()
     let inv = getInventoryCost()
@@ -1046,218 +1046,119 @@ let shownToasts = window.shownToasts
     let materialNeeds = getMaterialNeeds(r)
     let comparison = compareInventory(needs, inventoryTotals)
     let alerts = generateAlerts(r, comparison)
+
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
 
-    // temporarily switch package
+    // ==========================
+    // PACKAGE COMPARISON
+    // ==========================
+
     document.getElementById("package").value = altPackage
     let alt = calculateJob()
-
-let recommendationHTML = ""
-
-if(alt.price > r.price){
-  recommendationHTML = `
-    <div style="
-      margin:15px 0;
-      padding:12px;
-      border:1px solid gold;
-      border-radius:10px;
-      background:rgba(255,215,0,0.08);
-    ">
-      💡 <b>Recommendation:</b><br>
-      Switch to ${altPackage.toUpperCase()} →
-      <span style="color:#4cff9a;font-weight:700;">
-        +$${(alt.profit - r.profit).toFixed(2)} profit
-      </span>
-    </div>
-  `
-}
-
     document.getElementById("package").value = currentPackage
 
-    let priceDiff = alt.price - r.price
-    let profitDiff = alt.profit - r.profit
-    let priceDiffColor = priceDiff > 0 ? "red" : "lime"
-    let profitDiffColor = profitDiff > 0 ? "lime" : "red"
+    let recommendationHTML = ""
 
-    let a = r.addonCosts || {}
-
-    let packageType = currentPackage
-
-    function isIncluded(name){
-      if(packageType !== "premium") return false
-      return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+    if(alt.price > r.price){
+      recommendationHTML = `
+        <div style="margin:15px 0;padding:12px;border:1px solid gold;border-radius:10px;background:rgba(255,215,0,0.08);">
+          💡 <b>Recommendation:</b><br>
+          Switch to ${altPackage.toUpperCase()} →
+          <span style="color:#4cff9a;font-weight:700;">
+            +$${(alt.profit - r.profit).toFixed(2)} profit
+          </span>
+        </div>
+      `
     }
 
-    // ======================
-    // ADD-ONS HTML
-    // ======================
-
-    let addonHTML = "<b>ADD-ONS</b><br>"
-
-    function addLine(label, cost, included){
-      if((cost || 0) > 0 || included){
-        addonHTML += included
-          ? label + ": <span style='color:gold; font-weight:600;'>Included</span><br>"
-          : label + ": $" + cost.toFixed(2) + "<br>"
-      }
-    }
-
-    addLine("Aeration", a.aeration, isIncluded("aeration"))
-    addLine("Compost", a.compost, isIncluded("compost"))
-    addLine("Bio/Hum Blend", a.biohum, isIncluded("biohum"))
-
-    if((a.biochar || 0) > 0){
-      addonHTML += "Biochar 100%: $" + a.biochar.toFixed(2) + "<br>"
-    }
-
-    if((a.humic || 0) > 0){
-      addonHTML += "Humic Acid 100%: $" + a.humic.toFixed(2) + "<br>"
-    }
-
-    if((a.grow || 0) > 0){
-      addonHTML += "Grow System: $" + a.grow.toFixed(2) + "<br>"
-    }
-
-    addLine("Lime", a.lime, isIncluded("lime"))
-    addLine("Sulfur", a.sulfur, isIncluded("sulfur"))
-
-    if(addonHTML === "<b>ADD-ONS</b><br>"){
-      addonHTML = ""
-    } else {
-      addonHTML += "<br>"
-    }
-
-    // ======================
-    // SAVINGS
-    // ======================
-
-    let savings = 0
-
-    if(isIncluded("aeration")) savings += r.totalSqft * 0.04
-    if(isIncluded("compost")) savings += r.totalSqft * 0.10
-    if(isIncluded("biohum")) savings += r.totalSqft * 0.12
-    if(isIncluded("lime")) savings += r.totalSqft * 0.004
-    if(isIncluded("sulfur")) savings += r.totalSqft * 0.008
-
-    let savingsHTML = ""
-    if(savings > 0){
-      savingsHTML = "<b>Savings with Premium:</b> " +
-        "<span style='color:gold; font-weight:700;'>$" + savings.toFixed(2) + "</span><br><br>"
-    }
-
-    // ======================
-    // SAFE MATH
-    // ======================
+    // ==========================
+    // METRICS
+    // ==========================
 
     let perHouseCost = r.houses ? r.cost / r.houses : 0
     let perHousePrice = r.houses ? r.price / r.houses : 0
     let perHouseProfit = r.houses ? r.profit / r.houses : 0
-    let laborPerHouse = r.houses ? r.laborCost / r.houses : 0
-    let overheadPerHouse = r.houses ? r.overheadCost / r.houses : 0
 
     let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
     let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
     let marginPercent = r.price ? (r.profit / r.price) * 100 : 0
 
-let barPercent = Math.min(Math.max(marginPercent, 0), 50)
-let barWidth = barPercent * 2 // scale to 100%
+    // ==========================
+    // MATERIAL DISPLAY
+    // ==========================
 
-let barColor =
-  marginPercent < 20 ? "#ff4d4d" :
-  marginPercent < 30 ? "#ffd24d" :
-  "#4cff9a"
+    let materialHTML = "<b>MATERIAL REQUIREMENTS</b><br>"
 
-let profitBarHTML = `
-  <div style="margin:12px 0 18px 0;">
-    
-    <div style="
-      display:flex;
-      justify-content:space-between;
-      font-size:12px;
-      margin-bottom:4px;
-      color:#aaa;
-    ">
-      <span>Profit Strength</span>
-      <span style="color:${barColor};font-weight:700;">
-        ${marginPercent.toFixed(1)}%
-      </span>
-    </div>
+    Object.keys(comparison).forEach(k => {
+      let item = comparison[k]
+      let color = item.status === "short" ? "red" : "lime"
+      let unit = MATERIAL_RATES[k]?.unit || ""
 
-    <div style="
-      background:#1a1a1a;
-      border-radius:8px;
-      overflow:hidden;
-      height:14px;
-      box-shadow: inset 0 0 6px rgba(0,0,0,0.6);
-    ">
-      <div style="
-        width:0%;
-        height:100%;
-        background:${barColor};
-       box-shadow:0 0 18px ${barColor}, 0 0 6px ${barColor} inset;
-        transition:width 0.8s ease;
-      " class="profit-bar-fill"></div>
-    </div>
+      materialHTML += `
+        ${k.toUpperCase()}:
+        Need ${item.required.toFixed(1)} ${unit} |
+        Have ${item.available.toFixed(1)} ${unit}
+        <span style="color:${color}">
+          ${item.status === "short"
+            ? "BUY " + item.shortage.toFixed(1)
+            : "OK"}
+        </span><br>
+      `
+    })
 
-  </div>
-`
+    // ==========================
+    // OUTPUT UI
+    // ==========================
 
-    // ======================
-    // OUTPUT
-    // ======================
+    document.getElementById("results").innerHTML =
+      recommendationHTML +
+      `<div>Total Sqft: ${r.totalSqft}</div>` +
+      `<div>Total Cost: $${r.cost.toFixed(2)}</div>` +
+      `<div>Price: $${r.price.toFixed(2)}</div>` +
+      `<div>Profit: $${r.profit.toFixed(2)}</div>` +
+      `<div>Margin: ${marginPercent.toFixed(1)}%</div>` +
+      `<br>` +
+      materialHTML
 
-let materialHTML = "<b>MATERIAL REQUIREMENTS</b><br>"
+    // ==========================
+    // AUTO WARNINGS
+    // ==========================
 
-Object.keys(comparison).forEach(k => {
+    setTimeout(() => {
 
-  let item = comparison[k]
-  let color = item.status === "short" ? "red" : "lime"
+      if(Object.values(comparison).some(i => i.status === "short")){
+        if(!shownToasts.has("materials")){
+          showToast("⚠ Inventory shortage detected", "error")
+          shownToasts.add("materials")
+        }
+      }
 
- let unit = MATERIAL_RATES[k]?.unit || ""
+      if(marginPercent < 25){
+        if(!shownToasts.has("pricing")){
+          showToast("⚠ Low margin detected", "warning")
+          shownToasts.add("pricing")
+        }
+      }
 
-materialHTML += `
-  ${k.toUpperCase()}:
-  Need ${item.required.toFixed(1)} ${unit} |
-  Have ${item.available.toFixed(1)} ${unit}
-  <span style="color:${color}">
-    ${item.status === "short"
-      ? "BUY " + item.shortage.toFixed(1)
-      : "OK"}
-  </span>
-  <br>
-`
+    }, 50)
 
-})
-
-materialHTML += "<br><b>MATERIAL USAGE</b><br>"
-
-Object.keys(materialNeeds).forEach(k => {
-
-  let unit = MATERIAL_RATES[k]?.unit || ""
-
-  materialHTML += `
-    ${k.toUpperCase()}: ${materialNeeds[k].toFixed(1)} ${unit}<br>
-  `
-})
-
-materialHTML += "<br>"
-
-let alertsHTML = ""
+  } catch(e){
+    console.error(e)
+    document.getElementById("results").innerHTML = "Error in calculation"
+  }
+}
 
 //=======================
 //=== SAVE JOB
 //=======================
-
 function saveJob(){
 
-let needs = getMaterialNeeds(r)
-
   let r = calculateJob()
-  let inventory = getInventoryTotals()
-}
+  let needs = getMaterialNeeds(r)
+
   // ======================
-  // BUILD JOB FIRST ✅
+  // BUILD JOB
   // ======================
 
   let job = {
@@ -1271,7 +1172,7 @@ let needs = getMaterialNeeds(r)
   }
 
   // ======================
-  // SAVE JOB HISTORY ✅
+  // SAVE HISTORY
   // ======================
 
   let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
@@ -1279,374 +1180,41 @@ let needs = getMaterialNeeds(r)
   localStorage.setItem("jobHistory", JSON.stringify(history))
 
   // ======================
-  // DEDUCT INVENTORY ✅
+  // DEDUCT INVENTORY
   // ======================
 
- let full = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+  let full = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
-Object.keys(needs).forEach(type => {
+  Object.keys(needs).forEach(type => {
 
-  let remaining = needs[type] || 0
+    let remaining = needs[type] || 0
 
-  ["standard","premium","addons"].forEach(section => {
+    ["standard","premium","addons"].forEach(section => {
 
-    (full[section] || []).forEach(item => {
+      (full[section] || []).forEach(item => {
 
-      if(item.type === type && remaining > 0){
+        if(item.type === type && remaining > 0){
 
-        let used = Math.min(item.qty, remaining)
+          let used = Math.min(item.qty, remaining)
 
-        item.qty -= used
-        remaining -= used
-      }
+          item.qty -= used
+          remaining -= used
+        }
 
+      })
     })
   })
-})
 
-localStorage.setItem("inventory_full", JSON.stringify(full))
+  localStorage.setItem("inventory_full", JSON.stringify(full))
 
   // ======================
-  // UPDATE UI ✅
+  // UPDATE UI
   // ======================
 
   renderHistory()
   render()
 
   showToast("Job saved + inventory updated","success")
-}
-
-//==================
-//== Build Alert
-//==================
-
-function buildAlertBox(title, items, className){
-
-  if(items.length === 0) return ""
-
-  let html = `<div class="alert-box ${className}">`
-  html += `<div class="alert-title">${title}</div>`
-
-  items.forEach(i => {
-
-    let actionBtn = ""
-
-    if(i.fix === "margin"){
-      actionBtn = `<button onclick="fixLowMargin()">Fix</button>`
-    }
-
-    if(i.fix === "price"){
-      actionBtn = `<button onclick="fixLowPrice()">Fix</button>`
-    }
-
-    if(i.fix === "inventory"){
-      actionBtn = `<button onclick="fixInventory('${i.type}', ${i.amount})">Fix</button>`
-    }
-
-    html += `
-      <div class="alert-line">
-        <span>${i.text}</span>
-        ${actionBtn}
-      </div>
-    `
-  })
-
-  html += `</div>`
-
-  return html
-}
-
-alertsHTML += buildAlertBox("🚨 Critical Issues", alerts.danger, "alert-danger")
-alertsHTML += buildAlertBox("⚠ Warnings", alerts.warning, "alert-warning")
-alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success")
-
-let summaryHTML = `
-<div class="glass-card collapsible" data-card="summary">
-
-    
-    <div class="card-header" onclick="toggleCard(this)">
-      <span>PROJECT SUMMARY</span>
-      <span class="chevron">⌄</span>
-    </div>
-
-    <div class="card-body">
-      Total Sqft: ${r.totalSqft.toFixed(0)}<br>
-      Houses: ${r.houses}
-    </div>
-
-  </div>
-`
-
-let inventoryHTML = `
-<div class="glass-card collapsible" data-card="inventory">
-
-  
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>INVENTORY COST</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-    Standard: $${inv.standard.toFixed(2)}<br>
-    Premium: $${inv.premium.toFixed(2)}<br>
-    Add-Ons: $${inv.addons.toFixed(2)}<br>
-    <br>
-    <b>Total Materials:</b> $${inv.total.toFixed(2)}
-  </div>
-
-</div>
-`
-
-let materialReqHTML = `
-<div class="glass-card collapsible" data-card="materials">
-
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>MATERIAL REQUIREMENTS</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-    ${materialHTML}
-  </div>
-
-</div>
-`
-
-let usageHTMLInner = Object.keys(materialNeeds).map(k => {
-  let unit = MATERIAL_RATES[k]?.unit || ""
-  return `${k.toUpperCase()}: ${materialNeeds[k].toFixed(1)} ${unit}<br>`
-}).join("")
-
-let usageHTML = `
-
-<div class="glass-card collapsible" data-card="materials-usage">
-
-  
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>MATERIAL USAGE</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-    ${usageHTMLInner}
-  </div>
-
-</div>
-`
-
-let laborHTML = `
-<div class="glass-card collapsible" data-card="labor">
-
-  
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>LABOR</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-    Total Hours: ${r.totalHours.toFixed(2)}<br>
-    Labor Cost: $${r.laborCost.toFixed(2)}<br>
-    Per House: $${laborPerHouse.toFixed(2)}
-  </div>
-
-</div>
-`
-
-let overheadHTML = `
-<div class="glass-card collapsible" data-card="overhead">
-
-  
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>OVERHEAD</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-    Overhead Cost: $${r.overheadCost.toFixed(2)}<br>
-    Per House: $${overheadPerHouse.toFixed(2)}
-  </div>
-
-</div>
-`
-
-let costHTML = `
-<div class="glass-card collapsible" data-card="cost">
-
-  
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>COST BREAKDOWN</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-    Total Cost: $${r.cost.toFixed(2)}<br>
-    Cost / Sqft: $${costPerSqft.toFixed(2)}
-  </div>
-
-</div>
-`
-
-let pricingHTML = `
-<div class="glass-card collapsible" data-card="pricing">
-
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>PRICING</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-
-    ${profitBarHTML}
-
-    Target Price: $${r.price.toFixed(2)}<br>
-    Price / Sqft: $${pricePerSqft.toFixed(2)}<br>
-    Profit: $${r.profit.toFixed(2)}<br>
-    Margin: ${marginPercent.toFixed(1)}%
-
-  </div>
-
-</div>
-`
-
-let perHouseHTML = `
-<div class="glass-card collapsible" data-card="perhouse">
-  
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>PER HOUSE</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-    Cost: $${perHouseCost.toFixed(2)}<br>
-    Price: $${perHousePrice.toFixed(2)}<br>
-    Profit: $${perHouseProfit.toFixed(2)}
-  </div>
-
-</div>
-`
-
-let comparisonHTML = `
-<div class="glass-card collapsible" data-card="comparison">
-
-  
-  <div class="card-header" onclick="toggleCard(this)">
-    <span>PACKAGE COMPARISON</span>
-    <span class="chevron">⌄</span>
-  </div>
-
-  <div class="card-body">
-
-    Current: ${currentPackage.toUpperCase()}<br>
-    Other: ${altPackage.toUpperCase()}<br><br>
-
-    Price Difference:
-    <span style="color:${priceDiffColor};font-weight:700;">
-      $${priceDiff.toFixed(2)}
-    </span><br>
-
-    Profit Difference:
-    <span style="color:${profitDiffColor};font-weight:700;">
-      $${profitDiff.toFixed(2)}
-    </span>
-
-  </div>
-
-</div>
-`
-
-document.getElementById("results").innerHTML =
-  alertsHTML +
-  recommendationHTML +
-  summaryHTML +
-  inventoryHTML +
-  materialReqHTML +
-  usageHTML+
-  laborHTML +
-  overheadHTML +
-  costHTML +
-  pricingHTML +
-  perHouseHTML +
-  comparisonHTML
-
-   
-
-// 🔥 AUTO OPEN CARDS (CORRECT SPOT)
-
-setTimeout(() => {
-  let cards = document.querySelectorAll(".glass-card")
-
-let problemCards = []
-
-// Inventory issues
-if(Object.values(comparison).some(i => i.status === "short")){
-  problemCards.push("materials")
- if(!shownToasts.has("materials")){
-  showToast("⚠ Inventory shortage detected", "error", "materials")
-  shownToasts.add("materials")
-}
-}
-
-// Low margin
-if(marginPercent < 25){
-  problemCards.push("pricing")
-
-if(!shownToasts.has("pricing")){
-  showToast("⚠ Low margin detected", "warning", "pricing")
-  shownToasts.add("pricing")
-}
-
-}
-
-// Missing data
-if(inv.total === 0){
-  problemCards.push("inventory")
-  showToast("⚠ Add inventory costs", "warning", "inventory")
-}
-
-if(r.laborCost === 0){
-  problemCards.push("labor")
- if(r.laborCost === 0 && !shownToasts.has("labor")){
-  showToast("⚠ Add labor cost", "warning", "labor")
-  shownToasts.add("labor")
-}
-}
-
-if(r.overheadCost === 0){
-  problemCards.push("overhead")
-  showToast("⚠ Add overhead cost", "warning", "overhead")
-}
-
-  cards.forEach(card => {
-    let type = card.dataset.card
-
-    if(problemCards.includes(type)){
-      card.classList.add("open", "highlight")
-    } else {
-      card.classList.remove("highlight")
-    }
-  })
-
-  // fallback open first if nothing triggered
-  if(problemCards.length === 0){
-    cards[0]?.classList.add("open")
-  }
-
-}, 50)
-
-    
-
-setTimeout(() => {
-  let bar = document.querySelector(".profit-bar-fill")
-  if(bar){
-    let targetWidth = Math.min(Math.max(marginPercent, 0), 50) * 2
-    bar.style.width = targetWidth + "%"
-  }
-}, 100)
-
- catch(e){
-  console.error(e)
-  document.getElementById("results").innerHTML = "Error in calculation"
-}
 }
 
 //============================
