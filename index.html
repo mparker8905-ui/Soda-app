@@ -443,6 +443,70 @@ button:active{
   margin-top:6px;
 }
 
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(6px);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+
+.modal-card{
+  width:90%;
+  max-width:400px;
+  background:#111;
+  border:1px solid rgba(255,215,0,0.3);
+  border-radius:14px;
+  box-shadow:0 0 25px rgba(255,215,0,0.15);
+  padding:15px;
+  animation:fadeIn 0.2s ease;
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.modal-body label{
+  display:block;
+  margin-top:10px;
+  font-size:12px;
+  color:#aaa;
+}
+
+.modal-body input{
+  width:100%;
+  padding:8px;
+  margin-top:4px;
+  border-radius:6px;
+  border:none;
+  background:#1a1a1a;
+  color:#fff;
+}
+
+.modal-footer{
+  margin-top:15px;
+}
+
+.modal-footer button{
+  width:100%;
+  padding:12px;
+  background:gold;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:scale(0.95)}
+  to{opacity:1; transform:scale(1)}
+}
+
 </style>
 
 </head>
@@ -2599,7 +2663,7 @@ function renderHistory(){
 
   let html = ""
 
-  history.forEach(job => {
+  history.forEach((job, index) => {
 
     let color =
       job.margin < 20 ? "#ff4d4d" :
@@ -2608,7 +2672,7 @@ function renderHistory(){
 
     html += `
       <div class="history-card">
-        
+
         <div class="history-top">
           <b>${job.sqft} sqft</b>
           <span style="color:${color}">
@@ -2625,6 +2689,11 @@ function renderHistory(){
           ${job.date}
         </div>
 
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button onclick="editJob(${index})">✏️ Edit</button>
+          <button onclick="deleteJob(${index})">🗑 Delete</button>
+        </div>
+
       </div>
     `
   })
@@ -2632,7 +2701,24 @@ function renderHistory(){
   document.getElementById("jobHistory").innerHTML = html
 }
 
+//===========================
+//== DELETE JOB
+//===========================
 
+window.deleteJob = function(index){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+
+  if(!confirm("Delete this job?")) return
+
+  history.splice(index, 1)
+
+  localStorage.setItem("jobHistory", JSON.stringify(history))
+
+  renderHistory()
+
+  showToast("Job deleted", "error")
+}
 
 loadInventory()
 renderHistory()
@@ -2646,7 +2732,101 @@ document.addEventListener("input", (e) => {
 
 })
 
+//========================
+//===EDIT JOB
+//========================
+
+let currentEditIndex = null
+
+window.editJob = function(index){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+  let job = history[index]
+
+  if(!job) return
+
+  currentEditIndex = index
+
+  document.getElementById("editSqft").value = job.sqft
+  document.getElementById("editPrice").value = job.price
+  document.getElementById("editCost").value = job.cost
+
+  document.getElementById("jobModal").style.display = "flex"
+}
+
+//====================
+//==CLOSE JOB
+//====================
+
+function closeJobModal(){
+  document.getElementById("jobModal").style.display = "none"
+}
+
+//====================
+//==SAVE JOB
+//====================
+
+function saveJobEdit(){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+
+  if(currentEditIndex === null) return
+
+  let job = history[currentEditIndex]
+
+  let sqft = Number(document.getElementById("editSqft").value) || job.sqft
+  let price = Number(document.getElementById("editPrice").value) || job.price
+  let cost = Number(document.getElementById("editCost").value) || job.cost
+
+  let profit = price - cost
+  let margin = price ? (profit / price) * 100 : 0
+
+  history[currentEditIndex] = {
+    ...job,
+    sqft,
+    price,
+    cost,
+    profit,
+    margin
+  }
+
+  localStorage.setItem("jobHistory", JSON.stringify(history))
+
+  closeJobModal()
+  renderHistory()
+
+  showToast("Job updated", "success")
+}
+
 </script>
+
+<div id="jobModal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+
+    <div class="modal-header">
+      <span>Edit Job</span>
+      <button onclick="closeJobModal()">✖</button>
+    </div>
+
+    <div class="modal-body">
+
+      <label>Sqft</label>
+      <input id="editSqft" type="number">
+
+      <label>Price ($)</label>
+      <input id="editPrice" type="number">
+
+      <label>Cost ($)</label>
+      <input id="editCost" type="number">
+
+    </div>
+
+    <div class="modal-footer">
+      <button onclick="saveJobEdit()">💾 Save</button>
+    </div>
+
+  </div>
+</div>
 
 </body>
 </html>
