@@ -1036,24 +1036,46 @@ if(alt.price > r.price){
     let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
     let marginPercent = r.price ? (r.profit / r.price) * 100 : 0
 
-let barWidth = Math.min(marginPercent, 50)
-let barColor = marginPercent < 20 ? "#ff4d4d" : marginPercent < 30 ? "#ffd24d" : "#4cff9a"
+let barPercent = Math.min(Math.max(marginPercent, 0), 50)
+let barWidth = barPercent * 2 // scale to 100%
+
+let barColor =
+  marginPercent < 20 ? "#ff4d4d" :
+  marginPercent < 30 ? "#ffd24d" :
+  "#4cff9a"
 
 let profitBarHTML = `
-  <div style="margin:10px 0;">
-    <div style="font-size:12px;">Profit Strength</div>
-    <div style="background:#222;border-radius:6px;overflow:hidden;">
-      <div style="
-        width:${barWidth * 2}%;
-        background:${barColor};
-        padding:4px;
-        text-align:right;
-        font-size:12px;
-        font-weight:bold;
-      ">
+  <div style="margin:12px 0 18px 0;">
+    
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      font-size:12px;
+      margin-bottom:4px;
+      color:#aaa;
+    ">
+      <span>Profit Strength</span>
+      <span style="color:${barColor};font-weight:700;">
         ${marginPercent.toFixed(1)}%
-      </div>
+      </span>
     </div>
+
+    <div style="
+      background:#1a1a1a;
+      border-radius:8px;
+      overflow:hidden;
+      height:14px;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.6);
+    ">
+      <div style="
+        width:0%;
+        height:100%;
+        background:${barColor};
+       box-shadow:0 0 18px ${barColor}, 0 0 6px ${barColor} inset;
+        transition:width 0.8s ease;
+      " class="profit-bar-fill"></div>
+    </div>
+
   </div>
 `
 
@@ -1201,6 +1223,14 @@ recommendationHTML +
       "<span style='color:" + profitDiffColor + "; font-weight:700;'>" +
       "$" + profitDiff.toFixed(2) +
       "</span><br><br>"
+
+setTimeout(() => {
+  let bar = document.querySelector(".profit-bar-fill")
+  if(bar){
+    let targetWidth = Math.min(Math.max(marginPercent, 0), 50) * 2
+    bar.style.width = targetWidth + "%"
+  }
+}, 100)
 
   } catch(e){
     document.getElementById("results").innerHTML = "Error in calculation"
