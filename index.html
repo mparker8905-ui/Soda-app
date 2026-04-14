@@ -290,26 +290,34 @@ input,select,button{
   z-index:9999;
 }
 
-/* TOAST BASE */
+
+/* BASE */
 .toast{
   position:fixed;
   bottom:30px;
   left:50%;
-  transform:translateX(-50%) translateY(20px);
+  transform:translateX(-50%) translateY(20px) scale(0.95);
   padding:14px 22px;
-  border-radius:10px;
+  border-radius:12px;
   font-weight:600;
   font-size:14px;
   opacity:0;
-  transition:all .3s ease;
-  z-index:999999;
-  box-shadow:0 0 15px rgba(0,0,0,0.6);
+  transition:all .35s ease;
+  z-index:9999999;
+  backdrop-filter: blur(8px);
 }
 
-/* SHOW */
+/* SHOW ANIMATION */
 .toast.show{
   opacity:1;
-  transform:translateX(-50%) translateY(0);
+  transform:translateX(-50%) translateY(0) scale(1);
+}
+
+/* ✨ GLOW ANIMATION */
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 0 rgba(255,255,255,0); }
+  50% { box-shadow: 0 0 18px rgba(255,255,255,0.2); }
+  100% { box-shadow: 0 0 0 rgba(255,255,255,0); }
 }
 
 /* GREEN */
@@ -317,13 +325,17 @@ input,select,button{
   background:#1f3d2b;
   color:#4cff9a;
   border:1px solid #4cff9a;
+  box-shadow:0 0 10px rgba(76,255,154,0.3);
+  animation: glowPulse 1.5s ease;
 }
 
-/* GOLD */
+/* GOLD (🔥 YOUR BRAND) */
 .toast-warning{
   background:#3a2f0f;
   color:#d4af37;
   border:1px solid #d4af37;
+  box-shadow:0 0 12px rgba(212,175,55,0.5);
+  animation: glowPulse 1.5s ease;
 }
 
 /* RED */
@@ -331,6 +343,17 @@ input,select,button{
   background:#3a1212;
   color:#ff4d4d;
   border:1px solid #ff4d4d;
+  box-shadow:0 0 12px rgba(255,77,77,0.4);
+  animation: glowPulse 1.5s ease;
+}
+
+button{
+  transition: all 0.15s ease;
+}
+
+button:active{
+  transform: scale(0.96);
+  box-shadow: 0 0 6px rgba(212,175,55,0.5);
 }
 
 </style>
@@ -443,6 +466,8 @@ input,select,button{
 ">
   🎯 Hit Target Profit
 </button>
+
+<button onclick="winJob()">🔥 Win This Job</button>
 
 <div class="card results-card">
   <h2>Job Breakdown</h2>
@@ -594,10 +619,7 @@ const MATERIAL_LABELS = {
 //== TOAST SYSTEM
 //=====================
 
-showToast("TEST TOAST", "warning")
-
 function showToast(message, type = "success"){
-  console.log("TOAST:", message, type) // debug
 
   let toast = document.createElement("div")
   toast.className = `toast toast-${type}`
@@ -906,6 +928,27 @@ function render(){
     // temporarily switch package
     document.getElementById("package").value = altPackage
     let alt = calculateJob()
+
+let recommendationHTML = ""
+
+if(alt.price > r.price){
+  recommendationHTML = `
+    <div style="
+      margin:15px 0;
+      padding:12px;
+      border:1px solid gold;
+      border-radius:10px;
+      background:rgba(255,215,0,0.08);
+    ">
+      💡 <b>Recommendation:</b><br>
+      Switch to ${altPackage.toUpperCase()} →
+      <span style="color:#4cff9a;font-weight:700;">
+        +$${(alt.profit - r.profit).toFixed(2)} profit
+      </span>
+    </div>
+  `
+}
+
     document.getElementById("package").value = currentPackage
 
     let priceDiff = alt.price - r.price
@@ -992,6 +1035,27 @@ function render(){
     let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
     let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
     let marginPercent = r.price ? (r.profit / r.price) * 100 : 0
+
+let barWidth = Math.min(marginPercent, 50)
+let barColor = marginPercent < 20 ? "#ff4d4d" : marginPercent < 30 ? "#ffd24d" : "#4cff9a"
+
+let profitBarHTML = `
+  <div style="margin:10px 0;">
+    <div style="font-size:12px;">Profit Strength</div>
+    <div style="background:#222;border-radius:6px;overflow:hidden;">
+      <div style="
+        width:${barWidth * 2}%;
+        background:${barColor};
+        padding:4px;
+        text-align:right;
+        font-size:12px;
+        font-weight:bold;
+      ">
+        ${marginPercent.toFixed(1)}%
+      </div>
+    </div>
+  </div>
+`
 
     // ======================
     // OUTPUT
@@ -1081,6 +1145,7 @@ alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success
 
 document.getElementById("results").innerHTML =
   alertsHTML +
+recommendationHTML +
   "<b>PROJECT SUMMARY</b><br>" +
   "Total Sqft: " + r.totalSqft.toFixed(0) + "<br>" +
   "Houses: " + r.houses + "<br><br>" +
@@ -1108,14 +1173,15 @@ document.getElementById("results").innerHTML =
       "Per House: $" + overheadPerHouse.toFixed(2) + "<br><br>" +
 
       "<b>COST BREAKDOWN</b><br>" +
-      "Total Cost: $" + r.cost.toFixed(2) + "<br>" +
+     "Total Cost: <span style='color:#fff;'>$" + r.cost.toFixed(2) + "</span><br>" +
       "Cost / Sqft: $" + costPerSqft.toFixed(2) + "<br><br>" +
 
       "<b>PRICING</b><br>" +
+      profitBarHTML +
       "Target Price: $" + r.price.toFixed(2) + "<br>" +
       "Price / Sqft: $" + pricePerSqft.toFixed(2) + "<br>" +
-      "Profit: $" + r.profit.toFixed(2) + "<br>" +
-      "Margin: " + marginPercent.toFixed(1) + "%<br><br>" +
+     "Profit: <span style='color:#4cff9a;font-weight:700;'>$" + r.profit.toFixed(2) + "</span><br>" +
+    "Margin: <span style='color:" + (marginPercent < 20 ? "#ff4d4d" : marginPercent < 30 ? "#ffd24d" : "#4cff9a") + ";font-weight:700;'>" + marginPercent.toFixed(1) + "%</span><br><br>" +
 
       "<b>PER HOUSE</b><br>" +
       "Cost: $" + perHouseCost.toFixed(2) + "<br>" +
@@ -2487,6 +2553,23 @@ window.optimizeForTargetProfit = function(){
   render()
 
  alert(`Target hit at ${margin}% margin 💰`)
+}
+
+//==========================
+//=== WIN JOB
+//==========================
+
+window.winJob = function(){
+
+  let marginInput = document.getElementById("targetMargin")
+  let pricingMode = document.getElementById("pricingMode")
+
+  marginInput.value = 15
+  pricingMode.value = "win"
+
+  showToast("🔥 Competitive pricing applied", "warning")
+
+  render()
 }
 
 </script>
