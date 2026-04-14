@@ -290,22 +290,47 @@ input,select,button{
   z-index:9999;
 }
 
+/* TOAST BASE */
 .toast{
-  background:#111;
-  color:#fff;
-  padding:12px 16px;
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  padding:14px 22px;
   border-radius:10px;
-  border:1px solid #d4af37;
-  box-shadow:0 0 10px rgba(212,175,55,0.25);
+  font-weight:600;
   font-size:14px;
   opacity:0;
-  transform:translateY(20px);
-  transition:all 0.3s ease;
+  transition:all .3s ease;
+  z-index:999999;
+  box-shadow:0 0 15px rgba(0,0,0,0.6);
 }
 
+/* SHOW */
 .toast.show{
   opacity:1;
-  transform:translateY(0);
+  transform:translateX(-50%) translateY(0);
+}
+
+/* GREEN */
+.toast-success{
+  background:#1f3d2b;
+  color:#4cff9a;
+  border:1px solid #4cff9a;
+}
+
+/* GOLD */
+.toast-warning{
+  background:#3a2f0f;
+  color:#d4af37;
+  border:1px solid #d4af37;
+}
+
+/* RED */
+.toast-error{
+  background:#3a1212;
+  color:#ff4d4d;
+  border:1px solid #ff4d4d;
 }
 
 </style>
@@ -565,9 +590,30 @@ const MATERIAL_LABELS = {
   timers: "Sprinkler Timers" // 👈 YOUR NEW ONE
 }
 
-//==============================
-//HELPERS
-//==============================
+//=====================
+//== TOAST SYSTEM
+//=====================
+
+showToast("TEST TOAST", "warning")
+
+function showToast(message, type = "success"){
+  console.log("TOAST:", message, type) // debug
+
+  let toast = document.createElement("div")
+  toast.className = `toast toast-${type}`
+  toast.innerText = message
+
+  document.body.appendChild(toast)
+
+  setTimeout(() => {
+    toast.classList.add("show")
+  }, 50)
+
+  setTimeout(() => {
+    toast.classList.remove("show")
+    setTimeout(() => toast.remove(), 300)
+  }, 2000)
+}
 
 //==================
 //== UNIT LABEL
@@ -2196,6 +2242,12 @@ function generateInventoryPDF(){
 window.fixLowMargin = function(){
 
   let input = document.getElementById("targetMargin")
+
+  if(!input){
+    showToast("Margin input missing", "error")
+    return
+  }
+
   let current = Number(input.value) || 0
 
   if(current < 30){
@@ -2206,7 +2258,7 @@ window.fixLowMargin = function(){
 
   render()
 
-  showToast("📈 Margin improved")
+  showToast("📈 Margin improved", "success")
 }
 
 //===================
@@ -2218,12 +2270,17 @@ window.fixLowPrice = function(){
   let marginInput = document.getElementById("targetMargin")
   let pricingMode = document.getElementById("pricingMode")
 
+  if(!marginInput || !pricingMode){
+    showToast("Missing inputs", "error")
+    return
+  }
+
   marginInput.value = 35
   pricingMode.value = "max"
 
   render()
 
-  showToast("💰 Price optimized")
+  showToast("💰 Price optimized", "warning")
 }
 
 //================
@@ -2324,25 +2381,20 @@ window.fixAllIssues = function(){
   let needs = getMaterialNeeds(r)
   let inventory = getInventoryTotals()
 
-  Object.keys(needs).forEach(type => {
+  let fixes = 0
 
+  Object.keys(needs).forEach(type => {
     let shortage = (needs[type] || 0) - (inventory[type] || 0)
 
     if(shortage > 0.5){
       fixInventory(type, shortage)
+      fixes++
     }
   })
 
-window.fixAllIssues = function(){
-  // logic...
+  showToast(`⚡ ${fixes} issues fixed`, "warning")
 
-  showToast("All issues fixed")
-}
-
-  // 🔥 FINAL FORCE REFRESH
-  setTimeout(() => {
-    render()
-  }, 100)
+  setTimeout(() => render(), 100)
 }
 
 //========================
@@ -2435,37 +2487,6 @@ window.optimizeForTargetProfit = function(){
   render()
 
  alert(`Target hit at ${margin}% margin 💰`)
-}
-
-//=======================
-//== SHOW TOAST
-//=======================
-
-function showToast(message){
-
-  let container = document.getElementById("toastContainer")
-  if(!container) return
-
-  let toast = document.createElement("div")
-  toast.className = "toast"
-  toast.innerText = message
-
-  container.appendChild(toast)
-
-  // trigger animation
-  setTimeout(() => {
-    toast.classList.add("show")
-  }, 10)
-
-  // remove after delay
-  setTimeout(() => {
-    toast.classList.remove("show")
-
-    setTimeout(() => {
-      toast.remove()
-    }, 300)
-
-  }, 2500)
 }
 
 </script>
