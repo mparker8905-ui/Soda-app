@@ -862,7 +862,9 @@ let baseCost = totalSqft * baseRate
 if(baseCost < 500) baseCost = 500
 
 // 🔥 NEW LOGIC
-let materialCost = baseCost + inventory.total
+
+let materialCost = inventory.total || baseCost
+
   let addonCosts = {
   aeration: 0,
   compost: 0,
@@ -1241,6 +1243,10 @@ Object.keys(materialNeeds).forEach(k => {
 materialHTML += "<br>"
 
 let alertsHTML = ""
+
+alertsHTML += buildAlertBox("🚨 Critical Issues", alerts.danger, "alert-danger")
+alertsHTML += buildAlertBox("⚠ Warnings", alerts.warning, "alert-warning")
+alertsHTML += buildAlertBox("💰 Opportunities", alerts.success, "alert-success")
 }
 
 //=======================
@@ -1416,7 +1422,7 @@ let usageHTMLInner = Object.keys(materialNeeds).map(k => {
 
 let usageHTML = `
 
-<div class="glass-card collapsible" data-card="materials">
+<div class="glass-card collapsible" data-card="materials-usage">
 
   
   <div class="card-header" onclick="toggleCard(this)">
@@ -1640,9 +1646,10 @@ setTimeout(() => {
   }
 }, 100)
 
-  } catch(e){
-    document.getElementById("results").innerHTML = "Error in calculation"
-  }
+ catch(e){
+  console.error(e)
+  document.getElementById("results").innerHTML = "Error in calculation"
+}
 }
 
 //============================
@@ -2310,6 +2317,8 @@ function saveInventory(){
   }
 
   // ✅ SAVE FULL DATA
+
+localStorage.setItem("inventory_full", JSON.stringify(inventory))
 
  // silent autosave (no toast)
 }
