@@ -1,7 +1,8 @@
 //===========================
 //==== GLOBAL STATE
 //===========================
-let app = {
+
+window.app = window.app || {
   job:{
     addons:{
       aeration:false,
@@ -19,7 +20,8 @@ let app = {
 //===============================
 //==== CONSTANTS
 //===============================
-const COSTS = {
+
+window.COSTS = {
   seed: 80,
   fertilizer: 40,
   mulch: 35,
@@ -33,7 +35,7 @@ const COSTS = {
   grow: 50
 }
 
-const MATERIAL_RATES = {
+window.MATERIAL_RATES = {
   seed:       { rate: 5, unit: "lbs" },
   fertilizer: { rate: 4, unit: "lbs" },
   mulch:      { rate: 50, unit: "lbs" },
@@ -47,7 +49,7 @@ const MATERIAL_RATES = {
   timers:     { rate: 1, unit: "units" }
 }
 
-const MATERIAL_LABELS = {
+window.MATERIAL_LABELS = {
   seed: "Seed",
   fertilizer: "Fertilizer",
   mulch: "Mulch",

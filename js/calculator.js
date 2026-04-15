@@ -13,7 +13,8 @@ function getBuilderMultiplier(houses){
 //=======================
 //AVG COST FROM INVENTORY
 //=======================
-function getAvgCostFromInventory(type, inventory){
+function getAvgCostFromInventory(type){
+  let inventory = window.inventory || {}
   let totalQty = 0
   let totalCost = 0
 
@@ -109,17 +110,18 @@ function calculateJob(){
   let materialCost = 0
   let needs = getMaterialNeeds({ totalSqft })
 
-  let inventoryCache = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
   Object.keys(needs).forEach(type => {
     let needed = needs[type] || 0
-    let avgCost = getAvgCostFromInventory(type, inventoryCache)
+    let avgCost = getAvgCostFromInventory(type)
     materialCost += needed * avgCost
   })
 
   if(materialCost < baseCost){
     materialCost = baseCost
-    showToast("Using base pricing (inventory incomplete)", "warning")
+
+    if(typeof showToast === "function"){
+      showToast("Using base pricing (inventory incomplete)", "warning")
+    }
   }
 
   if(materialCost < 500){
