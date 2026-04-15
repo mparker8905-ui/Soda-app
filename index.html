@@ -966,7 +966,7 @@ let inventoryCache = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
 Object.keys(needs).forEach(type => {
   let needed = needs[type] || 0
-  let avgCost = getAvgCostFromInventory(type) // still works fine
+  let avgCost = getAvgCostFromInventory(type, inventoryCache)
   materialCost += needed * avgCost
 })
 
@@ -981,11 +981,6 @@ if(materialCost < baseCost){
 
 if(usedFallback){
   showToast("Using base pricing (inventory incomplete)", "warning")
-}
-
-// never go below base model
-if(materialCost < baseCost){
-  materialCost = baseCost
 }
 
 // minimum job floor
