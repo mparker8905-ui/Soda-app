@@ -1,5 +1,5 @@
 //==============================
-//==== BUILDER MODE
+// BUILDER MODE
 //==============================
 function getBuilderMultiplier(houses){
   if(houses <= 1) return 1
@@ -11,10 +11,9 @@ function getBuilderMultiplier(houses){
 }
 
 //=======================
-//AVG COST FROM INVENTORY
+// AVG COST FROM INVENTORY
 //=======================
-function getAvgCostFromInventory(type){
-  let inventory = window.inventory || {}
+function getAvgCostFromInventory(type, inventory){
   let totalQty = 0
   let totalCost = 0
 
@@ -37,10 +36,9 @@ function getAvgCostFromInventory(type){
 }
 
 //=====================
-//==MATERIAL NEEDS
-//======================
+// MATERIAL NEEDS
+//=====================
 function getMaterialNeeds(input){
-
   let sqft = input.totalSqft || input.sqft || 0
   let needs = {}
 
@@ -81,15 +79,12 @@ function getMaterialNeeds(input){
 }
 
 //============================
-//==== CALCULATE JOB
+// CALCULATE JOB
 //============================
 function calculateJob(){
 
   let sqft = Number(document.getElementById("sqft")?.value) || 0
   let houses = Number(document.getElementById("houses")?.value) || 1
-  let packageType = document.getElementById("package")?.value || "standard"
-  let pricingMode = document.getElementById("pricingMode")?.value || "balanced"
-  let targetMarginInput = Number(document.getElementById("targetMargin")?.value)
 
   let builderMult = getBuilderMultiplier(houses)
   let totalSqft = sqft * houses
@@ -103,58 +98,35 @@ function calculateJob(){
   let totalHours = hoursPerHouse * houses * laborEfficiency
   let laborCost = totalHours * hourlyRate * crewSize
 
-  let baseRate = packageType === "premium" ? 0.30 : 0.18
-  let baseCost = totalSqft * baseRate
+  let baseCost = totalSqft * 0.18
   if(baseCost < 500) baseCost = 500
 
-  let materialCost = 0
   let needs = getMaterialNeeds({ totalSqft })
+  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  let materialCost = 0
 
   Object.keys(needs).forEach(type => {
-    let needed = needs[type] || 0
-    let avgCost = getAvgCostFromInventory(type)
+    let needed = needs[type]
+    let avgCost = getAvgCostFromInventory(type, inventory)
     materialCost += needed * avgCost
   })
 
   if(materialCost < baseCost){
     materialCost = baseCost
-
-    if(typeof showToast === "function"){
-      showToast("Using base pricing (inventory incomplete)", "warning")
-    }
-  }
-
-  if(materialCost < 500){
-    materialCost = 500
   }
 
   let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
   let totalCost = materialCost + laborCost + overheadCost
 
-  let margin = targetMarginInput > 0
-    ? targetMarginInput / 100
-    : (pricingMode === "max" ? 0.5 : pricingMode === "win" ? 0.15 : 0.3)
-
-  if(houses >= 10) margin -= 0.03
-  if(houses >= 20) margin -= 0.05
-  if(houses >= 50) margin -= 0.08
-  if(margin < 0.1) margin = 0.1
-
+  let margin = 0.3
   let price = totalCost / (1 - margin)
 
-  if(price < totalCost * 1.1){
-    price = totalCost * 1.1
-  }
-
-  let profit = price - totalCost
-
   return {
-    sqft,
-    houses,
     totalSqft,
     cost: totalCost,
     price,
-    profit,
+    profit: price - totalCost,
     laborCost,
     overheadCost
   }

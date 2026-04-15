@@ -1,67 +1,75 @@
-// ================================
-// INVENTORY STATE
-// ================================
+function saveInventory(){
 
-window.inventory = {}
+  function getSection(id){
+    let rows = document.querySelectorAll(`#${id} .material-row`)
+    let data = []
 
-// ================================
-// LOAD INVENTORY
-// ================================
+    rows.forEach(row => {
+      let select = row.querySelector("select")
+      let inputs = row.querySelectorAll("input")
 
-function loadInventory() {
-  try {
-    const data = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-    window.inventory = data
-    console.log("Inventory loaded", window.inventory)
-  } catch (e) {
-    console.error("Inventory load failed", e)
-    window.inventory = {}
+      data.push({
+        type: select.value,
+        name: inputs[0].value,
+        cost: Number(inputs[1].value) || 0,
+        qty: Number(inputs[2].value) || 0
+      })
+    })
+
+    return data
   }
+
+  let inventory = {
+    standard: getSection("standardMaterials"),
+    premium: getSection("premiumMaterials"),
+    addons: getSection("addonMaterials")
+  }
+
+  localStorage.setItem("inventory_full", JSON.stringify(inventory))
 }
 
-// ================================
-// SAVE INVENTORY
-// ================================
+function loadInventory(){
+  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
-function saveInventoryToStorage() {
-  localStorage.setItem("inventory_full", JSON.stringify(window.inventory))
+  function loadSection(id, items){
+    let container = document.getElementById(id)
+    container.innerHTML = ""
+
+    items.forEach(item => {
+      addMaterialRow(id.replace("Materials",""))
+    })
+  }
+
+  loadSection("standardMaterials", inventory.standard || [])
+  loadSection("premiumMaterials", inventory.premium || [])
+  loadSection("addonMaterials", inventory.addons || [])
 }
 
-// ================================
-// GET TOTALS
-// ================================
-
-function getInventoryTotals() {
+function getInventoryTotals(){
+  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
   let totals = {}
 
-  Object.values(window.inventory).forEach(section => {
-    section.forEach(item => {
-      let type = item.type
-      let qty = item.qty || 0
-      totals[type] = (totals[type] || 0) + qty
+  Object.values(inventory).forEach(section => {
+    (section || []).forEach(item => {
+      totals[item.type] = (totals[item.type] || 0) + item.qty
     })
   })
 
   return totals
 }
 
-// ================================
-// COMPARE INVENTORY
-// ================================
-
-function compareInventory(needs, inventoryTotals) {
+function compareInventory(needs, inventory){
   let results = {}
 
-  for (let key in needs) {
+  for(let key in needs){
     let required = needs[key]
-    let available = inventoryTotals[key] || 0
-    let shortage = required - available
+    let available = inventory[key] || 0
 
     results[key] = {
       required,
       available,
-      shortage: shortage > 0 ? shortage : 0,
-      status: shortage > 0 ? "short" : "ok"
+      shortage: Math.max(required - available, 0),
+      status: required > available ? "short" : "ok"
     }
   }
 
