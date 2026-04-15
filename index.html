@@ -507,6 +507,15 @@ button:active{
   to{opacity:1; transform:scale(1)}
 }
 
+.delete-btn {
+  font-size: 18px;
+  color: white;
+}
+
+.delete-btn:hover {
+  color: red;
+}
+
 </style>
 
 </head>
@@ -1189,7 +1198,7 @@ function render(){
     if(alt.price > r.price){
       recommendationHTML = `
         <div style="margin:15px 0;padding:12px;border:1px solid gold;border-radius:10px;background:rgba(255,215,0,0.08);">
-          ðŸ’¡ <b>Recommendation:</b><br>
+          🛎️<b>Recommendation:</b><br>
           Switch to ${altPackage.toUpperCase()} â†’
           <span style="color:#4cff9a;font-weight:700;">
             +$${(alt.profit - r.profit).toFixed(2)} profit
