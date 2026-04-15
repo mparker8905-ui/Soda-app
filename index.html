@@ -558,8 +558,6 @@ button:active{
   <button onclick="setSize(12000)">Large</button>
 </div>
 
-</div>
-
 <input id="houses" type="number" value="1" min="1" placeholder="# of Houses">
 
 <input id="targetMargin" type="number" placeholder="Target Profit Margin (%)">
@@ -598,7 +596,7 @@ button:active{
   font-weight:bold;
   margin-bottom:10px;
 ">
-  âš¡ Fix All Issues
+  ✅ Fix All Issues
 </button>
 
 <button onclick="optimizeForProfit()" style="
@@ -607,7 +605,7 @@ button:active{
   font-weight:bold;
   margin-bottom:10px;
 ">
-  ðŸ’° Optimize for Profit
+  🦾Optimize for Profit
 </button>
 
 <button onclick="optimizeForTargetProfit()" style="
@@ -616,10 +614,10 @@ button:active{
   font-weight:bold;
   margin-bottom:10px;
 ">
-  ðŸŽ¯ Hit Target Profit
+  💰Hit Target Profit
 </button>
 
-<button onclick="winJob()">ðŸ”¥ Win This Job</button>
+<button onclick="winJob()">💎Win This Job</button>
 
 <div class="card results-card">
   <h2>Job Breakdown</h2>
@@ -627,7 +625,7 @@ button:active{
 </div>
 
 <button onclick="saveJob()" class="primary-btn">
-  ðŸ’¾ Save Job
+  💾Save Job
 </button>
 
 <div id="jobHistorySection" class="glass-card">
@@ -784,7 +782,7 @@ function showToast(message, type = "success", targetCard = null){
   toast.className = `toast toast-${type}`
   toast.innerText = message
 
-  // ðŸ‘‰ CLICK HANDLER
+  // CLICK HANDLER
   if(targetCard){
     toast.style.cursor = "pointer"
 
@@ -881,6 +879,36 @@ function getBuilderMultiplier(houses){
   if(houses <= 50) return 0.80
   return 0.75
 }
+//=======================
+//AVG COST FROM INVENTORY
+//=======================
+
+function getAvgCostFromInventory(type, inventory){
+
+  let totalQty = 0
+  let totalCost = 0
+
+  Object.values(inventory).forEach(section => {
+    (section || []).forEach(item => {
+
+      if(item.type === type){
+
+        let qty = Number(item.qty) || 0
+        let cost = Number(item.cost) || 0
+
+        totalQty += qty
+        totalCost += qty * cost
+      }
+
+    })
+  })
+
+  if(totalQty === 0){
+    return COSTS[type] || 0
+  }
+
+  return totalCost / totalQty
+}
 
 //============================
 //==== CALCULATE JOB
@@ -920,16 +948,52 @@ function calculateJob(){
   if(packageType === "standard") baseRate = 0.18
   if(packageType === "premium") baseRate = 0.30
 
- let inventory = getInventoryCost()
+
 
 let baseCost = totalSqft * baseRate
 if(baseCost < 500) baseCost = 500
 
-// ðŸ”¥ NEW LOGIC
+// NEW LOGIC
 
-let materialCost = inventory.total > 0 ? inventory.total : baseCost
+let materialCost = 0
 
-  let addonCosts = {
+let needs = getMaterialNeeds({
+  totalSqft: totalSqft
+})
+
+// 🔥 cache inventory ONCE
+let inventoryCache = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+Object.keys(needs).forEach(type => {
+  let needed = needs[type] || 0
+  let avgCost = getAvgCostFromInventory(type) // still works fine
+  materialCost += needed * avgCost
+})
+
+// fallback safety
+
+let usedFallback = false
+
+if(materialCost < baseCost){
+  materialCost = baseCost
+  usedFallback = true
+}
+
+if(usedFallback){
+  showToast("Using base pricing (inventory incomplete)", "warning")
+}
+
+// never go below base model
+if(materialCost < baseCost){
+  materialCost = baseCost
+}
+
+// minimum job floor
+if(materialCost < 500){
+  materialCost = 500
+}
+
+let addonCosts = {
   aeration: 0,
   compost: 0,
   biohum: 0,
@@ -1049,6 +1113,10 @@ if(addons.sulfur && !isIncluded("sulfur")){
  let strategy = document.getElementById("pricingStrategy")?.value || "normal"
 let competitor = Number(document.getElementById("competitorPrice")?.value) || 0
 
+if(margin >= 0.95){
+  margin = 0.95
+}
+
 let price = totalCost / (1 - margin)
 
 // ==========================
@@ -1107,7 +1175,6 @@ function render(){
     let inv = getInventoryCost()
     let needs = getMaterialNeeds(r)
     let inventoryTotals = getInventoryTotals()
-    let materialNeeds = getMaterialNeeds(r)
     let comparison = compareInventory(needs, inventoryTotals)
     let alerts = generateAlerts(r, comparison)
 
@@ -1193,14 +1260,14 @@ function render(){
 
       if(Object.values(comparison).some(i => i.status === "short")){
         if(!shownToasts.has("materials")){
-          showToast("âš  Inventory shortage detected", "error")
+          showToast("📡Inventory shortage detected", "error")
           shownToasts.add("materials")
         }
       }
 
       if(marginPercent < 25){
         if(!shownToasts.has("pricing")){
-          showToast("âš  Low margin detected", "warning")
+          showToast("📉Low margin detected", "warning")
           shownToasts.add("pricing")
         }
       }
@@ -1291,7 +1358,7 @@ function openClientView(){
 
 let materialNeeds = getMaterialNeeds(r)
 
-let materialCost = getInventoryCost().total
+let materialCost = r.cost - r.laborCost - r.overheadCost
 
 let materialHTML = ""
 
@@ -1542,7 +1609,7 @@ function sendProposal(){
 
     let r = calculateJob()
 
-let materialCost = getInventoryCost().total
+let materialCost = r.cost - r.laborCost - r.overheadCost
 
 let materialNeeds = getMaterialNeeds(r)
 
@@ -1573,7 +1640,7 @@ Object.keys(materialNeeds).forEach(k => {
       return
     }
 
-    // âœ… BUILD HTML SAFELY
+    // BUILD HTML SAFELY
    
 
 let html = `
@@ -2103,11 +2170,11 @@ function useInventoryForJob(){
 //==MATERIAL NEEDS
 //======================
 
-function getMaterialNeeds(r){
+function getMaterialNeeds(input){
+
+  let sqft = input.totalSqft || input.sqft || 0
 
   let needs = {}
-
-  let sqft = r.totalSqft
 
   // =========================
   // BASE MATERIALS
@@ -2387,7 +2454,7 @@ window.fixLowMargin = function(){
 
   render()
 
- showToast("ðŸ“ˆ Margin improved", "success", "pricing")
+ showToast("📈 Margin improved", "success", "pricing")
 }
 
 //===================
@@ -2409,7 +2476,7 @@ window.fixLowPrice = function(){
 
   render()
 
-  showToast("ðŸ’° Profit optimized", "success", "pricing")
+  showToast("🛡️ Profit optimized", "success", "pricing")
 }
 
 //================
@@ -2488,7 +2555,7 @@ window.fixInventory = function(type, amount){
     showToast(`${MATERIAL_LABELS[type]} +${Math.ceil(amount)} added`)
   }
 
-  // ðŸ’¾ SAVE + REFRESH
+  // 💾SAVE + REFRESH
   saveInventory()
   loadInventory()
 
@@ -2521,7 +2588,7 @@ window.fixAllIssues = function(){
     }
   })
 
-  showToast(`âš¡ ${fixes} issues fixed`, "warning")
+  showToast(`🔨${fixes} issues fixed`, "warning")
 
   setTimeout(() => render(), 100)
 }
@@ -2571,7 +2638,7 @@ window.optimizeForProfit = function(){
   pricingMode.value = "max"
 
 
-showToast("All issues fixed âœ…")
+showToast("All issues fixed💡")
 
   render()
 }
@@ -2615,7 +2682,7 @@ window.optimizeForTargetProfit = function(){
 
   render()
 
- alert(`Target hit at ${margin}% margin ðŸ’°`)
+ alert(`Target hit at ${margin}% margin 🎯`)
 }
 
 //==========================
@@ -2630,7 +2697,7 @@ window.winJob = function(){
   marginInput.value = 15
   pricingMode.value = "win"
 
-  showToast("ðŸ”¥ Competitive pricing applied", "warning")
+  showToast("Competitive pricing applied🚀", "warning")
 
   render()
 }
@@ -2720,9 +2787,11 @@ window.deleteJob = function(index){
   showToast("Job deleted", "error")
 }
 
-loadInventory()
-renderHistory()
-render()
+window.onload = () => {
+  loadInventory()
+  renderHistory()
+  render()
+}
 
 document.addEventListener("input", (e) => {
 
@@ -2822,7 +2891,7 @@ function saveJobEdit(){
     </div>
 
     <div class="modal-footer">
-      <button onclick="saveJobEdit()">ðŸ’¾ Save</button>
+      <button onclick="saveJobEdit()">💾Save</button>
     </div>
 
   </div>
