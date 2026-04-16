@@ -1318,6 +1318,46 @@ function generateAIInsights(r, comparison){
     })
   }
 
+// =========================
+// MATERIAL INTELLIGENCE
+// =========================
+
+let materialCost = r.cost - r.laborCost - r.overheadCost
+let materialPerSqft = r.totalSqft ? materialCost / r.totalSqft : 0
+let materialPercent = r.cost ? (materialCost / r.cost) * 100 : 0
+
+// 🚨 TOO EXPENSIVE MATERIALS
+if(materialPerSqft > 0.35){
+  insights.push({
+    type: "warning",
+    text: "Material cost per sqft is high. Check seed, mulch, or additive usage."
+  })
+}
+
+// 🚨 TOO CHEAP (usually bad pricing)
+if(materialPerSqft < 0.12){
+  insights.push({
+    type: "danger",
+    text: "Material cost per sqft is very low. You may be underpricing or missing materials."
+  })
+}
+
+// ⚠️ MATERIAL DOMINATING JOB
+if(materialPercent > 60){
+  insights.push({
+    type: "warning",
+    text: "Materials are a large portion of total cost. Verify mix and pricing strategy."
+  })
+}
+
+// 💪 HEALTHY RANGE
+if(materialPercent >= 30 && materialPercent <= 50){
+  insights.push({
+    type: "success",
+    text: "Material cost is well balanced for this job."
+  })
+}
+
   return insights
 }
 
@@ -3368,7 +3408,35 @@ function calculateDealScore(r, comparison){
   if(r.houses >= 10) score += 10
   if(r.houses >= 20) score += 10
 
-  // clamp
+  // =========================
+  // MATERIAL IMPACT
+  // =========================
+
+  let materialCost = r.cost - r.laborCost - r.overheadCost
+  let materialPerSqft = r.totalSqft ? materialCost / r.totalSqft : 0
+let materialPercent = r.cost ? (materialCost / r.cost) * 100 : 0
+
+  if(materialPerSqft > 0.35){
+    score -= 10
+  }
+
+  if(materialPerSqft < 0.12){
+    score -= 15
+  }
+
+  if(materialPerSqft >= 0.18 && materialPerSqft <= 0.30){
+    score += 5
+  }
+
+// 🚨 materials dominating job
+if(materialPercent > 60){
+  score -= 10
+}
+
+  // =========================
+  // FINAL CLAMP (ALWAYS LAST)
+  // =========================
+
   if(score > 100) score = 100
   if(score < 0) score = 0
 
