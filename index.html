@@ -1241,9 +1241,37 @@ function buildSchedule(r){
 
   let addons = app.job.addons || {}
 
-  // 📅 START DATE = today
+  // ✅ START DATE FROM UI
 
-  let currentDate = new Date()
+  let startInput = document.getElementById("projectStart")?.value
+
+  let currentDate = startInput ? new Date(startInput) : new Date()
+
+  // ✅ TIMELINE SELECTION
+
+  let timeline =
+
+    document.querySelector('input[name="timeline"]:checked')?.value || "standard"
+
+  let prepToSeedDays = 3
+
+  let seedToFinalDays = 21
+
+  if(timeline === "fast"){
+
+    prepToSeedDays = 1
+
+    seedToFinalDays = 14
+
+  }
+
+  if(timeline === "extended"){
+
+    prepToSeedDays = 5
+
+    seedToFinalDays = 30
+
+  }
 
   function formatDate(date){
 
@@ -1307,11 +1335,11 @@ function buildSchedule(r){
 
   // ==========================
 
-  // DAY 2 — AFTER 3 DAYS
+  // DAY 2 — SEEDING
 
   // ==========================
 
-  currentDate = addDays(currentDate, 3)
+  currentDate = addDays(currentDate, prepToSeedDays)
 
   let day2Tasks = ["Hydroseeding"]
 
@@ -1335,11 +1363,11 @@ function buildSchedule(r){
 
   // ==========================
 
-  // DAY 3 — AFTER 21 DAYS
+  // DAY 3 — FINAL
 
   // ==========================
 
-  currentDate = addDays(currentDate, 21)
+  currentDate = addDays(currentDate, seedToFinalDays)
 
   let day3Tasks = ["Final Lawn Inspection"]
 
