@@ -639,6 +639,56 @@ button:active{
   <div id="results"></div>
 </div>
 
+<div class="card">
+  <span class='gold-text'>Scheduling</span>
+
+  <div class="glass-card">
+    <div class="section-title">Quote</div>
+    <input type="datetime-local" id="schedule_quote">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Soil Test</div>
+    <input type="datetime-local" id="schedule_soilTest">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Soil Enhancement</div>
+    <input type="datetime-local" id="schedule_soilEnhance">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Aeration</div>
+    <input type="datetime-local" id="schedule_aeration">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Compost</div>
+    <input type="datetime-local" id="schedule_compost">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Hydroseeding</div>
+    <input type="datetime-local" id="schedule_hydroseed">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Grow System Install</div>
+    <input type="datetime-local" id="schedule_growInstall">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Grow System Removal</div>
+    <input type="datetime-local" id="schedule_growRemove">
+  </div>
+
+  <div class="glass-card">
+    <div class="section-title">Final Inspection</div>
+    <input type="datetime-local" id="schedule_final">
+  </div>
+
+</div>
+
 <button onclick="saveJob()" class="primary-btn">
   💾Save Job
 </button>
@@ -1605,6 +1655,19 @@ function saveJob(){
     cost: r.cost,
     profit: r.profit,
     margin: r.price ? (r.profit / r.price) * 100 : 0
+
+schedule: {
+  quote: document.getElementById("schedule_quote")?.value || "",
+  soilTest: document.getElementById("schedule_soilTest")?.value || "",
+  soilEnhance: document.getElementById("schedule_soilEnhance")?.value || "",
+  aeration: document.getElementById("schedule_aeration")?.value || "",
+  compost: document.getElementById("schedule_compost")?.value || "",
+  hydroseed: document.getElementById("schedule_hydroseed")?.value || "",
+  growInstall: document.getElementById("schedule_growInstall")?.value || "",
+  growRemove: document.getElementById("schedule_growRemove")?.value || "",
+  final: document.getElementById("schedule_final")?.value || ""
+},
+
   }
 
   // ======================
@@ -3052,6 +3115,15 @@ function renderHistory(){
           📜 $${job.price.toFixed(2)} |
           Profit: $${job.profit.toFixed(2)}
         </div>
+
+        ${job.schedule ? `
+  <div style="margin-top:6px;font-size:12px;color:#aaa;">
+    ${Object.entries(job.schedule)
+      .filter(([k,v]) => v)
+      .map(([k,v]) => `<div>${k}: ${new Date(v).toLocaleString()}</div>`)
+      .join("")}
+  </div>
+` : ""}
 
         <div class="history-date">
           ${job.date}
