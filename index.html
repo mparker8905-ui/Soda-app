@@ -652,52 +652,42 @@ button:active{
   <option value="900">900 gal</option>
 </select>
 
-<div class="card">
-  <span class='gold-text'>Scheduling</span>
+<span class='gold-text'>Scheduling</span>
 
-  <div class="glass-card">
-    <div class="section-title">Quote</div>
-    <input type="datetime-local" id="schedule_quote">
+<div class="glass-card">
+
+  <div class="section-title">📅 PROJECT SCHEDULER</div>
+
+  <label class="mat-label">Start Date</label>
+
+  <input id="projectStart" type="date" class="mat-input">
+
+  <div id="schedulePreview" style="
+
+    margin-top:15px;
+
+    padding:12px;
+
+    border-radius:10px;
+
+    background:rgba(255,255,255,0.03);
+
+    border:1px solid rgba(255,215,0,0.2);
+
+  ">
+
+    <div style="color:#aaa;">Schedule will generate automatically</div>
+
   </div>
 
-  <div class="glass-card">
-    <div class="section-title">Soil Test</div>
-    <input type="datetime-local" id="schedule_soilTest">
-  </div>
+  <div style="margin-top:12px;">
 
-  <div class="glass-card">
-    <div class="section-title">Soil Enhancement</div>
-    <input type="datetime-local" id="schedule_soilEnhance">
-  </div>
+    <label><input type="radio" name="timeline" value="fast"> Fast Track</label>
 
-  <div class="glass-card">
-    <div class="section-title">Aeration</div>
-    <input type="datetime-local" id="schedule_aeration">
-  </div>
+    <label><input type="radio" name="timeline" value="standard" checked> Standard</label>
 
-  <div class="glass-card">
-    <div class="section-title">Compost</div>
-    <input type="datetime-local" id="schedule_compost">
-  </div>
+    <label><input type="radio" name="timeline" value="extended"> Extended Care</label>
 
-  <div class="glass-card">
-    <div class="section-title">Hydroseeding</div>
-    <input type="datetime-local" id="schedule_hydroseed">
-  </div>
-
-  <div class="glass-card">
-    <div class="section-title">Grow System Install</div>
-    <input type="datetime-local" id="schedule_growInstall">
-  </div>
-
-  <div class="glass-card">
-    <div class="section-title">Grow System Removal</div>
-    <input type="datetime-local" id="schedule_growRemove">
-  </div>
-
-  <div class="glass-card">
-    <div class="section-title">Final Inspection</div>
-    <input type="datetime-local" id="schedule_final">
   </div>
 
 </div>
@@ -2385,18 +2375,8 @@ function saveJob(){
     cost: r.cost,
     profit: r.profit,
     margin: r.price ? (r.profit / r.price) * 100 : 0,
-
-schedule: {
-  quote: document.getElementById("schedule_quote")?.value || "",
-  soilTest: document.getElementById("schedule_soilTest")?.value || "",
-  soilEnhance: document.getElementById("schedule_soilEnhance")?.value || "",
-  aeration: document.getElementById("schedule_aeration")?.value || "",
-  compost: document.getElementById("schedule_compost")?.value || "",
-  hydroseed: document.getElementById("schedule_hydroseed")?.value || "",
-  growInstall: document.getElementById("schedule_growInstall")?.value || "",
-  growRemove: document.getElementById("schedule_growRemove")?.value || "",
-  final: document.getElementById("schedule_final")?.value || ""
-},
+    schedule: buildSchedule(r)
+}
 
   }
 
