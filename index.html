@@ -1280,14 +1280,14 @@ function render(){
 
     window.shownToasts = window.shownToasts || new Set()
     let shownToasts = window.shownToasts
-    let dealScore = calculateDealScore(r, comparison)
+   
     let r = calculateJob()
     let inv = getInventoryCost()
     let needs = getMaterialNeeds(r)
     let inventoryTotals = getInventoryTotals()
     let comparison = compareInventory(needs, inventoryTotals)
     let alerts = generateAlerts(r, comparison)
-
+    let dealScore = calculateDealScore(r, comparison)
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
 
@@ -1411,8 +1411,9 @@ let dealHTML = `
 
 document.getElementById("results").innerHTML =
 recommendationHTML +
-insightsHTML +
 dealHTML +
+insightsHTML +
+
 `
 <div class="glass-card collapsible" data-card="summary">
   <div class="card-header" onclick="toggleCard(this)">
