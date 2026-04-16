@@ -1407,7 +1407,7 @@ let maxWeight =
   tankSize === 700 ? 1600 :
   2000
 
-let percentFull = (mixWeight / maxWeight)
+let percentFull = maxWeight ? (mixWeight / maxWeight) * 100 : 0
 
 if(mixWeight > maxWeight && !shownToasts.has("tank")){
   showToast("⚠️ Tank overloaded — reduce mulch or split load", "warning", "tank")
@@ -1549,8 +1549,9 @@ let tankHTML = `
   <div class="card-body">
 
 <div>Tank Size: ${tankSize} gal</div>
-<div>Coverage per Tank: ${tankData.coveragePerTank.toFixed(0)} sqft</div>
-<div>Tanks Needed: ${tankData.loads.toFixed(2)}</div>
+<div>Coverage per Tank: ${(tankData?.coveragePerTank || 0).toFixed(0)} sqft</div>
+<div>Tanks Needed: ${(tankData?.loads || 0).toFixed(2)}</div>
+
 <div>Load Weight: ${mixWeight.toFixed(0)} lbs</div>
 <div>Capacity Used: ${percentFull.toFixed(0)}%</div>
 
