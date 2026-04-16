@@ -1393,6 +1393,37 @@ function render(){
   tackifier: 0
 }
 
+// ==========================
+// SCHEDULING CALCULATIONS
+// ==========================
+
+// 🧠 LABOR TIME (already calculated)
+let laborHours = r.totalHours || 0
+
+// 🚛 TANK TIME
+let minutesPerTank = 20      // spraying time
+let refillMinutes = 15       // refill/mix time
+
+let totalTanks = tankData?.loads || 0
+
+let tankMinutes = totalTanks * (minutesPerTank + refillMinutes)
+let tankHours = tankMinutes / 60
+
+// ⏱️ TOTAL JOB TIME
+let totalJobHours = laborHours + tankHours
+
+// 📅 DAYS NEEDED
+let hoursPerDay = 8
+let crewSize = Number(document.getElementById("crewSize")?.value) || 1
+
+let daysNeeded = totalJobHours / (crewSize * hoursPerDay)
+
+// round UP to full days
+daysNeeded = Math.ceil(daysNeeded)
+
+// 🔁 REFILL CYCLES
+let refillCycles = Math.max(0, Math.ceil(totalTanks) - 1)
+
 let mixWeight =
   perTank.seed +
   perTank.mulch +
@@ -1568,10 +1599,37 @@ let tankHTML = `
 </div>
 `
 
+let scheduleHTML = `
+<div class="glass-card collapsible" data-card="schedule">
+  <div class="card-header" onclick="toggleCard(this)">
+    📅 SCHEDULING
+    <span class="chevron">▼</span>
+  </div>
+
+  <div class="card-body">
+
+    <div>Total Job Time: ${totalJobHours.toFixed(1)} hrs</div>
+    <div>Labor Time: ${laborHours.toFixed(1)} hrs</div>
+    <div>Hydroseeding Time: ${tankHours.toFixed(1)} hrs</div>
+
+    <div style="margin-top:10px;">
+      Tanks: ${totalTanks.toFixed(1)}
+    </div>
+    <div>Refill Cycles: ${refillCycles}</div>
+
+    <div style="margin-top:10px;">
+      Days Needed: <b>${daysNeeded}</b>
+    </div>
+
+  </div>
+</div>
+`
+
 document.getElementById("results").innerHTML =
 recommendationHTML +
 dealHTML +
 tankHTML +
+scheduleHTML +
 insightsHTML +
 
 `
