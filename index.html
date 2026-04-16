@@ -1280,7 +1280,7 @@ function render(){
 
     window.shownToasts = window.shownToasts || new Set()
     let shownToasts = window.shownToasts
-
+    let dealScore = calculateDealScore(r, comparison)
     let r = calculateJob()
     let inv = getInventoryCost()
     let needs = getMaterialNeeds(r)
@@ -1387,10 +1387,32 @@ let insightsHTML = `
 </div>
 `
 
+let dealColor =
+  dealScore >= 80 ? "#4cff9a" :
+  dealScore >= 60 ? "#ffd24d" :
+  "#ff4d4d"
+
+let dealLabel =
+  dealScore >= 80 ? "🔥 TAKE THIS JOB" :
+  dealScore >= 60 ? "⚖️ DECENT JOB" :
+  "⚠️ RISKY JOB"
+
+let dealHTML = `
+<div class="glass-card" style="text-align:center;border:2px solid ${dealColor};">
+  <div style="font-size:14px;color:#aaa;">DEAL SCORE</div>
+  <div style="font-size:42px;font-weight:bold;color:${dealColor};">
+    ${dealScore}/100
+  </div>
+  <div style="margin-top:6px;color:${dealColor};font-weight:700;">
+    ${dealLabel}
+  </div>
+</div>
+`
+
 document.getElementById("results").innerHTML =
 recommendationHTML +
-insightsHTML+
-
+insightsHTML +
+dealHTML +
 `
 <div class="glass-card collapsible" data-card="summary">
   <div class="card-header" onclick="toggleCard(this)">
@@ -1526,21 +1548,32 @@ insightsHTML+
 
 setTimeout(() => {
 
-  // AUTO OPEN + HIGHLIGHT SECTIONS
+  let opened = false
 
-  if(Object.values(comparison).some(i => i.status === "short")){
-    openCard("materials")
-    highlightCard("materials")
-  }
-
-  if(marginPercent < 25){
+  // 🚨 PRIORITY 1 — LOSING MONEY
+  if(marginPercent < 20){
     openCard("final")
     highlightCard("final")
+    opened = true
   }
 
-  if(r.laborCost > r.cost * 0.4){
+  // 🚨 PRIORITY 2 — INVENTORY SHORTAGE
+  if(!opened && Object.values(comparison).some(i => i.status === "short")){
+    openCard("materials")
+    highlightCard("materials")
+    opened = true
+  }
+
+  // ⚠️ PRIORITY 3 — LABOR TOO HIGH
+  if(!opened && r.laborCost > r.cost * 0.4){
     openCard("labor")
     highlightCard("labor")
+    opened = true
+  }
+
+  // 📊 DEFAULT — SHOW SUMMARY
+  if(!opened){
+    openCard("summary")
   }
 
 }, 100)
@@ -3210,6 +3243,63 @@ function highlightCard(name){
       card.classList.remove("highlight")
     }, 2000)
   }
+}
+
+//========================
+//=== DEAL SCORE
+//========================
+
+function calculateDealScore(r, comparison){
+
+  let score = 100
+
+  let margin = r.price ? (r.profit / r.price) * 100 : 0
+
+  // =========================
+  // MARGIN IMPACT
+  // =========================
+
+  if(margin < 15) score -= 40
+  else if(margin < 25) score -= 20
+  else if(margin > 40) score += 10
+
+  // =========================
+  // PROFIT SIZE
+  // =========================
+
+  if(r.profit < 200) score -= 25
+  else if(r.profit > 1000) score += 10
+
+  // =========================
+  // INVENTORY SHORTAGES
+  // =========================
+
+  let shortages = Object.values(comparison).filter(i => i.status === "short")
+
+  if(shortages.length > 0){
+    score -= shortages.length * 5
+  }
+
+  // =========================
+  // LABOR EFFICIENCY
+  // =========================
+
+  if(r.laborCost > r.cost * 0.5){
+    score -= 15
+  }
+
+  // =========================
+  // SCALE BONUS
+  // =========================
+
+  if(r.houses >= 10) score += 10
+  if(r.houses >= 20) score += 10
+
+  // clamp
+  if(score > 100) score = 100
+  if(score < 0) score = 0
+
+  return score
 }
 
 </script>
