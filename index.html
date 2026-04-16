@@ -959,27 +959,21 @@ function getBuilderMultiplier(houses){
 
 function getAvgCostFromInventory(type, inventory){
 
-  let totalQty = 0
+  let items = inventory[type] || []
+
+  if(items.length === 0){
+    return COSTS[type] || 0   // ✅ fallback to default cost
+  }
+
   let totalCost = 0
+  let totalQty = 0
 
-  Object.values(inventory).forEach(section => {
-    (section || []).forEach(item => {
-
-      if(item.type === type){
-
-        let qty = Number(item.qty) || 0
-        let cost = Number(item.cost) || 0
-
-        totalQty += qty
-        totalCost += qty * cost
-      }
-
-    })
+  items.forEach(i => {
+    totalCost += i.cost
+    totalQty += i.qty
   })
 
-  if(totalQty === 0){
-    return COSTS[type] || 0
-  }
+  if(totalQty === 0) return COSTS[type] || 0
 
   return totalCost / totalQty
 }
