@@ -1217,6 +1217,14 @@ if(price < totalCost * 1.1){
   price = totalCost * 1.1
 }
 
+// ✅ MINIMUM JOB PRICE
+if(price < 1000){
+  price = 1000
+}
+
+// recalc profit AFTER all adjustments
+profit = price - totalCost
+
   return {
     sqft,
     houses,
