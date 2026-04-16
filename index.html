@@ -3524,39 +3524,29 @@ if(materialPercent > 60){
 
 function calculateTankLoads(r, needs){
 
-  let tankSize = Number(document.getElementById("tankSize")?.value) || 500
+  let tankSize =
+    Number(document.getElementById("tankSize")?.value) || 500
 
-  // sqft per tank (realistic field averages)
-  let coveragePerTank = {
-    300: 3000,
-    500: 5000,
-    700: 7000,
-    900: 9000
-  }
+  let coveragePerTank = tankSize * 10
 
-  let sqftPerTank = coveragePerTank[tankSize] || 5000
+  let sqftPerTank = coveragePerTank
 
-  let totalSqft = r.totalSqft
+  let totalSqft = r.totalSqft || 0
 
-  let tanks = Math.ceil(totalSqft / sqftPerTank)
-  let refills = tanks - 1
-
-  // per tank mix
-  let perTank = {}
-
-let coreMaterials = ["seed", "fertilizer", "mulch", "tackifier"]
-
-coreMaterials.forEach(k => {
-  if(needs[k]){
-    perTank[k] = needs[k] / tanks
-  }
-})
+  let loads = sqftPerTank > 0
+    ? totalSqft / sqftPerTank
+    : 0
 
   return {
-    tanks,
-    refills,
-    sqftPerTank,
-    perTank
+    tankSize,
+    coveragePerTank,
+    loads,
+    perTank: {
+      seed: needs.seed / loads || 0,
+      mulch: needs.mulch / loads || 0,
+      fertilizer: needs.fertilizer / loads || 0,
+      tackifier: needs.tackifier / loads || 0
+    }
   }
 }
 
