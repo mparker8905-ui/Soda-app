@@ -788,7 +788,7 @@ let app = {
 const RATES = {
   seed: 5,        // lbs per 1000 sqft
   fert: 4,
- mulch: { rate: 85, unit: "lbs" },
+ mulch: { rate: 70, unit: "lbs" },
   tackifier: 3,
 
   compost: 0.5,   // yards per 1000 sqft
@@ -799,26 +799,26 @@ const RATES = {
 }
 
 const COSTS = {
-  seed: 80,
-  fert: 40,
-  mulch: 35,
-  tackifier: 25,
+  seed: 3,        // per lb
+  fert: 1.5,
+  mulch: 0.35,
+  tackifier: 3,
 
-  compost: 60,
+  compost: 60,    // per yd³ (this one is fine)
   biohum: 25,
 
-  lime: 15,
-  sulfur: 20,
+  lime: 0.5,
+  sulfur: 1,
 
-  biochar: 30,
-  humic: 25,
+  biochar: 1.5,
+  humic: 2,
   grow: 50
 }
 
 const MATERIAL_RATES = {
   seed:       { rate: 5, unit: "lbs" },
   fertilizer: { rate: 4, unit: "lbs" },
-  mulch:      { rate: 50, unit: "lbs" },
+  mulch:      { rate: 70, unit: "lbs" },
   tackifier:  { rate: 3, unit: "lbs" },
 
   compost:    { rate: 0.5, unit: "yd3" },
