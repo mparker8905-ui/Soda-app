@@ -1355,7 +1355,7 @@ function render(){
       recommendationHTML = `
         <div style="margin:15px 0;padding:12px;border:1px solid gold;border-radius:10px;background:rgba(255,215,0,0.08);">
           🛎️<b>Recommendation:</b><br>
-          Switch to ${altPackage.toUpperCase()} â†’
+          Switch to ${altPackage.toUpperCase()} 🛎️
           <span style="color:#4cff9a;font-weight:700;">
             +$${(alt.profit - r.profit).toFixed(2)} profit
           </span>
@@ -1654,7 +1654,7 @@ function saveJob(){
     price: r.price,
     cost: r.cost,
     profit: r.profit,
-    margin: r.price ? (r.profit / r.price) * 100 : 0
+    margin: r.price ? (r.profit / r.price) * 100 : 0,
 
 schedule: {
   quote: document.getElementById("schedule_quote")?.value || "",
@@ -1724,9 +1724,9 @@ function openClientView(){
 
   let r = calculateJob()
 
-let materialNeeds = getMaterialNeeds(r)
-
 let materialCost = r.cost - r.laborCost - r.overheadCost
+
+let materialNeeds = getMaterialNeeds(r)
 
 let materialHTML = ""
 
