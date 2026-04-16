@@ -1958,11 +1958,15 @@ let tankHTML = `
 </div>
 `
 
-let scheduleHTML = isBuilderJob
+let scheduleHTML = ""
 
-  ? buildProductionScheduleHTML(r)
+if(isBuilderJob){
 
-  : `
+  scheduleHTML = buildProductionScheduleHTML(r)
+
+} else {
+
+  scheduleHTML = `
 
 <div class="glass-card collapsible" data-card="schedule">
 
@@ -1976,7 +1980,7 @@ let scheduleHTML = isBuilderJob
 
   <div class="card-body">
 
-    <!-- CUSTOMER HEADER -->
+    <!-- HEADER -->
 
     <div style="
 
@@ -2038,11 +2042,11 @@ let scheduleHTML = isBuilderJob
 
       <div style="margin-top:6px;">
 
-        • Soil treatments need time to activate before seeding  
+        • Soil treatments need time to activate<br>
 
-        • Proper spacing improves germination rates  
+        • Proper spacing improves germination rates<br>
 
-        • Reduces risk of washout or failure  
+        • Reduces risk of washout or failure<br>
 
         • Produces thicker, healthier lawns
 
@@ -2172,141 +2176,9 @@ let scheduleHTML = isBuilderJob
 
 `
 
-    <!-- ========================= -->
+}
 
-    <!-- TIME METRICS (KEEP THESE) -->
-
-    <!-- ========================= -->
-
-<div style="
-
-  margin:15px 0;
-
-  border-top:1px solid rgba(255,255,255,0.08);
-
-"></div>
-
-    <div>Total Job Time: ${totalJobHours.toFixed(1)} hrs</div>
-
-    <div>Labor Time: ${laborHours.toFixed(1)} hrs</div>
-
-    <div>Hydroseeding Time: ${tankHours.toFixed(1)} hrs</div>
-
-    <div>Prep / Add-on Time: ${addonHours.toFixed(1)} hrs</div>
-
-    <div style="margin-top:10px;">
-
-      Tanks: ${totalTanks.toFixed(1)}
-
-    </div>
-
-    <div>Refill Cycles: ${refillCycles}</div>
-
-    <div style="margin-top:10px;">
-
-      Days Needed: <b>${daysNeeded}</b>
-
-    </div>
-
-    <div style="margin-top:10px;">
-
-      Revenue / Day: <b>$${revenuePerDay.toFixed(0)}</b>
-
-    </div>
-
-    <div>
-
-      Profit / Day: <b>$${profitPerDay.toFixed(0)}</b>
-
-    </div>
-
-    ${
-
-      scheduleWarnings.length > 0
-
-        ? `<div style="margin-top:10px;color:#ff4d4d;">
-
-            ${scheduleWarnings.map(w => `<div>⚠️ ${w}</div>`).join("")}
-
-           </div>`
-
-        : `<div style="margin-top:10px;color:#4cff9a;">
-
-            ✅ Efficient schedule
-
-           </div>`
-
-    }
-
-    <!-- ========================= -->
-
-    <!-- NEW: DAY-BY-DAY PLAN -->
-
-    <!-- ========================= -->
-
-<div style="margin-top:15px;font-weight:bold;color:#ffd24d;">
-
-  📋 INSTALLATION PLAN
-
-</div>
-
-<div style="margin-top:8px;color:#aaa;font-size:13px;">
-
-  Our process ensures proper soil conditioning, seed establishment, and long-term lawn success.
-
-</div>
-
-${(schedule || []).map(day => `
-
-  <div style="
-
-    margin-top:12px;
-
-    padding:12px;
-
-    border-radius:10px;
-
-    background:rgba(255,255,255,0.03);
-
-    border:1px solid rgba(255,215,0,0.25);
-
-  ">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-
-      <div style="font-weight:bold;color:#4cff9a;">
-
-        Day ${day.day} — ${day.title}
-
-      </div>
-
-      <div style="font-size:12px;color:#aaa;">
-
-        ${day.date}
-
-      </div>
-
-    </div>
-
-    <div style="margin-top:8px;">
-
-      ${day.tasks.map(task => `
-
-        <div style="margin-left:8px;">• ${task}</div>
-
-      `).join("")}
-
-    </div>
-
-  </div>
-
-`).join("")}
-
-  </div>
-
-</div>
-
-`
+  
 
 document.getElementById("results").innerHTML =
 recommendationHTML +
