@@ -643,16 +643,14 @@ button:active{
   💾Save Job
 </button>
 
-<label>Hydroseeder Tank Size (gallons)</label>
+<label>Hydroseeder Tank Size</label>
 <select id="tankSize" onchange="render()">
+  <option value="100">100 gal</option>
   <option value="300">300 gal</option>
   <option value="500" selected>500 gal</option>
   <option value="700">700 gal</option>
   <option value="900">900 gal</option>
 </select>
-
-<label>Hydroseeder Tank Size (gallons)</label>
-<input id="tankSize" type="number" value="500" onchange="render()">
 
 <div class="card">
   <span class='gold-text'>Scheduling</span>
@@ -1402,6 +1400,7 @@ let mixWeight =
 let tankSize = Number(document.getElementById("tankSize")?.value) || 500
 
 let maxWeight =
+  tankSize === 100 ? 300 :
   tankSize === 300 ? 800 :
   tankSize === 500 ? 1200 :
   tankSize === 700 ? 1600 :
