@@ -1239,6 +1239,138 @@ profit = price - totalCost
   }
 }
 
+//======================
+//== BUILD SCHEDULE
+//======================
+
+function buildSchedule(r){
+
+  let schedule = []
+
+  let packageType = document.getElementById("package")?.value || "standard"
+
+  let addons = app.job.addons || {}
+
+  // ==========================
+
+  // DAY 1 — LIME / SULFUR
+
+  // ==========================
+
+  let day1Tasks = []
+
+  if(packageType === "premium" || addons.lime){
+
+    day1Tasks.push("Apply Lime")
+
+  }
+
+  if(packageType === "premium" || addons.sulfur){
+
+    day1Tasks.push("Apply Sulfur")
+
+  }
+
+  if(day1Tasks.length){
+
+    schedule.push({
+
+      day: 1,
+
+      title: "Soil Prep",
+
+      tasks: day1Tasks
+
+    })
+
+  }
+
+  // ==========================
+
+  // DAY 2 — AERATION + COMPOST
+
+  // ==========================
+
+  let day2Tasks = []
+
+  if(packageType === "premium" || addons.aeration){
+
+    day2Tasks.push("Core Aeration")
+
+  }
+
+  if(packageType === "premium" || addons.compost){
+
+    day2Tasks.push("Apply Compost")
+
+  }
+
+  if(day2Tasks.length){
+
+    schedule.push({
+
+      day: 2,
+
+      title: "Soil Conditioning",
+
+      tasks: day2Tasks
+
+    })
+
+  }
+
+  // ==========================
+
+  // DAY 3 — HYDROSEED
+
+  // ==========================
+
+  let day3Tasks = ["Hydroseeding"]
+
+  if(addons.grow){
+
+    day3Tasks.push("Install Grow System")
+
+  }
+
+  schedule.push({
+
+    day: 3,
+
+    title: "Seeding Day",
+
+    tasks: day3Tasks
+
+  })
+
+  // ==========================
+
+  // DAY 4 — REMOVAL + INSPECTION
+
+  // ==========================
+
+  let day4Tasks = ["Final Lawn Inspection"]
+
+  if(addons.grow){
+
+    day4Tasks.unshift("Remove Grow System")
+
+  }
+
+  schedule.push({
+
+    day: 4,
+
+    title: "Wrap-Up",
+
+    tasks: day4Tasks
+
+  })
+
+  return schedule
+
+}
+
 //=======================
 //== AI INSIGHTS
 //=======================
@@ -1409,12 +1541,73 @@ let totalTanks = tankData?.loads || 0
 let tankMinutes = totalTanks * (minutesPerTank + refillMinutes)
 let tankHours = tankMinutes / 60
 
+// ==========================
+// 🧱 ADD-ON TIME (FIELD WORK)
+// ==========================
+
+let addonHours = 0
+
+let addons = app.job.addons || {}
+
+// 🌱 Lime / Sulfur (light application)
+if(addons.lime || addons.sulfur){
+  addonHours += 0.5   // ~30 mins total
+}
+
+// 🌀 Aeration + Compost (can be combined)
+if(addons.aeration || addons.compost){
+  addonHours += 1.5   // 1–2 hrs combined
+}
+
+// 🌿 Bio / Humic / Biochar (spray add-ons)
+if(addons.biohum || addons.biochar || addons.humic){
+  addonHours += 0.5
+}
+
+// 🌧️ Grow system setup
+if(addons.grow){
+  addonHours += 2
+}
+
+let sizeFactor = r.totalSqft / 5000
+
+addonHours *= Math.max(0.5, sizeFactor)
+
 // ⏱️ TOTAL JOB TIME
-let totalJobHours = laborHours + tankHours
+
+let totalJobHours = laborHours + tankHours + addonHours
 
 // 📅 DAYS NEEDED
 let hoursPerDay = 8
 let crewSize = Number(document.getElementById("crewSize")?.value) || 1
+
+// ==========================
+// 💰 PERFORMANCE METRICS
+// ==========================
+
+let revenuePerDay = daysNeeded ? r.price / daysNeeded : 0
+let profitPerDay = daysNeeded ? r.profit / daysNeeded : 0 
+
+// ==========================
+// ⚠️ SCHEDULING WARNINGS
+// ==========================
+
+let scheduleWarnings = []
+
+// 🚨 LOW REVENUE DAY
+if(revenuePerDay < 1500){
+  scheduleWarnings.push("Low revenue per day — consider batching jobs")
+}
+
+// 🚨 LOW PROFIT DAY
+if(profitPerDay < 500){
+  scheduleWarnings.push("Low profit per day — job may not be worth it")
+}
+
+// 🚨 TOO MANY DAYS
+if(daysNeeded > 2 && r.totalSqft < 10000){
+  scheduleWarnings.push("Too many days for job size — inefficiency detected")
+}
 
 let daysNeeded = totalJobHours / (crewSize * hoursPerDay)
 
@@ -1450,6 +1643,7 @@ if(mixWeight > maxWeight && !shownToasts.has("tank")){
     let comparison = compareInventory(needs, inventoryTotals)
     let alerts = generateAlerts(r, comparison)
     let dealScore = calculateDealScore(r, comparison)
+    let schedule = buildSchedule(r)
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
 
@@ -1600,29 +1794,115 @@ let tankHTML = `
 `
 
 let scheduleHTML = `
+
 <div class="glass-card collapsible" data-card="schedule">
+
   <div class="card-header" onclick="toggleCard(this)">
+
     📅 SCHEDULING
+
     <span class="chevron">▼</span>
+
   </div>
 
   <div class="card-body">
 
+    <!-- ========================= -->
+
+    <!-- TIME METRICS (KEEP THESE) -->
+
+    <!-- ========================= -->
+
     <div>Total Job Time: ${totalJobHours.toFixed(1)} hrs</div>
+
     <div>Labor Time: ${laborHours.toFixed(1)} hrs</div>
+
     <div>Hydroseeding Time: ${tankHours.toFixed(1)} hrs</div>
 
+    <div>Prep / Add-on Time: ${addonHours.toFixed(1)} hrs</div>
+
     <div style="margin-top:10px;">
+
       Tanks: ${totalTanks.toFixed(1)}
+
     </div>
+
     <div>Refill Cycles: ${refillCycles}</div>
 
     <div style="margin-top:10px;">
+
       Days Needed: <b>${daysNeeded}</b>
+
     </div>
 
+    <div style="margin-top:10px;">
+
+      Revenue / Day: <b>$${revenuePerDay.toFixed(0)}</b>
+
+    </div>
+
+    <div>
+
+      Profit / Day: <b>$${profitPerDay.toFixed(0)}</b>
+
+    </div>
+
+    ${
+
+      scheduleWarnings.length > 0
+
+        ? `<div style="margin-top:10px;color:#ff4d4d;">
+
+            ${scheduleWarnings.map(w => `<div>⚠️ ${w}</div>`).join("")}
+
+           </div>`
+
+        : `<div style="margin-top:10px;color:#4cff9a;">
+
+            ✅ Efficient schedule
+
+           </div>`
+
+    }
+
+    <!-- ========================= -->
+
+    <!-- NEW: DAY-BY-DAY PLAN -->
+
+    <!-- ========================= -->
+
+    <div style="margin-top:15px;font-weight:bold;color:#ffd24d;">
+
+      FIELD PLAN
+
+    </div>
+
+    ${schedule.map(day => `
+
+      <div style="margin-top:10px;padding:8px;border:1px solid rgba(255,215,0,0.2);border-radius:8px;">
+
+        
+
+        <div style="font-weight:bold;color:#4cff9a;">
+
+          Day ${day.day} — ${day.title}
+
+        </div>
+
+        ${day.tasks.map(task => `
+
+          <div style="margin-left:10px;">• ${task}</div>
+
+        `).join("")}
+
+      </div>
+
+    `).join("")}
+
   </div>
+
 </div>
+
 `
 
 document.getElementById("results").innerHTML =
