@@ -639,6 +639,21 @@ button:active{
   <div id="results"></div>
 </div>
 
+<button onclick="saveJob()" class="primary-btn">
+  💾Save Job
+</button>
+
+<label>Hydroseeder Tank Size (gallons)</label>
+<select id="tankSize" onchange="render()">
+  <option value="300">300 gal</option>
+  <option value="500" selected>500 gal</option>
+  <option value="700">700 gal</option>
+  <option value="900">900 gal</option>
+</select>
+
+<label>Hydroseeder Tank Size (gallons)</label>
+<input id="tankSize" type="number" value="500" onchange="render()">
+
 <div class="card">
   <span class='gold-text'>Scheduling</span>
 
@@ -688,10 +703,6 @@ button:active{
   </div>
 
 </div>
-
-<button onclick="saveJob()" class="primary-btn">
-  💾Save Job
-</button>
 
 <div id="jobHistorySection" class="glass-card">
   <div class="section-title">JOB HISTORY</div>
@@ -779,7 +790,7 @@ let app = {
 const RATES = {
   seed: 5,        // lbs per 1000 sqft
   fert: 4,
-  mulch: 50,      // lbs
+ mulch: { rate: 85, unit: "lbs" },
   tackifier: 3,
 
   compost: 0.5,   // yards per 1000 sqft
@@ -1374,6 +1385,35 @@ function render(){
     let r = calculateJob()
     let inv = getInventoryCost()
     let needs = getMaterialNeeds(r)
+    let tankData = calculateTankLoads(r, needs)
+   let perTank = tankData?.perTank || {
+  seed: 0,
+  mulch: 0,
+  fertilizer: 0,
+  tackifier: 0
+}
+
+let mixWeight =
+  perTank.seed +
+  perTank.mulch +
+  perTank.fertilizer +
+  perTank.tackifier
+
+let tankSize = Number(document.getElementById("tankSize")?.value) || 500
+
+let maxWeight =
+  tankSize === 300 ? 800 :
+  tankSize === 500 ? 1200 :
+  tankSize === 700 ? 1600 :
+  2000
+
+let percentFull = (mixWeight / maxWeight)
+
+if(mixWeight > maxWeight && !shownToasts.has("tank")){
+  showToast("⚠️ Tank overloaded — reduce mulch or split load", "warning", "tank")
+  shownToasts.add("tank")
+}
+
     let inventoryTotals = getInventoryTotals()
     let comparison = compareInventory(needs, inventoryTotals)
     let alerts = generateAlerts(r, comparison)
@@ -1499,9 +1539,37 @@ let dealHTML = `
 </div>
 `
 
+let tankHTML = `
+<div class="glass-card collapsible" data-card="tank">
+  <div class="card-header" onclick="toggleCard(this)">
+    🚛 TANK MIX PLAN
+    <span class="chevron">▼</span>
+  </div>
+
+  <div class="card-body">
+
+<div>Tank Size: ${tankSize} gal</div>
+<div>Coverage per Tank: ${tankData.coveragePerTank.toFixed(0)} sqft</div>
+<div>Tanks Needed: ${tankData.loads.toFixed(2)}</div>
+<div>Load Weight: ${mixWeight.toFixed(0)} lbs</div>
+<div>Capacity Used: ${percentFull.toFixed(0)}%</div>
+
+<div class="section-title" style="margin-top:10px;">
+  PER TANK MIX
+</div>
+
+<div>Seed: ${perTank.seed.toFixed(1)} lbs</div>
+<div>Fertilizer: ${perTank.fertilizer.toFixed(1)} lbs</div>
+<div>Mulch: ${perTank.mulch.toFixed(1)} lbs</div>
+<div>Tackifier: ${perTank.tackifier.toFixed(1)} lbs</div>
+  </div>
+</div>
+`
+
 document.getElementById("results").innerHTML =
 recommendationHTML +
 dealHTML +
+tankHTML +
 insightsHTML +
 
 `
@@ -1645,6 +1713,13 @@ setTimeout(() => {
   if(marginPercent < 20){
     openCard("final")
     highlightCard("final")
+    opened = true
+  }
+
+  // 🚨 PRIORITY 1.5 — TANK TOO HEAVY
+ if(!opened && mixWeight > maxWeight){
+    openCard("tank")
+    highlightCard("tank")
     opened = true
   }
 
@@ -3441,6 +3516,80 @@ if(materialPercent > 60){
   if(score < 0) score = 0
 
   return score
+}
+
+//=======================
+//=== CALCULATE TANK LOAD
+//=======================
+
+function calculateTankLoads(r, needs){
+
+  let tankSize = Number(document.getElementById("tankSize")?.value) || 500
+
+  // sqft per tank (realistic field averages)
+  let coveragePerTank = {
+    300: 3000,
+    500: 5000,
+    700: 7000,
+    900: 9000
+  }
+
+  let sqftPerTank = coveragePerTank[tankSize] || 5000
+
+  let totalSqft = r.totalSqft
+
+  let tanks = Math.ceil(totalSqft / sqftPerTank)
+  let refills = tanks - 1
+
+  // per tank mix
+  let perTank = {}
+
+let coreMaterials = ["seed", "fertilizer", "mulch", "tackifier"]
+
+coreMaterials.forEach(k => {
+  if(needs[k]){
+    perTank[k] = needs[k] / tanks
+  }
+})
+
+  return {
+    tanks,
+    refills,
+    sqftPerTank,
+    perTank
+  }
+}
+
+//=======================
+//== CALCULATE TANK MIX
+//=======================
+
+function calculateTankMix(r){
+
+  let tankSize = Number(document.getElementById("tankSize")?.value) || 500
+
+  // 💡 Rule of thumb:
+  // 500 gal tank ≈ 5,000 sqft coverage
+  // scale linearly
+
+  let coveragePerTank = tankSize * 10   // sqft per tank
+
+  let tanksNeeded = r.totalSqft / coveragePerTank
+
+  // per tank amounts
+  let perTank = {
+    seed: (coveragePerTank / 1000) * MATERIAL_RATES.seed.rate,
+    fertilizer: (coveragePerTank / 1000) * MATERIAL_RATES.fertilizer.rate,
+    mulch: (coveragePerTank / 1000) * MATERIAL_RATES.mulch.rate,
+    tackifier: (coveragePerTank / 1000) * MATERIAL_RATES.tackifier.rate
+  }
+
+  return {
+    tankSize,
+    coveragePerTank,
+    tanksNeeded,
+    perTank
+  }
 }
 
 </script>
