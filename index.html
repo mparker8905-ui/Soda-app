@@ -1251,9 +1251,29 @@ function buildSchedule(r){
 
   let addons = app.job.addons || {}
 
+  // 📅 START DATE = today
+
+  let currentDate = new Date()
+
+  function formatDate(date){
+
+    return date.toLocaleDateString()
+
+  }
+
+  function addDays(date, days){
+
+    let d = new Date(date)
+
+    d.setDate(d.getDate() + days)
+
+    return d
+
+  }
+
   // ==========================
 
-  // DAY 1 — LIME / SULFUR
+  // DAY 1 — PREP
 
   // ==========================
 
@@ -1271,65 +1291,71 @@ function buildSchedule(r){
 
   }
 
-  if(day1Tasks.length){
-
-    schedule.push({
-
-      day: 1,
-
-      title: "Soil Prep",
-
-      tasks: day1Tasks
-
-    })
-
-  }
-
-  // ==========================
-
-  // DAY 2 — AERATION + COMPOST
-
-  // ==========================
-
-  let day2Tasks = []
-
   if(packageType === "premium" || addons.aeration){
 
-    day2Tasks.push("Core Aeration")
+    day1Tasks.push("Core Aeration")
 
   }
 
   if(packageType === "premium" || addons.compost){
 
-    day2Tasks.push("Apply Compost")
+    day1Tasks.push("Apply Compost")
 
   }
 
-  if(day2Tasks.length){
+  schedule.push({
 
-    schedule.push({
+    day: 1,
 
-      day: 2,
+    title: "Full Soil Prep",
 
-      title: "Soil Conditioning",
+    date: formatDate(currentDate),
 
-      tasks: day2Tasks
+    tasks: day1Tasks
 
-    })
-
-  }
+  })
 
   // ==========================
 
-  // DAY 3 — HYDROSEED
+  // DAY 2 — AFTER 3 DAYS
 
   // ==========================
 
-  let day3Tasks = ["Hydroseeding"]
+  currentDate = addDays(currentDate, 3)
+
+  let day2Tasks = ["Hydroseeding"]
 
   if(addons.grow){
 
-    day3Tasks.push("Install Grow System")
+    day2Tasks.push("Install Grow System")
+
+  }
+
+  schedule.push({
+
+    day: 2,
+
+    title: "Seeding Day",
+
+    date: formatDate(currentDate),
+
+    tasks: day2Tasks
+
+  })
+
+  // ==========================
+
+  // DAY 3 — AFTER 21 DAYS
+
+  // ==========================
+
+  currentDate = addDays(currentDate, 21)
+
+  let day3Tasks = ["Final Lawn Inspection"]
+
+  if(addons.grow){
+
+    day3Tasks.unshift("Remove Grow System")
 
   }
 
@@ -1337,33 +1363,11 @@ function buildSchedule(r){
 
     day: 3,
 
-    title: "Seeding Day",
+    title: "Final Visit",
+
+    date: formatDate(currentDate),
 
     tasks: day3Tasks
-
-  })
-
-  // ==========================
-
-  // DAY 4 — REMOVAL + INSPECTION
-
-  // ==========================
-
-  let day4Tasks = ["Final Lawn Inspection"]
-
-  if(addons.grow){
-
-    day4Tasks.unshift("Remove Grow System")
-
-  }
-
-  schedule.push({
-
-    day: 4,
-
-    title: "Wrap-Up",
-
-    tasks: day4Tasks
 
   })
 
@@ -1887,7 +1891,13 @@ let scheduleHTML = `
 
         <div style="font-weight:bold;color:#4cff9a;">
 
-          Day ${day.day} — ${day.title}
+         Day ${day.day} — ${day.title}
+
+<div style="font-size:12px;color:#aaa;">
+
+  ${day.date}
+
+</div>
 
         </div>
 
