@@ -1250,8 +1250,7 @@ function buildSchedule(r){
   // ✅ TIMELINE SELECTION
 
   let timeline =
-
-    document.querySelector('input[name="timeline"]:checked')?.value || "standard"
+ document.querySelector('input[name="timeline"]:checked')?.value || "standard"
 
   let prepToSeedDays = 3
 
@@ -1325,7 +1324,17 @@ function buildSchedule(r){
 
     day: 1,
 
-    title: "Full Soil Prep",
+   title:
+
+  timeline === "fast"
+
+    ? "Full Soil Prep (Fast Track)"
+
+    : timeline === "extended"
+
+    ? "Full Soil Prep (Extended Care)"
+
+    : "Full Soil Prep",
 
     date: formatDate(currentDate),
 
@@ -1339,7 +1348,7 @@ function buildSchedule(r){
 
   // ==========================
 
-  currentDate = addDays(currentDate, prepToSeedDays)
+currentDate = addDays(currentDate, spacing.prepToSeed)
 
   let day2Tasks = ["Hydroseeding"]
 
@@ -1353,7 +1362,17 @@ function buildSchedule(r){
 
     day: 2,
 
-    title: "Seeding Day",
+   title:
+
+  timeline === "fast"
+
+    ? "Seeding Day (Fast Track)"
+
+    : timeline === "extended"
+
+    ? "Seeding Day (Extended Care)"
+
+    : "Seeding Day",
 
     date: formatDate(currentDate),
 
@@ -1367,7 +1386,7 @@ function buildSchedule(r){
 
   // ==========================
 
-  currentDate = addDays(currentDate, seedToFinalDays)
+currentDate = addDays(currentDate, spacing.seedToFinal)
 
   let day3Tasks = ["Final Lawn Inspection"]
 
@@ -1381,7 +1400,17 @@ function buildSchedule(r){
 
     day: 3,
 
-    title: "Final Visit",
+  title:
+
+  timeline === "fast"
+
+    ? "Final Visit (Fast Track)"
+
+    : timeline === "extended"
+
+    ? "Final Visit (Extended Care)"
+
+    : "Final Visit",
 
     date: formatDate(currentDate),
 
@@ -2376,6 +2405,8 @@ setTimeout(() => {
   }
 
 }, 100)
+
+renderSchedulePreview()
 
   } catch(e){
     console.error(e)
@@ -4204,6 +4235,76 @@ function calculateTankMix(r){
     perTank
   }
 }
+
+//============================
+// SCHEDULE PREVIEW
+//============================
+
+function renderSchedulePreview(){
+
+  let r = calculateJob()
+
+  let schedule = buildSchedule(r)
+
+  let container = document.getElementById("schedulePreview")
+
+  if(!container) return
+
+  if(!schedule || schedule.length === 0){
+
+    container.innerHTML = `<div style="color:#aaa;">No schedule yet</div>`
+
+    return
+
+  }
+
+  container.innerHTML = schedule.map(day => `
+
+    <div style="
+
+      margin-bottom:10px;
+
+      padding:10px;
+
+      border-radius:8px;
+
+      background:rgba(255,255,255,0.03);
+
+      border:1px solid rgba(255,215,0,0.2);
+
+    ">
+
+      <div style="font-weight:bold;color:#4cff9a;">
+
+        Day ${day.day} — ${day.title}
+
+      </div>
+
+      <div style="font-size:12px;color:#aaa;">
+
+        ${day.date}
+
+      </div>
+
+      <div style="margin-top:6px;">
+
+        ${day.tasks.map(t => `<div>• ${t}</div>`).join("")}
+
+      </div>
+
+    </div>
+
+  `).join("")
+
+}
+
+document.getElementById("projectStart")?.addEventListener("change", renderSchedulePreview)
+
+document.querySelectorAll('input[name="timeline"]').forEach(radio => {
+
+  radio.addEventListener("change", renderSchedulePreview)
+
+})
 
 </script>
 
