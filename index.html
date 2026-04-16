@@ -1178,6 +1178,99 @@ if(price < totalCost * 1.1){
   }
 }
 
+//=======================
+//== AI INSIGHTS
+//=======================
+
+function generateAIInsights(r, comparison){
+
+  let insights = []
+
+  let margin = r.price ? (r.profit / r.price) * 100 : 0
+
+  // =========================
+  // PROFIT INSIGHTS
+  // =========================
+
+  if(margin < 20){
+    insights.push({
+      type: "danger",
+      text: "Profit margin is critically low. Increase pricing or reduce costs."
+    })
+  }
+
+  if(margin >= 20 && margin < 30){
+    insights.push({
+      type: "warning",
+      text: "Margin is decent but could be improved. Consider premium upsell."
+    })
+  }
+
+  if(margin > 40){
+    insights.push({
+      type: "success",
+      text: "Strong profit margin. This is a high-quality job."
+    })
+  }
+
+  // =========================
+  // LABOR INTELLIGENCE
+  // =========================
+
+  if(r.laborCost > r.cost * 0.4){
+    insights.push({
+      type: "warning",
+      text: "Labor cost is high. Increase crew efficiency or adjust pricing."
+    })
+  }
+
+  // =========================
+  // INVENTORY INTELLIGENCE
+  // =========================
+
+  let shortages = Object.values(comparison).filter(i => i.status === "short")
+
+  if(shortages.length > 0){
+    insights.push({
+      type: "danger",
+      text: `${shortages.length} material shortages detected. This job will require purchasing materials.`
+    })
+  }
+
+  // =========================
+  // SCALE INTELLIGENCE
+  // =========================
+
+  if(r.houses >= 10){
+    insights.push({
+      type: "success",
+      text: "Builder scale detected. You can reduce pricing slightly and still profit."
+    })
+  }
+
+  // =========================
+  // PRICE POSITIONING
+  // =========================
+
+  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+
+  if(pricePerSqft > 0.5){
+    insights.push({
+      type: "warning",
+      text: "Price per sqft is high. Risk of losing competitive bids."
+    })
+  }
+
+  if(pricePerSqft < 0.25){
+    insights.push({
+      type: "danger",
+      text: "Price per sqft is very low. You may be underpricing."
+    })
+  }
+
+  return insights
+}
+
 //=============================
 //=====RENDER
 //=============================
@@ -1261,8 +1354,42 @@ function render(){
 
 let materialCost = r.cost - r.laborCost - r.overheadCost
 
+let insights = generateAIInsights(r, comparison)
+
+let insightsHTML = `
+<div class="glass-card collapsible" data-card="ai">
+  <div class="card-header" onclick="toggleCard(this)">
+    🤖 AI INSIGHTS
+    <span class="chevron">▼</span>
+  </div>
+
+  <div class="card-body">
+    ${insights.map(i => `
+      <div style="
+        margin:6px 0;
+        padding:8px;
+        border-radius:8px;
+        background:${
+          i.type === "danger" ? "rgba(255,60,60,0.1)" :
+          i.type === "warning" ? "rgba(255,180,0,0.1)" :
+          "rgba(0,255,120,0.1)"
+        };
+        border:1px solid ${
+          i.type === "danger" ? "rgba(255,60,60,0.4)" :
+          i.type === "warning" ? "rgba(255,180,0,0.4)" :
+          "rgba(0,255,120,0.4)"
+        };
+      ">
+        ${i.text}
+      </div>
+    `).join("")}
+  </div>
+</div>
+`
+
 document.getElementById("results").innerHTML =
 recommendationHTML +
+insightsHTML 
 
 `
 <div class="glass-card collapsible" data-card="summary">
