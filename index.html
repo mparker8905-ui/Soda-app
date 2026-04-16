@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
- 
+
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -633,7 +633,7 @@ button:active{
   <div id="results"></div>
 </div>
 
-<button onclick="saveJob()">
+<button onclick="saveJob()" class="primary-btn">
   💾Save Job
 </button>
 
@@ -696,12 +696,2253 @@ button:active{
 
 <button onclick="generateInventoryPDF()">Inventory PDF</button>
 
+<script>
+
+//===========================
+//==== STATE
+//===========================
+let app = {
+  job:{
+    addons:{
+      aeration:false,
+      compost:false,
+      biohum:false,
+      biochar:false,
+      humic:false,
+      grow:false,
+      lime:false,
+      sulfur:false
+    }
+  }
+}
+
+//===============
+//== CONSTANTS
+//===============
+
+const RATES = {
+  seed: 5,        // lbs per 1000 sqft
+  fert: 4,
+  mulch: 50,      // lbs
+  tackifier: 3,
+
+  compost: 0.5,   // yards per 1000 sqft
+  biohum: 2,      // gallons
+
+  lime: 10,       // lbs
+  sulfur: 5
+}
+
+const COSTS = {
+  seed: 80,
+  fert: 40,
+  mulch: 35,
+  tackifier: 25,
+
+  compost: 60,
+  biohum: 25,
+
+  lime: 15,
+  sulfur: 20,
+
+  biochar: 30,
+  humic: 25,
+  grow: 50
+}
+
+const MATERIAL_RATES = {
+  seed:       { rate: 5, unit: "lbs" },
+  fertilizer: { rate: 4, unit: "lbs" },
+  mulch:      { rate: 50, unit: "lbs" },
+  tackifier:  { rate: 3, unit: "lbs" },
+
+  compost:    { rate: 0.5, unit: "yd3" },
+  biochar:    { rate: 10, unit: "lbs" },
+  humic:      { rate: 1, unit: "lbs" },
+
+  lime:       { rate: 4, unit: "lbs" },
+  sulfur:     { rate: 8, unit: "lbs" },
+
+  sprinklers: { rate: 1, unit: "units" },
+  timers: { rate: 1, unit: "units" }
+}
+
+const MATERIAL_LABELS = {
+  seed: "Seed",
+  fertilizer: "Fertilizer",
+  mulch: "Mulch",
+  tackifier: "Tackifier",
+  compost: "Compost",
+  biochar: "Biochar",
+  humic: "Humic Acid",
+  lime: "Lime",
+  sulfur: "Sulfur",
+  sprinklers: "Sprinklers",
+  timers: "Sprinkler Timers" // ðŸ‘ˆ YOUR NEW ONE
+}
+
+//=====================
+//== TOAST SYSTEM
+//=====================
+
+function showToast(message, type = "success", targetCard = null){
+
+  let toast = document.createElement("div")
+  toast.className = `toast toast-${type}`
+  toast.innerText = message
+
+  // CLICK HANDLER
+  if(targetCard){
+    toast.style.cursor = "pointer"
+
+    toast.onclick = () => {
+      let card = document.querySelector(`[data-card="${targetCard}"]`)
+
+      if(card){
+        // open it
+        card.classList.add("open")
+
+        // scroll to it
+        card.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        })
+
+        // temporary glow boost
+        card.classList.add("highlight")
+        setTimeout(() => {
+          card.classList.remove("highlight")
+        }, 2000)
+      }
+    }
+  }
+
+  document.body.appendChild(toast)
+
+  setTimeout(() => toast.classList.add("show"), 10)
+
+  setTimeout(() => {
+    toast.classList.remove("show")
+    setTimeout(() => toast.remove(), 300)
+  }, 3000)
+}
+
+//==================
+//== UNIT LABEL
+//==================
+
+function updateUnitLabel(selectEl){
+
+  let row = selectEl.closest(".material-row")
+  let label = row.querySelector(".unit-label")
+
+  let type = selectEl.value
+
+  let unit = MATERIAL_RATES[type]?.unit || ""
+
+  if(unit){
+    label.innerText = `Quantity Available (${unit})`
+  } else {
+    label.innerText = "Quantity Available"
+  }
+}
+
+// ==============================
+// SIZE BUTTONS
+// ==============================
+
+function setSize(val){
+  document.getElementById("sqft").value = val
+  render()
+}
+
+// ==============================
+// TOGGLE BUTTONS 
+// ==============================
+
+function toggleAddon(el){
+  let name = el.dataset.name
+
+  // safety check
+  if(!app.job.addons){
+    app.job.addons = {}
+  }
+
+  app.job.addons[name] = !app.job.addons[name]
+
+  el.classList.toggle("active")
+
+  render()
+}
+
+//==============================
+//==== BUILDER MODE
+//==============================
+
+function getBuilderMultiplier(houses){
+
+  if(houses <= 1) return 1
+  if(houses <= 5) return 0.95
+  if(houses <= 10) return 0.9
+  if(houses <= 20) return 0.85
+  if(houses <= 50) return 0.80
+  return 0.75
+}
+//=======================
+//AVG COST FROM INVENTORY
+//=======================
+
+function getAvgCostFromInventory(type, inventory){
+
+  let totalQty = 0
+  let totalCost = 0
+
+  Object.values(inventory).forEach(section => {
+    (section || []).forEach(item => {
+
+      if(item.type === type){
+
+        let qty = Number(item.qty) || 0
+        let cost = Number(item.cost) || 0
+
+        totalQty += qty
+        totalCost += qty * cost
+      }
+
+    })
+  })
+
+  if(totalQty === 0){
+    return COSTS[type] || 0
+  }
+
+  return totalCost / totalQty
+}
+
+//============================
+//==== CALCULATE JOB
+//============================
+
+function calculateJob(){
+
+  let sqft = Number(document.getElementById("sqft")?.value) || 0
+  let houses = Number(document.getElementById("houses")?.value) || 1
+  let packageType = document.getElementById("package")?.value || "standard"
+  let pricingMode = document.getElementById("pricingMode")?.value || "balanced"
+  let targetMarginInput = Number(document.getElementById("targetMargin")?.value)
+
+  let builderMult = getBuilderMultiplier(houses)
+
+  let totalSqft = sqft * houses
+
+  // ==============================
+  // LABOR INPUTS
+  // ==============================
+
+  let hourlyRate = Number(document.getElementById("hourlyRate")?.value) || 0
+  let hoursPerHouse = Number(document.getElementById("hoursPerHouse")?.value) || 0
+  let crewSize = Number(document.getElementById("crewSize")?.value) || 1
+  let overheadPct = Number(document.getElementById("overhead")?.value) || 0
+
+  let laborEfficiency = 1 - ((1 - builderMult) * 0.5)
+  let totalHours = hoursPerHouse * houses * laborEfficiency
+  let laborCost = totalHours * hourlyRate * crewSize
+
+  // ==========================
+  // BASE COST
+  // ==========================
+
+  let baseRate = 0
+
+  if(packageType === "standard") baseRate = 0.18
+  if(packageType === "premium") baseRate = 0.30
+
+
+
+let baseCost = totalSqft * baseRate
+if(baseCost < 500) baseCost = 500
+
+// NEW LOGIC
+
+let materialCost = 0
+
+let needs = getMaterialNeeds({
+  totalSqft: totalSqft
+})
+
+// 🔥 cache inventory ONCE
+let inventoryCache = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+Object.keys(needs).forEach(type => {
+  let needed = needs[type] || 0
+  let avgCost = getAvgCostFromInventory(type, inventoryCache)
+  materialCost += needed * avgCost
+})
+
+// fallback safety
+
+let usedFallback = false
+
+if(materialCost < baseCost){
+  materialCost = baseCost
+  usedFallback = true
+}
+
+if(usedFallback){
+  showToast("Using base pricing (inventory incomplete)", "warning")
+}
+
+// minimum job floor
+if(materialCost < 500){
+  materialCost = 500
+}
+
+let addonCosts = {
+  aeration: 0,
+  compost: 0,
+  biohum: 0,
+  biochar: 0,
+  humic: 0,
+  grow: 0,
+  lime: 0,
+  sulfur: 0
+}
+
+  // ==========================
+  // ADDONS
+  // ==========================
+
+  let addons = app.job.addons || {}
+
+  function isIncluded(name){
+    if(packageType !== "premium") return false
+    return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+  }
+
+// Aeration
+if(addons.aeration && !isIncluded("aeration")){
+  let cost = totalSqft * 0.04
+  materialCost += cost
+  addonCosts.aeration = cost
+}
+
+// Compost
+if(addons.compost && !isIncluded("compost")){
+  let cost = totalSqft * 0.10
+  materialCost += cost
+  addonCosts.compost = cost
+}
+
+// Bio/Hum Blend
+if(addons.biohum && !isIncluded("biohum")){
+  let cost = totalSqft * 0.12
+  materialCost += cost
+  addonCosts.biohum = cost
+}
+
+// Biochar
+if(addons.biochar){
+  let cost = totalSqft * 0.20
+  materialCost += cost
+  addonCosts.biochar = cost
+}
+
+// Humic
+if(addons.humic){
+  let cost = totalSqft * 0.01
+  materialCost += cost
+  addonCosts.humic = cost
+}
+
+// Grow System
+if(addons.grow){
+
+  let weeklyCost = (50 * 3) * houses
+  let installCost = 0
+
+  if(packageType === "standard"){
+    installCost = houses <= 1 
+      ? totalSqft * 0.05 
+      : totalSqft * 0.03
+  }
+
+  let cost = weeklyCost + installCost
+  materialCost += cost
+  addonCosts.grow = cost
+}
+
+// Lime
+if(addons.lime && !isIncluded("lime")){
+  let cost = totalSqft * 0.004
+  materialCost += cost
+  addonCosts.lime = cost
+}
+
+// Sulfur
+if(addons.sulfur && !isIncluded("sulfur")){
+  let cost = totalSqft * 0.008
+  materialCost += cost
+  addonCosts.sulfur = cost
+}
+
+  // ==========================
+  // OVERHEAD (AFTER MATERIAL)
+  // ==========================
+
+  let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
+
+  let totalCost = materialCost + laborCost + overheadCost
+
+  // ==========================
+  // PRICING
+  // ==========================
+
+  let margin
+
+  if(targetMarginInput && targetMarginInput > 0){
+    margin = targetMarginInput / 100
+  } else {
+    margin = 0.3
+    if(pricingMode === "win") margin = 0.15
+    if(pricingMode === "balanced") margin = 0.3
+    if(pricingMode === "max") margin = 0.5
+  }
+
+  if(houses >= 10) margin -= 0.03
+  if(houses >= 20) margin -= 0.05
+  if(houses >= 50) margin -= 0.08
+
+  if(margin < 0.1) margin = 0.1
+
+ let strategy = document.getElementById("pricingStrategy")?.value || "normal"
+let competitor = Number(document.getElementById("competitorPrice")?.value) || 0
+
+if(margin >= 0.95){
+  margin = 0.95
+}
+
+let pricing = getSmartPricing(
+  totalCost,
+  totalSqft,
+  houses,
+  pricingMode,
+  competitor
+)
+
+let price = pricing.price
+let profit = pricing.profit
+
+// ==========================
+// PRICING POWER MODE
+// ==========================
+
+if(strategy === "market"){
+  let marketRate = 0.35 // $/sqft target
+  let marketPrice = totalSqft * marketRate
+
+  if(marketPrice > price){
+    price = marketPrice
+  }
+}
+
+if(strategy === "undercut" && competitor > 0){
+  price = competitor * 0.97 // 3% undercut
+}
+
+if(strategy === "builder"){
+  price *= 0.92 // aggressive builder pricing
+}
+
+// SAFETY FLOOR (never lose money)
+if(price < totalCost * 1.1){
+  price = totalCost * 1.1
+}
+
+  return {
+    sqft,
+    houses,
+    totalSqft,
+    cost: totalCost,
+    price,
+    profit,
+    laborCost,
+    overheadCost,
+    totalHours,
+    addonCosts
+  }
+}
+
+//=============================
+//=====RENDER
+//=============================
+
+function render(){
+  try{
+
+    window.shownToasts = window.shownToasts || new Set()
+    let shownToasts = window.shownToasts
+
+    let r = calculateJob()
+    let inv = getInventoryCost()
+    let needs = getMaterialNeeds(r)
+    let inventoryTotals = getInventoryTotals()
+    let comparison = compareInventory(needs, inventoryTotals)
+    let alerts = generateAlerts(r, comparison)
+
+    let currentPackage = document.getElementById("package")?.value || "standard"
+    let altPackage = currentPackage === "standard" ? "premium" : "standard"
+
+    // ==========================
+    // PACKAGE COMPARISON
+    // ==========================
+
+    document.getElementById("package").value = altPackage
+    let alt = calculateJob()
+    document.getElementById("package").value = currentPackage
+
+    let recommendationHTML = ""
+
+    if(alt.price > r.price){
+      recommendationHTML = `
+        <div style="margin:15px 0;padding:12px;border:1px solid gold;border-radius:10px;background:rgba(255,215,0,0.08);">
+          🛎️<b>Recommendation:</b><br>
+          Switch to ${altPackage.toUpperCase()} â†’
+          <span style="color:#4cff9a;font-weight:700;">
+            +$${(alt.profit - r.profit).toFixed(2)} profit
+          </span>
+        </div>
+      `
+    }
+
+    // ==========================
+    // METRICS
+    // ==========================
+
+    let perHouseCost = r.houses ? r.cost / r.houses : 0
+    let perHousePrice = r.houses ? r.price / r.houses : 0
+    let perHouseProfit = r.houses ? r.profit / r.houses : 0
+
+    let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+    let costPerSqft = r.totalSqft ? r.cost / r.totalSqft : 0
+    let marginPercent = r.price ? (r.profit / r.price) * 100 : 0
+
+    // ==========================
+    // MATERIAL DISPLAY
+    // ==========================
+
+    let materialHTML = "<b>MATERIAL REQUIREMENTS</b><br>"
+
+    Object.keys(comparison).forEach(k => {
+      let item = comparison[k]
+      let color = item.status === "short" ? "red" : "lime"
+      let unit = MATERIAL_RATES[k]?.unit || ""
+
+      materialHTML += `
+        ${k.toUpperCase()}:
+        Need ${item.required.toFixed(1)} ${unit} |
+        Have ${item.available.toFixed(1)} ${unit}
+        <span style="color:${color}">
+          ${item.status === "short"
+            ? "BUY " + item.shortage.toFixed(1)
+            : "OK"}
+        </span><br>
+      `
+    })
+
+    // ==========================
+    // OUTPUT UI
+    // ==========================
+
+    document.getElementById("results").innerHTML =
+      recommendationHTML +
+      `<div>Total Sqft: ${r.totalSqft}</div>` +
+      `<div>Total Cost: $${r.cost.toFixed(2)}</div>` +
+      `<div>Price: $${r.price.toFixed(2)}</div>` +
+      `<div>Profit: $${r.profit.toFixed(2)}</div>` +
+      `<div>Margin: ${marginPercent.toFixed(1)}%</div>` +
+      `<br>` +
+      materialHTML
+
+    // ==========================
+    // AUTO WARNINGS
+    // ==========================
+
+    setTimeout(() => {
+
+      if(Object.values(comparison).some(i => i.status === "short")){
+        if(!shownToasts.has("materials")){
+          showToast("📡Inventory shortage detected", "error")
+          shownToasts.add("materials")
+        }
+      }
+
+      if(marginPercent < 25){
+        if(!shownToasts.has("pricing")){
+          showToast("📉Low margin detected", "warning")
+          shownToasts.add("pricing")
+        }
+      }
+
+    }, 50)
+
+  } catch(e){
+    console.error(e)
+    document.getElementById("results").innerHTML = "Error in calculation"
+  }
+}
+
+//=======================
+//=== SAVE JOB
+//=======================
+function saveJob(){
+
+  let r = calculateJob()
+  let needs = getMaterialNeeds(r)
+
+  // ======================
+  // BUILD JOB
+  // ======================
+
+  let job = {
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+    sqft: r.totalSqft,
+    price: r.price,
+    cost: r.cost,
+    profit: r.profit,
+    margin: r.price ? (r.profit / r.price) * 100 : 0
+  }
+
+  // ======================
+  // SAVE HISTORY
+  // ======================
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+  history.unshift(job)
+  localStorage.setItem("jobHistory", JSON.stringify(history))
+
+  // ======================
+  // DEDUCT INVENTORY
+  // ======================
+
+  let full = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  Object.keys(needs).forEach(type => {
+
+    let remaining = needs[type] || 0
+
+    ["standard","premium","addons"].forEach(section => {
+
+      (full[section] || []).forEach(item => {
+
+        if(item.type === type && remaining > 0){
+
+          let used = Math.min(item.qty, remaining)
+
+          item.qty -= used
+          remaining -= used
+        }
+
+      })
+    })
+  })
+
+  localStorage.setItem("inventory_full", JSON.stringify(full))
+
+  // ======================
+  // UPDATE UI
+  // ======================
+
+  renderHistory()
+  render()
+
+  showToast("Job saved + inventory updated","success")
+}
+
+//============================
+//CLIENT VIEW
+//============================
+
+function openClientView(){
+
+  let r = calculateJob()
+
+let materialNeeds = getMaterialNeeds(r)
+
+let materialCost = r.cost - r.laborCost - r.overheadCost
+
+let materialHTML = ""
+
+Object.keys(materialNeeds).forEach(k => {
+
+  let unit = MATERIAL_RATES[k]?.unit || ""
+
+  materialHTML += `
+    <div class="line">
+      <span>${k.toUpperCase()}</span>
+      <span>${materialNeeds[k].toFixed(1)} ${unit}</span>
+    </div>
+  `
+})
+
+  let customer = document.getElementById("customer")?.value || "Client"
+  let address = document.getElementById("address")?.value || ""
+  let packageType = document.getElementById("package")?.value || "standard"
+
+  function isIncluded(name){
+    return packageType === "premium" &&
+      ["aeration","compost","biohum","lime","sulfur"].includes(name)
+  }
+
+  let a = r.addonCosts || {}
+  let addonList = ""
+
+  function addItem(label, name, cost, rate){
+    let included = isIncluded(name)
+    let value = included ? r.totalSqft * rate : (cost || 0)
+
+    if(value > 0 || included){
+      addonList += `
+        <div style="display:flex;justify-content:space-between;">
+          <span>${label}</span>
+          <span>
+            ${included ? "Included" : "$" + value.toFixed(2)}
+            ${included ? ` ($${value.toFixed(2)} value)` : ""}
+          </span>
+        </div>
+      `
+    }
+  }
+
+  addItem("Aeration","aeration",a.aeration,0.04)
+  addItem("Compost","compost",a.compost,0.10)
+  addItem("Bio/Hum Blend","biohum",a.biohum,0.12)
+  addItem("Lime","lime",a.lime,0.004)
+  addItem("Sulfur","sulfur",a.sulfur,0.008)
+
+  if(a.biochar > 0) addonList += `<div>Biochar: $${a.biochar.toFixed(2)}</div>`
+  if(a.humic > 0) addonList += `<div>Humic Acid: $${a.humic.toFixed(2)}</div>`
+  if(a.grow > 0) addonList += `<div>Grow System: $${a.grow.toFixed(2)}</div>`
+
+  let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+  let housesHTML = r.houses > 1 ? `<div>Houses: ${r.houses}</div>` : ""
+
+  let win = window.open("", "_blank")
+
+  if(!win){
+    alert("Popup blocked. Please allow popups.")
+    return
+  }
+
+  win.document.write(`
+<html>
+<head>
+<title>Quote</title>
+
+<style>
+body{
+  margin:0;
+  background:#000;
+  color:gold;
+  font-family:Arial;
+}
+
+.container{
+  width:100%;
+  min-height:100vh;
+  padding:40px 25px;
+  box-sizing:border-box;
+}
+
+.section{
+  margin-top:20px;
+  border-top:1px solid rgba(255,215,0,0.25);
+  padding-top:10px;
+}
+
+.line{
+  display:flex;
+  justify-content:space-between;
+}
+
+.total{
+  margin-top:25px;
+  border-top:2px solid gold;
+  padding-top:15px;
+}
+
+.total-price{
+  font-size:42px;
+  font-weight:bold;
+  text-align:right;
+}
+
+.pdf-wrap{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:90%;
+  max-width:400px;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  font-size:16px;
+  font-weight:bold;
+  background:gold;
+  color:#000;
+  border:none;
+  border-radius:8px;
+  box-shadow:0 0 10px rgba(255,215,0,0.4);
+}
+
+button:active{
+  transform:scale(0.97);
+  box-shadow:0 0 4px rgba(255,215,0,0.6);
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+}
+
+.brand h1{
+  margin:0;
+  font-size:22px;
+}
+
+.tagline{
+  font-size:12px;
+  color:#aaa
+}
+
+.logo{
+  width:55px;
+}
+
+.gold-line{
+  height:2px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    #d4af37,
+    transparent
+  );
+  margin:10px 0 20px 0;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="clientQuote" class="container">
+
+<div class="header">
+  <div class="brand">
+    <h1>SoDa Outdoor Designs</h1>
+    <div class="tagline">We build lawns from the soil up</div>
+  </div>
+
+  <img src="/logo.PNG" class="logo">
+</div>
+
+<div class="gold-line"></div>
+
+<div class="section">
+  <div>${customer}</div>
+  <div>${address}</div>
+</div>
+
+<div class="section">
+  <div><b>PACKAGE</b></div>
+  <div>${packageType.toUpperCase()}</div>
+</div>
+
+<div class="section">
+  <div><b>ADD-ONS</b></div>
+ ${addonList ? addonList : "<div>None</div>"}
+</div>
+
+<div class="section">
+  <div><b>MATERIALS USED</b></div>
+  ${materialHTML}
+</div>
+
+<div class="line">
+  <span>Material Cost</span>
+  <span>$${materialCost.toFixed(2)}</span>
+</div>
+
+<div class="section">
+  <div>Total Sqft: ${r.totalSqft.toFixed(0)}</div>
+  ${housesHTML}
+
+  <div class="line">
+    <span>Price / Sqft</span>
+    <span>$${pricePerSqft.toFixed(2)}</span>
+  </div>
+
+  <div class="line">
+    <span>Labor Cost</span>
+    <span>$${r.laborCost.toFixed(2)}</span>
+  </div>
+
+  <div class="total">
+    <div>TOTAL INVESTMENT</div>
+    <div class="total-price">$${r.price.toFixed(2)}</div>
+  </div>
+
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+</body>
+
+</html>
+`)
+
+win.document.close()
+} 
+
+//============================
+//SEND PROPOSAL 
+//============================
+
+function sendProposal(){
+
+  try{
+
+    let r = calculateJob()
+
+let materialCost = r.cost - r.laborCost - r.overheadCost
+
+let materialNeeds = getMaterialNeeds(r)
+
+let materialHTML = ""
+
+Object.keys(materialNeeds).forEach(k => {
+
+  let unit = MATERIAL_RATES[k]?.unit || ""
+
+  materialHTML += `
+    <div class="line">
+      <span>${k.toUpperCase()}</span>
+      <span>${materialNeeds[k].toFixed(1)} ${unit}</span>
+    </div>
+  `
+})
+
+    let customer = document.getElementById("customer")?.value || "Client"
+    let address = document.getElementById("address")?.value || ""
+    let packageType = document.getElementById("package")?.value || "standard"
+
+    let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
+
+    let win = window.open("", "_blank")
+
+    if(!win){
+      alert("Popup blocked")
+      return
+    }
+
+    // BUILD HTML SAFELY
+   
+
+let html = `
+<html>
+<head>
+  <title>Proposal</title>
+
+  <style>
+ body{
+  font-family: -apple-system, BlinkMacSystemFont, Arial;
+  padding:40px 25px;
+  background:#000;
+  color:#d4af37;
+  max-width:700px;
+  margin:auto;
+}
+
+    /* HEADER */
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .header{
+    padding-bottom:5px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:26px;
+    }
+
+    .tagline{
+      font-size:13px;
+      color:#aaa;
+      margin-top:3px;
+    }
+
+    .logo{
+      width:65px;
+    }
+
+    .gold-line{
+      height:2px;
+      background:linear-gradient(90deg, transparent,     #d4af37, transparent);
+      margin:15px 0 25px 0;
+    }
+
+    /* SECTIONS */
+    .section{
+      margin-top:20px;
+    }
+
+    .section-title{
+      font-weight:bold;
+      margin-bottom:6px;
+      letter-spacing:0.5px;
+    }
+
+    .line{
+      display:flex;
+      justify-content:space-between;
+      margin:4px 0;
+    }
+
+    /* HIGHLIGHT BOX */
+    .highlight{
+  background:#111;
+  border:2px solid #d4af37;
+  box-shadow:0 0 12px rgba(212,175,55,0.25);
+}
+
+    /* TOTAL */
+    .total{
+      margin-top:15px;
+      font-size:28px;
+      font-weight:bold;
+      text-align:right;
+    }
+
+    /* CTA */
+    .cta button{
+  background:#d4af37;
+  color:#000;
+  box-shadow:0 0 10px rgba(212,175,55,0.4);
+}
+
+    .cta button{
+      width:100%;
+      padding:16px;
+      font-size:18px;
+      font-weight:bold;
+      background:black;
+      color:white;
+      border:none;
+      border-radius:8px;
+    }
+
+    .signature{
+  border-top:1px solid #d4af37;
+  color:#aaa;
+}
+
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <h1>SoDa Outdoor Designs</h1>
+      <div class="tagline">We build lawns from the soil up</div>
+    </div>
+
+    <img src="/logo.PNG" class="logo">
+  </div>
+
+  <div class="gold-line"></div>
+
+  <!-- CLIENT -->
+  <div class="section">
+    <div class="section-title">CLIENT</div>
+    <div><b>${customer}</b></div>
+    <div>${address}</div>
+  </div>
+
+  <!-- PACKAGE -->
+  <div class="section">
+    <div class="section-title">PACKAGE</div>
+    <div>${packageType.toUpperCase()}</div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="section">
+    <div class="section-title">PROJECT DETAILS</div>
+
+    <div class="line">
+      <span>Total Sqft</span>
+      <span>${r.totalSqft.toFixed(0)}</span>
+    </div>
+
+    <div class="line">
+      <span>Houses</span>
+      <span>${r.houses}</span>
+    </div>
+
+    <div class="line">
+      <span>Price / Sqft</span>
+      <span>$${pricePerSqft.toFixed(2)}</span>
+    </div>
+
+    <div class="line">
+      <span>Labor</span>
+      <span>$${r.laborCost.toFixed(2)}</span>
+    </div>
+  </div>
+
+<div class="section">
+  <div class="section-title">MATERIALS USED</div>
+  ${materialHTML}
+</div>
+
+<div class="line">
+  <span>Material Cost</span>
+  <span>$${materialCost.toFixed(2)}</span>
+</div>
+
+  <!-- TOTAL BOX -->
+  <div class="highlight">
+
+    <div style="font-weight:bold;margin-bottom:10px;">
+      TOTAL INVESTMENT
+    </div>
+
+    <div class="total">
+      $${r.price.toFixed(2)}
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <button onclick="window.print()">Approve & Save Proposal</button>
+  </div>
+
+  <!-- SIGNATURE -->
+  <div class="signature">
+    Client Signature
+  </div>
+
+</body>
+</html>
+`
+
+    // âœ… WRITE TO NEW WINDOW
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+
+    // âœ… SAFARI SAFE PRINT TRIGGER
+    setTimeout(function(){
+      try{
+        win.focus()
+        win.print()
+      } catch(e){
+        console.log("Print failed", e)
+      }
+    }, 500)
+
+  } catch(e){
+    alert("Proposal error")
+    console.log(e)
+  }
+}
+
+// ==============================
+// PREMIUM PACKAGE AUTO-SELECT
+// ==============================
+function handlePackage(){
+
+  let pkg = document.getElementById("package").value
+  let toggles = document.querySelectorAll(".toggle")
+
+  if(pkg === "premium"){
+
+    toggles.forEach(t => {
+      let name = t.dataset.name
+
+      if(name === "aeration" ||
+         name === "compost" ||
+         name === "biohum" ||
+         name === "lime" ||
+         name === "sulfur"){
+         t.classList.add("active")
+         app.job.addons[name] = true
+      }
+    })
+
+  } else {
+
+  toggles.forEach(t => {
+  t.classList.remove("active")
+  app.job.addons[t.dataset.name] = false
+})
+
+  }
+}
+
+//===============================
+//===INVENTORY
+//===============================
+
+//=================
+// ADD MATERIAL ROW
+//=================
+
+function addMaterialRow(type){
+
+  let container
+
+  if(type === "standard"){
+    container = document.getElementById("standardMaterials")
+  }
+
+  if(type === "premium"){
+    container = document.getElementById("premiumMaterials")
+  }
+
+  if(type === "addons"){
+    container = document.getElementById("addonMaterials")
+  }
+
+  let row = document.createElement("div")
+  row.className = "material-row"
+
+  row.innerHTML = `
+    <div class="row-top">
+      <select class="mat-select" onchange="updateUnitLabel(this)">
+        <option value="seed">Seed</option>
+        <option value="fertilizer">Fertilizer</option>
+        <option value="mulch">Mulch</option>
+        <option value="tackifier">Tackifier</option>
+        <option value="compost">Compost</option>
+        <option value="biochar">Biochar</option>
+        <option value="humic">Humic Acid</option>
+        <option value="lime">Lime</option>
+        <option value="sulfur">Sulfur</option>
+        <option value="sprinklers">Sprinklers</option>
+        <option value="timers">Sprinkler Timers</option>
+      </select>
+
+      <button class="delete-btn" onclick="deleteRow(this)">🗑️</button>
+    </div>
+
+    <label class="mat-label">Material Name</label>
+    <input class="mat-input" placeholder="e.g. Ryegrass Seed">
+
+    <label class="mat-label">Cost per Unit ($)</label>
+    <input class="mat-input" type="number">
+
+    <label class="mat-label unit-label">Quantity Available</label>
+    <input class="mat-input" type="number">
+  `
+
+  container.appendChild(row)
+
+  // âœ… FIX: NOW it's in correct scope
+  updateUnitLabel(row.querySelector(".mat-select"))
+}
+
+//==================
+// GET INVENTORY COST
+//==================
+
+function getInventoryCost(){
+
+  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  function sum(section){
+    let total = 0
+    ;(section || []).forEach(item => {
+      total += (item.cost || 0) * (item.qty || 0)
+    })
+    return total
+  }
+
+  let standard = sum(saved.standard)
+  let premium = sum(saved.premium)
+  let addons = sum(saved.addons)
+
+  return {
+    standard,
+    premium,
+    addons,
+    total: standard + premium + addons
+  }
+}
+
+//==================
+//==SAVE INVENTORY 
+//==================
+
+function saveInventory(){
+
+  function getSection(id){
+    let container = document.getElementById(id)
+    let rows = container.querySelectorAll(".material-row")
+
+    let data = []
+
+    rows.forEach(row => {
+      let select = row.querySelector("select")
+      let inputs = row.querySelectorAll("input")
+
+      data.push({
+        type: select?.value || "",
+        name: inputs[0]?.value || "",
+        cost: parseFloat(inputs[1]?.value) || 0,
+        qty: parseFloat(inputs[2]?.value) || 0
+      })
+    })
+
+    return data
+  }
+
+  let inventory = {
+    standard: getSection("standardMaterials"),
+    premium: getSection("premiumMaterials"),
+    addons: getSection("addonMaterials")
+  }
+
+  // âœ… SAVE FULL DATA
+
+localStorage.setItem("inventory_full", JSON.stringify(inventory))
+
+ // silent autosave (no toast)
+}
+
+//==================
+//==LOAD INVENTORY
+//==================
+
+function loadInventory(){
+
+  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  function loadSection(id, items){
+
+    let container = document.getElementById(id)
+    container.innerHTML = ""
+
+    items.forEach(item => {
+
+      let row = document.createElement("div")
+      row.className = "material-row"
+
+      row.innerHTML = `
+        <div class="row-top">
+          <select class="mat-select" onchange="updateUnitLabel(this)">
+            <option value="seed" ${item.type==="seed"?"selected":""}>Seed</option>
+            <option value="fertilizer" ${item.type==="fertilizer"?"selected":""}>Fertilizer</option>
+            <option value="mulch" ${item.type==="mulch"?"selected":""}>Mulch</option>
+            <option value="tackifier" ${item.type==="tackifier"?"selected":""}>Tackifier</option>
+            <option value="compost" ${item.type==="compost"?"selected":""}>Compost</option>
+            <option value="biochar" ${item.type==="biochar"?"selected":""}>Biochar</option>
+            <option value="humic" ${item.type==="humic"?"selected":""}>Humic Acid</option>
+            <option value="lime" ${item.type==="lime"?"selected":""}>Lime</option>
+            <option value="sulfur" ${item.type==="sulfur"?"selected":""}>Sulfur</option>
+            <option value="sprinklers" ${item.type==="sprinklers"?"selected":""}>Sprinklers</option>
+            <option value="timers" ${item.type==="timers"?"selected":""}>Sprinkler Timers</option>
+          </select>
+
+          <button class="delete-btn" onclick="deleteRow(this)">🗑️</button>
+        </div>
+
+        <label class="mat-label">Material Name</label>
+        <input class="mat-input" value="${item.name}">
+
+        <label class="mat-label">Cost per Unit ($)</label>
+        <input class="mat-input" type="number" value="${item.cost}">
+
+        <label class="mat-label unit-label">Quantity Available</label>
+        <input class="mat-input" type="number" value="${item.qty}">
+      `
+
+      container.appendChild(row)
+
+      updateUnitLabel(row.querySelector("select"))
+    })
+  }
+
+  loadSection("standardMaterials", inventory.standard || [])
+  loadSection("premiumMaterials", inventory.premium || [])
+  loadSection("addonMaterials", inventory.addons || [])
+}
+
+//===================
+//==INVENTORY TOTAL
+//===================
+
+function getInventoryTotals(){
+
+  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  let totals = {}
+
+  Object.values(inventory).forEach(section => {
+    section.forEach(item => {
+
+      let type = item.type
+      let qty = item.qty || 0
+
+      totals[type] = (totals[type] || 0) + qty
+    })
+  })
+
+  return totals
+}
+
+//===================
+//==COMPARE INVENTORY
+//===================
+
+function compareInventory(needs, inventory){
+
+  let results = {}
+
+  for(let key in needs){
+
+    let required = needs[key]
+    let available = inventory[key] || 0
+    let shortage = required - available
+
+    results[key] = {
+      required,
+      available,
+      shortage: shortage > 0 ? shortage : 0,
+      status: shortage > 0 ? "short" : "ok"
+    }
+  }
+
+  return results
+}
+//=========================
+//===USE INVENTORY FOR JOB
+//=========================
+
+function useInventoryForJob(){
+
+  if(!confirm("Use inventory for this job?")) return
+
+  let r = calculateJob()
+  let needs = getMaterialNeeds(r)
+
+  let full = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  function deduct(section){
+
+    (section || []).forEach(item => {
+
+      let type = item.type
+      let qty = Number(item.qty) || 0
+
+      if(needs[type] !== undefined){
+
+        let used = Math.min(qty, needs[type])
+
+        item.qty -= used
+        needs[type] -= used
+      }
+    })
+  }
+
+  deduct(full.standard)
+  deduct(full.premium)
+  deduct(full.addons)
+
+  localStorage.setItem("inventory_full", JSON.stringify(full))
+
+  loadInventory()
+  render()
+
+  showToast("Inventory applied to job", "success")
+}
+
+ //=====================
+//==MATERIAL NEEDS
+//======================
+
+function getMaterialNeeds(input){
+
+  let sqft = input.totalSqft || input.sqft || 0
+
+  let needs = {}
+
+  // =========================
+  // BASE MATERIALS
+  // =========================
+
+needs.seed       = (sqft / 1000) * MATERIAL_RATES.seed.rate
+needs.fertilizer = (sqft / 1000) * MATERIAL_RATES.fertilizer.rate
+needs.mulch      = (sqft / 1000) * MATERIAL_RATES.mulch.rate
+needs.tackifier  = (sqft / 1000) * MATERIAL_RATES.tackifier.rate
+
+  // =========================
+  // PREMIUM ADDITIONS
+  // =========================
+
+  let packageType = document.getElementById("package")?.value || "standard"
+
+  if(packageType === "premium"){
+  needs.compost = (sqft / 1000) * MATERIAL_RATES.compost.rate
+
+    // Bio/Hum blend = split usage
+    needs.biochar = (sqft / 1000) * (MATERIAL_RATES.biochar.rate * 0.5)
+needs.humic   = (sqft / 1000) * (MATERIAL_RATES.humic.rate * 0.5)
+  }
+
+  // =========================
+  // ADD-ONS
+  // =========================
+
+  let addons = app.job.addons || {}
+
+if(addons.lime){
+ needs.lime = (sqft / 1000) * MATERIAL_RATES.lime.rate
+}
+
+if(addons.sulfur){
+  needs.sulfur = (sqft / 1000) * MATERIAL_RATES.sulfur.rate
+}
+
+if(addons.biochar){
+ needs.biochar = (needs.biochar || 0) +
+  (sqft / 1000) * MATERIAL_RATES.biochar.rate
+}
+
+if(addons.humic){
+  needs.humic = (needs.humic || 0) +
+  (sqft / 1000) * MATERIAL_RATES.humic.rate
+}
+
+  return needs
+}
+
+//================
+//== ALERTS
+//================
+
+function generateAlerts(r, comparison){
+
+  let alerts = {
+    danger: [],
+    warning: [],
+    success: []
+  }
+
+  let margin = r.price ? (r.profit / r.price) * 100 : 0
+
+  // ðŸš¨ LOW MARGIN
+  if(margin < 20){
+    alerts.danger.push({
+      text: `Low profit margin (${margin.toFixed(1)}%)`,
+      fix: "margin"
+    })
+  }
+
+  // âš ï¸ MEDIUM MARGIN
+  else if(margin < 30){
+    alerts.warning.push({
+      text: `Margin could be improved (${margin.toFixed(1)}%)`,
+      fix: "margin"
+    })
+  }
+
+  // ðŸ’° HIGH PROFIT
+  if(margin > 40){
+    alerts.success.push({
+      text: `High profit margin (${margin.toFixed(1)}%)`
+    })
+  }
+
+  // ðŸš¨ INVENTORY SHORTAGES
+  Object.keys(comparison).forEach(k => {
+
+    let item = comparison[k]
+
+    if(item.shortage > 0.5){
+
+      alerts.danger.push({
+        text: `${k.toUpperCase()} short by ${item.shortage.toFixed(1)}`,
+        fix: "inventory",
+        type: k,
+        amount: item.shortage
+      })
+    }
+  })
+
+  // âš ï¸ LOW PROFIT $
+  if(r.profit < 200){
+    alerts.warning.push({
+      text: `Low total profit ($${r.profit.toFixed(0)})`,
+      fix: "price"
+    })
+  }
+
+  return alerts
+}
+
+//====================
+//=== DELETE ROW
+//====================
+
+function deleteRow(btn){
+  let row = btn.closest(".material-row")
+  if(row){
+    row.remove()
+  }
+}
+
+//====================
+//== EXPORT INVENTORY
+//====================
+
+function exportInventory(){
+
+ let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  let rows = [["Section","Material","Cost","Quantity","Unit"]]
+
+  function process(sectionName, items){
+
+    (items || []).forEach(item => {
+
+      let type = item.type || ""
+      let name = item.name || MATERIAL_LABELS[item.type] || item.type
+      let cost = item.cost || 0
+      let qty = item.qty || 0
+      let unit = MATERIAL_RATES[type]?.unit || ""
+
+      rows.push([
+        sectionName,
+        name,
+        cost,
+        qty,
+        unit
+      ])
+    })
+
+  } // âœ… CLOSE process()
+
+  // ðŸ‘‡ YOU ALSO NEED TO CALL IT
+  process("Standard", saved.standard)
+  process("Premium", saved.premium)
+  process("Add-On", saved.addons)
+
+  // ðŸ‘‡ CSV BUILD
+  let csvContent = rows.map(r => r.join(",")).join("\n")
+
+  let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+  let url = URL.createObjectURL(blob)
+
+  let link = document.createElement("a")
+  link.href = url
+  link.download = "inventory.csv"
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+
+} // âœ… CLOSE exportInventory()
+
+//=======================
+//==GENERATE INVENTORY PDF
+//=======================
+
+function generateInventoryPDF(){
+
+  try {
+
+  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+    let rows = []
+
+    function process(section, items){
+      (items || []).forEach(item => {
+        let cost = Number(item.cost) || 0
+        let qty = Number(item.qty) || 0
+
+        rows.push(`
+          <tr>
+            <td>${section}</td>
+            <td>${item.type}</td>
+            <td>${item.name || item.type}</td>
+            <td>$${cost.toFixed(2)}</td>
+            <td>${qty}</td>
+            <td>$${(cost * qty).toFixed(2)}</td>
+          </tr>
+        `)
+      })
+    }
+
+    process("Standard", saved.standard)
+    process("Premium", saved.premium)
+    process("Add-On", saved.addons)
+
+    let win = window.open()
+
+    if(!win){
+      alert("Popup blocked")
+      return
+    }
+
+    win.document.write(`
+      <html>
+      <body>
+
+      <h2>Inventory Sheet</h2>
+
+      <table border="1" style="width:100%; border-collapse:collapse;">
+        <tr>
+          <th>Section</th>
+          <th>Type</th>
+          <th>Name</th>
+          <th>Cost</th>
+          <th>Qty</th>
+          <th>Total</th>
+        </tr>
+
+        ${rows.join("")}
+
+      </table>
+
+      </body>
+      </html>
+    `)
+
+    win.document.close()
+
+    setTimeout(() => {
+      win.print()
+    }, 500)
+
+  } catch(e){
+    console.log(e)
+    alert("PDF error")
+  }
+
+}
+
+//=================
+//== FIX LOW MARGIN
+//=================
+
+window.fixLowMargin = function(){
+
+  let input = document.getElementById("targetMargin")
+
+  if(!input){
+    showToast("Margin input missing", "error")
+    return
+  }
+
+  let current = Number(input.value) || 0
+
+  if(current < 30){
+    input.value = 35
+  } else {
+    input.value = current + 5
+  }
+
+  render()
+
+ showToast("📈 Margin improved", "success", "pricing")
+}
+
+//===================
+//== FIX LOW PRICE
+//===================
+
+window.fixLowPrice = function(){
+
+  let marginInput = document.getElementById("targetMargin")
+  let pricingMode = document.getElementById("pricingMode")
+
+  if(!marginInput || !pricingMode){
+    showToast("Missing inputs", "error")
+    return
+  }
+
+  marginInput.value = 35
+  pricingMode.value = "max"
+
+  render()
+
+  showToast("🛡️ Profit optimized", "success", "pricing")
+}
+
+//================
+//== FIX INVENTORY
+//================
+
+window.fixInventory = function(type, amount){
+
+  let container
+
+  if(type === "seed" || type === "fertilizer" || type === "mulch" || type === "tackifier"){
+    container = document.getElementById("standardMaterials")
+  } else if(type === "compost" || type === "biochar" || type === "humic"){
+    container = document.getElementById("premiumMaterials")
+  } else {
+    container = document.getElementById("addonMaterials")
+  }
+
+  if(!container) return
+
+  let rows = container.querySelectorAll(".material-row")
+  let found = false
+
+  // ðŸ” CHECK EXISTING ROWS
+  rows.forEach(row => {
+
+    let select = row.querySelector("select")
+    let inputs = row.querySelectorAll("input")
+
+    if(select && select.value === type){
+
+      let currentQty = Number(inputs[2]?.value) || 0
+      inputs[2].value = Math.ceil(currentQty + amount)
+      showToast(`${MATERIAL_LABELS[type]} +${Math.ceil(amount)} added`)
+      found = true
+    }
+
+  })
+
+  // âž• IF NOT FOUND â†’ CREATE NEW ROW
+  if(!found){
+
+    let row = document.createElement("div")
+    row.className = "material-row"
+
+    row.innerHTML = `
+      <div class="row-top">
+        <select class="mat-select">
+          <option value="seed" ${type==="seed"?"selected":""}>Seed</option>
+          <option value="fertilizer" ${type==="fertilizer"?"selected":""}>Fertilizer</option>
+          <option value="mulch" ${type==="mulch"?"selected":""}>Mulch</option>
+          <option value="tackifier" ${type==="tackifier"?"selected":""}>Tackifier</option>
+          <option value="compost" ${type==="compost"?"selected":""}>Compost</option>
+          <option value="biochar" ${type==="biochar"?"selected":""}>Biochar</option>
+          <option value="humic" ${type==="humic"?"selected":""}>Humic Acid</option>
+          <option value="lime" ${type==="lime"?"selected":""}>Lime</option>
+          <option value="sulfur" ${type==="sulfur"?"selected":""}>Sulfur</option>
+          <option value="sprinklers" ${type==="sprinklers"?"selected":""}>Sprinklers</option>
+          <option value="timers" ${type==="timers"?"selected":""}>Sprinkler Timers</option>
+        </select>
+
+        <button class="delete-btn" onclick="deleteRow(this)">🗑️</button>
+      </div>
+
+      <label class="mat-label">Material Name</label>
+      <input class="mat-input" value="${MATERIAL_LABELS[type] || type}">
+
+      <label class="mat-label">Cost per Unit ($)</label>
+      <input class="mat-input" type="number" value="0">
+
+      <label class="mat-label unit-label">Quantity Available</label>
+      <input class="mat-input" type="number" value="${Math.ceil(amount)}">
+    `
+
+    container.appendChild(row)
+    showToast(`${MATERIAL_LABELS[type]} +${Math.ceil(amount)} added`)
+  }
+
+  // 💾SAVE + REFRESH
+  saveInventory()
+  loadInventory()
+
+  setTimeout(() => {
+    render()
+  }, 50)
+}
+
+//=========================
+//===FIX ALL ISSUES
+//=========================
+
+window.fixAllIssues = function(){
+
+  fixLowMargin()
+  fixLowPrice()
+
+  let r = calculateJob()
+  let needs = getMaterialNeeds(r)
+  let inventory = getInventoryTotals()
+
+  let fixes = 0
+
+  Object.keys(needs).forEach(type => {
+    let shortage = (needs[type] || 0) - (inventory[type] || 0)
+
+    if(shortage > 0.5){
+      fixInventory(type, shortage)
+      fixes++
+    }
+  })
+
+  showToast(`🔨${fixes} issues fixed`, "warning")
+
+  setTimeout(() => render(), 100)
+}
+
+//========================
+//== OPTIMIZE FOR PROFIT
+//========================
+
+window.optimizeForProfit = function(){
+
+  let r = calculateJob()
+
+  let sqft = r.totalSqft
+  let currentMargin = r.price ? (r.profit / r.price) * 100 : 0
+
+  let marginInput = document.getElementById("targetMargin")
+  let pricingMode = document.getElementById("pricingMode")
+
+  let targetMargin = 30
+
+  // ðŸ”¥ Smart scaling based on job size
+  if(sqft < 3000){
+    targetMargin = 40
+  }
+  else if(sqft < 8000){
+    targetMargin = 35
+  }
+  else if(sqft < 20000){
+    targetMargin = 30
+  }
+  else {
+    targetMargin = 25
+  }
+
+  // ðŸ”¥ Boost if profit too low
+  if(r.profit < 200){
+    targetMargin += 5
+  }
+
+  // ðŸ”¥ Donâ€™t reduce margin if already higher
+  if(currentMargin > targetMargin){
+    targetMargin = currentMargin
+  }
+
+  // Apply
+  marginInput.value = Math.round(targetMargin)
+  pricingMode.value = "max"
+
+
+showToast("All issues fixed💡")
+
+  render()
+}
+
+//================================
+//==== TARGET PROFIT
+//================================
+
+window.optimizeForTargetProfit = function(){
+
+  let targetProfit = Number(document.getElementById("targetProfit")?.value) || 0
+
+  if(targetProfit <= 0){
+    alert("Enter target profit")
+    return
+  }
+
+  let pricingMode = document.getElementById("pricingMode")
+  let marginInput = document.getElementById("targetMargin")
+
+  // start with a base margin
+  let margin = 25
+
+  let attempts = 0
+  let maxAttempts = 20
+
+  while(attempts < maxAttempts){
+
+    marginInput.value = margin
+    pricingMode.value = "max"
+
+    let r = calculateJob()
+
+    if(r.profit >= targetProfit){
+      break
+    }
+
+    margin += 2
+    attempts++
+  }
+
+  render()
+
+ alert(`Target hit at ${margin}% margin 🎯`)
+}
+
+//==========================
+//=== WIN JOB
+//==========================
+
+window.winJob = function(){
+
+  let marginInput = document.getElementById("targetMargin")
+  let pricingMode = document.getElementById("pricingMode")
+
+  marginInput.value = 15
+  pricingMode.value = "win"
+
+  showToast("Competitive pricing applied🚀", "warning")
+
+  render()
+}
+
+//========================
+//===TOGGLE CARD 
+//========================
+
+function toggleCard(el){
+  let card = el.parentElement
+
+  document.querySelectorAll(".collapsible").forEach(c => {
+    if(c !== card) c.classList.remove("open")
+  })
+
+  card.classList.toggle("open")
+
+  setTimeout(() => {
+    card.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, 200)
+}
+
+//========================
+//=== RENDER HISTORY
+//========================
+
+function renderHistory(){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+
+  let html = ""
+
+  history.forEach((job, index) => {
+
+    let color =
+      job.margin < 20 ? "#ff4d4d" :
+      job.margin < 30 ? "#ffd24d" :
+      "#4cff9a"
+
+    html += `
+      <div class="history-card">
+
+        <div class="history-top">
+          <b>${job.sqft} sqft</b>
+          <span style="color:${color}">
+            ${job.margin.toFixed(1)}%
+          </span>
+        </div>
+
+        <div class="history-details">
+          📜 $${job.price.toFixed(2)} |
+          Profit: $${job.profit.toFixed(2)}
+        </div>
+
+        <div class="history-date">
+          ${job.date}
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button onclick="editJob(${index})">✏️ Edit</button>
+          <button onclick="deleteJob(${index})">🗑️Delete</button>
+        </div>
+
+      </div>
+    `
+  })
+
+  document.getElementById("jobHistory").innerHTML = html
+}
+
+//=========================
+//=== SMART PRICING
+//=========================
+
+function getSmartPricing(totalCost, sqft, houses, pricingMode, competitor){
+
+  let baseMargin = 0.3
+
+  // Job size logic
+  if(sqft < 3000) baseMargin = 0.4
+  else if(sqft < 8000) baseMargin = 0.35
+  else if(sqft < 20000) baseMargin = 0.3
+  else baseMargin = 0.25
+
+  // Win job mode
+  if(pricingMode === "win"){
+    baseMargin -= 0.1
+  }
+
+  // Multi-house efficiency (builder jobs)
+  if(houses >= 10) baseMargin -= 0.03
+  if(houses >= 20) baseMargin -= 0.05
+
+  // Protect large jobs
+  if(totalCost > 5000){
+    baseMargin += 0.05
+  }
+
+  // Prevent stupid margins
+  if(baseMargin < 0.1) baseMargin = 0.1
+  if(baseMargin > 0.9) baseMargin = 0.9
+
+  let price = totalCost / (1 - baseMargin)
+
+  // Competitor logic
+  if(competitor > 0){
+    if(competitor > price){
+      price = competitor * 0.98
+    } else {
+      price = Math.max(price, competitor * 0.95)
+    }
+  }
+
+  // Safety floor (never lose money)
+  if(price < totalCost * 1.1){
+    price = totalCost * 1.1
+  }
+
+  let profit = price - totalCost
+
+  return {
+    price,
+    profit,
+    margin: price ? profit / price : 0
+  }
+}
+
+//===========================
+//== DELETE JOB
+//===========================
+
+window.deleteJob = function(index){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+
+  if(!confirm("Delete this job?")) return
+
+  history.splice(index, 1)
+
+  localStorage.setItem("jobHistory", JSON.stringify(history))
+
+  renderHistory()
+
+  showToast("Job deleted", "error")
+}
+
+window.onload = () => {
+  loadInventory()
+  renderHistory()
+  render()
+}
+
+document.addEventListener("input", (e) => {
+
+  if(e.target.closest(".material-row")){
+    saveInventory()
+  }
+
+})
+
+//========================
+//===EDIT JOB
+//========================
+
+let currentEditIndex = null
+
+window.editJob = function(index){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+  let job = history[index]
+
+  if(!job) return
+
+  currentEditIndex = index
+
+  document.getElementById("editSqft").value = job.sqft
+  document.getElementById("editPrice").value = job.price
+  document.getElementById("editCost").value = job.cost
+
+  document.getElementById("jobModal").style.display = "flex"
+}
+
+//====================
+//==CLOSE JOB
+//====================
+
+function closeJobModal(){
+  document.getElementById("jobModal").style.display = "none"
+}
+
+//====================
+//==SAVE JOB
+//====================
+
+function saveJobEdit(){
+
+  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+
+  if(currentEditIndex === null) return
+
+  let job = history[currentEditIndex]
+
+  let sqft = Number(document.getElementById("editSqft").value) || job.sqft
+  let price = Number(document.getElementById("editPrice").value) || job.price
+  let cost = Number(document.getElementById("editCost").value) || job.cost
+
+  let profit = price - cost
+  let margin = price ? (profit / price) * 100 : 0
+
+  history[currentEditIndex] = {
+    ...job,
+    sqft,
+    price,
+    cost,
+    profit,
+    margin
+  }
+
+  localStorage.setItem("jobHistory", JSON.stringify(history))
+
+  closeJobModal()
+  renderHistory()
+
+  showToast("Job updated", "success")
+}
+
+</script>
+
 <div id="jobModal" class="modal-overlay" style="display:none;">
   <div class="modal-card">
 
     <div class="modal-header">
       <span>Edit Job</span>
-      <button onclick="closeJobModal()">🗑️</button>
+      <button onclick="closeJobModal()">âœ–</button>
     </div>
 
     <div class="modal-body">
@@ -724,15 +2965,5 @@ button:active{
   </div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/calculator.js"></script>
-<script src="js/inventory.js"></script>
-<script src="js/jobs.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/actions.js"></script>
-<script src="js/client.js"></script>
-<script src="js/main.js"></script>
-
- 
 </body>
 </html>
