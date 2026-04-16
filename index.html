@@ -1581,6 +1581,12 @@ let totalJobHours = laborHours + tankHours + addonHours
 let hoursPerDay = 8
 let crewSize = Number(document.getElementById("crewSize")?.value) || 1
 
+let daysNeeded = Math.max(1, Math.ceil(totalJobHours / (crewSize * hoursPerDay)))
+
+// round UP to full days
+
+daysNeeded = Math.ceil(daysNeeded)
+
 // ==========================
 // 💰 PERFORMANCE METRICS
 // ==========================
@@ -1609,10 +1615,6 @@ if(daysNeeded > 2 && r.totalSqft < 10000){
   scheduleWarnings.push("Too many days for job size — inefficiency detected")
 }
 
-let daysNeeded = totalJobHours / (crewSize * hoursPerDay)
-
-// round UP to full days
-daysNeeded = Math.ceil(daysNeeded)
 
 // 🔁 REFILL CYCLES
 let refillCycles = Math.max(0, Math.ceil(totalTanks) - 1)
