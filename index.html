@@ -516,6 +516,12 @@ button:active{
   color: red;
 }
 
+.highlight{
+  box-shadow: 0 0 20px rgba(212,175,55,0.6);
+  border: 1px solid gold !important;
+  transition: all 0.3s ease;
+}
+
 </style>
 
 </head>
@@ -1253,15 +1259,121 @@ function render(){
     // OUTPUT UI
     // ==========================
 
-    document.getElementById("results").innerHTML =
-      recommendationHTML +
-      `<div>Total Sqft: ${r.totalSqft}</div>` +
-      `<div>Total Cost: $${r.cost.toFixed(2)}</div>` +
-      `<div>Price: $${r.price.toFixed(2)}</div>` +
-      `<div>Profit: $${r.profit.toFixed(2)}</div>` +
-      `<div>Margin: ${marginPercent.toFixed(1)}%</div>` +
-      `<br>` +
-      materialHTML
+let materialCost = r.cost - r.laborCost - r.overheadCost
+
+document.getElementById("results").innerHTML =
+recommendationHTML +
+
+`
+<div class="glass-card collapsible" data-card="summary">
+  <div class="card-header" onclick="toggleCard(this)">
+    PROJECT SUMMARY
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    <div>Total Sqft: ${r.totalSqft}</div>
+    <div>Houses: ${r.houses}</div>
+  </div>
+</div>
+
+<div class="glass-card collapsible" data-card="inventory">
+  <div class="card-header" onclick="toggleCard(this)">
+    INVENTORY COST
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    <div>Standard: $${inv.standard.toFixed(2)}</div>
+    <div>Premium: $${inv.premium.toFixed(2)}</div>
+    <div>Add-Ons: $${inv.addons.toFixed(2)}</div>
+    <div><b>Total Materials: $${inv.total.toFixed(2)}</b></div>
+  </div>
+</div>
+
+<div class="glass-card collapsible" data-card="materials">
+  <div class="card-header" onclick="toggleCard(this)">
+    MATERIAL REQUIREMENTS
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    ${Object.keys(comparison).map(k => {
+      let item = comparison[k]
+      let color = item.status === "short" ? "red" : "#4cff9a"
+      let unit = MATERIAL_RATES[k]?.unit || ""
+
+      return `
+        <div>
+          ${k.toUpperCase()}:
+          Need ${item.required.toFixed(1)} ${unit} |
+          Have ${item.available.toFixed(1)} ${unit}
+          <span style="color:${color}">
+            ${item.status === "short"
+              ? "BUY " + item.shortage.toFixed(1)
+              : "OK"}
+          </span>
+        </div>
+      `
+    }).join("")}
+  </div>
+</div>
+
+<div class="glass-card collapsible" data-card="usage">
+  <div class="card-header" onclick="toggleCard(this)">
+    MATERIAL USAGE
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    ${Object.keys(needs).map(k => {
+      let unit = MATERIAL_RATES[k]?.unit || ""
+      return `<div>${k.toUpperCase()}: ${needs[k].toFixed(1)} ${unit}</div>`
+    }).join("")}
+  </div>
+</div>
+
+<div class="glass-card collapsible" data-card="base">
+  <div class="card-header" onclick="toggleCard(this)">
+    BASE PACKAGE
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    <div>Base Cost: $${(r.cost - r.laborCost - r.overheadCost).toFixed(2)}</div>
+  </div>
+</div>
+
+<div class="glass-card collapsible" data-card="labor">
+  <div class="card-header" onclick="toggleCard(this)">
+    LABOR
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    <div>Total Hours: ${r.totalHours.toFixed(2)}</div>
+    <div>Labor Cost: $${r.laborCost.toFixed(2)}</div>
+    <div>Per House: $${(r.laborCost / r.houses).toFixed(2)}</div>
+  </div>
+</div>
+
+<div class="glass-card collapsible" data-card="overhead">
+  <div class="card-header" onclick="toggleCard(this)">
+    OVERHEAD
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    <div>$${r.overheadCost.toFixed(2)}</div>
+  </div>
+</div>
+
+<div class="glass-card collapsible" data-card="final">
+  <div class="card-header" onclick="toggleCard(this)">
+    FINAL NUMBERS
+    <span class="chevron">▼</span>
+  </div>
+  <div class="card-body">
+    <div>Total Cost: $${r.cost.toFixed(2)}</div>
+    <div>Price: $${r.price.toFixed(2)}</div>
+    <div>Profit: $${r.profit.toFixed(2)}</div>
+    <div>Margin: ${(r.profit / r.price * 100).toFixed(1)}%</div>
+  </div>
+</div>
+`
 
     // ==========================
     // AUTO WARNINGS
@@ -1284,6 +1396,27 @@ function render(){
       }
 
     }, 50)
+
+setTimeout(() => {
+
+  // AUTO OPEN + HIGHLIGHT SECTIONS
+
+  if(Object.values(comparison).some(i => i.status === "short")){
+    openCard("materials")
+    highlightCard("materials")
+  }
+
+  if(marginPercent < 25){
+    openCard("final")
+    highlightCard("final")
+  }
+
+  if(r.laborCost > r.cost * 0.4){
+    openCard("labor")
+    highlightCard("labor")
+  }
+
+}, 100)
 
   } catch(e){
     console.error(e)
@@ -2725,10 +2858,6 @@ function toggleCard(el){
   })
 
   card.classList.toggle("open")
-
-  setTimeout(() => {
-    card.scrollIntoView({ behavior: "smooth", block: "start" })
-  }, 200)
 }
 
 //========================
@@ -2933,6 +3062,27 @@ function saveJobEdit(){
   renderHistory()
 
   showToast("Job updated", "success")
+}
+
+//====================
+//== OPEN CARD
+//====================
+
+function openCard(name){
+  let card = document.querySelector(`[data-card="${name}"]`)
+  if(card){
+    card.classList.add("open")
+  }
+}
+
+function highlightCard(name){
+  let card = document.querySelector(`[data-card="${name}"]`)
+  if(card){
+    card.classList.add("highlight")
+    setTimeout(() => {
+      card.classList.remove("highlight")
+    }, 2000)
+  }
 }
 
 </script>
