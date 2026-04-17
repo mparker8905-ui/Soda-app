@@ -2907,6 +2907,10 @@ let quoteDateFormatted = quoteDate
 
   : new Date().toLocaleDateString()
 
+let customer = document.getElementById("customer")?.value || "Client"
+    let address = document.getElementById("address")?.value || ""
+    let packageType = document.getElementById("package")?.value || "standard"
+
 let materialCost = r.cost - r.laborCost - r.overheadCost
 
 let materialNeeds = getMaterialNeeds(r)
@@ -3009,9 +3013,7 @@ let whyHTML = `
 
 `
 
-    let customer = document.getElementById("customer")?.value || "Client"
-    let address = document.getElementById("address")?.value || ""
-    let packageType = document.getElementById("package")?.value || "standard"
+   
 
     let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
