@@ -1856,6 +1856,25 @@ if(mixWeight > maxWeight && !shownToasts.has("tank")){
     let alerts = generateAlerts(r, comparison)
     let dealScore = calculateDealScore(r, comparison)
     let schedule = buildSchedule(r)
+
+let startDate = schedule[0]?.date ? new Date(schedule[0].date) : null
+
+let endDate = schedule[schedule.length - 1]?.date 
+
+  ? new Date(schedule[schedule.length - 1].date) 
+
+  : null
+
+let totalDays = 0
+
+if(startDate && endDate){
+
+  totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
+
+}
+
+let totalWeeks = (totalDays / 7).toFixed(1)
+
     let currentPackage = document.getElementById("package")?.value || "standard"
     let altPackage = currentPackage === "standard" ? "premium" : "standard"
 
@@ -2029,6 +2048,26 @@ if(isBuilderJob){
 
     <!-- HEADER -->
 
+<div style="
+
+  margin-top:8px;
+
+  font-size:13px;
+
+  color:#4cff9a;
+
+  font-weight:bold;
+
+">
+
+  ✅ Estimated Completion: ${
+
+    endDate ? endDate.toLocaleDateString() : "—"
+
+  }
+
+</div>
+
     <div style="
 
       margin-top:15px;
@@ -2059,7 +2098,7 @@ if(isBuilderJob){
 
       <div style="margin-top:8px;font-size:13px;color:#aaa;">
 
-        ⏱ Total Timeline: ~${schedule.length * 1.5}+ weeks
+       ⏱ Total Timeline: ~${totalWeeks} weeks (${totalDays} days)
 
       </div>
 
@@ -2191,7 +2230,7 @@ if(isBuilderJob){
 
           <div style="font-weight:bold;color:#4cff9a;">
 
-            Day ${day.day} — ${day.title}
+        ${day.title}
 
           </div>
 
