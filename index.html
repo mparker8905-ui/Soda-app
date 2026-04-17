@@ -708,6 +708,8 @@ button:active{
 
 </div>
 
+<div id="jobHistoryList"></div>
+
 <div id="jobHistorySection" class="glass-card">
   <div class="section-title">JOB HISTORY</div>
   <div id="jobHistory"></div>
@@ -2474,6 +2476,7 @@ setTimeout(() => {
 }, 100)
 
 renderSchedulePreview()
+  renderJobHistory()
 
   } catch(e){
     console.error(e)
@@ -3017,12 +3020,40 @@ let whyHTML = `
 
     let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
 
+let proposal = {
+
+  id: Date.now(),
+
+  customer,
+
+  address,
+
+  packageType,
+
+  quoteDate: quoteDateFormatted,
+
+  total: r.price,
+
+  sqft: r.totalSqft,
+
+  status: "Pending",
+
+  data: r
+
+}
+
+saveProposalToStorage(proposal)
+
+window.currentProposal = proposal
+
     let win = window.open("", "_blank")
 
     if(!win){
       alert("Popup blocked")
       return
     }
+
+renderJobHistory()
 
     // BUILD HTML SAFELY
    
@@ -3229,10 +3260,17 @@ ${workflowHTML}
 
 </div>
 
-  <!-- CTA -->
-  <div class="cta">
-    <button onclick="window.print()">Approve & Save Proposal</button>
-  </div>
+<div class="cta">
+
+  <button onclick="approveProposal()">Approve & Save Proposal</button>
+
+  <button onclick="markRejected()" style="margin-top:10px;background:#550000;color:#fff;">
+
+    Mark as Not Accepted
+
+  </button>
+
+</div>
 
   <!-- SIGNATURE -->
   <div class="signature">
@@ -3262,6 +3300,26 @@ ${workflowHTML}
     alert("Proposal error")
     console.log(e)
   }
+}
+
+//======================
+//=== APPROVE PROPOSAL
+//======================
+
+function approveProposal(){
+
+  if(window.opener && window.opener.currentProposal){
+
+    let proposal = window.opener.currentProposal
+
+    proposal.status = "Accepted"
+
+    window.opener.saveProposalToStorage(proposal)
+
+  }
+
+  window.print()
+
 }
 
 // ==============================
@@ -4598,6 +4656,124 @@ document.addEventListener("DOMContentLoaded", () => {
     quoteInput.value = iso
 
   }
+
+})
+
+//======================
+//== GET SAVED PROPOSAL
+//======================
+
+function getSavedProposals(){
+
+  return JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+}
+
+//======================
+//==SAVE PROPOSAL LOCAL
+//======================
+
+function saveProposalToStorage(proposal){
+
+  let list = getSavedProposals()
+
+  list.push(proposal)
+
+  localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+}
+
+//======================
+//== MARK REJECTED
+//======================
+
+function markRejected(){
+
+  if(window.opener && window.opener.currentProposal){
+
+    let proposal = window.opener.currentProposal
+
+    proposal.status = "Not Accepted"
+
+    window.opener.saveProposalToStorage(proposal)
+
+  }
+
+  alert("Proposal saved as Not Accepted")
+
+}
+
+//======================
+//=== SAVE PROPOSALS LIST
+//======================
+
+function renderJobHistory(){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let container = document.getElementById("jobHistoryList")
+
+  if(!container) return
+
+  container.innerHTML = list.map(p => `
+
+    <div style="
+
+      padding:12px;
+
+      margin-top:10px;
+
+      border:1px solid rgba(212,175,55,0.2);
+
+      border-radius:8px;
+
+    ">
+
+      <div style="font-weight:bold;">
+
+        ${p.customer}
+
+      </div>
+
+      <div style="font-size:12px;color:#aaa;">
+
+        ${p.address}
+
+      </div>
+
+      <div style="margin-top:6px;">
+
+        $${p.total.toFixed(2)} • ${p.packageType.toUpperCase()}
+
+      </div>
+
+      <div style="margin-top:6px;font-size:12px;">
+
+        Status: 
+
+        <b style="
+
+          color:${p.status === "Accepted" ? "#4cff9a" :
+
+                 p.status === "Not Accepted" ? "#ff4d4d" : "#ffd24d"}
+
+        ">
+
+          ${p.status}
+
+        </b>
+
+      </div>
+
+    </div>
+
+  `).join("")
+
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  renderJobHistory()
 
 })
 
