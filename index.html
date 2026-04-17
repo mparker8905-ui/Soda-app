@@ -3038,13 +3038,43 @@ let proposal = {
 
   status: "Pending",
 
-  data: r
+  snapshot: {
+
+    sqft: document.getElementById("sqft")?.value,
+
+    houses: document.getElementById("houses")?.value,
+
+    package: packageType,
+
+    addons: app.job.addons,
+
+    pricingMode: document.getElementById("pricingMode")?.value,
+
+    targetMargin: document.getElementById("targetMargin")?.value
+
+  }
 
 }
 
-saveProposalToStorage(proposal)
+let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
 
-window.currentProposal = proposal
+let exists = list.find(p =>
+
+  p.customer === proposal.customer &&
+
+  p.address === proposal.address &&
+
+  p.total === proposal.total
+
+)
+
+if(!exists){
+
+  list.push(proposal)
+
+  localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+}
 
     let win = window.open("", "_blank")
 
@@ -3284,6 +3314,55 @@ ${workflowHTML}
     // âœ… WRITE TO NEW WINDOW
     win.document.open()
     win.document.write(html)
+    win.proposalId = proposal.id
+
+win.approveProposal = function(){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let index = list.findIndex(p => p.id === win.proposalId)
+
+  if(index !== -1){
+
+    list[index].status = "Accepted"
+
+    localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+  }
+
+  if(window.renderJobHistory){
+
+    window.renderJobHistory()
+
+  }
+
+  win.print()
+
+}
+
+win.markRejected = function(){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let index = list.findIndex(p => p.id === win.proposalId)
+
+  if(index !== -1){
+
+    list[index].status = "Not Accepted"
+
+    localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+  }
+
+  if(window.renderJobHistory){
+
+    window.renderJobHistory()
+
+  }
+
+  alert("Marked as Not Accepted")
+
+}
     win.document.close()
 
     // âœ… SAFARI SAFE PRINT TRIGGER
@@ -3300,26 +3379,6 @@ ${workflowHTML}
     alert("Proposal error")
     console.log(e)
   }
-}
-
-//======================
-//=== APPROVE PROPOSAL
-//======================
-
-function approveProposal(){
-
-  if(window.opener && window.opener.currentProposal){
-
-    let proposal = window.opener.currentProposal
-
-    proposal.status = "Accepted"
-
-    window.opener.saveProposalToStorage(proposal)
-
-  }
-
-  window.print()
-
 }
 
 // ==============================
@@ -4684,26 +4743,6 @@ function saveProposalToStorage(proposal){
 }
 
 //======================
-//== MARK REJECTED
-//======================
-
-function markRejected(){
-
-  if(window.opener && window.opener.currentProposal){
-
-    let proposal = window.opener.currentProposal
-
-    proposal.status = "Not Accepted"
-
-    window.opener.saveProposalToStorage(proposal)
-
-  }
-
-  alert("Proposal saved as Not Accepted")
-
-}
-
-//======================
 //=== SAVE PROPOSALS LIST
 //======================
 
@@ -4717,17 +4756,19 @@ function renderJobHistory(){
 
   container.innerHTML = list.map(p => `
 
-    <div style="
+   <div onclick="openProposal(${p.id})" style="
 
-      padding:12px;
+  padding:12px;
 
-      margin-top:10px;
+  margin-top:10px;
 
-      border:1px solid rgba(212,175,55,0.2);
+  border:1px solid rgba(212,175,55,0.2);
 
-      border-radius:8px;
+  border-radius:8px;
 
-    ">
+  cursor:pointer;
+
+">
 
       <div style="font-weight:bold;">
 
@@ -4776,6 +4817,40 @@ document.addEventListener("DOMContentLoaded", () => {
   renderJobHistory()
 
 })
+
+//=====================
+//==OPEN PROPOSAL ID
+//=====================
+
+function openProposal(id){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let p = list.find(x => x.id === id)
+
+  if(!p) return
+
+  let s = p.snapshot
+
+  document.getElementById("sqft").value = s.sqft
+
+  document.getElementById("houses").value = s.houses
+
+  document.getElementById("package").value = s.package
+
+  document.getElementById("pricingMode").value = s.pricingMode
+
+  document.getElementById("targetMargin").value = s.targetMargin
+
+  app.job.addons = s.addons || {}
+
+  render()
+
+  // reopen proposal window
+
+  sendProposal()
+
+}
 
 </script>
 
