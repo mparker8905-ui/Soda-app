@@ -660,6 +660,22 @@ button:active{
 
   <label class="mat-label">Start Date</label>
 
+<div style="margin-bottom:10px;">
+
+  <div style="font-size:13px;color:#aaa;">Date of Quote</div>
+
+  <input 
+
+    type="date" 
+
+    id="quoteDate"
+
+    style="width:100%;padding:10px;border-radius:8px;background:#222;color:#fff;border:none;"
+
+  >
+
+</div>
+
   <input id="projectStart" type="date" class="mat-input">
 
   <div id="schedulePreview" style="
@@ -1245,7 +1261,19 @@ function buildSchedule(r){
 
   let startInput = document.getElementById("projectStart")?.value
 
-  let currentDate = startInput ? new Date(startInput) : new Date()
+let currentDate
+
+if(startInput){
+
+  let [year, month, day] = startInput.split("-")
+
+  currentDate = new Date(year, month - 1, day)
+
+} else {
+
+  currentDate = new Date()
+
+}
 
   // ✅ TIMELINE SELECTION
 
@@ -2532,6 +2560,14 @@ function openClientView(){
 
   let r = calculateJob()
 
+let quoteDate = document.getElementById("quoteDate")?.value || "—"
+
+let quoteDateFormatted = quoteDate !== "—"
+
+  ? new Date(quoteDate).toLocaleDateString()
+
+  : "—"
+
 let schedule = buildSchedule(r)
 
   let endDate = schedule.length
@@ -2793,6 +2829,14 @@ button:active{
 </div>
 
 <div class="section">
+
+  <div><b>QUOTE DATE</b></div>
+
+  <div>${quoteDateFormatted}</div>
+
+</div>
+
+<div class="section">
   <div><b>PACKAGE</b></div>
   <div>${packageType.toUpperCase()}</div>
 </div>
@@ -2855,6 +2899,14 @@ function sendProposal(){
 
     let r = calculateJob()
 
+let quoteDate = document.getElementById("quoteDate")?.value || ""
+
+let quoteDateFormatted = quoteDate
+
+  ? new Date(quoteDate).toLocaleDateString()
+
+  : new Date().toLocaleDateString()
+
 let materialCost = r.cost - r.laborCost - r.overheadCost
 
 let materialNeeds = getMaterialNeeds(r)
@@ -2872,6 +2924,90 @@ Object.keys(materialNeeds).forEach(k => {
     </div>
   `
 })
+
+let workflowHTML = `
+
+<div class="section">
+
+  <div class="section-title">PROJECT WORKFLOW</div>
+
+  <div style="color:#aaa;font-size:14px;line-height:1.5;">
+
+    <div style="margin-bottom:10px;">
+
+      <b>1. Site Preparation</b><br>
+
+      Soil conditioning may include aeration, lime/sulfur balancing, and organic amendments to create an optimal growing environment.
+
+    </div>
+
+    <div style="margin-bottom:10px;">
+
+      <b>2. Lawn Installation</b><br>
+
+      Professional hydroseeding application using Organic premium seed blends, fertilizer, mulch, and tackifier for maximum germination and coverage.
+
+    </div>
+
+    <div>
+
+     <b>3. ${packageType === "premium" ? "Enhanced Soil Optimization & Growth Support" : "Establishment & Follow-Up"}</b>
+
+      We provide guidance for watering and care to ensure proper germination and long-term success of your lawn.
+
+    </div>
+
+  </div>
+
+</div>
+
+`
+
+let whyHTML = `
+
+<div class="section">
+
+  <div class="section-title">WHY CHOOSE SODA OUTDOOR DESIGNS</div>
+
+  <div style="color:#aaa;font-size:14px;line-height:1.6;">
+
+    <div style="margin-bottom:10px;">
+
+      <b>Built With Purpose</b><br>
+
+    SoDa Outdoor Designs is a family-founded company, named after our daughters, and built on a commitment to doing things the right way—from the ground up. That foundation shapes how we approach every project—with pride, accountability, and long-term care in mind.
+
+    </div>
+
+    <div style="margin-bottom:10px;">
+
+      <b>Professional Process</b><br>
+
+      We don’t take shortcuts. Every lawn is installed using a structured system focused on soil health, proper nutrient balance, and optimal seed establishment for lasting results.
+
+    </div>
+
+    <div style="margin-bottom:10px;">
+
+      <b>Quality Materials</b><br>
+
+      We use professional-grade seed blends, fertilizers, and soil amendments designed to produce thicker, healthier, and more resilient lawns.
+
+    </div>
+
+    <div>
+
+      <b>Client-Focused Approach</b><br>
+
+      As a family-operated business, we value relationships. Every project is treated with the same level of care, communication, and attention to detail we would expect for our own property.
+
+    </div>
+
+  </div>
+
+</div>
+
+`
 
     let customer = document.getElementById("customer")?.value || "Client"
     let address = document.getElementById("address")?.value || ""
@@ -3006,12 +3142,22 @@ let html = `
 
   <div class="gold-line"></div>
 
+${whyHTML}
+
   <!-- CLIENT -->
   <div class="section">
     <div class="section-title">CLIENT</div>
     <div><b>${customer}</b></div>
     <div>${address}</div>
   </div>
+
+<div class="section">
+
+  <div class="section-title">PROPOSAL DATE</div>
+
+  <div>${quoteDateFormatted}</div>
+
+</div>
 
   <!-- PACKAGE -->
   <div class="section">
@@ -3044,6 +3190,8 @@ let html = `
     </div>
   </div>
 
+${workflowHTML}
+
 <div class="section">
   <div class="section-title">MATERIALS USED</div>
   ${materialHTML}
@@ -3066,6 +3214,18 @@ let html = `
     </div>
 
   </div>
+
+<div class="section">
+
+  <div style="color:#aaa;font-size:14px;line-height:1.5;">
+
+    Thank you for the opportunity to earn your business. This proposal outlines a professional lawn installation designed to promote strong root development, long-term turf health, and a clean, uniform appearance. 
+
+    Our process focuses on proper soil conditioning, nutrient balance, and high-quality materials to ensure lasting results.
+
+  </div>
+
+</div>
 
   <!-- CTA -->
   <div class="cta">
@@ -4420,6 +4580,22 @@ document.querySelectorAll('input[name="timeline"]').forEach(radio => {
     render()
 
   })
+
+})
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  let today = new Date()
+
+  let iso = today.toISOString().split("T")[0]
+
+  let quoteInput = document.getElementById("quoteDate")
+
+  if(quoteInput && !quoteInput.value){
+
+    quoteInput.value = iso
+
+  }
 
 })
 
