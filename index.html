@@ -1328,13 +1328,13 @@ function buildSchedule(r){
 
   timeline === "fast"
 
-    ? "Full Soil Prep (Fast Track)"
+    ? "Soil Preparation & Conditioning (Fast Track)"
 
     : timeline === "extended"
 
-    ? "Full Soil Prep (Extended Care)"
+    ? "Soil Preparation & Conditioning (Extended Care)"
 
-    : "Full Soil Prep",
+    : "Soil Preparation & Conditioning",
 
     date: formatDate(currentDate),
 
@@ -1366,13 +1366,13 @@ currentDate = addDays(currentDate, prepToSeedDays)
 
   timeline === "fast"
 
-    ? "Seeding Day (Fast Track)"
+    ? "Professional Hydroseeding Application (Fast Track)"
 
     : timeline === "extended"
 
-    ? "Seeding Day (Extended Care)"
+    ? "Professional Hydroseeding Application (Extended Care)"
 
-    : "Seeding Day",
+    : "Professional Hydroseeding Application",
 
     date: formatDate(currentDate),
 
@@ -1404,13 +1404,13 @@ currentDate = addDays(currentDate, seedToFinalDays)
 
   timeline === "fast"
 
-    ? "Final Visit (Fast Track)"
+    ? "Final Lawn Evaluation (Fast Track)"
 
     : timeline === "extended"
 
-    ? "Final Visit (Extended Care)"
+    ? "Final Lawn Evaluation(Extended Care)"
 
-    : "Final Visit",
+    : "Final Lawn Evaluation",
 
     date: formatDate(currentDate),
 
@@ -2532,6 +2532,14 @@ function openClientView(){
 
   let r = calculateJob()
 
+let schedule = buildSchedule(r)
+
+  let endDate = schedule.length
+
+  ? schedule[schedule.length - 1].date
+
+  : null
+
 let materialCost = r.cost - r.laborCost - r.overheadCost
 
 let materialNeeds = getMaterialNeeds(r)
@@ -2578,6 +2586,66 @@ Object.keys(materialNeeds).forEach(k => {
       `
     }
   }
+
+let scheduleHTML = `
+
+  <div class="section">
+
+    <div class="section-title">PROJECT TIMELINE</div>
+
+    <div class="line">
+
+      <span>Start Date</span>
+
+      <span>${schedule[0]?.date || "-"}</span>
+
+    </div>
+
+    <div class="line">
+
+      <span>Estimated Completion</span>
+
+      <span>${endDate || "-"}</span>
+
+    </div>
+
+    <div style="margin-top:12px;">
+
+      ${schedule.map(day => `
+
+        <div style="
+
+          margin-top:10px;
+
+          padding:10px;
+
+          border:1px solid rgba(212,175,55,0.2);
+
+          border-radius:8px;
+
+        ">
+
+          <div style="font-weight:bold;">
+
+            ${day.title}
+
+          </div>
+
+          <div style="font-size:12px;color:#aaa;">
+
+            ${day.date}
+
+          </div>
+
+        </div>
+
+      `).join("")}
+
+    </div>
+
+  </div>
+
+`
 
   addItem("Aeration","aeration",a.aeration,0.04)
   addItem("Compost","compost",a.compost,0.10)
@@ -2728,6 +2796,8 @@ button:active{
   <div><b>PACKAGE</b></div>
   <div>${packageType.toUpperCase()}</div>
 </div>
+
+${scheduleHTML}
 
 <div class="section">
   <div><b>ADD-ONS</b></div>
