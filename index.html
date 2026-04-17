@@ -4337,11 +4337,19 @@ function renderSchedulePreview(){
 
 }
 
-document.getElementById("projectStart")?.addEventListener("change", renderSchedulePreview)
+document.getElementById("projectStart")?.addEventListener("change", () => {
+
+  render()
+
+})
 
 document.querySelectorAll('input[name="timeline"]').forEach(radio => {
 
-  radio.addEventListener("change", renderSchedulePreview)
+  radio.addEventListener("change", () => {
+
+    render()
+
+  })
 
 })
 
