@@ -5217,19 +5217,15 @@ function handleTouchMove(e){
 
   touchEndX = e.changedTouches[0].screenX
 
-let content = document.querySelector(".proposal-content")
+  let moveX = touchEndX - touchStartX
 
-content.style.willChange = "transform"
+  let content = document.querySelector(".proposal-content")
 
-content.style.position = "absolute"
+  if(moveX > 0){
 
-content.style.left = "0"
+    content.style.transform = `translateX(${moveX}px)`
 
-content.style.top = "0"
-
-content.style.transform = `translateX(${moveX}px)`
-
-   content.style.opacity = 1 - (moveX / 300)
+    content.style.opacity = 1 - (moveX / 300)
 
   }
 
