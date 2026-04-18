@@ -644,6 +644,52 @@ button:active{
 
 }
 
+.delete-icon{
+
+  width:36px;
+
+  height:36px;
+
+  min-width:36px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  background:rgba(255,77,77,0.15);
+
+  border:1px solid rgba(255,77,77,0.5);
+
+  color:#ff4d4d;
+
+  font-size:16px;
+
+  border-radius:8px;
+
+  padding:0;
+
+  flex-shrink:0;
+
+}
+
+/* kill global button width */
+
+.delete-icon{
+
+  width:auto !important;
+
+}
+
+/* optional hover */
+
+.delete-icon:active{
+
+  transform:scale(0.92);
+
+}
+
 </style>
 
 </head>
@@ -913,26 +959,13 @@ button:active{
 
       </div>
 
-      <button onclick="event.stopPropagation(); deleteProposal()" style="
+     <button onclick="event.stopPropagation(); deleteProposal()" class="delete-icon">
 
-        background:#300;
+  🗑️
 
-        border:none;
+</button>
 
-        color:#ff4d4d;
-
-        font-size:18px;
-
-        padding:8px;
-
-        border-radius:6px;
-
-      ">
-
-        🗑️
-
-      </button>
-
+    
     </div>
 
     <!-- BODY -->
