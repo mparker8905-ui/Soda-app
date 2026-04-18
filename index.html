@@ -855,19 +855,65 @@ button:active{
 
   <div class="proposal-content">
 
-    <div class="proposal-header">
+<div class="proposal-header">
 
-      <div>
+  <div>
 
-        <h2 id="modalCustomer">Client</h2>
+    <h2 id="modalCustomer">Client</h2>
 
-        <div id="modalAddress" style="color:#aaa;font-size:13px;"></div>
+    <div id="modalAddress" style="color:#aaa;font-size:13px;"></div>
 
-      </div>
+  </div>
 
-      <button onclick="closeProposalModal()">✕</button>
+  <div style="display:flex;gap:10px;align-items:center;">
 
-    </div>
+    <!-- 🗑️ DELETE -->
+
+    <button onclick="deleteProposal()" style="
+
+      background:#300;
+
+      border:none;
+
+      color:#ff4d4d;
+
+      font-size:18px;
+
+      padding:8px;
+
+      border-radius:6px;
+
+    ">
+
+      🗑️
+
+    </button>
+
+    <!-- ❌ CLOSE -->
+
+    <button onclick="closeProposalModal()" style="
+
+      font-size:22px;
+
+      background:none;
+
+      border:none;
+
+      color:#aaa;
+
+      cursor:pointer;
+
+      padding:10px;
+
+    ">
+
+      ✕
+
+    </button>
+
+  </div>
+
+</div>
 
     <div id="modalBody"></div>
 
