@@ -554,6 +554,16 @@ button:active{
 
   padding:20px;
 
+  display:flex;
+
+  flex-direction:column;   /* 🔥 THIS FIXES STACKING */
+
+  gap:14px;                /* spacing between sections */
+
+  width:100%;              /* 🔥 FORCE FULL WIDTH */
+
+  box-sizing:border-box;
+
 }
 
 .proposal-header{
@@ -607,6 +617,42 @@ button:active{
 .proposal-modal{
 
   transition: transform 0.2s ease, opacity 0.2s ease;
+
+}
+
+.proposal-wrap{
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:14px;
+
+  width:100%;
+
+}
+
+.row{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  padding:10px;
+
+  border:1px solid rgba(212,175,55,0.2);
+
+  border-radius:8px;
+
+}
+
+.price{
+
+  font-size:32px;
+
+  font-weight:bold;
+
+  margin-top:10px;
 
 }
 
@@ -5037,35 +5083,43 @@ function openProposal(id){
 
   document.getElementById("modalAddress").innerText = p.address
 
-  document.getElementById("modalBody").innerHTML = `
+ document.getElementById("modalBody").innerHTML = `
 
-    <div style="margin-bottom:10px;">
+  <div class="proposal-wrap">
 
-      <b>Date:</b> ${p.quoteDate}
+    <div class="row">
 
-    </div>
+      <b>Date:</b>
 
-    <div>
-
-      <b>Package:</b> ${p.packageType.toUpperCase()}
+      <span>${p.quoteDate}</span>
 
     </div>
 
-    <div style="margin-top:10px;">
+    <div class="row">
 
-      <b>Sqft:</b> ${p.sqft}
+      <b>Package:</b>
+
+      <span>${p.packageType.toUpperCase()}</span>
 
     </div>
 
-    <div style="margin-top:10px;font-size:22px;">
+    <div class="row">
+
+      <b>Sqft:</b>
+
+      <span>${p.sqft}</span>
+
+    </div>
+
+    <div class="price">
 
       💰 $${p.total.toFixed(2)}
 
     </div>
 
-    <div style="margin-top:10px;">
+    <div class="row">
 
-      <b>Status:</b> 
+      <b>Status:</b>
 
       <span style="
 
@@ -5085,7 +5139,9 @@ function openProposal(id){
 
     </div>
 
-  `
+  </div>
+
+`
 
 }
 
