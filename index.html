@@ -522,21 +522,15 @@ button:active{
   transition: all 0.3s ease;
 }
 
-#proposalModal{
+#proposalModal {
 
   position: fixed;
-
-  top: 0;
-
-  left: 0;
 
   width: 100vw;
 
   height: 100vh;
 
-  overflow: hidden;
-
-  z-index: 9999;
+  display: none; /* 🔥 THIS WAS MISSING */
 
 }
 
@@ -5247,21 +5241,19 @@ function handleTouchEnd(){
 
   let distance = touchEndX - touchStartX
 
-  if(distance > 80){
+  if(distance > 120){
 
-    closeProposalModal()
+    closeProposalModal() // 🔥 actually closes it
 
   } else {
 
-    modal.style.transform = "translateX(0)"
+    let content = document.querySelector(".proposal-content")
 
-    modal.style.opacity = "1"
+    content.style.transform = "translateX(0)"
+
+    content.style.opacity = 1
 
   }
-
-  touchStartX = 0
-
-  touchEndX = 0
 
 }
 
