@@ -869,25 +869,25 @@ button:active{
 
     <!-- 🗑️ DELETE -->
 
-    <button onclick="deleteProposal()" style="
+<button onclick="event.stopPropagation(); deleteProposal()" style="
 
-      background:#300;
+  background:#300;
 
-      border:none;
+  border:none;
 
-      color:#ff4d4d;
+  color:#ff4d4d;
 
-      font-size:18px;
+  font-size:18px;
 
-      padding:8px;
+  padding:8px;
 
-      border-radius:6px;
+  border-radius:6px;
 
-    ">
+">
 
-      🗑️
+  🗑️
 
-    </button>
+</button>
 
     <!-- ❌ CLOSE -->
 
@@ -944,6 +944,8 @@ button:active{
 </div>
 
 <script>
+
+let activeProposalId = null
 
 //===========================
 //==== STATE
@@ -5031,8 +5033,6 @@ function openProposal(id){
 //=== OPEN PROPOSAL
 //=======================
 
-let activeProposalId = null
-
 function openProposal(id){
 
   let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
@@ -5132,6 +5132,36 @@ function setProposalStatus(status){
   renderJobHistory()
 
   openProposal(activeProposalId) // refresh modal
+
+}
+
+//=====================
+//== DELETE PROPOSAL
+//=====================
+
+function deleteProposal(){
+
+  if(!activeProposalId){
+
+    alert("No proposal selected")
+
+    return
+
+  }
+
+  if(!confirm("Delete this proposal?")) return
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  list = list.filter(p => p.id !== activeProposalId)
+
+  localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+  closeProposalModal()
+
+  renderJobHistory()
+
+  showToast("Proposal deleted", "error")
 
 }
 
