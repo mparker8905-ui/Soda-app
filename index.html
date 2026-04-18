@@ -604,6 +604,12 @@ button:active{
 
 .reject-btn{ background:#500; color:#fff; }
 
+.proposal-modal{
+
+  transition: transform 0.2s ease, opacity 0.2s ease;
+
+}
+
 </style>
 
 </head>
@@ -5091,15 +5097,11 @@ function closeProposalModal(){
 
   let modal = document.getElementById("proposalModal")
 
-  let content = document.querySelector(".proposal-content")
-
   modal.style.display = "none"
 
-  // reset swipe position
+  modal.style.transform = "translateX(0)"
 
-  content.style.transform = "translateX(0)"
-
-  content.style.opacity = "1"
+  modal.style.opacity = "1"
 
 }
 
@@ -5175,11 +5177,9 @@ function handleTouchMove(e){
 
   touchEndX = e.changedTouches[0].screenX
 
-  let modal = document.querySelector(".proposal-content")
+  let modal = document.getElementById("proposalModal")
 
   let moveX = touchEndX - touchStartX
-
-  // only move right
 
   if(moveX > 0){
 
@@ -5193,7 +5193,7 @@ function handleTouchMove(e){
 
 function handleTouchEnd(){
 
-  let modal = document.querySelector(".proposal-content")
+  let modal = document.getElementById("proposalModal")
 
   let distance = touchEndX - touchStartX
 
@@ -5202,8 +5202,6 @@ function handleTouchEnd(){
     closeProposalModal()
 
   } else {
-
-    // snap back
 
     modal.style.transform = "translateX(0)"
 
