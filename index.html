@@ -5067,71 +5067,55 @@ function openProposal(id){
 
   activeProposalId = id
 
-  document.getElementById("proposalModal").style.display = "block"
+  let modal = document.getElementById("proposalModal")
+
+  let content = document.querySelector(".proposal-content")
+
+  modal.style.display = "block"
+
+  // 🔥 RESET POSITION EVERY TIME
+
+  content.style.transform = "translateX(0)"
+
+  content.style.opacity = 1
 
   document.getElementById("modalCustomer").innerText = p.customer
 
   document.getElementById("modalAddress").innerText = p.address
 
- document.getElementById("modalBody").innerHTML = `
+  document.getElementById("modalBody").innerHTML = `
 
-  <div class="proposal-wrap">
+    <div class="proposal-wrap">
 
-    <div class="row">
+      <div class="row"><b>Date:</b><span>${p.quoteDate}</span></div>
 
-      <b>Date:</b>
+      <div class="row"><b>Package:</b><span>${p.packageType.toUpperCase()}</span></div>
 
-      <span>${p.quoteDate}</span>
+      <div class="row"><b>Sqft:</b><span>${p.sqft}</span></div>
 
-    </div>
+      <div class="price">💰 $${p.total.toFixed(2)}</div>
 
-    <div class="row">
+      <div class="row">
 
-      <b>Package:</b>
+        <b>Status:</b>
 
-      <span>${p.packageType.toUpperCase()}</span>
-
-    </div>
-
-    <div class="row">
-
-      <b>Sqft:</b>
-
-      <span>${p.sqft}</span>
-
-    </div>
-
-    <div class="price">
-
-      💰 $${p.total.toFixed(2)}
-
-    </div>
-
-    <div class="row">
-
-      <b>Status:</b>
-
-      <span style="
-
-        color:${
+        <span style="color:${
 
           p.status === "Accepted" ? "#4cff9a" :
 
           p.status === "Not Accepted" ? "#ff4d4d" : "#ffd24d"
 
-        }
+        }">
 
-      ">
+          ${p.status}
 
-        ${p.status}
+        </span>
 
-      </span>
+      </div>
 
     </div>
 
-  </div>
-
-`
+  `
 
 }
 
@@ -5143,11 +5127,15 @@ function closeProposalModal(){
 
   let modal = document.getElementById("proposalModal")
 
+  let content = document.querySelector(".proposal-content")
+
   modal.style.display = "none"
 
-  modal.style.transform = "translateX(0)"
+  // reset so next open is clean
 
-  modal.style.opacity = "1"
+  content.style.transform = "translateX(0)"
+
+  content.style.opacity = 1
 
 }
 
@@ -5209,47 +5197,77 @@ function deleteProposal(){
 //=== SWIPE LOGIC
 //====================
 
-let touchStartX = 0
+let startX = 0
 
-let touchEndX = 0
+let currentX = 0
+
+let isDragging = false
 
 function handleTouchStart(e){
 
-  touchStartX = e.changedTouches[0].screenX
+  startX = e.touches[0].clientX
+
+  isDragging = true
 
 }
 
 function handleTouchMove(e){
 
-  touchEndX = e.changedTouches[0].screenX
+  if(!isDragging) return
 
-  let moveX = touchEndX - touchStartX
+  currentX = e.touches[0].clientX
+
+  let diff = currentX - startX
+
+  // 👉 ONLY allow swipe RIGHT
+
+  if(diff < 0) diff = 0
 
   let content = document.querySelector(".proposal-content")
 
-  if(moveX > 0){
+  content.style.transition = "none"
 
-    content.style.transform = `translateX(${moveX}px)`
+  content.style.transform = `translateX(${diff}px)`
 
-    content.style.opacity = 1 - (moveX / 300)
-
-  }
+  content.style.opacity = 1 - (diff / 300)
 
 }
 
 function handleTouchEnd(){
 
-  let modal = document.getElementById("proposalModal")
+  if(!isDragging) return
 
-  let distance = touchEndX - touchStartX
+  isDragging = false
 
-  if(distance > 120){
+  let diff = currentX - startX
 
-    closeProposalModal() // 🔥 actually closes it
+  let content = document.querySelector(".proposal-content")
+
+  // 👉 threshold to close
+
+  if(diff > 120){
+
+    content.style.transition = "all 0.2s ease"
+
+    content.style.transform = "translateX(100%)"
+
+    content.style.opacity = 0
+
+    setTimeout(() => {
+
+      closeProposalModal()
+
+      content.style.transform = "translateX(0)"
+
+      content.style.opacity = 1
+
+    }, 200)
 
   } else {
 
-    let content = document.querySelector(".proposal-content")
+    // snap back
+
+    content.style.transition = "all 0.2s ease"
 
     content.style.transform = "translateX(0)"
 
