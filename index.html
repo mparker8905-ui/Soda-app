@@ -526,11 +526,15 @@ button:active{
 
   position: fixed;
 
-  width: 100vw;
+  inset: 0;
 
-  height: 100vh;
+  display: none;
 
-  display: none; /* 🔥 THIS WAS MISSING */
+  justify-content: center;
+
+  align-items: center;
+
+  z-index: 9999;
 
 }
 
@@ -897,43 +901,45 @@ button:active{
 
   <div class="proposal-content">
 
-<div class="proposal-header">
+    <!-- HEADER -->
 
-  <div>
+    <div class="proposal-header">
 
-    <h2 id="modalCustomer">Client</h2>
+      <div>
 
-    <div id="modalAddress" style="color:#aaa;font-size:13px;"></div>
+        <h2 id="modalCustomer">Client</h2>
 
-  </div>
+        <div id="modalAddress" style="color:#aaa;font-size:13px;"></div>
 
-  <div style="display:flex;gap:10px;align-items:center;">
+      </div>
 
-    <!-- 🗑️ DELETE -->
+      <button onclick="event.stopPropagation(); deleteProposal()" style="
 
-<button onclick="event.stopPropagation(); deleteProposal()" style="
+        background:#300;
 
-  background:#300;
+        border:none;
 
-  border:none;
+        color:#ff4d4d;
 
-  color:#ff4d4d;
+        font-size:18px;
 
-  font-size:18px;
+        padding:8px;
 
-  padding:8px;
+        border-radius:6px;
 
-  border-radius:6px;
+      ">
 
-">
+        🗑️
 
-  🗑️
+      </button>
 
-</button>
+    </div>
 
-</div>
+    <!-- BODY -->
 
     <div id="modalBody"></div>
+
+    <!-- ACTIONS -->
 
     <div class="proposal-actions">
 
@@ -5014,39 +5020,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 })
 
-//=====================
-//==OPEN PROPOSAL ID
-//=====================
-
-function openProposal(id){
-
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
-
-  let p = list.find(x => x.id === id)
-
-  if(!p) return
-
-  let s = p.snapshot
-
-  document.getElementById("sqft").value = s.sqft
-
-  document.getElementById("houses").value = s.houses
-
-  document.getElementById("package").value = s.package
-
-  document.getElementById("pricingMode").value = s.pricingMode
-
-  document.getElementById("targetMargin").value = s.targetMargin
-
-  app.job.addons = s.addons || {}
-
-  render()
-
-  // reopen proposal window
-
-  sendProposal()
-
-}
 //=======================
 //=== OPEN PROPOSAL
 //=======================
