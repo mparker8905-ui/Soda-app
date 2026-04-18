@@ -5288,13 +5288,16 @@ function handleTouchEnd(){
 //== SWIPE LOGIC DELETE
 //====================
 
-let startX = 0
 
-let currentX = 0
+let deleteStartX = 0
+
+let deleteCurrentX = 0
 
 let activeCard = null
 
 document.addEventListener("touchstart", e => {
+
+if(e.target.closest("#proposalModal")) return
 
   let card = e.target.closest(".swipe-card")
 
@@ -5302,7 +5305,7 @@ document.addEventListener("touchstart", e => {
 
   activeCard = card
 
-  startX = e.touches[0].clientX
+ deleteStartX = e.touches[0].clientX
 
 })
 
@@ -5310,9 +5313,9 @@ document.addEventListener("touchmove", e => {
 
   if(!activeCard) return
 
-  currentX = e.touches[0].clientX
+deleteCurrentX = e.touches[0].clientX
 
-  let diff = currentX - startX
+let diff = deleteCurrentX - deleteStartX
 
   // 👉 only allow LEFT swipe
 
@@ -5332,7 +5335,7 @@ document.addEventListener("touchend", e => {
 
   if(!activeCard) return
 
-  let diff = currentX - startX
+ let diff = deleteCurrentX - deleteStartX
 
   let id = activeCard.dataset.id
 
