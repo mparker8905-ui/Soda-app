@@ -522,47 +522,41 @@ button:active{
   transition: all 0.3s ease;
 }
 
-.proposal-modal{
+#proposalModal{
 
-  position:fixed;
+  position: fixed;
 
-  top:0;
+  top: 0;
 
-  left:0;
+  left: 0;
 
-  width:100%;
+  width: 100vw;
 
-  height:100%;
+  height: 100vh;
 
-  background:rgba(0,0,0,0.85);
+  overflow: hidden;
 
-  display:none;
-
-  z-index:9999;
+  z-index: 9999;
 
 }
 
 .proposal-content{
 
-  background:#000;
+  width: 100vw;            /* 🔥 THIS FIXES THE SQUISH */
 
-  color:#d4af37;
+  min-width: 100vw;        /* 🔥 prevents shrink */
 
-  height:100%;
+  max-width: 100vw;
 
-  overflow:auto;
+  height: 100%;
 
-  padding:20px;
+  overflow-y: auto;
 
-  display:flex;
+  box-sizing: border-box;
 
-  flex-direction:column;   /* 🔥 THIS FIXES STACKING */
+  padding: 20px;
 
-  gap:14px;                /* spacing between sections */
-
-  width:100%;              /* 🔥 FORCE FULL WIDTH */
-
-  box-sizing:border-box;
+  background: #000;
 
 }
 
@@ -622,13 +616,9 @@ button:active{
 
 .proposal-wrap{
 
-  display:flex;
+  flex-shrink: 0;
 
-  flex-direction:column;
-
-  gap:14px;
-
-  width:100%;
+  width: 100%;
 
 }
 
@@ -5233,15 +5223,19 @@ function handleTouchMove(e){
 
   touchEndX = e.changedTouches[0].screenX
 
-  let modal = document.getElementById("proposalModal")
+let content = document.querySelector(".proposal-content")
 
-  let moveX = touchEndX - touchStartX
+content.style.willChange = "transform"
 
-  if(moveX > 0){
+content.style.position = "absolute"
 
-    modal.style.transform = `translateX(${moveX}px)`
+content.style.left = "0"
 
-    modal.style.opacity = 1 - (moveX / 300)
+content.style.top = "0"
+
+content.style.transform = `translateX(${moveX}px)`
+
+   content.style.opacity = 1 - (moveX / 300)
 
   }
 
