@@ -851,7 +851,13 @@ button:active{
 
 <button onclick="generateInventoryPDF()">Inventory PDF</button>
 
-<div id="proposalModal" class="proposal-modal">
+<div id="proposalModal" class="proposal-modal"
+
+     ontouchstart="handleTouchStart(event)"
+
+     ontouchmove="handleTouchMove(event)"
+
+     ontouchend="handleTouchEnd()">
 
   <div class="proposal-content">
 
@@ -888,30 +894,6 @@ button:active{
   🗑️
 
 </button>
-
-    <!-- ❌ CLOSE -->
-
-    <button onclick="closeProposalModal()" style="
-
-      font-size:22px;
-
-      background:none;
-
-      border:none;
-
-      color:#aaa;
-
-      cursor:pointer;
-
-      padding:10px;
-
-    ">
-
-      ✕
-
-    </button>
-
-  </div>
 
 </div>
 
@@ -5107,7 +5089,17 @@ function openProposal(id){
 
 function closeProposalModal(){
 
-  document.getElementById("proposalModal").style.display = "none"
+  let modal = document.getElementById("proposalModal")
+
+  let content = document.querySelector(".proposal-content")
+
+  modal.style.display = "none"
+
+  // reset swipe position
+
+  content.style.transform = "translateX(0)"
+
+  content.style.opacity = "1"
 
 }
 
@@ -5162,6 +5154,66 @@ function deleteProposal(){
   renderJobHistory()
 
   showToast("Proposal deleted", "error")
+
+}
+
+//====================
+//=== SWIPE LOGIC
+//====================
+
+let touchStartX = 0
+
+let touchEndX = 0
+
+function handleTouchStart(e){
+
+  touchStartX = e.changedTouches[0].screenX
+
+}
+
+function handleTouchMove(e){
+
+  touchEndX = e.changedTouches[0].screenX
+
+  let modal = document.querySelector(".proposal-content")
+
+  let moveX = touchEndX - touchStartX
+
+  // only move right
+
+  if(moveX > 0){
+
+    modal.style.transform = `translateX(${moveX}px)`
+
+    modal.style.opacity = 1 - (moveX / 300)
+
+  }
+
+}
+
+function handleTouchEnd(){
+
+  let modal = document.querySelector(".proposal-content")
+
+  let distance = touchEndX - touchStartX
+
+  if(distance > 80){
+
+    closeProposalModal()
+
+  } else {
+
+    // snap back
+
+    modal.style.transform = "translateX(0)"
+
+    modal.style.opacity = "1"
+
+  }
+
+  touchStartX = 0
+
+  touchEndX = 0
 
 }
 
