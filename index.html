@@ -690,6 +690,56 @@ button:active{
 
 }
 
+.swipe-container{
+
+  position:relative;
+
+  overflow:hidden;
+
+  border-radius:10px;
+
+  margin-top:10px;
+
+}
+
+.swipe-delete{
+
+  position:absolute;
+
+  right:0;
+
+  top:0;
+
+  bottom:0;
+
+  width:90px;
+
+  background:#500;
+
+  color:#fff;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  font-weight:bold;
+
+}
+
+.swipe-card{
+
+  background:#000;
+
+  position:relative;
+
+  z-index:2;
+
+  transition: transform 0.2s ease;
+
+}
+
 </style>
 
 </head>
@@ -958,15 +1008,6 @@ button:active{
         <div id="modalAddress" style="color:#aaa;font-size:13px;"></div>
 
       </div>
-
-     <button onclick="event.stopPropagation(); deleteProposal()" class="delete-icon">
-
-  🗑️
-
-</button>
-
-    
-    </div>
 
     <!-- BODY -->
 
@@ -4989,19 +5030,15 @@ function renderJobHistory(){
 
   container.innerHTML = list.map(p => `
 
-   <div onclick="openProposal(${p.id})" style="
+<div class="swipe-container">
 
-  padding:12px;
+  <div class="swipe-delete">Delete</div>
 
-  margin-top:10px;
+  <div class="swipe-card" onclick="openProposal(${p.id})" data-id="${p.id}">
 
-  border:1px solid rgba(212,175,55,0.2);
+  </div>
 
-  border-radius:8px;
-
-  cursor:pointer;
-
-">
+</div>
 
      <div onclick="openProposal(${p.id})" style="
 
@@ -5163,38 +5200,8 @@ function setProposalStatus(status){
 
 }
 
-//=====================
-//== DELETE PROPOSAL
-//=====================
-
-function deleteProposal(){
-
-  if(!activeProposalId){
-
-    alert("No proposal selected")
-
-    return
-
-  }
-
-  if(!confirm("Delete this proposal?")) return
-
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
-
-  list = list.filter(p => p.id !== activeProposalId)
-
-  localStorage.setItem("soda_proposals", JSON.stringify(list))
-
-  closeProposalModal()
-
-  renderJobHistory()
-
-  showToast("Proposal deleted", "error")
-
-}
-
 //====================
-//=== SWIPE LOGIC
+//=== SWIPE LOGIC MODAL
 //====================
 
 let startX = 0
@@ -5274,6 +5281,93 @@ function handleTouchEnd(){
     content.style.opacity = 1
 
   }
+
+}
+
+//====================
+//== SWIPE LOGIC DELETE
+//====================
+
+let startX = 0
+
+let currentX = 0
+
+let activeCard = null
+
+document.addEventListener("touchstart", e => {
+
+  let card = e.target.closest(".swipe-card")
+
+  if(!card) return
+
+  activeCard = card
+
+  startX = e.touches[0].clientX
+
+})
+
+document.addEventListener("touchmove", e => {
+
+  if(!activeCard) return
+
+  currentX = e.touches[0].clientX
+
+  let diff = currentX - startX
+
+  // 👉 only allow LEFT swipe
+
+  if(diff > 0) diff = 0
+
+  // limit swipe distance
+
+  if(diff < -120) diff = -120
+
+  activeCard.style.transition = "none"
+
+  activeCard.style.transform = `translateX(${diff}px)`
+
+})
+
+document.addEventListener("touchend", e => {
+
+  if(!activeCard) return
+
+  let diff = currentX - startX
+
+  let id = activeCard.dataset.id
+
+  // 👉 FULL DELETE SWIPE
+
+  if(diff < -100){
+
+    deleteProposalById(id)
+
+  } else {
+
+    // snap back
+
+    activeCard.style.transition = "all 0.2s ease"
+
+    activeCard.style.transform = "translateX(0)"
+
+  }
+
+  activeCard = null
+
+})
+
+
+function deleteProposalById(id){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  list = list.filter(p => p.id != id)
+
+  localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+  renderJobHistory()
+
+  showToast("Proposal deleted", "error")
 
 }
 
