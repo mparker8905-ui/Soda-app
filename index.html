@@ -5143,6 +5143,14 @@ document.body.style.overflow = "hidden";
 
   let content = document.querySelector(".proposal-content")
 
+// 🔥 hide swipe/delete buttons
+
+document.querySelectorAll(".delete-button").forEach(el => {
+
+  el.style.display = "none";
+
+});
+
   modal.style.display = "block"
 
   // 🔥 RESET POSITION EVERY TIME
@@ -5202,6 +5210,12 @@ function closeProposalModal(){
 document.body.style.overflow = "auto";
 
   let content = document.querySelector(".proposal-content")
+
+document.querySelectorAll(".delete-button").forEach(el => {
+
+  el.style.display = "block";
+
+});
 
   modal.style.display = "none"
 
