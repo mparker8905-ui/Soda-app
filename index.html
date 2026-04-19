@@ -5145,7 +5145,17 @@ document.body.style.overflow = "hidden";
 
 // 🔥 hide swipe/delete buttons
 
-document.querySelectorAll(".delete-button").forEach(el => {
+// 🔥 reset swipe position
+
+document.querySelectorAll(".swipe-card").forEach(el => {
+
+  el.style.transform = "translateX(0)";
+
+});
+
+// 🔥 hide delete background
+
+document.querySelectorAll(".swipe-delete").forEach(el => {
 
   el.style.display = "none";
 
@@ -5211,9 +5221,9 @@ document.body.style.overflow = "auto";
 
   let content = document.querySelector(".proposal-content")
 
-document.querySelectorAll(".delete-button").forEach(el => {
+document.querySelectorAll(".swipe-delete").forEach(el => {
 
-  el.style.display = "block";
+  el.style.display = "flex";
 
 });
 
