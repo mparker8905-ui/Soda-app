@@ -534,11 +534,13 @@ button:active{
 
   align-items: flex-start; /* 👈 key change */
 
-  background: rgba(0,0,0,0.75);
+ background: rgba(0,0,0,0.9);
 
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px);
 
-  z-index: 9999;
+  z-index: 999999;
+
+  animation: fadeIn 0.2s ease;
 
 }
 
@@ -563,7 +565,12 @@ button:active{
   overflow-y: auto;
 
   box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  
+  position: relative;
 
+  z-index: 2;
+
+  animation: slideUp 0.25s ease;
 }
 
 .proposal-header{
@@ -617,6 +624,14 @@ button:active{
   border:none;
 
   border-radius:8px;
+
+}
+
+@keyframes slideUp {
+
+  from { transform: translateY(40px); opacity:0 }
+
+  to { transform: translateY(0); opacity:1 }
 
 }
 
@@ -5124,6 +5139,8 @@ function openProposal(id){
 
   let modal = document.getElementById("proposalModal")
 
+document.body.style.overflow = "hidden";
+
   let content = document.querySelector(".proposal-content")
 
   modal.style.display = "block"
@@ -5181,6 +5198,8 @@ function openProposal(id){
 function closeProposalModal(){
 
   let modal = document.getElementById("proposalModal")
+
+document.body.style.overflow = "auto";
 
   let content = document.querySelector(".proposal-content")
 
