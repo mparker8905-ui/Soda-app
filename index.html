@@ -3366,8 +3366,6 @@ let exists = list.find(p =>
 
 )
 
-)
-
 if(!exists){
 
   list.push(proposal)
@@ -5062,13 +5060,11 @@ function renderJobHistory(){
 
   <div class="swipe-card" onclick="openProposal(${p.id})" data-id="${p.id}">
 
-     <div onclick="openProposal(${p.id})" style="
+    <div onclick="openProposal(${p.id})" style="cursor:pointer;">
 
-  cursor:pointer;
+  ${p.customer}
 
-        ${p.customer}
-
-      </div>
+</div>
 
       <div style="font-size:12px;color:#aaa;">
 
