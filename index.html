@@ -522,17 +522,19 @@ button:active{
   transition: all 0.3s ease;
 }
 
-#proposalModal {
+#proposalModal{
 
   position: fixed;
 
   inset: 0;
 
-  display: none;
+  display: flex;
 
   justify-content: center;
 
   align-items: center;
+
+  background: rgba(0,0,0,0.9);
 
   z-index: 9999;
 
@@ -540,11 +542,11 @@ button:active{
 
 .proposal-content{
 
-  width: 100vw;            /* 🔥 THIS FIXES THE SQUISH */
+  width: 100%;
 
-  min-width: 100vw;        /* 🔥 prevents shrink */
+  max-width: 500px;
 
-  max-width: 100vw;
+  margin: auto;
 
   height: 100%;
 
@@ -612,35 +614,29 @@ button:active{
 
 }
 
-.proposal-wrap{
+.proposal-wrap {
 
-  flex-shrink: 0;
-
-  width: 100%;
+  padding: 15px;
 
 }
 
-.row{
+.row {
 
-  display:flex;
+  display: flex;
 
-  justify-content:space-between;
+  justify-content: space-between;
 
-  padding:10px;
-
-  border:1px solid rgba(212,175,55,0.2);
-
-  border-radius:8px;
+  margin: 6px 0;
 
 }
 
-.price{
+.price {
 
-  font-size:32px;
+  font-size: 36px;
 
-  font-weight:bold;
+  font-weight: bold;
 
-  margin-top:10px;
+  margin: 15px 0;
 
 }
 
@@ -690,53 +686,63 @@ button:active{
 
 }
 
-.swipe-container{
+.swipe-container {
 
-  position:relative;
+  position: relative;
 
-  overflow:hidden;
+  overflow: hidden;
 
-  border-radius:10px;
-
-  margin-top:10px;
+  margin-bottom: 10px;
 
 }
 
-.swipe-delete{
+.swipe-delete {
 
-  position:absolute;
+  position: absolute;
 
-  right:0;
+  right: 0;
 
-  top:0;
+  top: 0;
 
-  bottom:0;
+  bottom: 0;
 
-  width:90px;
+  width: 100px;
 
-  background:#500;
+  background: #8b0000;
 
-  color:#fff;
+  color: white;
 
-  display:flex;
+  display: flex;
 
-  align-items:center;
+  align-items: center;
 
-  justify-content:center;
+  justify-content: center;
 
-  font-weight:bold;
+  font-weight: bold;
+
+  z-index: 1;
 
 }
 
-.swipe-card{
+.swipe-card {
 
-  background:#000;
+  position: relative;
 
-  position:relative;
+  z-index: 2;
 
-  z-index:2;
+  background: #000;
 
   transition: transform 0.2s ease;
+
+  padding: 12px;
+
+  border-radius: 10px;
+
+}
+
+body {
+
+  overflow-x: hidden;
 
 }
 
@@ -3338,7 +3344,9 @@ let exists = list.find(p =>
 
   p.address === proposal.address &&
 
-  p.total === proposal.total
+  p.quoteDate === proposal.quoteDate
+
+)
 
 )
 
