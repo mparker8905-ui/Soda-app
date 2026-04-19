@@ -955,13 +955,21 @@ body {
 
   <div style="margin-top:12px;">
 
-    <label><input type="radio" name="timeline" value="fast"> Fast Track</label>
+  <div class="toggle active" data-timeline="standard" onclick="setTimeline(this)">
 
-    <label><input type="radio" name="timeline" value="standard" checked> Standard</label>
+  Standard
 
-    <label><input type="radio" name="timeline" value="extended"> Extended Care</label>
+</div>
 
-  </div>
+<div class="toggle" data-timeline="fast" onclick="setTimeline(this)">
+
+  Fast Track
+
+</div>
+
+<div class="toggle" data-timeline="extended" onclick="setTimeline(this)">
+
+  Extended Care
 
 </div>
 
@@ -1592,8 +1600,7 @@ if(startInput){
 
   // ✅ TIMELINE SELECTION
 
-  let timeline =
- document.querySelector('input[name="timeline"]:checked')?.value || "standard"
+  let timeline = app.timeline || "standard"
 
   let prepToSeedDays = 3
 
@@ -5432,6 +5439,22 @@ function deleteProposalById(id){
   renderJobHistory()
 
   showToast("Proposal deleted", "error")
+
+}
+
+app.timeline = "standard"
+
+function setTimeline(el){
+
+  let all = document.querySelectorAll("[data-timeline]")
+
+  all.forEach(t => t.classList.remove("active"))
+
+  el.classList.add("active")
+
+  app.timeline = el.dataset.timeline
+
+  render()
 
 }
 
