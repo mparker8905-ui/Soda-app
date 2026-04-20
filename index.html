@@ -517,13 +517,7 @@ button:active{
 
   position: fixed;
 
-  top: 0;
-
-  left: 0;
-
-  width: 100vw;
-
-  height: 100vh;
+  inset: 0; /* 🔥 stronger than top/left/width/height */
 
   display: none;
 
@@ -531,48 +525,32 @@ button:active{
 
   align-items: center;
 
-  background: rgba(0,0,0,0.9);
+  background: rgba(0,0,0,0.95);
 
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 
-  z-index: 999999;
-
-  margin: 0 !important;
-
-  animation: fadeIn 0.2s ease;
+  z-index: 999999999; /* 🔥 higher than EVERYTHING */
 
   pointer-events: auto;
 
   touch-action: none;
+
 }
 
-.proposal-content{
+.proposal-content {
 
-  width: 100%;
+  width: 90%;
 
   max-width: 500px;
 
-  border-radius: 16px;
+  margin: auto; /* 🔥 ensures centering */
 
-  background: #000;
-
-  padding: 20px;
-
-  box-sizing: border-box;
-
-  max-height: 85vh;
-
-  overflow-y: auto;
-
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-  
   position: relative;
 
   z-index: 2;
 
-  animation: slideUp 0.25s ease;
+  transform: translateY(0);
 
-  touch-action: pan-y;
 }
 
 .proposal-header{
@@ -805,9 +783,11 @@ body.modal-open {
 
 }
 
+body.modal-open *:not(#proposalModal):not(#proposalModal *) {
 
+  pointer-events: none !important;
 
-
+}
 
 </style>
 
@@ -5108,9 +5088,13 @@ function renderJobHistory(){
 
   container.innerHTML = list.map(p => `
 
-<div class="swipe-container">
+<div class="swipe-delete"
 
-  <div class="swipe-delete">Delete</div>
+     onclick="deleteProposalById(this.closest('.swipe-container').querySelector('.swipe-card').dataset.id)">
+
+  Delete
+
+</div>
 
   <div class="swipe-card" onclick="openProposal(${p.id})" data-id="${p.id}">
 
@@ -5426,11 +5410,13 @@ document.addEventListener("touchend", e => {
 
   let diff = deleteCurrentX - deleteStartX
 
-  let id = activeCard.dataset.id
+  if(diff < -80){
 
-  if(diff < -100){
+    // 👉 reveal delete button instead of deleting
 
-    deleteProposalById(id)
+    activeCard.style.transition = "all 0.2s ease"
+
+    activeCard.style.transform = "translateX(-100px)"
 
   } else {
 
