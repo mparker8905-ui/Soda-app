@@ -5187,7 +5187,9 @@ function openProposal(id){
 
   activeProposalId = id
 
-  let modal = document.getElementById("proposalModal").style.display = "flex";
+  const modal = document.getElementById("proposalModal");
+
+modal.style.display = "flex";
 
 document.body.classList.add("modal-open");
 
