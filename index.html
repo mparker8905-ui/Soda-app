@@ -776,6 +776,60 @@ body {
 
 }
 
+/* ===== MODAL HARD LOCK FIX ===== */
+
+/* Disable all interaction when modal is open */
+
+body.modal-open {
+
+  overflow: hidden;
+
+}
+
+/* Block ALL clicks behind modal */
+
+body.modal-open *:not(#proposalModal):not(#proposalModal *) {
+
+  pointer-events: none !important;
+
+}
+
+/* Ensure modal ALWAYS receives clicks */
+
+#proposalModal {
+
+  pointer-events: auto;
+
+}
+
+/* ===== HARD MODAL LOCK ===== */
+
+/* kill scrolling */
+
+body.modal-open {
+
+  overflow: hidden;
+
+}
+
+/* 🔥 THIS STOPS CLICK-THROUGH COMPLETELY */
+
+body.modal-open * {
+
+  pointer-events: none !important;
+
+}
+
+/* allow modal interaction ONLY */
+
+#proposalModal,
+
+#proposalModal * {
+
+  pointer-events: auto !important;
+
+}
+
 </style>
 
 </head>
@@ -5145,13 +5199,9 @@ function openProposal(id){
 
   let modal = document.getElementById("proposalModal")
 
-document.body.style.overflow = "hidden";
+document.body.classList.add("modal-open");
 
   let content = document.querySelector(".proposal-content")
-
-// 🔥 hide swipe/delete buttons
-
-// 🔥 reset swipe position
 
 document.querySelectorAll(".swipe-card").forEach(el => {
 
@@ -5159,15 +5209,7 @@ document.querySelectorAll(".swipe-card").forEach(el => {
 
 });
 
-// 🔥 hide delete background
-
-document.querySelectorAll(".swipe-delete").forEach(el => {
-
-  el.style.display = "none";
-
-});
-
-  modal.style.display = "block"
+  modal.style.display = "flex"
 
   // 🔥 RESET POSITION EVERY TIME
 
@@ -5221,25 +5263,31 @@ document.querySelectorAll(".swipe-delete").forEach(el => {
 
 function closeProposalModal(){
 
-  let modal = document.getElementById("proposalModal")
+  const modal = document.getElementById("proposalModal");
 
-document.body.style.overflow = "auto";
+  const content = document.querySelector(".proposal-content");
 
-  let content = document.querySelector(".proposal-content")
+  // 🔥 UNLOCK the app (THIS is the key fix)
 
-document.querySelectorAll(".swipe-delete").forEach(el => {
+  document.body.classList.remove("modal-open");
 
-  el.style.display = "flex";
+  // restore swipe delete buttons
 
-});
+  document.querySelectorAll(".swipe-delete").forEach(el => {
 
-  modal.style.display = "none"
+    el.style.display = "flex";
 
-  // reset so next open is clean
+  });
 
-  content.style.transform = "translateX(0)"
+  // hide modal
 
-  content.style.opacity = 1
+  modal.style.display = "none";
+
+  // reset modal state
+
+  content.style.transform = "translateX(0)";
+
+  content.style.opacity = 1;
 
 }
 
