@@ -523,7 +523,7 @@ button:active{
 
   width: 100vw;
 
-  height: 100dvh;
+  height: 100vh;
 
   display: none;
 
@@ -5187,6 +5187,8 @@ function openProposal(id){
 
   let modal = document.getElementById("proposalModal")
 
+modal.style.display = "flex"
+
 document.body.classList.add("modal-open");
 
   let content = document.querySelector(".proposal-content")
@@ -5197,7 +5199,7 @@ document.querySelectorAll(".swipe-card").forEach(el => {
 
 });
 
-  modal.style.display = "flex"
+ 
 
   // 🔥 RESET POSITION EVERY TIME
 
