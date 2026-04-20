@@ -1075,7 +1075,7 @@ body.modal-open {
 
 <button onclick="generateInventoryPDF()">Inventory PDF</button>
 
-<div id="proposalModal" class="proposal-modal"
+<div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)"
 
      ontouchstart="handleTouchStart(event)"
 
@@ -5384,9 +5384,10 @@ function handleTouchEnd(){
 }
 
 //====================
-//== SWIPE LOGIC DELETE
-//====================
 
+//=== SWIPE LOGIC DELETE
+
+//====================
 
 let deleteStartX = 0
 
@@ -5396,7 +5397,7 @@ let activeCard = null
 
 document.addEventListener("touchstart", e => {
 
-if(e.target.closest("#proposalModal")) return
+  if(document.body.classList.contains("modal-open")) return
 
   let card = e.target.closest(".swipe-card")
 
@@ -5404,23 +5405,21 @@ if(e.target.closest("#proposalModal")) return
 
   activeCard = card
 
- deleteStartX = e.touches[0].clientX
+  deleteStartX = e.touches[0].clientX
 
 })
 
 document.addEventListener("touchmove", e => {
 
+  if(document.body.classList.contains("modal-open")) return
+
   if(!activeCard) return
 
-deleteCurrentX = e.touches[0].clientX
+  deleteCurrentX = e.touches[0].clientX
 
-let diff = deleteCurrentX - deleteStartX
-
-  // 👉 only allow LEFT swipe
+  let diff = deleteCurrentX - deleteStartX
 
   if(diff > 0) diff = 0
-
-  // limit swipe distance
 
   if(diff < -120) diff = -120
 
@@ -5432,21 +5431,19 @@ let diff = deleteCurrentX - deleteStartX
 
 document.addEventListener("touchend", e => {
 
+  if(document.body.classList.contains("modal-open")) return
+
   if(!activeCard) return
 
- let diff = deleteCurrentX - deleteStartX
+  let diff = deleteCurrentX - deleteStartX
 
   let id = activeCard.dataset.id
-
-  // 👉 FULL DELETE SWIPE
 
   if(diff < -100){
 
     deleteProposalById(id)
 
   } else {
-
-    // snap back
 
     activeCard.style.transition = "all 0.2s ease"
 
@@ -5457,7 +5454,6 @@ document.addEventListener("touchend", e => {
   activeCard = null
 
 })
-
 
 function deleteProposalById(id){
 
@@ -5486,6 +5482,18 @@ function setTimeline(el){
   app.timeline = el.dataset.timeline
 
   render()
+
+}
+
+function handleModalBackground(e){
+
+  // only close if clicking OUTSIDE content
+
+  if(e.target.id === "proposalModal"){
+
+    closeProposalModal()
+
+  }
 
 }
 
