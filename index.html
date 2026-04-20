@@ -715,6 +715,12 @@ button:active{
 
   border-radius: 10px;
 
+  width: 100%;
+
+  max-width: 100%;
+
+  background: #000;
+
 }
 
 .swipe-delete {
@@ -727,7 +733,7 @@ button:active{
 
   bottom: 0;
 
-  width: 100px;
+  width: 100px; /* 👈 fixed reveal width */
 
   background: #8b0000;
 
@@ -741,7 +747,7 @@ button:active{
 
   font-weight: bold;
 
-  z-index: 0;
+  z-index: 1;
 
 }
 
@@ -753,9 +759,11 @@ button:active{
 
   background: #000;
 
-  transition: transform 0.2s ease;
+  width: 100%;          /* 🔥 CRITICAL */
 
-  padding: 12px;
+  box-sizing: border-box;
+
+  transition: transform 0.2s ease;
 
   border-radius: 10px;
 
