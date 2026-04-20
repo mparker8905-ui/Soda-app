@@ -722,7 +722,7 @@ button:active{
 
   overflow: hidden;
 
-  margin-bottom: 10px;
+  border-radius: 10px;
 
 }
 
@@ -750,7 +750,7 @@ button:active{
 
   font-weight: bold;
 
-  z-index: 1;
+  z-index: 0;
 
 }
 
@@ -802,33 +802,7 @@ body.modal-open *:not(#proposalModal):not(#proposalModal *) {
 
 }
 
-/* ===== HARD MODAL LOCK ===== */
 
-/* kill scrolling */
-
-body.modal-open {
-
-  overflow: hidden;
-
-}
-
-/* 🔥 THIS STOPS CLICK-THROUGH COMPLETELY */
-
-body.modal-open * {
-
-  pointer-events: none !important;
-
-}
-
-/* allow modal interaction ONLY */
-
-#proposalModal,
-
-#proposalModal * {
-
-  pointer-events: auto !important;
-
-}
 
 </style>
 
@@ -5270,14 +5244,6 @@ function closeProposalModal(){
   // 🔥 UNLOCK the app (THIS is the key fix)
 
   document.body.classList.remove("modal-open");
-
-  // restore swipe delete buttons
-
-  document.querySelectorAll(".swipe-delete").forEach(el => {
-
-    el.style.display = "flex";
-
-  });
 
   // hide modal
 
