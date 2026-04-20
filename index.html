@@ -800,13 +800,6 @@ body.modal-open {
 
 }
 
-/* Block ALL clicks behind modal */
-
-body.modal-open *:not(#proposalModal):not(#proposalModal *) {
-
-  pointer-events: none !important;
-
-}
 
 /* Ensure modal ALWAYS receives clicks */
 
@@ -816,6 +809,15 @@ body.modal-open *:not(#proposalModal):not(#proposalModal *) {
 
 }
 
+#proposalModal::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+}
 
 
 </style>
@@ -5185,9 +5187,7 @@ function openProposal(id){
 
   activeProposalId = id
 
-  let modal = document.getElementById("proposalModal")
-
-modal.style.display = "flex"
+  let modal = document.getElementById("proposalModal").style.display = "flex";
 
 document.body.classList.add("modal-open");
 
