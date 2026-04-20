@@ -523,7 +523,7 @@ button:active{
 
   justify-content: center;
 
-  align-items: flex-start; /* 👈 key change */
+  align-items: center; /* 👈 key change */
 
  background: rgba(0,0,0,0.9);
 
@@ -540,8 +540,6 @@ button:active{
   width: 100%;
 
   max-width: 500px;
-
-  margin-top: 80px; /* 👈 pushes it down like iOS sheet */
 
   border-radius: 16px;
 
@@ -584,6 +582,12 @@ button:active{
 
 }
 
+.proposal-header > div{
+
+  width:100%;
+
+}
+
 .proposal-actions{
 
   position:sticky;
@@ -599,6 +603,8 @@ button:active{
   gap:10px;
 
   flex-wrap: wrap;
+
+  flex:1 1 30%;
 
 }
 
@@ -1045,6 +1051,8 @@ body {
 
         <div id="modalAddress" style="color:#aaa;font-size:13px;"></div>
 
+      </div>
+     
       </div>
 
     <!-- BODY -->
