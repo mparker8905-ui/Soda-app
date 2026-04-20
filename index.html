@@ -541,6 +541,9 @@ button:active{
 
   animation: fadeIn 0.2s ease;
 
+  pointer-events: auto;
+
+  touch-action: none;
 }
 
 .proposal-content{
@@ -568,6 +571,8 @@ button:active{
   z-index: 2;
 
   animation: slideUp 0.25s ease;
+
+  touch-action: pan-y;
 }
 
 .proposal-header{
@@ -801,23 +806,7 @@ body.modal-open {
 }
 
 
-/* Ensure modal ALWAYS receives clicks */
 
-#proposalModal {
-
-  pointer-events: auto;
-
-}
-
-#proposalModal::before {
-
-  content: "";
-
-  position: absolute;
-
-  inset: 0;
-
-}
 
 
 </style>
