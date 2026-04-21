@@ -535,6 +535,8 @@ button:active{
 
   touch-action: none;
 
+   -webkit-overflow-scrolling: touch;
+
 }
 
 .proposal-content {
@@ -788,12 +790,6 @@ body {
 body.modal-open {
 
   overflow: hidden;
-
-}
-
-body.modal-open *:not(#proposalModal):not(#proposalModal *) {
-
-  pointer-events: none !important;
 
 }
 
@@ -5506,7 +5502,7 @@ function handleModalBackground(e){
 
   // only close if clicking OUTSIDE content
 
-  if(e.target.id === "proposalModal"){
+   if(e.target === e.currentTarget){
 
     closeProposalModal()
 
