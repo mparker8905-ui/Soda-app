@@ -5214,6 +5214,8 @@ function renderPipeline(){
 
 function openProposal(id){
 
+closeProposalModal()
+
 window.currentProposalId = id
 
   let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
@@ -5331,6 +5333,8 @@ function closeProposalModal(){
   // hide modal
 
   modal.style.display = "none";
+
+ document.body.style.pointerEvents = "auto";
 
   // reset modal state
 
@@ -5642,15 +5646,31 @@ function convertToProposal(){
 
   if(index === -1) return
 
-  list[index].stage = "proposal"
+  let p = list[index]
 
-  list[index].status = "Proposal Sent"
+  // ✅ update stage
+
+  p.stage = "proposal"
+
+  p.status = "Proposal Sent"
 
   localStorage.setItem("soda_proposals", JSON.stringify(list))
 
+  // ✅ load into calculator (THIS is key)
+
+  document.getElementById("customer").value = p.customer || ""
+
+  document.getElementById("address").value = p.address || ""
+
+  // ✅ CLOSE modal before render (prevents freeze)
+
+  closeProposalModal()
+
+  // ✅ re-render UI
+
   renderPipeline()
 
-  openProposal(activeProposalId)
+  render()
 
   showToast("Converted to proposal", "success")
 
