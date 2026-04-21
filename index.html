@@ -5164,6 +5164,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function openProposal(id){
 
+window.currentProposalId = id
+
   let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
 
   let p = list.find(x => x.id === id)
@@ -5227,10 +5229,38 @@ document.querySelectorAll(".swipe-card").forEach(el => {
         </span>
 
       </div>
+      <button onclick="openFullProposalFromModal()"
 
+        style="margin-top:15px;width:100%;">
+
+  View Full Proposal
+
+</button>
     </div>
 
   `
+
+}
+
+//=============================
+//=== OPEN FULL PROPOSAL
+//=============================
+
+function openFullProposal(id){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let proposal = list.find(p => p.id == id)
+
+  if(!proposal) return
+
+  // Example: navigate or render full page
+
+  alert("Open full proposal for: " + proposal.customer)
+
+  // OR if you have a page/section:
+
+  // renderFullProposal(proposal)
 
 }
 
