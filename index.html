@@ -810,6 +810,12 @@ body.modal-open {
 
 <div class="gold-line"></div>
 
+<button onclick="convertToProposal()" style="margin-top:10px;">
+
+  📄 Create Proposal
+
+</button>
+
 <!-- NEW: CUSTOMER -->
 <input id="customer" placeholder="Customer Name">
 
@@ -1190,6 +1196,20 @@ const MATERIAL_LABELS = {
   sprinklers: "Sprinklers",
   timers: "Sprinkler Timers" // ðŸ‘ˆ YOUR NEW ONE
 }
+
+const PIPELINE_STAGES = [
+
+  { key: "lead", label: "Leads" },
+
+  { key: "proposal", label: "Proposals Sent" },
+
+  { key: "pending", label: "Pending Decision" },
+
+  { key: "won", label: "Accepted" },
+
+  { key: "lost", label: "Not Accepted" }
+
+]
 
 //=====================
 //== TOAST SYSTEM
@@ -2812,7 +2832,23 @@ setTimeout(() => {
 }, 100)
 
 renderSchedulePreview()
-  renderJobHistory()
+ renderPipeline()
+
+let today = new Date().toDateString()
+
+if(localStorage.getItem("lastFollowUpCheck") !== today){
+
+  let stale = getStaleLeads()
+
+  if(stale.length > 0){
+
+    showToast(`⚠️ ${stale.length} follow-ups needed`, "warning")
+
+  }
+
+  localStorage.setItem("lastFollowUpCheck", today)
+
+}
 
   } catch(e){
     console.error(e)
@@ -3372,7 +3408,11 @@ let proposal = {
 
   sqft: r.totalSqft,
 
-  status: "Pending",
+ status: "Proposal Sent",
+
+stage: "proposal",
+
+createdAt: Date.now(),
 
   snapshot: {
 
@@ -3419,7 +3459,7 @@ if(!exists){
       return
     }
 
-renderJobHistory()
+renderPipeline()
 
     // BUILD HTML SAFELY
    
@@ -3666,11 +3706,15 @@ win.approveProposal = function(){
 
   }
 
-  if(window.renderJobHistory){
+ if(window.renderPipeline){
 
-    window.renderJobHistory()
+  window.renderPipeline()
 
-  }
+} else if(window.renderJobHistory){
+
+  window.renderJobHistory()
+
+}
 
   win.print()
 
@@ -3690,11 +3734,15 @@ win.markRejected = function(){
 
   }
 
-  if(window.renderJobHistory){
+if(window.renderPipeline){
 
-    window.renderJobHistory()
+  window.renderPipeline()
 
-  }
+} else if(window.renderJobHistory){
+
+  window.renderJobHistory()
+
+}
 
   alert("Marked as Not Accepted")
 
@@ -5082,7 +5130,7 @@ function saveProposalToStorage(proposal){
 //=== SAVE PROPOSALS LIST
 //======================
 
-function renderJobHistory(){
+function renderPipeline(){
 
   let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
 
@@ -5090,69 +5138,75 @@ function renderJobHistory(){
 
   if(!container) return
 
-  container.innerHTML = list.map(p => `
+  let html = `<div style="display:flex; gap:12px; overflow-x:auto;">`
 
-  <div class="swipe-container" data-id="${p.id}">
+  PIPELINE_STAGES.forEach(stage => {
 
-    <div class="swipe-delete"
+    let items = list.filter(p => {
 
-         onclick="deleteProposalById('${p.id}')">
+      if(stage.key === "proposal") return p.stage === "proposal"
 
-      Delete
+      if(stage.key === "pending") return p.status === "Pending"
 
-    </div>
+      if(stage.key === "won") return p.status === "Accepted"
 
-    <div class="swipe-card" onclick="openProposal(${p.id})">
+      if(stage.key === "lost") return p.status === "Not Accepted"
 
-      <div style="cursor:pointer;">
+      return false
 
-        ${p.customer}
+    })
+
+    html += `
+
+      <div style="
+
+        min-width:260px;
+
+        background:#0d0d0d;
+
+        border:1px solid #333;
+
+        border-radius:12px;
+
+        padding:10px;
+
+      ">
+
+        <div style="font-weight:bold;color:#d4af37;margin-bottom:10px;">
+
+          ${stage.label} (${items.length})
+
+        </div>
+
+        ${items.map(p => `
+
+          <div class="history-card" onclick="openProposal(${p.id})">
+
+            <div><b>${p.customer}</b></div>
+
+            <div style="font-size:12px;color:#aaa;">${p.address}</div>
+
+            <div style="margin-top:6px;">
+
+              💰 $${p.total.toFixed(0)}
+
+            </div>
+
+          </div>
+
+        `).join("")}
 
       </div>
 
-      <div style="font-size:12px;color:#aaa;">
+    `
 
-        ${p.address}
+  })
 
-      </div>
+  html += `</div>`
 
-      <div style="margin-top:6px;">
-
-        $${p.total.toFixed(2)} • ${p.packageType.toUpperCase()}
-
-      </div>
-
-      <div style="margin-top:6px;font-size:12px;">
-
-        Status: 
-
-        <b style="
-
-          color:${p.status === "Accepted" ? "#4cff9a" :
-
-                 p.status === "Not Accepted" ? "#ff4d4d" : "#ffd24d"}
-
-        ">
-
-          ${p.status}
-
-        </b>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  `).join("")
+  container.innerHTML = html
 
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  renderJobHistory()
-
-})
 
 //=======================
 //=== OPEN PROPOSAL
@@ -5300,13 +5354,31 @@ function setProposalStatus(status){
 
     list[index].status = status
 
+    if(status === "Accepted"){
+
+      list[index].stage = "won"
+
+    }
+
+    else if(status === "Pending"){
+
+      list[index].stage = "pending"
+
+    }
+
+    else if(status === "Not Accepted"){
+
+      list[index].stage = "lost"
+
+    }
+
     localStorage.setItem("soda_proposals", JSON.stringify(list))
 
   }
 
-  renderJobHistory()
+  renderPipeline()
 
-  openProposal(activeProposalId) // refresh modal
+  openProposal(activeProposalId)
 
 }
 
@@ -5476,7 +5548,7 @@ function deleteProposalById(id){
 
   localStorage.setItem("soda_proposals", JSON.stringify(list))
 
-  renderJobHistory()
+ renderPipeline()
 
   showToast("Proposal deleted", "error")
 
@@ -5507,6 +5579,142 @@ function handleModalBackground(e){
     closeProposalModal()
 
   }
+
+}
+
+//=======================
+//==CREATE LEAD
+//=======================
+
+function createLead(){
+
+  let customer = document.getElementById("customer").value
+
+  let address = document.getElementById("address").value
+
+  if(!customer) return alert("Enter customer name")
+
+  let lead = {
+
+    id: Date.now(),
+
+    customer,
+
+    address,
+
+    stage: "lead",
+
+    status: "New Lead",
+
+    total: 0,
+
+    createdAt: Date.now()
+
+  }
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  list.push(lead)
+
+  localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+  // 🔥 AUTO-FILL FORM (PUT IT HERE)
+
+  document.getElementById("customer").value = customer
+
+  document.getElementById("address").value = address
+
+  renderPipeline()
+
+  showToast("Lead created", "success")
+
+}
+
+//============================
+//==CONVERT TO PROPOSAL
+//============================
+
+function convertToProposal(){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let index = list.findIndex(p => p.id === activeProposalId)
+
+  if(index === -1) return
+
+  list[index].stage = "proposal"
+
+  list[index].status = "Proposal Sent"
+
+  localStorage.setItem("soda_proposals", JSON.stringify(list))
+
+  renderPipeline()
+
+  openProposal(activeProposalId)
+
+  showToast("Converted to proposal", "success")
+
+}
+
+//==========================
+//== REVENUE DASHBOARD
+//==========================
+
+function renderDashboard(){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let revenue = list
+
+    .filter(p => p.status === "Accepted")
+
+    .reduce((sum, p) => sum + p.total, 0)
+
+  let pending = list
+
+    .filter(p => p.status === "Pending")
+
+    .reduce((sum, p) => sum + p.total, 0)
+
+  let lost = list
+
+    .filter(p => p.status === "Not Accepted")
+
+    .reduce((sum, p) => sum + p.total, 0)
+
+  document.getElementById("results").innerHTML += `
+
+    <div class="glass-card">
+
+      <div>💰 Revenue Won: $${revenue.toFixed(0)}</div>
+
+      <div>⏳ Pending: $${pending.toFixed(0)}</div>
+
+      <div>❌ Lost: $${lost.toFixed(0)}</div>
+
+    </div>
+
+  `
+
+}
+
+//=======================
+//===FOLLOW UP SYSTEM
+//=======================
+
+function getStaleLeads(){
+
+  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+
+  let now = Date.now()
+
+  return list.filter(p => 
+
+    p.status === "Pending" &&
+
+    (now - p.createdAt) > (3 * 24 * 60 * 60 * 1000)
+
+  )
 
 }
 
