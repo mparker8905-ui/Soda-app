@@ -911,6 +911,24 @@ body.modal-open {
 
 <button onclick="winJob()">💎Win This Job</button>
 
+<div id="statusBar" style="
+
+  margin:10px 0;
+
+  padding:12px;
+
+  border-radius:10px;
+
+  background:#111;
+
+  border:1px solid gold;
+
+  text-align:center;
+
+  font-weight:bold;
+
+"></div>
+
 <div class="card results-card">
   <h2>Job Breakdown</h2>
   <div id="results"></div>
@@ -1112,6 +1130,22 @@ body.modal-open {
 
 <script>
 
+let inventoryCache = null
+
+function getInventoryCache(){
+
+  if(!inventoryCache){
+
+    inventoryCache = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+
+  }
+
+  return inventoryCache
+
+}
+
+let shownToasts = new Set()
+
 let activeProposalId = null
 
 //===========================
@@ -1257,6 +1291,12 @@ function showToast(message, type = "success", targetCard = null){
   }, 3000)
 }
 
+function resetToasts(){
+
+  shownToasts.clear()
+
+}
+
 //==================
 //== UNIT LABEL
 //==================
@@ -1393,9 +1433,6 @@ let materialCost = 0
 let needs = getMaterialNeeds({
   totalSqft: totalSqft
 })
-
-// 🔥 cache inventory ONCE
-let inventoryCache = JSON.parse(localStorage.getItem("inventory_full") || "{}")
 
 Object.keys(needs).forEach(type => {
   let needed = needs[type] || 0
@@ -1590,6 +1627,8 @@ if(price < 1000){
 // recalc profit AFTER all adjustments
 profit = price - totalCost
 
+let usingFallback = usedFallback
+
   return {
     sqft,
     houses,
@@ -1600,7 +1639,8 @@ profit = price - totalCost
     laborCost,
     overheadCost,
     totalHours,
-    addonCosts
+    addonCosts,
+    usingFallback
   }
 }
 
@@ -2106,10 +2146,10 @@ function buildProductionScheduleHTML(r){
 function render(){
   try{
 
-    window.shownToasts = window.shownToasts || new Set() 
-    let shownToasts = window.shownToasts
+  
    
     let r = calculateJob()
+    updateStatus(r)
     let isBuilderJob = r.houses >= 5
     let inv = getInventoryCost()
     let needs = getMaterialNeeds(r)
@@ -2769,6 +2809,32 @@ insightsHTML +
   </div>
 </div>
 `
+
+if(r.usingFallback){
+
+  document.getElementById("results").innerHTML += `
+
+    <div style="
+
+      margin-top:10px;
+
+      padding:10px;
+
+      border:1px solid orange;
+
+      border-radius:8px;
+
+      color:orange;
+
+    ">
+
+      ⚠️ Using estimated pricing (inventory incomplete)
+
+    </div>
+
+  `
+
+}
 
     // ==========================
     // AUTO WARNINGS
@@ -3926,6 +3992,9 @@ function saveInventory(){
 localStorage.setItem("inventory_full", JSON.stringify(inventory))
 
  // silent autosave (no toast)
+
+inventoryCache = null
+
 }
 
 //==================
@@ -4968,10 +5037,13 @@ function calculateTankLoads(r, needs){
     coveragePerTank,
     loads,
     perTank: {
-      seed: needs.seed / loads || 0,
-      mulch: needs.mulch / loads || 0,
-      fertilizer: needs.fertilizer / loads || 0,
-      tackifier: needs.tackifier / loads || 0
+     seed: loads ? needs.seed / loads : 0,
+
+mulch: loads ? needs.mulch / loads : 0,
+
+fertilizer: loads ? needs.fertilizer / loads : 0,
+
+tackifier: loads ? needs.tackifier / loads : 0
     }
   }
 }
@@ -5333,8 +5405,6 @@ function closeProposalModal(){
   // hide modal
 
   modal.style.display = "none";
-
- document.body.style.pointerEvents = "auto";
 
   // reset modal state
 
@@ -5735,6 +5805,28 @@ function getStaleLeads(){
     (now - p.createdAt) > (3 * 24 * 60 * 60 * 1000)
 
   )
+
+}
+
+//======================
+//==STATUS BAR
+//======================
+
+function updateStatus(r){
+
+  let el = document.getElementById("statusBar")
+
+  let margin = r.price ? (r.profit / r.price) * 100 : 0
+
+  el.innerHTML = `
+
+    💰 Profit: $${r.profit.toFixed(0)} 
+
+    • Margin: ${margin.toFixed(1)}%
+
+    • Price: $${r.price.toFixed(0)}
+
+  `
 
 }
 
