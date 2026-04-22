@@ -1389,6 +1389,8 @@ function getAvgCostFromInventory(type, inventory){
 
 function calculateJob(){
 
+let inventory = getInventoryCache()
+
   let sqft = Number(document.getElementById("sqft")?.value) || 0
   let houses = Number(document.getElementById("houses")?.value) || 1
   let packageType = document.getElementById("package")?.value || "standard"
@@ -1436,7 +1438,7 @@ let needs = getMaterialNeeds({
 
 Object.keys(needs).forEach(type => {
   let needed = needs[type] || 0
-  let avgCost = getAvgCostFromInventory(type, inventoryCache)
+  let avgCost = getAvgCostFromInventory(type, inventory)
   materialCost += needed * avgCost
 })
 
