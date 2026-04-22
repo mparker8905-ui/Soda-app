@@ -1442,14 +1442,23 @@ Object.keys(needs).forEach(type => {
   materialCost += needed * avgCost
 })
 
+let inventoryTotals = getInventoryTotals()
+
+let comparison = compareInventory(needs, inventoryTotals)
+
+let hasShortage = Object.values(comparison).some(i => i.status === "short")
+
+if(hasShortage){
+
+  usedFallback = true
+
+  showToast("Using base pricing (inventory shortage detected)", "warning")
+
+}
+
 // fallback safety
 
 let usedFallback = false
-
-if(materialCost < baseCost){
-  materialCost = baseCost
-  usedFallback = true
-}
 
 if(usedFallback){
   showToast("Using base pricing (inventory incomplete)", "warning")
