@@ -2351,15 +2351,15 @@ let totalWeeks = (totalDays / 7).toFixed(1)
     Object.keys(comparison).forEach(k => {
       let item = comparison[k]
       let color = item.status === "short" ? "red" : "lime"
-      let unit = MATERIAL_RATES[k]?.unit || ""
+      let unit = (window.MATERIAL_RATES && MATERIAL_RATES[k]?.unit) || ""
 
       materialHTML += `
         ${k.toUpperCase()}:
-        Need ${item.required.toFixed(1)} ${unit} |
-        Have ${item.available.toFixed(1)} ${unit}
+        Need ${required.toFixed(1)} ${unit} |
+        Have ${available.toFixed(1)} ${unit}
         <span style="color:${color}">
           ${item.status === "short"
-            ? "BUY " + item.shortage.toFixed(1)
+            ? "BUY " + shortage.toFixed(1)
             : "OK"}
         </span><br>
       `
@@ -2371,7 +2371,13 @@ let totalWeeks = (totalDays / 7).toFixed(1)
 
 let materialCost = r.cost - r.laborCost - r.overheadCost
 
-let insights = generateAIInsights(r, comparison)
+let insights = []
+
+if(typeof generateAIInsights === "function"){
+
+  insights = generateAIInsights(r, comparison) || []
+
+}
 
 let insightsHTML = `
 <div class="glass-card collapsible" data-card="ai">
@@ -2734,19 +2740,26 @@ insightsHTML +
     <span class="chevron">▼</span>
   </div>
   <div class="card-body">
-    ${Object.keys(comparison).map(k => {
-      let item = comparison[k]
+   Object.keys(comparison || {}).map(k => {
+
+  let item = comparison[k] || {}
+
+  let required = Number(item.required) || 0
+
+  let available = Number(item.available) || 0
+
+  let shortage = Number(item.shortage) || 0
       let color = item.status === "short" ? "red" : "#4cff9a"
       let unit = MATERIAL_RATES[k]?.unit || ""
 
       return `
         <div>
           ${k.toUpperCase()}:
-          Need ${item.required.toFixed(1)} ${unit} |
-          Have ${item.available.toFixed(1)} ${unit}
+          Need ${required.toFixed(1)} ${unit} |
+          Have ${available.toFixed(1)} ${unit}
           <span style="color:${color}">
             ${item.status === "short"
-              ? "BUY " + item.shortage.toFixed(1)
+              ? "BUY " + shortage.toFixed(1)
               : "OK"}
           </span>
         </div>
@@ -2763,7 +2776,7 @@ insightsHTML +
   <div class="card-body">
     ${Object.keys(needs).map(k => {
       let unit = MATERIAL_RATES[k]?.unit || ""
-      return `<div>${k.toUpperCase()}: ${needs[k].toFixed(1)} ${unit}</div>`
+      return `<div>${k.toUpperCase()}: ${Number(needs[k] || 0).toFixed(1)} ${unit}</div>`
     }).join("")}
   </div>
 </div>
