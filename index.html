@@ -2348,22 +2348,41 @@ let totalWeeks = (totalDays / 7).toFixed(1)
 
     let materialHTML = "<b>MATERIAL REQUIREMENTS</b><br>"
 
-    Object.keys(comparison).forEach(k => {
-      let item = comparison[k]
-      let color = item.status === "short" ? "red" : "lime"
-      let unit = (window.MATERIAL_RATES && MATERIAL_RATES[k]?.unit) || ""
+   Object.keys(comparison).forEach(k => {
 
-      materialHTML += `
-        ${k.toUpperCase()}:
-        Need ${required.toFixed(1)} ${unit} |
-        Have ${available.toFixed(1)} ${unit}
-        <span style="color:${color}">
-          ${item.status === "short"
-            ? "BUY " + shortage.toFixed(1)
-            : "OK"}
-        </span><br>
-      `
-    })
+  let item = comparison[k]
+
+  let required = Number(item.required) || 0
+
+  let available = Number(item.available) || 0
+
+  let shortage = Number(item.shortage) || 0
+
+  let color = item.status === "short" ? "red" : "lime"
+
+  let unit = (window.MATERIAL_RATES && MATERIAL_RATES[k]?.unit) || ""
+
+  materialHTML += `
+
+    ${k.toUpperCase()}:
+
+    Need ${required.toFixed(1)} ${unit} |
+
+    Have ${available.toFixed(1)} ${unit}
+
+    <span style="color:${color}">
+
+      ${item.status === "short"
+
+        ? "BUY " + shortage.toFixed(1)
+
+        : "OK"}
+
+    </span><br>
+
+  `
+
+})
 
     // ==========================
     // OUTPUT UI
