@@ -5261,19 +5261,21 @@ function renderPipeline(){
 
   PIPELINE_STAGES.forEach(stage => {
 
-    let items = list.filter(p => {
+  let items = list.filter(p => {
 
-      if(stage.key === "proposal") return p.stage === "proposal"
+  if(stage.key === "lead") return p.stage === "lead"
 
-      if(stage.key === "pending") return p.status === "Pending"
+  if(stage.key === "proposal") return p.stage === "proposal"
 
-      if(stage.key === "won") return p.status === "Accepted"
+  if(stage.key === "pending") return p.status === "Pending"
 
-      if(stage.key === "lost") return p.status === "Not Accepted"
+  if(stage.key === "won") return p.status === "Accepted"
 
-      return false
+  if(stage.key === "lost") return p.status === "Not Accepted"
 
-    })
+  return false
+
+})
 
     html += `
 
