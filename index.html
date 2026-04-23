@@ -543,15 +543,17 @@ button:active{
 
   width: 90%;
 
-  max-width: 500px;
+  max-width: 400px;
 
-  margin: auto; /* 🔥 ensures centering */
+  max-height: 85vh;
 
-  position: relative;
+  overflow-y: auto;
 
-  z-index: 2;
+  border-radius: 12px;
 
-  transform: translateY(0);
+  background: #111;
+
+  transform: none !important;  /* 🔥 kill bad transforms */
 
 }
 
