@@ -515,9 +515,15 @@ button:active{
 
 #proposalModal {
 
-  position: fixed;
+  position: fixed !important;
 
-  inset: 0; /* 🔥 stronger than top/left/width/height */
+  top: 0 !important;
+
+  left: 0 !important;
+
+  right: 0 !important;
+
+  bottom: 0 !important;
 
   display: none;
 
@@ -525,17 +531,9 @@ button:active{
 
   align-items: center;
 
-  background: rgba(0,0,0,0.95);
+  z-index: 999999999;
 
-  backdrop-filter: blur(12px);
-
-  z-index: 999999999; /* 🔥 higher than EVERYTHING */
-
-  pointer-events: auto;
-
-  touch-action: none;
-
-   -webkit-overflow-scrolling: touch;
+  transform: none !important; /* 🔥 critical */
 
 }
 
@@ -781,7 +779,7 @@ html, body {
 
 body {
 
-  overflow-x: hidden;
+  transform: none !important;
 
 }
 
@@ -792,6 +790,12 @@ body {
 body.modal-open {
 
   overflow: hidden;
+
+}
+
+* {
+
+  transform-style: flat;
 
 }
 
