@@ -1,1 +1,69 @@
+body{
 
+  background:#000;
+
+  color:#fff;
+
+  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+
+  margin:0;
+
+  padding:15px;
+
+}
+
+button{
+
+  padding:12px;
+
+  margin:5px 0;
+
+  border:none;
+
+  border-radius:8px;
+
+  background:#d4af37;
+
+  color:#000;
+
+  font-weight:bold;
+
+}
+
+input, select{
+
+  width:100%;
+
+  padding:10px;
+
+  margin:5px 0;
+
+  background:#111;
+
+  color:#fff;
+
+  border:1px solid #333;
+
+  border-radius:8px;
+
+}
+
+.card{
+
+  background:#111;
+
+  padding:15px;
+
+  border-radius:12px;
+
+  margin-bottom:15px;
+
+}
+
+.gold{
+
+  color:#d4af37;
+
+  font-weight:bold;
+
+}
