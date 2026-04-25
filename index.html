@@ -4,19 +4,19 @@
 
 <head>
 
-<link rel="stylesheet" href="css/styles.css">
+  <title>SoDa App</title>
+
+  <link rel="stylesheet" href="css/styles.css">
 
 </head>
 
 <body>
 
-<h2 class="gold">Calculator</h2>
+<h1>Hydroseed Calculator</h1>
 
-<input id="sqft" placeholder="Square Feet">
+<!-- PRICING MODE -->
 
-<input id="houses" type="number" value="1">
-
-<div id="results" class="card"></div>
+<label>Pricing Mode</label>
 
 <select id="pricingMode">
 
@@ -28,15 +28,55 @@
 
 </select>
 
+<hr>
+
+<!-- INPUTS -->
+
+<label>Square Feet</label>
+
+<input id="sqft" type="number" placeholder="Enter sqft">
+
+<label>Houses</label>
+
+<input id="houses" type="number" value="1">
+
+<label>Cost ($)</label>
+
+<input id="cost" type="number" placeholder="Material cost">
+
+<hr>
+
+<!-- RESULTS -->
+
+<h2>Results</h2>
+
+<div id="results"></div>
+
+<hr>
+
+<!-- ADVANCED FEATURES -->
+
+<h2>Deal Score</h2>
+
 <div id="dealScore"></div>
+
+<h2>Insights</h2>
 
 <div id="insights"></div>
 
+<h2>Tank Plan</h2>
+
 <div id="tanks"></div>
 
-<button onclick="location.href='crm.html'">CRM</button>
+<hr>
 
-<button onclick="location.href='inventory.html'">Inventory</button>
+<!-- NAV -->
+
+<a href="crm.html">Go to CRM</a><br>
+
+<a href="inventory.html">Go to Inventory</a>
+
+<!-- SCRIPTS -->
 
 <script src="js/state.js"></script>
 
