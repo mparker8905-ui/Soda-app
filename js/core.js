@@ -54,29 +54,57 @@ function calcPrice(cost, sqft){
 
 function calculateJob(){
 
-  let sqft = Number(document.getElementById("sqft")?.value)||0
+  let sqft = Number(document.getElementById("sqft")?.value) || 0
 
-  let houses = Number(document.getElementById("houses")?.value)||1
+  let houses = Number(document.getElementById("houses")?.value) || 1
 
-  let totalSqft = sqft*houses
+  let totalSqft = sqft * houses
 
-  let needs = calcMaterials(totalSqft)
+  // MATERIAL CALC (keep your system)
 
-  let cost = calcCost(needs)
+  let needs = calcMaterials ? calcMaterials(totalSqft) : {}
+
+  let cost = 0
+
+  if (calcCost && needs) {
+
+    cost = calcCost(needs)
+
+  } else {
+
+    // fallback if inventory system not loaded
+
+    cost = Number(document.getElementById("cost")?.value) || 0
+
+  }
+
+  // minimum job cost
 
   if(cost < 500) cost = 500
 
-  let price = calcSmartPrice(cost)
+  // ✅ NEW SMART PRICING
+
+  let price = typeof calcSmartPrice === "function"
+
+    ? calcSmartPrice(cost)
+
+    : calcPrice(cost, totalSqft)
 
   return {
 
+    sqft,
+
+    houses,
+
     totalSqft,
+
+    needs,
 
     cost,
 
     price,
 
-    profit:price-cost
+    profit: price - cost
 
   }
 
