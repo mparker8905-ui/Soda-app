@@ -4,333 +4,429 @@
 
 <head>
 
-  <meta charset="UTF-8" />
+<meta charset="UTF-8">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>SoDa Outdoor Designs | Hydroseed Calculator</title>
+<title>SoDa Outdoor Designs</title>
 
-  <link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/styles.css">
 
 </head>
 
 <body>
 
-  <header class="page-header">
+<!-- HEADER -->
+
+<div class="header">
+
+  <div class="brand">
 
     <h1>Hydroseed Calculator</h1>
 
-    <p>SoDa Outdoor Designs</p>
+    <div class="tagline">SoDa Outdoor Designs</div>
 
-  </header>
+  </div>
 
-  <main class="app-wrap">
+</div>
 
-    <!-- JOB INPUTS -->
+<div class="gold-line"></div>
 
-    <section class="card collapsible open" data-card="job">
+<!-- NAV -->
 
-      <div class="card-title" onclick="toggleCard(this)">
+<div class="row" style="margin-bottom:18px;">
 
-        Project Details
+  <button onclick="location.href='crm.html'">CRM</button>
 
-      </div>
+  <button onclick="location.href='inventory.html'">Inventory</button>
 
-      <div class="card-body">
+</div>
 
-        <label>Square Feet</label>
+<!-- =========================
 
-        <input id="sqft" type="number" placeholder="Enter sqft" />
+     PROJECT DETAILS
 
-        <label>Houses</label>
+========================= -->
 
-        <input id="houses" type="number" value="1" />
+<div class="collapsible card open" data-card="details">
 
-        <label>Package</label>
+  <div class="card-header" onclick="toggleCard(this)">
 
-        <select id="package">
+    Project Details
 
-          <option value="standard">Standard</option>
+    <span class="chevron">⌄</span>
 
-          <option value="premium">Premium</option>
+  </div>
 
-        </select>
+  <div class="card-body">
 
-        <label>Pricing Mode</label>
+    <label>Square Feet</label>
 
-        <select id="pricingMode">
+    <input id="sqft" type="number" value="3000">
 
-          <option value="win">Win Job</option>
+    <label>Houses</label>
 
-          <option value="balanced" selected>Balanced</option>
+    <input id="houses" type="number" value="1">
 
-          <option value="max">Max Profit</option>
+    <label>Package</label>
 
-        </select>
+    <select id="package">
 
-        <label>Target Margin (%)</label>
+      <option value="standard">Standard</option>
 
-        <input id="targetMargin" type="number" placeholder="Optional" />
+      <option value="premium">Premium</option>
 
-        <label>Pricing Strategy</label>
+    </select>
 
-        <select id="pricingStrategy">
+    <label>Pricing Mode</label>
 
-          <option value="normal">Normal</option>
+    <select id="pricingMode">
 
-          <option value="market">Market Floor</option>
+      <option value="win">Win Job</option>
 
-          <option value="undercut">Undercut Competitor</option>
+      <option value="balanced" selected>Balanced</option>
 
-          <option value="builder">Builder Discount</option>
+      <option value="max">Max Profit</option>
 
-        </select>
+    </select>
 
-        <label>Competitor Price ($)</label>
+    <label>Target Margin (%)</label>
 
-        <input id="competitorPrice" type="number" placeholder="Optional" />
+    <input id="targetMargin" type="number" value="40">
 
-      </div>
+    <label>Pricing Strategy</label>
 
-    </section>
+    <select id="pricingStrategy">
 
-    <!-- LABOR -->
+      <option value="normal">Normal</option>
 
-    <section class="card collapsible" data-card="labor">
+      <option value="market">Market</option>
 
-      <div class="card-title" onclick="toggleCard(this)">
+      <option value="undercut">Undercut</option>
 
-        Labor Settings
+      <option value="builder">Builder</option>
 
-      </div>
+    </select>
 
-      <div class="card-body">
+    <label>Competitor Price ($)</label>
 
-        <label>Hourly Rate ($)</label>
+    <input id="competitorPrice" type="number" placeholder="Optional">
 
-        <input id="hourlyRate" type="number" />
+  </div>
 
-        <label>Hours Per House</label>
+</div>
 
-        <input id="hoursPerHouse" type="number" />
+<!-- =========================
 
-        <label>Crew Size</label>
+     LABOR
 
-        <input id="crewSize" type="number" value="1" />
+========================= -->
 
-        <label>Overhead (%)</label>
+<div class="collapsible card" data-card="labor">
 
-        <input id="overhead" type="number" />
+  <div class="card-header" onclick="toggleCard(this)">
 
-      </div>
+    Labor Settings
 
-    </section>
+    <span class="chevron">⌄</span>
 
-    <!-- TANK -->
+  </div>
 
-    <section class="card collapsible" data-card="tank">
+  <div class="card-body">
 
-      <div class="card-title" onclick="toggleCard(this)">
+    <label>Hourly Rate ($)</label>
 
-        Tank Settings
+    <input id="hourlyRate" type="number" value="25">
 
-      </div>
+    <label>Hours Per House</label>
 
-      <div class="card-body">
+    <input id="hoursPerHouse" type="number" value="5">
 
-        <label>Tank Size</label>
+    <label>Crew Size</label>
 
-        <select id="tankSize">
+    <input id="crewSize" type="number" value="2">
 
-          <option value="100">100 Gallon</option>
+    <label>Overhead (%)</label>
 
-          <option value="300">300 Gallon</option>
+    <input id="overhead" type="number" value="10">
 
-          <option value="500" selected>500 Gallon</option>
+  </div>
 
-          <option value="700">700 Gallon</option>
+</div>
 
-          <option value="1000">1000 Gallon</option>
+<!-- =========================
 
-        </select>
+     TANK
 
-      </div>
+========================= -->
 
-    </section>
+<div class="collapsible card" data-card="tank">
 
-    <!-- ADDONS -->
+  <div class="card-header" onclick="toggleCard(this)">
 
-    <section class="card collapsible" data-card="addons">
+    Tank Settings
 
-      <div class="card-title" onclick="toggleCard(this)">
+    <span class="chevron">⌄</span>
 
-        Add-ons
+  </div>
 
-      </div>
+  <div class="card-body">
 
-      <div class="card-body checkbox-grid">
+    <label>Tank Size</label>
 
-        <label><input type="checkbox" onchange="state.job.addons.aeration=this.checked;requestRender()"> Aeration</label>
+    <select id="tankSize">
 
-        <label><input type="checkbox" onchange="state.job.addons.compost=this.checked;requestRender()"> Compost</label>
+      <option value="100">100 Gallon</option>
 
-        <label><input type="checkbox" onchange="state.job.addons.biohum=this.checked;requestRender()"> BioHum</label>
+      <option value="300">300 Gallon</option>
 
-        <label><input type="checkbox" onchange="state.job.addons.biochar=this.checked;requestRender()"> Biochar</label>
+      <option value="500" selected>500 Gallon</option>
 
-        <label><input type="checkbox" onchange="state.job.addons.humic=this.checked;requestRender()"> Humic</label>
+      <option value="700">700 Gallon</option>
 
-        <label><input type="checkbox" onchange="state.job.addons.grow=this.checked;requestRender()"> Grow System</label>
+    </select>
 
-        <label><input type="checkbox" onchange="state.job.addons.lime=this.checked;requestRender()"> Lime</label>
+  </div>
 
-        <label><input type="checkbox" onchange="state.job.addons.sulfur=this.checked;requestRender()"> Sulfur</label>
+</div>
 
-      </div>
+<!-- =========================
 
-    </section>
+     ADDONS
 
-    <!-- TIMELINE -->
+========================= -->
 
-    <section class="card collapsible" data-card="schedule">
+<div class="collapsible card" data-card="addons">
 
-      <div class="card-title" onclick="toggleCard(this)">
+  <div class="card-header" onclick="toggleCard(this)">
 
-        Schedule
+    Add-ons
 
-      </div>
+    <span class="chevron">⌄</span>
 
-      <div class="card-body">
+  </div>
 
-        <label>Project Start</label>
+  <div class="card-body">
 
-        <input id="projectStart" type="date" />
+    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.aeration=this.classList.contains('active'); requestRender();">
 
-        <label>Quote Date</label>
+      Aeration
 
-        <input id="quoteDate" type="date" />
+    </div>
 
-        <div class="radio-group">
+    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.compost=this.classList.contains('active'); requestRender();">
 
-          <label><input type="radio" name="timeline" checked onchange="state.ui.timeline='standard';requestRender()"> Standard</label>
+      Compost
 
-          <label><input type="radio" name="timeline" onchange="state.ui.timeline='fast';requestRender()"> Fast</label>
+    </div>
 
-          <label><input type="radio" name="timeline" onchange="state.ui.timeline='extended';requestRender()"> Extended</label>
+    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.biochar=this.classList.contains('active'); requestRender();">
 
-        </div>
+      Biochar
 
-        <div id="schedulePreview"></div>
+    </div>
 
-      </div>
+    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.humic=this.classList.contains('active'); requestRender();">
 
-    </section>
+      Humic
 
-    <!-- CUSTOMER -->
+    </div>
 
-    <section class="card collapsible" data-card="customer">
+    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.grow=this.classList.contains('active'); requestRender();">
 
-      <div class="card-title" onclick="toggleCard(this)">
+      Grow System
 
-        Proposal Info
+    </div>
 
-      </div>
+    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.lime=this.classList.contains('active'); requestRender();">
 
-      <div class="card-body">
+      Lime
 
-        <label>Customer</label>
+    </div>
 
-        <input id="customer" type="text" />
+    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.sulfur=this.classList.contains('active'); requestRender();">
 
-        <label>Address</label>
-
-        <input id="address" type="text" />
-
-        <button onclick="sendProposal()">Send Proposal</button>
-
-        <button onclick="createLead()">Create Lead</button>
-
-      </div>
-
-    </section>
-
-    <!-- RESULTS -->
-
-    <section class="card open">
-
-      <div class="card-title">Results</div>
-
-      <div class="card-body">
-
-        <div id="results"></div>
-
-      </div>
-
-    </section>
-
-    <!-- CRM PIPELINE -->
-
-    <section class="card">
-
-      <div class="card-title">Pipeline</div>
-
-      <div class="card-body">
-
-        <div id="jobHistoryList"></div>
-
-      </div>
-
-    </section>
-
-    <!-- HISTORY -->
-
-    <section class="card">
-
-      <div class="card-title">History</div>
-
-      <div class="card-body">
-
-        <div id="jobHistory"></div>
-
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- MODAL -->
-
-  <div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
-
-    <div class="proposal-content">
-
-      <h3 id="modalCustomer"></h3>
-
-      <div id="modalAddress"></div>
-
-      <div id="modalBody"></div>
+      Sulfur
 
     </div>
 
   </div>
 
-  <!-- TOASTS -->
+</div>
 
-  <div id="toastContainer" class="toast-container"></div>
+<!-- =========================
 
-  <!-- JS -->
+     SCHEDULE
 
-  <script src="js/core.js"></script>
+========================= -->
 
-  <script src="js/state.js"></script>
+<div class="collapsible card" data-card="schedule">
 
-  <script src="js/inventory.js"></script>
+  <div class="card-header" onclick="toggleCard(this)">
 
-  <script src="js/crm.js"></script>
+    Schedule
 
-  <script src="js/ui.js"></script>
+    <span class="chevron">⌄</span>
 
-  <script src="js/app.js"></script>
+  </div>
+
+  <div class="card-body">
+
+    <label>Project Start</label>
+
+    <input type="date" id="projectStart">
+
+    <div id="schedulePreview"></div>
+
+  </div>
+
+</div>
+
+<!-- =========================
+
+     PROPOSAL
+
+========================= -->
+
+<div class="collapsible card" data-card="proposal">
+
+  <div class="card-header" onclick="toggleCard(this)">
+
+    Proposal Info
+
+    <span class="chevron">⌄</span>
+
+  </div>
+
+  <div class="card-body">
+
+    <label>Customer Name</label>
+
+    <input id="customer">
+
+    <label>Address</label>
+
+    <input id="address">
+
+    <label>Quote Date</label>
+
+    <input type="date" id="quoteDate">
+
+    <button class="primary full" onclick="sendProposal()">
+
+      Generate Proposal
+
+    </button>
+
+  </div>
+
+</div>
+
+<!-- =========================
+
+     RESULTS
+
+========================= -->
+
+<div class="collapsible card open" data-card="results">
+
+  <div class="card-header" onclick="toggleCard(this)">
+
+    Results
+
+    <span class="chevron">⌄</span>
+
+  </div>
+
+  <div class="card-body">
+
+    <div id="results"></div>
+
+  </div>
+
+</div>
+
+<!-- =========================
+
+     PIPELINE
+
+========================= -->
+
+<div class="collapsible card" data-card="pipeline">
+
+  <div class="card-header" onclick="toggleCard(this)">
+
+    Pipeline
+
+    <span class="chevron">⌄</span>
+
+  </div>
+
+  <div class="card-body">
+
+    <div id="jobHistoryList"></div>
+
+  </div>
+
+</div>
+
+<!-- =========================
+
+     HISTORY
+
+========================= -->
+
+<div class="collapsible card" data-card="history">
+
+  <div class="card-header" onclick="toggleCard(this)">
+
+    History
+
+    <span class="chevron">⌄</span>
+
+  </div>
+
+  <div class="card-body">
+
+    <div id="jobHistory"></div>
+
+  </div>
+
+</div>
+
+<!-- MODAL -->
+
+<div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
+
+  <div class="proposal-content">
+
+    <div id="modalCustomer"></div>
+
+    <div id="modalAddress"></div>
+
+    <div id="modalBody"></div>
+
+  </div>
+
+</div>
+
+<!-- TOAST -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- JS ORDER -->
+
+<script src="js/core.js"></script>
+
+<script src="js/state.js"></script>
+
+<script src="js/inventory.js"></script>
+
+<script src="js/crm.js"></script>
+
+<script src="js/ui.js"></script>
+
+<script src="js/app.js"></script>
 
 </body>
 

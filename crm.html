@@ -1,164 +1,134 @@
+<!-- crm.html -->
+
 <!DOCTYPE html>
 
 <html lang="en">
 
 <head>
 
-  <meta charset="UTF-8" />
+<meta charset="UTF-8">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-  <title>SoDa Outdoor Designs | CRM</title>
+<title>CRM - SoDa Outdoor Designs</title>
 
-  <link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/styles.css">
 
 </head>
 
 <body>
 
-  <header class="page-header">
+<div class="header">
 
-    <h1>CRM Dashboard</h1>
+  <div class="brand">
 
-    <p>SoDa Outdoor Designs</p>
+    <h1>CRM</h1>
 
-  </header>
+    <div class="tagline">Leads • Proposals • Wins</div>
 
-  <main class="app-wrap">
+  </div>
 
-    <!-- QUICK LEAD ENTRY -->
+</div>
 
-    <section class="card open">
+<div class="gold-line"></div>
 
-      <div class="card-title">Create New Lead</div>
+<div class="row">
 
-      <div class="card-body">
+  <button onclick="location.href='index.html'">Calculator</button>
 
-        <label>Customer Name</label>
+  <button onclick="location.href='inventory.html'">Inventory</button>
 
-        <input id="customer" type="text" placeholder="Enter customer name" />
+</div>
 
-        <label>Address</label>
+<div class="card">
 
-        <input id="address" type="text" placeholder="Enter address" />
+  <div class="section-title">Create Lead</div>
 
-        <button onclick="createLead()">Add Lead</button>
+  <label>Customer Name</label>
 
-        <button onclick="location.href='index.html'">
+  <input id="customer">
 
-          Open Calculator
+  <label>Address</label>
 
-        </button>
+  <input id="address">
 
-      </div>
+  <button class="primary full" onclick="createLead()">
 
-    </section>
+    Add Lead
 
-    <!-- SALES PIPELINE -->
+  </button>
 
-    <section class="card open">
+</div>
 
-      <div class="card-title">Sales Pipeline</div>
+<div class="card">
 
-      <div class="card-body">
+  <div class="section-title">Pipeline</div>
 
-        <div id="jobHistoryList"></div>
+  <div id="jobHistoryList"></div>
 
-      </div>
+</div>
 
-    </section>
+<!-- Proposal Modal -->
 
-    <!-- SAVED HISTORY -->
+<div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
 
-    <section class="card">
+  <div class="proposal-content">
 
-      <div class="card-title">Proposal History</div>
+    <div id="modalCustomer"></div>
 
-      <div class="card-body">
+    <div id="modalAddress"></div>
 
-        <div id="jobHistory"></div>
+    <div id="modalBody"></div>
 
-      </div>
+    <div class="proposal-actions">
 
-    </section>
+      <button class="accept-btn" onclick="setProposalStatus('Accepted')">
 
-  </main>
+        Accept
 
-  <!-- PROPOSAL MODAL -->
+      </button>
 
-  <div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
+      <button class="pending-btn" onclick="setProposalStatus('Pending')">
 
-    <div class="proposal-content">
+        Pending
 
-      <h3 id="modalCustomer"></h3>
+      </button>
 
-      <div id="modalAddress"></div>
+      <button class="reject-btn" onclick="setProposalStatus('Not Accepted')">
 
-      <div id="modalBody"></div>
+        Reject
 
-      <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
-
-        <button onclick="setProposalStatus('Pending')">
-
-          Mark Pending
-
-        </button>
-
-        <button onclick="setProposalStatus('Accepted')">
-
-          Mark Won
-
-        </button>
-
-        <button onclick="setProposalStatus('Not Accepted')">
-
-          Mark Lost
-
-        </button>
-
-        <button onclick="convertToProposal()">
-
-          Load Into Calculator
-
-        </button>
-
-      </div>
+      </button>
 
     </div>
 
   </div>
 
-  <!-- TOASTS -->
+</div>
 
-  <div id="toastContainer" class="toast-container"></div>
+<div id="toastContainer" class="toast-container"></div>
 
-  <!-- JS -->
+<script src="js/core.js"></script>
 
-  <script src="js/core.js"></script>
+<script src="js/state.js"></script>
 
-  <script src="js/state.js"></script>
+<script src="js/inventory.js"></script>
 
-  <script src="js/inventory.js"></script>
+<script src="js/crm.js"></script>
 
-  <script src="js/crm.js"></script>
+<script src="js/ui.js"></script>
 
-  <script src="js/ui.js"></script>
+<script src="js/app.js"></script>
 
-  <script src="js/app.js"></script>
+<script>
 
-  <!-- PAGE INIT -->
+window.onload = function(){
 
-  <script>
+  if(window.renderPipeline) renderPipeline();
 
-    window.onload = () => {
+};
 
-      renderPipeline();
-
-      renderHistory();
-
-    };
-
-  </script>
+</script>
 
 </body>
 
