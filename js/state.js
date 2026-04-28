@@ -37,6 +37,8 @@ window.state = {
   proposals: []
 }
 
+window.app = window.state;
+
 // app.js
 
 window.onload = () => {
