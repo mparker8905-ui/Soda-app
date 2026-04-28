@@ -1,36 +1,174 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
 
-<link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>SoDa Outdoor Designs | Inventory</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
 
 </head>
 
 <body>
 
-<h2 class="gold">Inventory</h2>
+  <header class="page-header">
 
-<div class="material-row card">
+    <h1>Inventory Manager</h1>
 
-  <input placeholder="Material Name">
+    <p>SoDa Outdoor Designs</p>
 
-  <input placeholder="Cost">
+  </header>
 
-  <input placeholder="Qty">
+  <main class="app-wrap">
 
-</div>
+    <!-- STANDARD MATERIALS -->
 
-<button onclick="saveInventory()">Save Inventory</button>
+    <section class="card open" data-card="standard">
 
-<div id="inventoryList"></div>
+      <div class="card-title">Standard Materials</div>
 
-<button onclick="location.href='index.html'">Calculator</button>
+      <div class="card-body">
 
-<script src="js/state.js"></script>
+        <div id="standardMaterials"></div>
 
-<script src="js/inventory.js"></script>
+        <button onclick="addMaterialRow('standard')">
+
+          + Add Standard Material
+
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- PREMIUM MATERIALS -->
+
+    <section class="card open" data-card="premium">
+
+      <div class="card-title">Premium Materials</div>
+
+      <div class="card-body">
+
+        <div id="premiumMaterials"></div>
+
+        <button onclick="addMaterialRow('premium')">
+
+          + Add Premium Material
+
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- ADDONS -->
+
+    <section class="card open" data-card="addons">
+
+      <div class="card-title">Add-On Materials</div>
+
+      <div class="card-body">
+
+        <div id="addonMaterials"></div>
+
+        <button onclick="addMaterialRow('addons')">
+
+          + Add Add-On Material
+
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- INVENTORY SUMMARY -->
+
+    <section class="card open" data-card="summary">
+
+      <div class="card-title">Inventory Summary</div>
+
+      <div class="card-body">
+
+        <div id="inventorySummary"></div>
+
+        <button onclick="saveInventory()">
+
+          Save Inventory
+
+        </button>
+
+        <button onclick="location.href='index.html'">
+
+          Open Calculator
+
+        </button>
+
+        <button onclick="location.href='crm.html'">
+
+          Open CRM
+
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- TOASTS -->
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- JS -->
+
+  <script src="js/core.js"></script>
+
+  <script src="js/state.js"></script>
+
+  <script src="js/inventory.js"></script>
+
+  <script src="js/crm.js"></script>
+
+  <script src="js/ui.js"></script>
+
+  <script src="js/app.js"></script>
+
+  <!-- PAGE INIT -->
+
+  <script>
+
+    window.onload = () => {
+
+      loadInventory();
+
+      if (typeof getInventoryCost === "function") {
+
+        const totals = getInventoryCost();
+
+        document.getElementById("inventorySummary").innerHTML = `
+
+          <div>Total Standard: $${totals.standard.toFixed(2)}</div>
+
+          <div>Total Premium: $${totals.premium.toFixed(2)}</div>
+
+          <div>Total Add-Ons: $${totals.addons.toFixed(2)}</div>
+
+          <hr>
+
+          <div><strong>Total Inventory Value: $${totals.total.toFixed(2)}</strong></div>
+
+        `;
+
+      }
+
+    };
+
+  </script>
 
 </body>
 

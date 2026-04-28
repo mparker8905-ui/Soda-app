@@ -1,98 +1,336 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
 
-  <title>SoDa App</title>
+  <meta charset="UTF-8" />
 
-  <link rel="stylesheet" href="css/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>SoDa Outdoor Designs | Hydroseed Calculator</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
 
 </head>
 
 <body>
 
-<h1>Hydroseed Calculator</h1>
+  <header class="page-header">
 
-<!-- PRICING MODE -->
+    <h1>Hydroseed Calculator</h1>
 
-<label>Pricing Mode</label>
+    <p>SoDa Outdoor Designs</p>
 
-<select id="pricingMode">
+  </header>
 
-  <option value="standard">Standard</option>
+  <main class="app-wrap">
 
-  <option value="aggressive">Aggressive</option>
+    <!-- JOB INPUTS -->
 
-  <option value="premium">Premium</option>
+    <section class="card collapsible open" data-card="job">
 
-</select>
+      <div class="card-title" onclick="toggleCard(this)">
 
-<hr>
+        Project Details
 
-<!-- INPUTS -->
+      </div>
 
-<label>Square Feet</label>
+      <div class="card-body">
 
-<input id="sqft" type="number" placeholder="Enter sqft">
+        <label>Square Feet</label>
 
-<label>Houses</label>
+        <input id="sqft" type="number" placeholder="Enter sqft" />
 
-<input id="houses" type="number" value="1">
+        <label>Houses</label>
 
-<label>Cost ($)</label>
+        <input id="houses" type="number" value="1" />
 
-<input id="cost" type="number" placeholder="Material cost">
+        <label>Package</label>
 
-<hr>
+        <select id="package">
 
-<!-- RESULTS -->
+          <option value="standard">Standard</option>
 
-<h2>Results</h2>
+          <option value="premium">Premium</option>
 
-<div id="results"></div>
+        </select>
 
-<hr>
+        <label>Pricing Mode</label>
 
-<!-- ADVANCED FEATURES -->
+        <select id="pricingMode">
 
-<h2>Deal Score</h2>
+          <option value="win">Win Job</option>
 
-<div id="dealScore"></div>
+          <option value="balanced" selected>Balanced</option>
 
-<h2>Insights</h2>
+          <option value="max">Max Profit</option>
 
-<div id="insights"></div>
+        </select>
 
-<h2>Tank Plan</h2>
+        <label>Target Margin (%)</label>
 
-<div id="tanks"></div>
+        <input id="targetMargin" type="number" placeholder="Optional" />
 
-<hr>
+        <label>Pricing Strategy</label>
 
-<!-- NAV -->
+        <select id="pricingStrategy">
 
-<a href="crm.html">Go to CRM</a><br>
+          <option value="normal">Normal</option>
 
-<a href="inventory.html">Go to Inventory</a>
+          <option value="market">Market Floor</option>
 
-<!-- SCRIPTS -->
+          <option value="undercut">Undercut Competitor</option>
 
-<script src="js/state.js"></script>
+          <option value="builder">Builder Discount</option>
 
-<script src="js/pricing.js"></script>
+        </select>
 
-<script src="js/core.js"></script>
+        <label>Competitor Price ($)</label>
 
-<script src="js/insights.js"></script>
+        <input id="competitorPrice" type="number" placeholder="Optional" />
 
-<script src="js/tank.js"></script>
+      </div>
 
-<script src="js/deals.js"></script>
+    </section>
 
-<script src="js/ui.js"></script>
+    <!-- LABOR -->
 
-<div class="toast-container" id="toastContainer"></div>
+    <section class="card collapsible" data-card="labor">
+
+      <div class="card-title" onclick="toggleCard(this)">
+
+        Labor Settings
+
+      </div>
+
+      <div class="card-body">
+
+        <label>Hourly Rate ($)</label>
+
+        <input id="hourlyRate" type="number" />
+
+        <label>Hours Per House</label>
+
+        <input id="hoursPerHouse" type="number" />
+
+        <label>Crew Size</label>
+
+        <input id="crewSize" type="number" value="1" />
+
+        <label>Overhead (%)</label>
+
+        <input id="overhead" type="number" />
+
+      </div>
+
+    </section>
+
+    <!-- TANK -->
+
+    <section class="card collapsible" data-card="tank">
+
+      <div class="card-title" onclick="toggleCard(this)">
+
+        Tank Settings
+
+      </div>
+
+      <div class="card-body">
+
+        <label>Tank Size</label>
+
+        <select id="tankSize">
+
+          <option value="100">100 Gallon</option>
+
+          <option value="300">300 Gallon</option>
+
+          <option value="500" selected>500 Gallon</option>
+
+          <option value="700">700 Gallon</option>
+
+          <option value="1000">1000 Gallon</option>
+
+        </select>
+
+      </div>
+
+    </section>
+
+    <!-- ADDONS -->
+
+    <section class="card collapsible" data-card="addons">
+
+      <div class="card-title" onclick="toggleCard(this)">
+
+        Add-ons
+
+      </div>
+
+      <div class="card-body checkbox-grid">
+
+        <label><input type="checkbox" onchange="state.job.addons.aeration=this.checked;requestRender()"> Aeration</label>
+
+        <label><input type="checkbox" onchange="state.job.addons.compost=this.checked;requestRender()"> Compost</label>
+
+        <label><input type="checkbox" onchange="state.job.addons.biohum=this.checked;requestRender()"> BioHum</label>
+
+        <label><input type="checkbox" onchange="state.job.addons.biochar=this.checked;requestRender()"> Biochar</label>
+
+        <label><input type="checkbox" onchange="state.job.addons.humic=this.checked;requestRender()"> Humic</label>
+
+        <label><input type="checkbox" onchange="state.job.addons.grow=this.checked;requestRender()"> Grow System</label>
+
+        <label><input type="checkbox" onchange="state.job.addons.lime=this.checked;requestRender()"> Lime</label>
+
+        <label><input type="checkbox" onchange="state.job.addons.sulfur=this.checked;requestRender()"> Sulfur</label>
+
+      </div>
+
+    </section>
+
+    <!-- TIMELINE -->
+
+    <section class="card collapsible" data-card="schedule">
+
+      <div class="card-title" onclick="toggleCard(this)">
+
+        Schedule
+
+      </div>
+
+      <div class="card-body">
+
+        <label>Project Start</label>
+
+        <input id="projectStart" type="date" />
+
+        <label>Quote Date</label>
+
+        <input id="quoteDate" type="date" />
+
+        <div class="radio-group">
+
+          <label><input type="radio" name="timeline" checked onchange="state.ui.timeline='standard';requestRender()"> Standard</label>
+
+          <label><input type="radio" name="timeline" onchange="state.ui.timeline='fast';requestRender()"> Fast</label>
+
+          <label><input type="radio" name="timeline" onchange="state.ui.timeline='extended';requestRender()"> Extended</label>
+
+        </div>
+
+        <div id="schedulePreview"></div>
+
+      </div>
+
+    </section>
+
+    <!-- CUSTOMER -->
+
+    <section class="card collapsible" data-card="customer">
+
+      <div class="card-title" onclick="toggleCard(this)">
+
+        Proposal Info
+
+      </div>
+
+      <div class="card-body">
+
+        <label>Customer</label>
+
+        <input id="customer" type="text" />
+
+        <label>Address</label>
+
+        <input id="address" type="text" />
+
+        <button onclick="sendProposal()">Send Proposal</button>
+
+        <button onclick="createLead()">Create Lead</button>
+
+      </div>
+
+    </section>
+
+    <!-- RESULTS -->
+
+    <section class="card open">
+
+      <div class="card-title">Results</div>
+
+      <div class="card-body">
+
+        <div id="results"></div>
+
+      </div>
+
+    </section>
+
+    <!-- CRM PIPELINE -->
+
+    <section class="card">
+
+      <div class="card-title">Pipeline</div>
+
+      <div class="card-body">
+
+        <div id="jobHistoryList"></div>
+
+      </div>
+
+    </section>
+
+    <!-- HISTORY -->
+
+    <section class="card">
+
+      <div class="card-title">History</div>
+
+      <div class="card-body">
+
+        <div id="jobHistory"></div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL -->
+
+  <div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
+
+    <div class="proposal-content">
+
+      <h3 id="modalCustomer"></h3>
+
+      <div id="modalAddress"></div>
+
+      <div id="modalBody"></div>
+
+    </div>
+
+  </div>
+
+  <!-- TOASTS -->
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- JS -->
+
+  <script src="js/core.js"></script>
+
+  <script src="js/state.js"></script>
+
+  <script src="js/inventory.js"></script>
+
+  <script src="js/crm.js"></script>
+
+  <script src="js/ui.js"></script>
+
+  <script src="js/app.js"></script>
 
 </body>
 

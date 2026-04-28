@@ -1,36 +1,164 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
 
 <head>
 
-<link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>SoDa Outdoor Designs | CRM</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
 
 </head>
 
 <body>
 
-<h2 class="gold">CRM</h2>
+  <header class="page-header">
 
-<input id="customer" placeholder="Customer Name">
+    <h1>CRM Dashboard</h1>
 
-<button onclick="createLead()">Add Lead</button>
+    <p>SoDa Outdoor Designs</p>
 
-<div id="leads"></div>
+  </header>
 
-<button onclick="location.href='index.html'">Calculator</button>
+  <main class="app-wrap">
 
-<input type="date" id="jobDate">
+    <!-- QUICK LEAD ENTRY -->
 
-<button onclick="saveSchedule()">Schedule Job</button>
+    <section class="card open">
 
-<div id="scheduleList"></div>
+      <div class="card-title">Create New Lead</div>
 
-<script src="js/schedule.js"></script>
+      <div class="card-body">
 
-<script src="js/state.js"></script>
+        <label>Customer Name</label>
 
-<script src="js/crm.js"></script>
+        <input id="customer" type="text" placeholder="Enter customer name" />
+
+        <label>Address</label>
+
+        <input id="address" type="text" placeholder="Enter address" />
+
+        <button onclick="createLead()">Add Lead</button>
+
+        <button onclick="location.href='index.html'">
+
+          Open Calculator
+
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- SALES PIPELINE -->
+
+    <section class="card open">
+
+      <div class="card-title">Sales Pipeline</div>
+
+      <div class="card-body">
+
+        <div id="jobHistoryList"></div>
+
+      </div>
+
+    </section>
+
+    <!-- SAVED HISTORY -->
+
+    <section class="card">
+
+      <div class="card-title">Proposal History</div>
+
+      <div class="card-body">
+
+        <div id="jobHistory"></div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- PROPOSAL MODAL -->
+
+  <div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
+
+    <div class="proposal-content">
+
+      <h3 id="modalCustomer"></h3>
+
+      <div id="modalAddress"></div>
+
+      <div id="modalBody"></div>
+
+      <div style="margin-top:15px; display:flex; gap:10px; flex-wrap:wrap;">
+
+        <button onclick="setProposalStatus('Pending')">
+
+          Mark Pending
+
+        </button>
+
+        <button onclick="setProposalStatus('Accepted')">
+
+          Mark Won
+
+        </button>
+
+        <button onclick="setProposalStatus('Not Accepted')">
+
+          Mark Lost
+
+        </button>
+
+        <button onclick="convertToProposal()">
+
+          Load Into Calculator
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- TOASTS -->
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- JS -->
+
+  <script src="js/core.js"></script>
+
+  <script src="js/state.js"></script>
+
+  <script src="js/inventory.js"></script>
+
+  <script src="js/crm.js"></script>
+
+  <script src="js/ui.js"></script>
+
+  <script src="js/app.js"></script>
+
+  <!-- PAGE INIT -->
+
+  <script>
+
+    window.onload = () => {
+
+      renderPipeline();
+
+      renderHistory();
+
+    };
+
+  </script>
 
 </body>
 
