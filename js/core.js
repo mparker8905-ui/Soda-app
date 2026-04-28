@@ -32,193 +32,238 @@ const MATERIAL_RATES = {
   timers: { rate: 1, unit: "units" }
 }
 
-//===================
-//== CALCULATE JOB
-//===================
+//======================
+//== CALCULATE JOB CORE
+//======================
 
-function calculateJob(options = {}){
+function calculateJobCore(state, options = {}){
 
-let inventory = getInventoryCache()
+  let inventory = state.inventory || getInventoryCache()
 
-  let sqft = Number(document.getElementById("sqft")?.value) || 0
-  let houses = Number(document.getElementById("houses")?.value) || 1
+  let sqft = Number(state.job?.sqft) || 0
 
-let packageType = options.packageOverride 
+  let houses = Number(state.job?.houses) || 1
 
-  || document.getElementById("package")?.value 
+  let packageType =
 
-  || "standard"
+    options.packageOverride ||
 
-  let pricingMode = document.getElementById("pricingMode")?.value || "balanced"
-  let targetMarginInput = Number(document.getElementById("targetMargin")?.value)
+    state.job?.package ||
+
+    "standard"
+
+  let pricingMode = state.job?.pricingMode || "balanced"
+
+  let targetMarginInput = Number(state.job?.targetMargin) || 0
 
   let builderMult = getBuilderMultiplier(houses)
 
   let totalSqft = sqft * houses
 
   // ==============================
+
   // LABOR INPUTS
+
   // ==============================
 
-  let hourlyRate = Number(document.getElementById("hourlyRate")?.value) || 0
-  let hoursPerHouse = Number(document.getElementById("hoursPerHouse")?.value) || 0
-  let crewSize = Number(document.getElementById("crewSize")?.value) || 1
-  let overheadPct = Number(document.getElementById("overhead")?.value) || 0
+  let hourlyRate = Number(state.job?.labor?.hourlyRate) || 0
+
+  let hoursPerHouse = Number(state.job?.labor?.hoursPerHouse) || 0
+
+  let crewSize = Number(state.job?.labor?.crewSize) || 1
+
+  let overheadPct = Number(state.job?.labor?.overhead) || 0
 
   let laborEfficiency = 1 - ((1 - builderMult) * 0.5)
+
   let totalHours = hoursPerHouse * houses * laborEfficiency
+
   let laborCost = totalHours * hourlyRate * crewSize
 
   // ==========================
-  // BASE COST
-  // ==========================
 
-  let baseRate = 0
-
-  if(packageType === "standard") baseRate = 0.18
-  if(packageType === "premium") baseRate = 0.30
-
-
-
-
-
-// NEW LOGIC
-
-let materialCost = 0
-
-let needs = getMaterialNeeds(
-
-  { totalSqft },
-
-  packageType,
-
-  app.job.addons
-
-)
-
-Object.keys(needs).forEach(type => {
-  let needed = needs[type] || 0
-  let avgCost = getAvgCostFromInventory(type, inventory)
-  materialCost += needed * avgCost
-})
-
-let inventoryTotals = getInventoryTotals()
-
-let comparison = compareInventory(needs, inventoryTotals)
-
-let hasShortage = Object.values(comparison).some(i => i.status === "short")
-
-let usedFallback = false
-
-if(hasShortage){
-
-  usedFallback = true
-
-  showToast("Using base pricing (inventory shortage detected)", "warning")
-
-}
-
-// fallback safety
-
-if(usedFallback){
-  showToast("Using base pricing (inventory incomplete)", "warning")
-}
-
-// minimum job floor
-if(materialCost < 500){
-  materialCost = 500
-}
-
-let addonCosts = {
-  aeration: 0,
-  compost: 0,
-  biohum: 0,
-  biochar: 0,
-  humic: 0,
-  grow: 0,
-  lime: 0,
-  sulfur: 0
-}
+  // MATERIAL COST
 
   // ==========================
-  // ADDONS
-  // ==========================
 
-  let addons = app.job.addons || {}
+  let materialCost = 0
+
+  let addons = state.job?.addons || {}
+
+  let needs = getMaterialNeeds(
+
+    { totalSqft },
+
+    packageType,
+
+    addons
+
+  )
+
+  Object.keys(needs).forEach(type => {
+
+    let needed = needs[type] || 0
+
+    let avgCost = getAvgCostFromInventory(type, inventory)
+
+    materialCost += needed * avgCost
+
+  })
+
+  let inventoryTotals = getInventoryTotals()
+
+  let comparison = compareInventory(needs, inventoryTotals)
+
+  let hasShortage = Object.values(comparison).some(i => i.status === "short")
+
+  let usedFallback = false
+
+  if(hasShortage){
+
+    usedFallback = true
+
+  }
+
+  // minimum job floor
+
+  if(materialCost < 500){
+
+    materialCost = 500
+
+  }
+
+  let addonCosts = {
+
+    aeration: 0,
+
+    compost: 0,
+
+    biohum: 0,
+
+    biochar: 0,
+
+    humic: 0,
+
+    grow: 0,
+
+    lime: 0,
+
+    sulfur: 0
+
+  }
 
   function isIncluded(name){
+
     if(packageType !== "premium") return false
+
     return ["aeration","compost","biohum","lime","sulfur"].includes(name)
+
   }
-
-// Aeration
-if(addons.aeration && !isIncluded("aeration")){
-  let cost = totalSqft * 0.04
-  materialCost += cost
-  addonCosts.aeration = cost
-}
-
-// Compost
-if(addons.compost && !isIncluded("compost")){
-  let cost = totalSqft * 0.10
-  materialCost += cost
-  addonCosts.compost = cost
-}
-
-// Bio/Hum Blend
-if(addons.biohum && !isIncluded("biohum")){
-  let cost = totalSqft * 0.12
-  materialCost += cost
-  addonCosts.biohum = cost
-}
-
-// Biochar
-if(addons.biochar){
-  let cost = totalSqft * 0.20
-  materialCost += cost
-  addonCosts.biochar = cost
-}
-
-// Humic
-if(addons.humic){
-  let cost = totalSqft * 0.01
-  materialCost += cost
-  addonCosts.humic = cost
-}
-
-// Grow System
-if(addons.grow){
-
-  let weeklyCost = (50 * 3) * houses
-  let installCost = 0
-
-  if(packageType === "standard"){
-    installCost = houses <= 1 
-      ? totalSqft * 0.05 
-      : totalSqft * 0.03
-  }
-
-  let cost = weeklyCost + installCost
-  materialCost += cost
-  addonCosts.grow = cost
-}
-
-// Lime
-if(addons.lime && !isIncluded("lime")){
-  let cost = totalSqft * 0.004
-  materialCost += cost
-  addonCosts.lime = cost
-}
-
-// Sulfur
-if(addons.sulfur && !isIncluded("sulfur")){
-  let cost = totalSqft * 0.008
-  materialCost += cost
-  addonCosts.sulfur = cost
-}
 
   // ==========================
-  // OVERHEAD (AFTER MATERIAL)
+
+  // ADDONS (UNCHANGED LOGIC)
+
+  // ==========================
+
+  if(addons.aeration && !isIncluded("aeration")){
+
+    let cost = totalSqft * 0.04
+
+    materialCost += cost
+
+    addonCosts.aeration = cost
+
+  }
+
+  if(addons.compost && !isIncluded("compost")){
+
+    let cost = totalSqft * 0.10
+
+    materialCost += cost
+
+    addonCosts.compost = cost
+
+  }
+
+  if(addons.biohum && !isIncluded("biohum")){
+
+    let cost = totalSqft * 0.12
+
+    materialCost += cost
+
+    addonCosts.biohum = cost
+
+  }
+
+  if(addons.biochar){
+
+    let cost = totalSqft * 0.20
+
+    materialCost += cost
+
+    addonCosts.biochar = cost
+
+  }
+
+  if(addons.humic){
+
+    let cost = totalSqft * 0.01
+
+    materialCost += cost
+
+    addonCosts.humic = cost
+
+  }
+
+  if(addons.grow){
+
+    let weeklyCost = (50 * 3) * houses
+
+    let installCost = 0
+
+    if(packageType === "standard"){
+
+      installCost = houses <= 1
+
+        ? totalSqft * 0.05
+
+        : totalSqft * 0.03
+
+    }
+
+    let cost = weeklyCost + installCost
+
+    materialCost += cost
+
+    addonCosts.grow = cost
+
+  }
+
+  if(addons.lime && !isIncluded("lime")){
+
+    let cost = totalSqft * 0.004
+
+    materialCost += cost
+
+    addonCosts.lime = cost
+
+  }
+
+  if(addons.sulfur && !isIncluded("sulfur")){
+
+    let cost = totalSqft * 0.008
+
+    materialCost += cost
+
+    addonCosts.sulfur = cost
+
+  }
+
+  // ==========================
+
+  // OVERHEAD
+
   // ==========================
 
   let overheadCost = (materialCost + laborCost) * (overheadPct / 100)
@@ -226,151 +271,292 @@ if(addons.sulfur && !isIncluded("sulfur")){
   let totalCost = materialCost + laborCost + overheadCost
 
   // ==========================
+
   // PRICING
+
   // ==========================
 
   let margin
 
   if(targetMarginInput && targetMarginInput > 0){
+
     margin = targetMarginInput / 100
+
   } else {
+
     margin = 0.3
+
     if(pricingMode === "win") margin = 0.15
+
     if(pricingMode === "balanced") margin = 0.3
+
     if(pricingMode === "max") margin = 0.5
+
   }
 
   if(houses >= 10) margin -= 0.03
+
   if(houses >= 20) margin -= 0.05
+
   if(houses >= 50) margin -= 0.08
 
   if(margin < 0.1) margin = 0.1
 
- let strategy = document.getElementById("pricingStrategy")?.value || "normal"
-let competitor = Number(document.getElementById("competitorPrice")?.value) || 0
+  if(margin >= 0.95) margin = 0.95
 
-if(margin >= 0.95){
-  margin = 0.95
-}
+  let competitor = Number(state.job?.competitorPrice) || 0
 
-let pricing = getSmartPricing(
-  totalCost,
-  totalSqft,
-  houses,
-  pricingMode,
-  competitor
-)
+  let strategy = state.job?.pricingStrategy || "normal"
 
-let price = pricing.price
-let profit = pricing.profit
+  let pricing = getSmartPricing(
 
-// ==========================
-// PRICING POWER MODE
-// ==========================
+    totalCost,
 
-if(strategy === "market"){
-  let marketRate = 0.35 // $/sqft target
-  let marketPrice = totalSqft * marketRate
+    totalSqft,
 
-  if(marketPrice > price){
-    price = marketPrice
+    houses,
+
+    pricingMode,
+
+    competitor
+
+  )
+
+  let price = pricing.price
+
+  let profit = pricing.profit
+
+  // ==========================
+
+  // PRICING STRATEGIES
+
+  // ==========================
+
+  if(strategy === "market"){
+
+    let marketRate = 0.35
+
+    let marketPrice = totalSqft * marketRate
+
+    if(marketPrice > price){
+
+      price = marketPrice
+
+    }
+
   }
-}
 
-if(strategy === "undercut" && competitor > 0){
-  price = competitor * 0.97 // 3% undercut
-}
+  if(strategy === "undercut" && competitor > 0){
 
-if(strategy === "builder"){
-  price *= 0.92 // aggressive builder pricing
-}
+    price = competitor * 0.97
 
-// SAFETY FLOOR (never lose money)
-if(price < totalCost * 1.1){
-  price = totalCost * 1.1
-}
+  }
 
-// ✅ MINIMUM JOB PRICE
-if(price < 1000){
-  price = 1000
-}
+  if(strategy === "builder"){
 
-// recalc profit AFTER all adjustments
-profit = price - totalCost
+    price *= 0.92
 
-let usingFallback = usedFallback
+  }
+
+  // SAFETY FLOOR
+
+  if(price < totalCost * 1.1){
+
+    price = totalCost * 1.1
+
+  }
+
+  // MINIMUM JOB
+
+  if(price < 1000){
+
+    price = 1000
+
+  }
+
+  profit = price - totalCost
 
   return {
+
     sqft,
+
     houses,
+
     totalSqft,
+
     cost: totalCost,
+
     price,
+
     profit,
+
     laborCost,
+
     overheadCost,
+
     totalHours,
+
     addonCosts,
-    usingFallback
+
+    usingFallback: usedFallback,
+
+    comparison,
+
+    needs
+
   }
+
+}
+//======================
+//CALCULATE JOB
+//======================
+
+function calculateJob(options = {}){
+
+  let state = {
+
+    job: {
+
+      sqft: Number(document.getElementById("sqft")?.value) || 0,
+
+      houses: Number(document.getElementById("houses")?.value) || 1,
+
+      package: document.getElementById("package")?.value || "standard",
+
+      pricingMode: document.getElementById("pricingMode")?.value || "balanced",
+
+      targetMargin: Number(document.getElementById("targetMargin")?.value) || 0,
+
+      labor: {
+
+        hourlyRate: Number(document.getElementById("hourlyRate")?.value) || 0,
+
+        hoursPerHouse: Number(document.getElementById("hoursPerHouse")?.value) || 0,
+
+        crewSize: Number(document.getElementById("crewSize")?.value) || 1,
+
+        overhead: Number(document.getElementById("overhead")?.value) || 0
+
+      },
+
+      addons: state.job.addons || {},
+
+      pricingStrategy: document.getElementById("pricingStrategy")?.value,
+
+      competitorPrice: Number(document.getElementById("competitorPrice")?.value)
+
+    },
+
+    inventory: getInventoryCache()
+
+  }
+
+  let result = calculateJobCore(state, options)
+
+  // 👉 UI side effects stay HERE
+
+  if(result.usingFallback){
+
+    showToast("Using base pricing (inventory incomplete)", "warning")
+
+  }
+
+  return result
+
+}
+
+//==================
+//GET MATERIAL NEEDS
+//==================
+
+function getMaterialNeeds(input){
+
+  let packageType = document.getElementById("package")?.value || "standard"
+
+  let addons = state.job.addons || {}
+
+  return getMaterialNeedsCore(input, packageType, addons)
+
 }
 
 //===========================
-//==GET MATERIAL NEEDS
+//==GET MATERIAL NEEDS CORE
 //===========================
 
-function getMaterialNeeds(input, packageType, addons){
+function getMaterialNeedsCore(input = {}, packageType = "standard", addons = {}){
 
   let sqft = input.totalSqft || input.sqft || 0
 
   let needs = {}
 
   // =========================
+
   // BASE MATERIALS
-  // =========================
-
-needs.seed       = (sqft / 1000) * MATERIAL_RATES.seed.rate
-needs.fertilizer = (sqft / 1000) * MATERIAL_RATES.fertilizer.rate
-needs.mulch      = (sqft / 1000) * MATERIAL_RATES.mulch.rate
-needs.tackifier  = (sqft / 1000) * MATERIAL_RATES.tackifier.rate
 
   // =========================
-  // PREMIUM ADDITIONS
+
+  needs.seed       = (sqft / 1000) * MATERIAL_RATES.seed.rate
+
+  needs.fertilizer = (sqft / 1000) * MATERIAL_RATES.fertilizer.rate
+
+  needs.mulch      = (sqft / 1000) * MATERIAL_RATES.mulch.rate
+
+  needs.tackifier  = (sqft / 1000) * MATERIAL_RATES.tackifier.rate
+
+  // =========================
+
+  // PREMIUM PACKAGE
+
   // =========================
 
   if(packageType === "premium"){
-  needs.compost = (sqft / 1000) * MATERIAL_RATES.compost.rate
 
-    // Bio/Hum blend = split usage
+    needs.compost = (sqft / 1000) * MATERIAL_RATES.compost.rate
+
+    // split bio/hum blend
+
     needs.biochar = (sqft / 1000) * (MATERIAL_RATES.biochar.rate * 0.5)
-needs.humic   = (sqft / 1000) * (MATERIAL_RATES.humic.rate * 0.5)
+
+    needs.humic   = (sqft / 1000) * (MATERIAL_RATES.humic.rate * 0.5)
+
   }
 
   // =========================
+
   // ADD-ONS
+
   // =========================
 
-  addons = addons || {}
+  if(addons.lime){
 
-if(addons.lime){
- needs.lime = (sqft / 1000) * MATERIAL_RATES.lime.rate
-}
+    needs.lime = (sqft / 1000) * MATERIAL_RATES.lime.rate
 
-if(addons.sulfur){
-  needs.sulfur = (sqft / 1000) * MATERIAL_RATES.sulfur.rate
-}
+  }
 
-if(addons.biochar){
- needs.biochar = (needs.biochar || 0) +
-  (sqft / 1000) * MATERIAL_RATES.biochar.rate
-}
+  if(addons.sulfur){
 
-if(addons.humic){
-  needs.humic = (needs.humic || 0) +
-  (sqft / 1000) * MATERIAL_RATES.humic.rate
-}
+    needs.sulfur = (sqft / 1000) * MATERIAL_RATES.sulfur.rate
+
+  }
+
+  if(addons.biochar){
+
+    needs.biochar = (needs.biochar || 0) +
+
+      (sqft / 1000) * MATERIAL_RATES.biochar.rate
+
+  }
+
+  if(addons.humic){
+
+    needs.humic = (needs.humic || 0) +
+
+      (sqft / 1000) * MATERIAL_RATES.humic.rate
+
+  }
 
   return needs
+
 }
 
 //=======================
@@ -434,35 +620,40 @@ function getSmartPricing(totalCost, sqft, houses, pricingMode, competitor){
 //== TANK LOADS
 //========================
 
-function calculateTankLoads(r, needs){
-
-  let tankSize =
-    Number(document.getElementById("tankSize")?.value) || 500
+function calculateTankLoads(r, needs, tankSize){
 
   let coveragePerTank = tankSize * 10
 
-  let sqftPerTank = coveragePerTank
-
   let totalSqft = r.totalSqft || 0
 
-  let loads = sqftPerTank > 0
-    ? totalSqft / sqftPerTank
+  let loads = coveragePerTank > 0
+
+    ? totalSqft / coveragePerTank
+
     : 0
 
   return {
+
     tankSize,
+
     coveragePerTank,
+
     loads,
+
     perTank: {
-     seed: loads ? needs.seed / loads : 0,
 
-mulch: loads ? needs.mulch / loads : 0,
+      seed: loads ? needs.seed / loads : 0,
 
-fertilizer: loads ? needs.fertilizer / loads : 0,
+      mulch: loads ? needs.mulch / loads : 0,
 
-tackifier: loads ? needs.tackifier / loads : 0
+      fertilizer: loads ? needs.fertilizer / loads : 0,
+
+      tackifier: loads ? needs.tackifier / loads : 0
+
     }
+
   }
+
 }
 
 //==================
@@ -693,7 +884,7 @@ function buildSchedule(r){
 
   let packageType = document.getElementById("package")?.value || "standard"
 
-  let addons = app.job.addons || {}
+  let addons = state.job.addons || {}
 
   // ✅ START DATE FROM UI
 
@@ -885,4 +1076,42 @@ currentDate = addDays(currentDate, seedToFinalDays)
 
   return schedule
 
+}
+
+//==============================
+//==== BUILDER MODE
+//==============================
+
+function getBuilderMultiplier(houses){
+
+  if(houses <= 1) return 1
+  if(houses <= 5) return 0.95
+  if(houses <= 10) return 0.9
+  if(houses <= 20) return 0.85
+  if(houses <= 50) return 0.80
+  return 0.75
+}
+//=======================
+//AVG COST FROM INVENTORY
+//=======================
+
+function getAvgCostFromInventory(type, inventory){
+
+  let items = inventory[type] || []
+
+  if(items.length === 0){
+    return COSTS[type] || 0   // ✅ fallback to default cost
+  }
+
+  let totalCost = 0
+  let totalQty = 0
+
+  items.forEach(i => {
+    totalCost += i.cost
+    totalQty += i.qty
+  })
+
+  if(totalQty === 0) return COSTS[type] || 0
+
+  return totalCost / totalQty
 }

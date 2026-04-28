@@ -28,7 +28,7 @@ let materialNeeds = getMaterialNeeds(
 
   packageType,
 
-  app.job.addons
+ state.job.addons
 
 )
 
@@ -164,7 +164,7 @@ createdAt: Date.now(),
 
     package: packageType,
 
-    addons: app.job.addons,
+    addons: state.job.addons,
 
     pricingMode: document.getElementById("pricingMode")?.value,
 
@@ -789,6 +789,16 @@ function openFullProposal(id){
 
 }
 
+//===============================
+//OPEN FULL PROPOSAL FROM MODAL
+//===============================
+
+function openFullProposalFromModal(){
+
+  openFullProposal(activeProposalId)
+
+}
+
 //====================
 //SET PROPOSAL STATUS
 //====================
@@ -830,164 +840,6 @@ function setProposalStatus(status){
   openProposal(activeProposalId)
 
 }
-
-//====================
-//=== SWIPE LOGIC MODAL
-//====================
-
-let startX = 0
-
-let currentX = 0
-
-let isDragging = false
-
-function handleTouchStart(e){
-
-  startX = e.touches[0].clientX
-
-  isDragging = true
-
-}
-
-function handleTouchMove(e){
-
-  if(!isDragging) return
-
-  currentX = e.touches[0].clientX
-
-  let diff = currentX - startX
-
-  // 👉 ONLY allow swipe RIGHT
-
-  if(diff < 0) diff = 0
-
-  let content = document.querySelector(".proposal-content")
-
-  content.style.transition = "none"
-
-  content.style.transform = `translateX(${diff}px)`
-
-  content.style.opacity = 1 - (diff / 300)
-
-}
-
-function handleTouchEnd(){
-
-  if(!isDragging) return
-
-  isDragging = false
-
-  let diff = currentX - startX
-
-  let content = document.querySelector(".proposal-content")
-
-  // 👉 threshold to close
-
-  if(diff > 120){
-
-    content.style.transition = "all 0.2s ease"
-
-    content.style.transform = "translateX(100%)"
-
-    content.style.opacity = 0
-
-    setTimeout(() => {
-
-      closeProposalModal()
-
-      content.style.transform = "translateX(0)"
-
-      content.style.opacity = 1
-
-    }, 200)
-
-  } else {
-
-    // snap back
-
-    content.style.transition = "all 0.2s ease"
-
-    content.style.transform = "translateX(0)"
-
-    content.style.opacity = 1
-
-  }
-
-}
-
-//====================
-
-//=== SWIPE LOGIC DELETE
-
-//====================
-
-let deleteStartX = 0
-
-let deleteCurrentX = 0
-
-let activeCard = null
-
-document.addEventListener("touchstart", e => {
-
-  if(document.body.classList.contains("modal-open")) return
-
-  let card = e.target.closest(".swipe-card")
-
-  if(!card) return
-
-  activeCard = card
-
-  deleteStartX = e.touches[0].clientX
-
-})
-
-document.addEventListener("touchmove", e => {
-
-  if(document.body.classList.contains("modal-open")) return
-
-  if(!activeCard) return
-
-  deleteCurrentX = e.touches[0].clientX
-
-  let diff = deleteCurrentX - deleteStartX
-
-  if(diff > 0) diff = 0
-
-  if(diff < -120) diff = -120
-
-  activeCard.style.transition = "none"
-
-  activeCard.style.transform = `translateX(${diff}px)`
-
-})
-
-document.addEventListener("touchend", e => {
-
-  if(document.body.classList.contains("modal-open")) return
-
-  if(!activeCard) return
-
-  let diff = deleteCurrentX - deleteStartX
-
-  if(diff < -80){
-
-    // 👉 reveal delete button instead of deleting
-
-    activeCard.style.transition = "all 0.2s ease"
-
-    activeCard.style.transform = "translateX(-100px)"
-
-  } else {
-
-    activeCard.style.transition = "all 0.2s ease"
-
-    activeCard.style.transform = "translateX(0)"
-
-  }
-
-  activeCard = null
-
-})
 
 //================
 //DELETE PROPOSAL

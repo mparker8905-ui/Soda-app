@@ -1,3 +1,29 @@
+const MATERIAL_LABELS = {
+
+  seed: "Seed",
+
+  fertilizer: "Fertilizer",
+
+  mulch: "Mulch",
+
+  tackifier: "Tackifier",
+
+  compost: "Compost",
+
+  biochar: "Biochar",
+
+  humic: "Humic Acid",
+
+  lime: "Lime",
+
+  sulfur: "Sulfur",
+
+  sprinklers: "Sprinklers",
+
+  timers: "Timers"
+
+}
+
 //====================
 //==SAVE INVENTORY 
 //====================
@@ -225,6 +251,17 @@ function addMaterialRow(type){
   updateUnitLabel(row.querySelector(".mat-select"))
 }
 
+//====================
+//=== DELETE ROW
+//====================
+
+function deleteRow(btn){
+  let row = btn.closest(".material-row")
+  if(row){
+    row.remove()
+  }
+}
+
 //==================
 // GET INVENTORY COST
 //==================
@@ -253,17 +290,6 @@ function getInventoryCost(){
   }
 }
 
-//====================
-//=== DELETE ROW
-//====================
-
-function deleteRow(btn){
-  let row = btn.closest(".material-row")
-  if(row){
-    row.remove()
-  }
-}
-
 //=========================
 //===USE INVENTORY FOR JOB
 //=========================
@@ -279,7 +305,7 @@ function useInventoryForJob(){
 
   document.getElementById("package")?.value || "standard",
 
-  app.job.addons
+ state.job.addons
 
 )
 
@@ -309,7 +335,7 @@ function useInventoryForJob(){
   localStorage.setItem("inventory_full", JSON.stringify(full))
 
   loadInventory()
-  render()
+  requestRender()
 
   showToast("Inventory applied to job", "success")
 }
@@ -396,6 +422,30 @@ showToast(`${label} +${Math.ceil(amount)} added`)
   loadInventory()
 
   setTimeout(() => {
-    render()
+    RequestRender()
   }, 50)
+}
+
+//================
+//UPDATE UNIT LABEL
+//================
+
+function updateUnitLabel(select){
+
+  let row = select.closest(".material-row")
+
+  if(!row) return
+
+  let label = row.querySelector(".unit-label")
+
+  let type = select.value
+
+  let unit = MATERIAL_RATES[type]?.unit || "units"
+
+  if(label){
+
+    label.innerText = `Quantity Available (${unit})`
+
+  }
+
 }
