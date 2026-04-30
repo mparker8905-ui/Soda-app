@@ -1,10 +1,56 @@
-/* ==================================
+/* =====================================
 
-   SODA OUTDOOR DESIGNS - CLEAN CSS
+   SODA OUTDOOR DESIGNS
 
-================================== */
+   PRODUCTION STYLESHEET
 
-/* RESET */
+===================================== */
+
+:root{
+
+  --bg:#050505;
+
+  --bg2:#0d0d0d;
+
+  --card:#121212;
+
+  --line:#262626;
+
+  --line2:#333333;
+
+  --text:#f4f4f4;
+
+  --muted:#9c9c9c;
+
+  --gold:#d4af37;
+
+  --green:#4cff9a;
+
+  --red:#ff4d4d;
+
+  --yellow:#ffd24d;
+
+  --blue:#59a8ff;
+
+  --radius:14px;
+
+  --radius-sm:10px;
+
+  --shadow:
+
+    0 12px 30px rgba(0,0,0,.35);
+
+  --gold-glow:
+
+    0 0 18px rgba(212,175,55,.18);
+
+}
+
+/* =====================================
+
+   RESET
+
+===================================== */
 
 *{
 
@@ -16,133 +62,409 @@
 
 }
 
-html,body{
+html,
 
-  height:100%;
+body{
+
+  width:100%;
+
+  min-height:100%;
 
 }
 
 body{
 
-  background:#000;
+  font-family:
 
-  color:#fff;
+    -apple-system,
 
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    BlinkMacSystemFont,
 
-  line-height:1.4;
+    "Segoe UI",
 
-  padding:16px;
+    Roboto,
 
-}
+    Arial,
 
-/* ==================================
+    sans-serif;
 
-   BRAND
+  background:
 
-================================== */
+    radial-gradient(
 
-.gold,
+      circle at top right,
 
-.gold-text{
+      rgba(212,175,55,.08),
 
-  color:#d4af37;
+      transparent 28%
 
-}
+    ),
 
-.section-title{
+    radial-gradient(
 
-  color:#d4af37;
+      circle at bottom left,
 
-  font-size:13px;
+      rgba(255,255,255,.03),
 
-  font-weight:700;
+      transparent 25%
 
-  text-transform:uppercase;
+    ),
 
-  letter-spacing:.6px;
+    var(--bg);
 
-  margin-bottom:10px;
+  color:var(--text);
 
-}
-
-.gold-line{
-
-  height:2px;
-
-  margin:14px 0 22px;
-
-  background:linear-gradient(
-
-    90deg,
-
-    transparent,
-
-    #d4af37,
-
-    transparent
-
-  );
+  line-height:1.45;
 
 }
 
-/* ==================================
+/* =====================================
 
-   HEADER
+   GLOBAL
 
-================================== */
+===================================== */
 
-.header{
+a{
+
+  color:inherit;
+
+  text-decoration:none;
+
+}
+
+img{
+
+  max-width:100%;
+
+  display:block;
+
+}
+
+button,
+
+input,
+
+select,
+
+textarea{
+
+  font:inherit;
+
+}
+
+button{
+
+  cursor:pointer;
+
+}
+
+.hidden{
+
+  display:none !important;
+
+}
+
+.muted{
+
+  color:var(--muted);
+
+}
+
+.mt-24{
+
+  margin-top:24px;
+
+}
+
+/* =====================================
+
+   APP LAYOUT
+
+===================================== */
+
+.app-shell{
+
+  display:grid;
+
+  grid-template-columns:280px 1fr;
+
+  min-height:100vh;
+
+}
+
+/* =====================================
+
+   SIDEBAR
+
+===================================== */
+
+.sidebar{
+
+  background:rgba(10,10,10,.96);
+
+  border-right:1px solid var(--line);
+
+  padding:26px 18px;
+
+  position:sticky;
+
+  top:0;
+
+  height:100vh;
+
+}
+
+.brand-wrap{
 
   display:flex;
-
-  justify-content:space-between;
 
   align-items:center;
 
   gap:14px;
 
-}
-
-.brand h1{
-
-  font-size:24px;
-
-  margin-bottom:4px;
+  margin-bottom:30px;
 
 }
 
-.tagline{
-
-  color:#999;
-
-  font-size:12px;
-
-}
-
-.logo{
+.brand-logo{
 
   width:56px;
 
-  height:auto;
+  height:56px;
+
+  object-fit:contain;
+
+  border-radius:12px;
+
+  background:#000;
+
+  padding:6px;
+
+  border:1px solid var(--line2);
 
 }
 
-/* ==================================
+.brand-text h1{
 
-   FORM CONTROLS
+  font-size:18px;
 
-================================== */
+  color:var(--gold);
 
-label{
+  letter-spacing:.3px;
 
-  display:block;
+}
 
-  margin:12px 0 6px;
+.brand-text p{
+
+  font-size:12px;
+
+  color:var(--muted);
+
+  margin-top:4px;
+
+}
+
+.nav-links{
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:10px;
+
+}
+
+.nav-link{
+
+  padding:12px 14px;
+
+  border-radius:12px;
+
+  border:1px solid transparent;
+
+  background:transparent;
+
+  color:#ddd;
+
+  transition:.2s ease;
+
+}
+
+.nav-link:hover{
+
+  background:#111;
+
+  border-color:#222;
+
+}
+
+.nav-link.active{
+
+  background:#131313;
+
+  border-color:rgba(212,175,55,.35);
+
+  color:var(--gold);
+
+  box-shadow:var(--gold-glow);
+
+}
+
+/* =====================================
+
+   MAIN
+
+===================================== */
+
+.main-content{
+
+  padding:28px;
+
+}
+
+.page-header{
+
+  margin-bottom:22px;
+
+}
+
+.page-header h2{
+
+  font-size:30px;
+
+  font-weight:800;
+
+  color:var(--gold);
+
+}
+
+.page-header p{
+
+  color:var(--muted);
+
+  margin-top:6px;
+
+}
+
+/* =====================================
+
+   GRID
+
+===================================== */
+
+.grid-two{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:22px;
+
+}
+
+.grid-three{
+
+  display:grid;
+
+  grid-template-columns:repeat(3,1fr);
+
+  gap:18px;
+
+}
+
+/* =====================================
+
+   CARD
+
+===================================== */
+
+.card,
+
+.glass-card{
+
+  background:
+
+    linear-gradient(
+
+      180deg,
+
+      rgba(255,255,255,.02),
+
+      rgba(255,255,255,.01)
+
+    );
+
+  border:1px solid var(--line);
+
+  border-radius:var(--radius);
+
+  padding:20px;
+
+  box-shadow:var(--shadow);
+
+}
+
+.card h3,
+
+.glass-card h3{
+
+  font-size:18px;
+
+  color:var(--gold);
+
+  margin-bottom:16px;
+
+}
+
+/* =====================================
+
+   FORM
+
+===================================== */
+
+.form-grid{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:14px;
+
+}
+
+.form-grid label,
+
+.checkbox-grid label{
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:8px;
 
   font-size:13px;
 
-  color:#aaa;
+  color:#ddd;
+
+}
+
+.checkbox-grid{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:12px;
+
+}
+
+.checkbox-grid label{
+
+  flex-direction:row;
+
+  align-items:center;
+
+  gap:10px;
 
 }
 
@@ -154,13 +476,13 @@ textarea{
 
   width:100%;
 
-  padding:12px;
+  padding:11px 12px;
 
   border-radius:10px;
 
-  border:1px solid #333;
+  border:1px solid var(--line2);
 
-  background:#161616;
+  background:#0b0b0b;
 
   color:#fff;
 
@@ -174,217 +496,173 @@ select:focus,
 
 textarea:focus{
 
-  border-color:#d4af37;
+  border-color:rgba(212,175,55,.55);
+
+  box-shadow:0 0 0 3px rgba(212,175,55,.08);
 
 }
 
-/* ==================================
+/* =====================================
 
    BUTTONS
 
-================================== */
+===================================== */
 
-button{
+.btn{
+
+  width:100%;
+
+  margin-top:10px;
 
   padding:12px 14px;
 
   border:none;
 
-  border-radius:10px;
+  border-radius:12px;
+
+  background:#191919;
+
+  color:#fff;
+
+  transition:.18s ease;
+
+}
+
+.btn:hover{
+
+  transform:translateY(-1px);
 
   background:#222;
 
-  color:#fff;
+}
 
-  cursor:pointer;
+.btn-primary{
 
-  margin-top:8px;
-
-  transition:.15s ease;
+  background:#202020;
 
 }
 
-button:hover{
+.btn-gold{
 
-  opacity:.92;
-
-}
-
-button:active{
-
-  transform:scale(.97);
-
-}
-
-button.full{
-
-  width:100%;
-
-}
-
-button.primary{
-
-  background:#d4af37;
+  background:var(--gold);
 
   color:#000;
 
   font-weight:700;
 
-}
-
-button.danger{
-
-  background:#8b0000;
+  box-shadow:var(--gold-glow);
 
 }
 
-.row{
-
-  display:flex;
-
-  gap:10px;
-
-}
-
-.row button{
-
-  flex:1;
-
-}
-
-/* ==================================
-
-   CARDS
-
-================================== */
-
-.card,
-
-.glass-card{
-
-  background:#111;
-
-  border:1px solid #222;
-
-  border-radius:14px;
-
-  padding:16px;
-
-  margin-bottom:16px;
-
-}
-
-.glass-card{
-
-  border:1px solid rgba(212,175,55,.18);
-
-  box-shadow:0 0 14px rgba(212,175,55,.08);
-
-}
-
-.highlight{
-
-  border:1px solid #d4af37;
-
-  box-shadow:0 0 18px rgba(212,175,55,.35);
-
-}
-
-/* ==================================
-
-   TOGGLES
-
-================================== */
-
-.toggle{
-
-  padding:14px;
-
-  border-radius:12px;
-
-  background:#161616;
-
-  border:1px solid #2a2a2a;
-
-  text-align:center;
-
-  margin-bottom:10px;
-
-  cursor:pointer;
-
-}
-
-.toggle.active{
-
-  background:#d4af37;
-
-  color:#000;
-
-  font-weight:700;
-
-}
-
-/* ==================================
+/* =====================================
 
    RESULTS
 
-================================== */
+===================================== */
 
 #results{
 
-  color:#fff;
+  display:grid;
+
+  gap:14px;
 
 }
 
-.results-card{
+.glass-card{
 
-  border:2px solid #d4af37;
-
-  color:#d4af37;
-
-  text-align:center;
-
-  border-radius:14px;
-
-  padding:18px;
+  border-color:#2a2a2a;
 
 }
 
-.results-card h2{
+.glass-card strong{
 
-  margin-bottom:8px;
+  color:var(--gold);
 
 }
 
-/* ==================================
+/* =====================================
 
-   INVENTORY
+   HISTORY CARDS
 
-================================== */
+===================================== */
 
-#standardMaterials,
+#jobHistory,
 
-#premiumMaterials,
+#jobHistoryList{
 
-#addonMaterials{
-
-  display:flex;
-
-  flex-direction:column;
+  display:grid;
 
   gap:12px;
 
 }
 
-.material-row{
+.history-card{
 
-  background:#111;
+  background:#0f0f0f;
 
-  border:1px solid #2a2a2a;
+  border:1px solid #2b2b2b;
 
   border-radius:12px;
 
-  padding:12px;
+  padding:14px;
+
+  transition:.18s ease;
+
+}
+
+.history-card:hover{
+
+  border-color:rgba(212,175,55,.45);
+
+  transform:translateY(-2px);
+
+}
+
+.history-top{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  gap:10px;
+
+  margin-bottom:8px;
+
+}
+
+.history-details,
+
+.history-date{
+
+  font-size:13px;
+
+  color:var(--muted);
+
+}
+
+.history-date{
+
+  margin-top:8px;
+
+}
+
+/* =====================================
+
+   INVENTORY
+
+===================================== */
+
+.material-row{
+
+  background:#0f0f0f;
+
+  border:1px solid #232323;
+
+  border-radius:12px;
+
+  padding:14px;
+
+  margin-bottom:12px;
 
 }
 
@@ -396,405 +674,357 @@ button.danger{
 
   align-items:center;
 
-  margin-bottom:10px;
+  justify-content:space-between;
+
+  margin-bottom:12px;
 
 }
 
-.mat-select{
+.mat-select,
 
-  flex:1;
+.mat-input{
+
+  width:100%;
 
 }
 
 .mat-label{
 
+  display:block;
+
   font-size:12px;
 
-  color:#aaa;
+  color:var(--muted);
 
-  margin:8px 0 4px;
+  margin:8px 0 6px;
 
 }
 
 .delete-btn{
 
-  width:42px;
+  border:none;
 
-  height:42px;
-
-  min-width:42px;
-
-  background:#a10000;
+  background:#1b1b1b;
 
   color:#fff;
 
+  width:38px;
+
+  height:38px;
+
   border-radius:10px;
 
-  margin:0;
+}
+
+.delete-btn:hover{
+
+  background:#2a1111;
+
+  color:#ffb3b3;
 
 }
 
-/* ==================================
-
-   HISTORY / CRM
-
-================================== */
-
-.history-card{
-
-  background:#111;
-
-  border:1px solid rgba(212,175,55,.15);
-
-  border-radius:12px;
-
-  padding:12px;
-
-  margin-bottom:10px;
-
-}
-
-.history-top{
-
-  display:flex;
-
-  justify-content:space-between;
-
-  margin-bottom:6px;
-
-  font-weight:700;
-
-}
-
-.history-details{
-
-  color:#ccc;
-
-  font-size:13px;
-
-}
-
-.history-date{
-
-  color:#777;
-
-  font-size:11px;
-
-  margin-top:8px;
-
-}
-
-/* ==================================
-
-   COLLAPSIBLE
-
-================================== */
-
-.card-header{
-
-  display:flex;
-
-  justify-content:space-between;
-
-  align-items:center;
-
-  color:#d4af37;
-
-  font-weight:700;
-
-  cursor:pointer;
-
-}
-
-.collapsible .card-body{
-
-  max-height:0;
-
-  overflow:hidden;
-
-  opacity:0;
-
-  transition:.3s ease;
-
-}
-
-.collapsible.open .card-body{
-
-  max-height:5000px;
-
-  opacity:1;
-
-  margin-top:12px;
-
-}
-
-.chevron{
-
-  transition:.25s ease;
-
-}
-
-.collapsible.open .chevron{
-
-  transform:rotate(180deg);
-
-}
-
-/* ==================================
-
-   TOASTS
-
-================================== */
-
-.toast-container{
-
-  position:fixed;
-
-  bottom:20px;
-
-  left:50%;
-
-  transform:translateX(-50%);
-
-  z-index:99999;
-
-}
-
-.toast{
-
-  min-width:220px;
-
-  text-align:center;
-
-  padding:14px 18px;
-
-  border-radius:12px;
-
-  font-weight:700;
-
-  margin-top:10px;
-
-  opacity:0;
-
-  transform:translateY(20px);
-
-  transition:.25s ease;
-
-}
-
-.toast.show{
-
-  opacity:1;
-
-  transform:translateY(0);
-
-}
-
-.toast-success{
-
-  background:#153321;
-
-  color:#4cff9a;
-
-  border:1px solid #4cff9a;
-
-}
-
-.toast-warning{
-
-  background:#3a2f0f;
-
-  color:#d4af37;
-
-  border:1px solid #d4af37;
-
-}
-
-.toast-error{
-
-  background:#351313;
-
-  color:#ff4d4d;
-
-  border:1px solid #ff4d4d;
-
-}
-
-/* ==================================
+/* =====================================
 
    MODAL
 
-================================== */
+===================================== */
 
-#proposalModal,
-
-.proposal-modal{
+.modal{
 
   position:fixed;
 
   inset:0;
 
-  background:rgba(0,0,0,.78);
+  background:rgba(0,0,0,.74);
 
   display:none;
 
-  justify-content:center;
-
   align-items:center;
 
-  z-index:9999;
+  justify-content:center;
 
-  padding:18px;
+  padding:20px;
+
+  z-index:999;
 
 }
 
-.proposal-content,
-
-.modal-card{
+.modal-content{
 
   width:100%;
 
-  max-width:420px;
+  max-width:640px;
 
-  max-height:88vh;
+  background:#0e0e0e;
 
-  overflow-y:auto;
+  border:1px solid var(--line2);
 
-  background:#111;
+  border-radius:18px;
 
-  border-radius:16px;
+  padding:22px;
 
-  border:1px solid rgba(212,175,55,.25);
+  position:relative;
 
-  padding:18px;
+}
+
+.close-btn{
+
+  position:absolute;
+
+  top:10px;
+
+  right:10px;
+
+  width:38px;
+
+  height:38px;
+
+  border:none;
+
+  border-radius:10px;
+
+  background:#181818;
+
+  color:#fff;
+
+}
+
+.close-btn:hover{
+
+  background:#262626;
 
 }
 
 .proposal-wrap{
 
-  padding:4px 0;
+  display:grid;
+
+  gap:12px;
 
 }
 
-.price{
+.proposal-wrap .row{
 
-  font-size:34px;
+  display:flex;
+
+  justify-content:space-between;
+
+  gap:12px;
+
+  color:#ddd;
+
+}
+
+.proposal-wrap .price{
+
+  font-size:26px;
 
   font-weight:800;
 
-  margin:14px 0;
-
-  color:#d4af37;
+  color:var(--gold);
 
 }
 
-.proposal-actions{
+/* =====================================
 
-  display:flex;
+   TOASTS
 
-  flex-wrap:wrap;
+===================================== */
+
+#toastWrap{
+
+  position:fixed;
+
+  right:16px;
+
+  bottom:16px;
+
+  z-index:2000;
+
+  display:grid;
 
   gap:10px;
 
-  margin-top:14px;
-
 }
 
-.proposal-actions button{
+.toast{
 
-  flex:1;
+  min-width:240px;
 
-}
+  max-width:320px;
 
-/* ==================================
-
-   SWIPE
-
-================================== */
-
-.swipe-container{
-
-  position:relative;
-
-  overflow:hidden;
+  padding:14px 16px;
 
   border-radius:12px;
 
-}
-
-.swipe-delete{
-
-  position:absolute;
-
-  right:0;
-
-  top:0;
-
-  bottom:0;
-
-  width:100px;
-
-  background:#8b0000;
-
-  display:flex;
-
-  justify-content:center;
-
-  align-items:center;
-
-  font-weight:700;
-
-}
-
-.swipe-card{
-
-  position:relative;
+  color:#fff;
 
   background:#111;
 
-  z-index:2;
+  border:1px solid #2a2a2a;
 
-  transition:transform .2s ease;
+  box-shadow:var(--shadow);
+
+  animation:toastIn .2s ease;
 
 }
 
-/* ==================================
+.toast.success{
 
-   MOBILE
+  border-color:rgba(76,255,154,.35);
 
-================================== */
+}
+
+.toast.warning{
+
+  border-color:rgba(255,210,77,.35);
+
+}
+
+.toast.error{
+
+  border-color:rgba(255,77,77,.35);
+
+}
+
+@keyframes toastIn{
+
+  from{
+
+    transform:translateY(10px);
+
+    opacity:0;
+
+  }
+
+  to{
+
+    transform:translateY(0);
+
+    opacity:1;
+
+  }
+
+}
+
+/* =====================================
+
+   TABLES
+
+===================================== */
+
+table{
+
+  width:100%;
+
+  border-collapse:collapse;
+
+}
+
+th,
+
+td{
+
+  text-align:left;
+
+  padding:12px;
+
+  border-bottom:1px solid #1f1f1f;
+
+}
+
+th{
+
+  color:var(--gold);
+
+  font-size:13px;
+
+}
+
+/* =====================================
+
+   RESPONSIVE
+
+===================================== */
+
+@media (max-width:1100px){
+
+  .grid-two{
+
+    grid-template-columns:1fr;
+
+  }
+
+  .grid-three{
+
+    grid-template-columns:1fr;
+
+  }
+
+  .form-grid{
+
+    grid-template-columns:1fr;
+
+  }
+
+}
+
+@media (max-width:900px){
+
+  .app-shell{
+
+    grid-template-columns:1fr;
+
+  }
+
+  .sidebar{
+
+    position:relative;
+
+    height:auto;
+
+    border-right:none;
+
+    border-bottom:1px solid var(--line);
+
+  }
+
+  .nav-links{
+
+    flex-direction:row;
+
+    flex-wrap:wrap;
+
+  }
+
+}
 
 @media (max-width:640px){
 
-  body{
+  .main-content{
 
-    padding:12px;
-
-  }
-
-  .header{
-
-    flex-direction:column;
-
-    align-items:flex-start;
+    padding:16px;
 
   }
 
-  .row{
+  .page-header h2{
 
-    flex-direction:column;
-
-  }
-
-  .proposal-actions{
-
-    flex-direction:column;
+    font-size:24px;
 
   }
 
-  .price{
+  .card,
 
-    font-size:28px;
+  .glass-card{
+
+    padding:16px;
+
+  }
+
+  .checkbox-grid{
+
+    grid-template-columns:1fr;
 
   }
 
