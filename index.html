@@ -4,429 +4,827 @@
 
 <head>
 
-<meta charset="UTF-8">
+  <meta charset="UTF-8" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
 
-<title>SoDa Outdoor Designs</title>
+    name="viewport"
 
-<link rel="stylesheet" href="css/styles.css">
+    content="width=device-width, initial-scale=1.0"
+
+  />
+
+  <title>
+
+    SoDa Outdoor Designs | Estimator
+
+  </title>
+
+  <link
+
+    rel="stylesheet"
+
+    href="assets/styles.css"
+
+  />
 
 </head>
 
 <body>
 
-<!-- HEADER -->
+  <!-- =====================
 
-<div class="header">
+       APP SHELL
 
-  <div class="brand">
+  ====================== -->
 
-    <h1>Hydroseed Calculator</h1>
+  <div class="app-shell">
 
-    <div class="tagline">SoDa Outdoor Designs</div>
+    <!-- =====================
+
+         SIDEBAR
+
+    ====================== -->
+
+    <aside class="sidebar">
+
+      <div class="brand-wrap">
+
+        <img
+
+          src="assets/logo.png"
+
+          alt="SoDa Outdoor Designs"
+
+          class="brand-logo"
+
+        />
+
+        <div class="brand-text">
+
+          <h1>
+
+            SoDa Outdoor Designs
+
+          </h1>
+
+          <p>
+
+            We build lawns from the soil up
+
+          </p>
+
+        </div>
+
+      </div>
+
+      <nav class="nav-links">
+
+        <a
+
+          href="index.html"
+
+          class="nav-link active"
+
+        >
+
+          Dashboard
+
+        </a>
+
+        <a
+
+          href="inventory.html"
+
+          class="nav-link"
+
+        >
+
+          Inventory
+
+        </a>
+
+        <a
+
+          href="crm.html"
+
+          class="nav-link"
+
+        >
+
+          CRM
+
+        </a>
+
+      </nav>
+
+    </aside>
+
+    <!-- =====================
+
+         MAIN CONTENT
+
+    ====================== -->
+
+    <main class="main-content">
+
+      <!-- =====================
+
+           PAGE HEADER
+
+      ====================== -->
+
+      <section class="page-header">
+
+        <div>
+
+          <h2>
+
+            Lawn Estimator
+
+          </h2>
+
+          <p>
+
+            Professional hydroseeding pricing
+
+            and scheduling system.
+
+          </p>
+
+        </div>
+
+      </section>
+
+      <!-- =====================
+
+           FORM GRID
+
+      ====================== -->
+
+      <section class="grid-two">
+
+        <!-- =====================
+
+             LEFT PANEL
+
+        ====================== -->
+
+        <div class="card">
+
+          <h3>
+
+            Job Inputs
+
+          </h3>
+
+          <div class="form-grid">
+
+            <label>
+
+              Customer
+
+              <input
+
+                id="customer"
+
+                type="text"
+
+                placeholder="Customer Name"
+
+              />
+
+            </label>
+
+            <label>
+
+              Address
+
+              <input
+
+                id="address"
+
+                type="text"
+
+                placeholder="Job Address"
+
+              />
+
+            </label>
+
+            <label>
+
+              Quote Date
+
+              <input
+
+                id="quoteDate"
+
+                type="date"
+
+              />
+
+            </label>
+
+            <label>
+
+              Project Start
+
+              <input
+
+                id="projectStart"
+
+                type="date"
+
+              />
+
+            </label>
+
+            <label>
+
+              Sqft Per House
+
+              <input
+
+                id="sqft"
+
+                type="number"
+
+                value="0"
+
+              />
+
+            </label>
+
+            <label>
+
+              Houses
+
+              <input
+
+                id="houses"
+
+                type="number"
+
+                value="1"
+
+              />
+
+            </label>
+
+            <label>
+
+              Package
+
+              <select id="package">
+
+                <option value="standard">
+
+                  Standard
+
+                </option>
+
+                <option value="premium">
+
+                  Premium
+
+                </option>
+
+              </select>
+
+            </label>
+
+            <label>
+
+              Pricing Mode
+
+              <select id="pricingMode">
+
+                <option value="win">
+
+                  Win Job
+
+                </option>
+
+                <option
+
+                  value="balanced"
+
+                  selected
+
+                >
+
+                  Balanced
+
+                </option>
+
+                <option value="max">
+
+                  Max Profit
+
+                </option>
+
+              </select>
+
+            </label>
+
+            <label>
+
+              Target Margin %
+
+              <input
+
+                id="targetMargin"
+
+                type="number"
+
+                value="0"
+
+              />
+
+            </label>
+
+            <label>
+
+              Pricing Strategy
+
+              <select
+
+                id="pricingStrategy"
+
+              >
+
+                <option value="normal">
+
+                  Normal
+
+                </option>
+
+                <option value="market">
+
+                  Market Rate
+
+                </option>
+
+                <option value="undercut">
+
+                  Undercut Competitor
+
+                </option>
+
+                <option value="builder">
+
+                  Builder Discount
+
+                </option>
+
+              </select>
+
+            </label>
+
+            <label>
+
+              Competitor Price
+
+              <input
+
+                id="competitorPrice"
+
+                type="number"
+
+                value="0"
+
+              />
+
+            </label>
+
+            <label>
+
+              Tank Size
+
+              <select id="tankSize">
+
+                <option value="100">
+
+                  100 Gallon
+
+                </option>
+
+                <option value="300">
+
+                  300 Gallon
+
+                </option>
+
+                <option
+
+                  value="500"
+
+                  selected
+
+                >
+
+                  500 Gallon
+
+                </option>
+
+                <option value="700">
+
+                  700 Gallon
+
+                </option>
+
+              </select>
+
+            </label>
+
+          </div>
+
+        </div>
+
+        <!-- =====================
+
+             RIGHT PANEL
+
+        ====================== -->
+
+        <div class="card">
+
+          <h3>
+
+            Labor Inputs
+
+          </h3>
+
+          <div class="form-grid">
+
+            <label>
+
+              Hourly Rate
+
+              <input
+
+                id="hourlyRate"
+
+                type="number"
+
+                value="0"
+
+              />
+
+            </label>
+
+            <label>
+
+              Hours Per House
+
+              <input
+
+                id="hoursPerHouse"
+
+                type="number"
+
+                value="0"
+
+              />
+
+            </label>
+
+            <label>
+
+              Crew Size
+
+              <input
+
+                id="crewSize"
+
+                type="number"
+
+                value="1"
+
+              />
+
+            </label>
+
+            <label>
+
+              Overhead %
+
+              <input
+
+                id="overhead"
+
+                type="number"
+
+                value="0"
+
+              />
+
+            </label>
+
+          </div>
+
+          <h3 class="mt-24">
+
+            Add-ons
+
+          </h3>
+
+          <div class="checkbox-grid">
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonAeration"
+
+              />
+
+              Aeration
+
+            </label>
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonCompost"
+
+              />
+
+              Compost
+
+            </label>
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonBiohum"
+
+              />
+
+              Biohum
+
+            </label>
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonBiochar"
+
+              />
+
+              Biochar
+
+            </label>
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonHumic"
+
+              />
+
+              Humic
+
+            </label>
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonGrow"
+
+              />
+
+              Grow System
+
+            </label>
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonLime"
+
+              />
+
+              Lime
+
+            </label>
+
+            <label>
+
+              <input
+
+                type="checkbox"
+
+                id="addonSulfur"
+
+              />
+
+              Sulfur
+
+            </label>
+
+          </div>
+
+          <div class="mt-24">
+
+            <button
+
+              onclick="render()"
+
+              class="btn btn-primary"
+
+            >
+
+              Calculate Job
+
+            </button>
+
+            <button
+
+              onclick="sendProposal()"
+
+              class="btn btn-gold"
+
+            >
+
+              Send Proposal
+
+            </button>
+
+            <button
+
+              onclick="createLead()"
+
+              class="btn"
+
+            >
+
+              Create Lead
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- =====================
+
+           RESULTS
+
+      ====================== -->
+
+      <section class="card mt-24">
+
+        <h3>
+
+          Results
+
+        </h3>
+
+        <div id="results">
+
+          <div class="muted">
+
+            Enter job values to begin.
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- =====================
+
+           SCHEDULE
+
+      ====================== -->
+
+      <section class="card mt-24">
+
+        <h3>
+
+          Schedule Preview
+
+        </h3>
+
+        <div
+
+          id="schedulePreview"
+
+        ></div>
+
+      </section>
+
+      <!-- =====================
+
+           JOB HISTORY
+
+      ====================== -->
+
+      <section class="card mt-24">
+
+        <h3>
+
+          Job History
+
+        </h3>
+
+        <div id="jobHistory"></div>
+
+      </section>
+
+    </main>
 
   </div>
 
-</div>
+  <!-- =====================
 
-<div class="gold-line"></div>
+       PROPOSAL MODAL
 
-<!-- NAV -->
+  ====================== -->
 
-<div class="row" style="margin-bottom:18px;">
+  <div
 
-  <button onclick="location.href='crm.html'">CRM</button>
+    id="proposalModal"
 
-  <button onclick="location.href='inventory.html'">Inventory</button>
+    class="modal"
 
-</div>
+    onclick="handleModalBackground(event)"
 
-<!-- =========================
+  >
 
-     PROJECT DETAILS
+    <div class="modal-content proposal-content">
 
-========================= -->
+      <button
 
-<div class="collapsible card open" data-card="details">
+        class="close-btn"
 
-  <div class="card-header" onclick="toggleCard(this)">
+        onclick="closeProposalModal()"
 
-    Project Details
+      >
 
-    <span class="chevron">⌄</span>
+        ×
 
-  </div>
+      </button>
 
-  <div class="card-body">
+      <h2 id="modalCustomer"></h2>
 
-    <label>Square Feet</label>
+      <p id="modalAddress"></p>
 
-    <input id="sqft" type="number" value="3000">
-
-    <label>Houses</label>
-
-    <input id="houses" type="number" value="1">
-
-    <label>Package</label>
-
-    <select id="package">
-
-      <option value="standard">Standard</option>
-
-      <option value="premium">Premium</option>
-
-    </select>
-
-    <label>Pricing Mode</label>
-
-    <select id="pricingMode">
-
-      <option value="win">Win Job</option>
-
-      <option value="balanced" selected>Balanced</option>
-
-      <option value="max">Max Profit</option>
-
-    </select>
-
-    <label>Target Margin (%)</label>
-
-    <input id="targetMargin" type="number" value="40">
-
-    <label>Pricing Strategy</label>
-
-    <select id="pricingStrategy">
-
-      <option value="normal">Normal</option>
-
-      <option value="market">Market</option>
-
-      <option value="undercut">Undercut</option>
-
-      <option value="builder">Builder</option>
-
-    </select>
-
-    <label>Competitor Price ($)</label>
-
-    <input id="competitorPrice" type="number" placeholder="Optional">
-
-  </div>
-
-</div>
-
-<!-- =========================
-
-     LABOR
-
-========================= -->
-
-<div class="collapsible card" data-card="labor">
-
-  <div class="card-header" onclick="toggleCard(this)">
-
-    Labor Settings
-
-    <span class="chevron">⌄</span>
-
-  </div>
-
-  <div class="card-body">
-
-    <label>Hourly Rate ($)</label>
-
-    <input id="hourlyRate" type="number" value="25">
-
-    <label>Hours Per House</label>
-
-    <input id="hoursPerHouse" type="number" value="5">
-
-    <label>Crew Size</label>
-
-    <input id="crewSize" type="number" value="2">
-
-    <label>Overhead (%)</label>
-
-    <input id="overhead" type="number" value="10">
-
-  </div>
-
-</div>
-
-<!-- =========================
-
-     TANK
-
-========================= -->
-
-<div class="collapsible card" data-card="tank">
-
-  <div class="card-header" onclick="toggleCard(this)">
-
-    Tank Settings
-
-    <span class="chevron">⌄</span>
-
-  </div>
-
-  <div class="card-body">
-
-    <label>Tank Size</label>
-
-    <select id="tankSize">
-
-      <option value="100">100 Gallon</option>
-
-      <option value="300">300 Gallon</option>
-
-      <option value="500" selected>500 Gallon</option>
-
-      <option value="700">700 Gallon</option>
-
-    </select>
-
-  </div>
-
-</div>
-
-<!-- =========================
-
-     ADDONS
-
-========================= -->
-
-<div class="collapsible card" data-card="addons">
-
-  <div class="card-header" onclick="toggleCard(this)">
-
-    Add-ons
-
-    <span class="chevron">⌄</span>
-
-  </div>
-
-  <div class="card-body">
-
-    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.aeration=this.classList.contains('active'); requestRender();">
-
-      Aeration
+      <div id="modalBody"></div>
 
     </div>
 
-    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.compost=this.classList.contains('active'); requestRender();">
-
-      Compost
-
-    </div>
-
-    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.biochar=this.classList.contains('active'); requestRender();">
-
-      Biochar
-
-    </div>
-
-    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.humic=this.classList.contains('active'); requestRender();">
-
-      Humic
-
-    </div>
-
-    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.grow=this.classList.contains('active'); requestRender();">
-
-      Grow System
-
-    </div>
-
-    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.lime=this.classList.contains('active'); requestRender();">
-
-      Lime
-
-    </div>
-
-    <div class="toggle" onclick="this.classList.toggle('active'); app.job.addons.sulfur=this.classList.contains('active'); requestRender();">
-
-      Sulfur
-
-    </div>
-
   </div>
 
-</div>
+  <!-- =====================
 
-<!-- =========================
+       TOASTS
 
-     SCHEDULE
+  ====================== -->
 
-========================= -->
+  <div id="toastWrap"></div>
 
-<div class="collapsible card" data-card="schedule">
+  <!-- =====================
 
-  <div class="card-header" onclick="toggleCard(this)">
+       SCRIPT ORDER
 
-    Schedule
+  ====================== -->
 
-    <span class="chevron">⌄</span>
+  <script src="js/state.js"></script>
 
-  </div>
+  <script src="js/core.js"></script>
 
-  <div class="card-body">
+  <script src="js/inventory.js"></script>
 
-    <label>Project Start</label>
+  <script src="js/crm.js"></script>
 
-    <input type="date" id="projectStart">
+  <script src="js/ui.js"></script>
 
-    <div id="schedulePreview"></div>
-
-  </div>
-
-</div>
-
-<!-- =========================
-
-     PROPOSAL
-
-========================= -->
-
-<div class="collapsible card" data-card="proposal">
-
-  <div class="card-header" onclick="toggleCard(this)">
-
-    Proposal Info
-
-    <span class="chevron">⌄</span>
-
-  </div>
-
-  <div class="card-body">
-
-    <label>Customer Name</label>
-
-    <input id="customer">
-
-    <label>Address</label>
-
-    <input id="address">
-
-    <label>Quote Date</label>
-
-    <input type="date" id="quoteDate">
-
-    <button class="primary full" onclick="sendProposal()">
-
-      Generate Proposal
-
-    </button>
-
-  </div>
-
-</div>
-
-<!-- =========================
-
-     RESULTS
-
-========================= -->
-
-<div class="collapsible card open" data-card="results">
-
-  <div class="card-header" onclick="toggleCard(this)">
-
-    Results
-
-    <span class="chevron">⌄</span>
-
-  </div>
-
-  <div class="card-body">
-
-    <div id="results"></div>
-
-  </div>
-
-</div>
-
-<!-- =========================
-
-     PIPELINE
-
-========================= -->
-
-<div class="collapsible card" data-card="pipeline">
-
-  <div class="card-header" onclick="toggleCard(this)">
-
-    Pipeline
-
-    <span class="chevron">⌄</span>
-
-  </div>
-
-  <div class="card-body">
-
-    <div id="jobHistoryList"></div>
-
-  </div>
-
-</div>
-
-<!-- =========================
-
-     HISTORY
-
-========================= -->
-
-<div class="collapsible card" data-card="history">
-
-  <div class="card-header" onclick="toggleCard(this)">
-
-    History
-
-    <span class="chevron">⌄</span>
-
-  </div>
-
-  <div class="card-body">
-
-    <div id="jobHistory"></div>
-
-  </div>
-
-</div>
-
-<!-- MODAL -->
-
-<div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
-
-  <div class="proposal-content">
-
-    <div id="modalCustomer"></div>
-
-    <div id="modalAddress"></div>
-
-    <div id="modalBody"></div>
-
-  </div>
-
-</div>
-
-<!-- TOAST -->
-
-<div id="toastContainer" class="toast-container"></div>
-
-<!-- JS ORDER -->
-
-<script src="js/state.js"></script>
-
-<script src="js/core.js"></script>
-
-<script src="js/inventory.js"></script>
-
-<script src="js/crm.js"></script>
-
-<script src="js/ui.js"></script>
-
-<script src="js/app.js"></script>
+  <script src="js/app.js"></script>
 
 </body>
 

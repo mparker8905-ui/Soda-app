@@ -1,4 +1,12 @@
-<!-- crm.html -->
+<!-- =====================================
+
+crm.html
+
+SoDa Outdoor Designs
+
+Production CRM Pipeline
+
+===================================== -->
 
 <!DOCTYPE html>
 
@@ -6,97 +14,669 @@
 
 <head>
 
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta
 
-<title>CRM - SoDa Outdoor Designs</title>
+  name="viewport"
 
-<link rel="stylesheet" href="css/styles.css">
+  content="width=device-width, initial-scale=1.0"
+
+/>
+
+<title>SoDa Outdoor Designs | CRM</title>
+
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+
+.crm-shell{
+
+  max-width:1500px;
+
+  margin:0 auto;
+
+  padding:28px 18px 80px;
+
+}
+
+.crm-top{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  gap:18px;
+
+  flex-wrap:wrap;
+
+  margin-bottom:24px;
+
+}
+
+.crm-title{
+
+  font-size:30px;
+
+  font-weight:800;
+
+  color:#d4af37;
+
+}
+
+.crm-sub{
+
+  color:#8e8e8e;
+
+  font-size:14px;
+
+  margin-top:4px;
+
+}
+
+.crm-actions{
+
+  display:flex;
+
+  gap:10px;
+
+  flex-wrap:wrap;
+
+}
+
+.crm-btn{
+
+  border:none;
+
+  border-radius:10px;
+
+  padding:12px 16px;
+
+  font-weight:800;
+
+  cursor:pointer;
+
+  background:#d4af37;
+
+  color:#000;
+
+}
+
+.crm-btn.alt{
+
+  background:#111;
+
+  color:#fff;
+
+  border:1px solid #333;
+
+}
+
+.crm-btn.red{
+
+  background:#7d1f1f;
+
+  color:#fff;
+
+}
+
+.quick-lead{
+
+  display:grid;
+
+  grid-template-columns:2fr 2fr auto;
+
+  gap:12px;
+
+  margin:18px 0 28px;
+
+}
+
+.quick-lead input{
+
+  background:#0d0d0d;
+
+  color:#fff;
+
+  border:1px solid #333;
+
+  border-radius:10px;
+
+  padding:12px;
+
+}
+
+.pipeline-wrap{
+
+  overflow-x:auto;
+
+}
+
+.pipeline-row{
+
+  display:flex;
+
+  gap:16px;
+
+  align-items:flex-start;
+
+  min-width:1300px;
+
+}
+
+.stage{
+
+  min-width:280px;
+
+  background:#0d0d0d;
+
+  border:1px solid #2b2b2b;
+
+  border-radius:16px;
+
+  padding:14px;
+
+}
+
+.stage-head{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  margin-bottom:14px;
+
+}
+
+.stage-title{
+
+  color:#fff;
+
+  font-weight:800;
+
+}
+
+.stage-count{
+
+  color:#d4af37;
+
+  font-size:13px;
+
+}
+
+.card-list{
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:12px;
+
+}
+
+.crm-card{
+
+  background:#111;
+
+  border:1px solid #2a2a2a;
+
+  border-radius:12px;
+
+  padding:14px;
+
+  cursor:pointer;
+
+  transition:.18s ease;
+
+}
+
+.crm-card:hover{
+
+  transform:translateY(-2px);
+
+  border-color:#d4af37;
+
+}
+
+.crm-name{
+
+  font-weight:800;
+
+  color:#fff;
+
+  margin-bottom:6px;
+
+}
+
+.crm-address{
+
+  font-size:13px;
+
+  color:#999;
+
+  margin-bottom:10px;
+
+}
+
+.crm-money{
+
+  color:#4cff9a;
+
+  font-weight:800;
+
+}
+
+.empty{
+
+  color:#666;
+
+  font-size:13px;
+
+  padding:6px 2px;
+
+}
+
+/* MODAL */
+
+.modal{
+
+  position:fixed;
+
+  inset:0;
+
+  background:rgba(0,0,0,.7);
+
+  display:none;
+
+  align-items:center;
+
+  justify-content:center;
+
+  z-index:9999;
+
+}
+
+.modal-card{
+
+  width:min(92vw,700px);
+
+  background:#0b0b0b;
+
+  border:1px solid #2b2b2b;
+
+  border-radius:18px;
+
+  padding:22px;
+
+}
+
+.modal-head{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  margin-bottom:18px;
+
+}
+
+.modal-title{
+
+  color:#fff;
+
+  font-size:22px;
+
+  font-weight:800;
+
+}
+
+.modal-close{
+
+  background:#111;
+
+  color:#fff;
+
+  border:1px solid #333;
+
+  width:42px;
+
+  height:42px;
+
+  border-radius:10px;
+
+  cursor:pointer;
+
+}
+
+.modal-grid{
+
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:14px;
+
+}
+
+.data-box{
+
+  background:#111;
+
+  border:1px solid #242424;
+
+  border-radius:12px;
+
+  padding:14px;
+
+}
+
+.data-label{
+
+  font-size:12px;
+
+  color:#777;
+
+  margin-bottom:6px;
+
+}
+
+.data-value{
+
+  color:#fff;
+
+  font-weight:700;
+
+}
+
+.modal-actions{
+
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:10px;
+
+  margin-top:18px;
+
+}
+
+@media (max-width:900px){
+
+  .quick-lead{
+
+    grid-template-columns:1fr;
+
+  }
+
+  .modal-grid{
+
+    grid-template-columns:1fr;
+
+  }
+
+  .crm-title{
+
+    font-size:24px;
+
+  }
+
+}
+
+</style>
 
 </head>
 
 <body>
 
-<div class="header">
+<div class="crm-shell">
 
-  <div class="brand">
+  <!-- TOP -->
 
-    <h1>CRM</h1>
+  <div class="crm-top">
 
-    <div class="tagline">Leads • Proposals • Wins</div>
+    <div>
+
+      <div class="crm-title">
+
+        Sales CRM Pipeline
+
+      </div>
+
+      <div class="crm-sub">
+
+        Manage leads, proposals,
+
+        pending jobs, wins and losses.
+
+      </div>
+
+    </div>
+
+    <div class="crm-actions">
+
+      <a
+
+        href="index.html"
+
+        class="crm-btn alt"
+
+        style="text-decoration:none;"
+
+      >
+
+        ← Calculator
+
+      </a>
+
+      <a
+
+        href="inventory.html"
+
+        class="crm-btn alt"
+
+        style="text-decoration:none;"
+
+      >
+
+        Inventory
+
+      </a>
+
+    </div>
+
+  </div>
+
+  <!-- QUICK LEAD -->
+
+  <div class="quick-lead">
+
+    <input
+
+      id="customer"
+
+      placeholder="Customer Name"
+
+    />
+
+    <input
+
+      id="address"
+
+      placeholder="Project Address"
+
+    />
+
+    <button
+
+      class="crm-btn"
+
+      onclick="createLead()"
+
+    >
+
+      + Add Lead
+
+    </button>
+
+  </div>
+
+  <!-- PIPELINE -->
+
+  <div class="pipeline-wrap">
+
+    <div
+
+      id="jobHistoryList"
+
+      class="pipeline-row"
+
+    ></div>
 
   </div>
 
 </div>
 
-<div class="gold-line"></div>
+<!-- MODAL -->
 
-<div class="row">
+<div
 
-  <button onclick="location.href='index.html'">Calculator</button>
+  class="modal"
 
-  <button onclick="location.href='inventory.html'">Inventory</button>
+  id="proposalModal"
 
-</div>
+  onclick="handleModalBackground(event)"
 
-<div class="card">
+>
 
-  <div class="section-title">Create Lead</div>
+  <div
 
-  <label>Customer Name</label>
+    class="modal-card proposal-content"
 
-  <input id="customer">
+    onclick="event.stopPropagation()"
 
-  <label>Address</label>
+  >
 
-  <input id="address">
+    <div class="modal-head">
 
-  <button class="primary full" onclick="createLead()">
+      <div class="modal-title">
 
-    Add Lead
+        Proposal Details
 
-  </button>
+      </div>
 
-</div>
+      <button
 
-<div class="card">
+        class="modal-close"
 
-  <div class="section-title">Pipeline</div>
+        onclick="closeProposalModal()"
 
-  <div id="jobHistoryList"></div>
+      >
 
-</div>
-
-<!-- Proposal Modal -->
-
-<div id="proposalModal" class="proposal-modal" onclick="handleModalBackground(event)">
-
-  <div class="proposal-content">
-
-    <div id="modalCustomer"></div>
-
-    <div id="modalAddress"></div>
-
-    <div id="modalBody"></div>
-
-    <div class="proposal-actions">
-
-      <button class="accept-btn" onclick="setProposalStatus('Accepted')">
-
-        Accept
+        ✕
 
       </button>
 
-      <button class="pending-btn" onclick="setProposalStatus('Pending')">
+    </div>
+
+    <div
+
+      id="modalCustomer"
+
+      style="
+
+        color:#fff;
+
+        font-size:20px;
+
+        font-weight:800;
+
+        margin-bottom:6px;
+
+      "
+
+    ></div>
+
+    <div
+
+      id="modalAddress"
+
+      style="
+
+        color:#888;
+
+        margin-bottom:18px;
+
+      "
+
+    ></div>
+
+    <div id="modalBody"></div>
+
+    <div class="modal-actions">
+
+      <button
+
+        class="crm-btn"
+
+        onclick="setProposalStatus('Accepted')"
+
+      >
+
+        Mark Won
+
+      </button>
+
+      <button
+
+        class="crm-btn alt"
+
+        onclick="setProposalStatus('Pending')"
+
+      >
 
         Pending
 
       </button>
 
-      <button class="reject-btn" onclick="setProposalStatus('Not Accepted')">
+      <button
 
-        Reject
+        class="crm-btn red"
+
+        onclick="setProposalStatus('Not Accepted')"
+
+      >
+
+        Lost
+
+      </button>
+
+      <button
+
+        class="crm-btn alt"
+
+        onclick="convertToProposal()"
+
+      >
+
+        Convert
+
+      </button>
+
+      <button
+
+        class="crm-btn red"
+
+        onclick="deleteProposalById(activeProposalId); closeProposalModal();"
+
+      >
+
+        Delete
 
       </button>
 
@@ -106,27 +686,85 @@
 
 </div>
 
-<div id="toastContainer" class="toast-container"></div>
+<!-- SCRIPTS -->
 
-<script src="js/state.js"></script>
+<script src="state.js"></script>
 
-<script src="js/core.js"></script>
+<script src="ui.js"></script>
 
-<script src="js/inventory.js"></script>
+<script src="core.js"></script>
 
-<script src="js/crm.js"></script>
+<script src="inventory.js"></script>
 
-<script src="js/ui.js"></script>
-
-<script src="js/app.js"></script>
+<script src="crm.js"></script>
 
 <script>
 
-window.onload = function(){
+document.addEventListener(
 
-  if(window.renderPipeline) renderPipeline();
+  "DOMContentLoaded",
 
-};
+  function(){
+
+    if(
+
+      typeof renderPipeline ===
+
+      "function"
+
+    ){
+
+      renderPipeline();
+
+    }
+
+  }
+
+);
+
+/* ==========================
+
+SAFETY FALLBACKS
+
+========================== */
+
+if(
+
+  typeof closeProposalModal !==
+
+  "function"
+
+){
+
+  window.closeProposalModal =
+
+    function(){
+
+      const modal =
+
+        document.getElementById(
+
+          "proposalModal"
+
+        );
+
+      if(modal){
+
+        modal.style.display =
+
+          "none";
+
+      }
+
+      document.body.classList.remove(
+
+        "modal-open"
+
+      );
+
+    };
+
+}
 
 </script>
 
