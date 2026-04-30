@@ -447,3 +447,7 @@
   };
 
 })();
+
+window.state = state;
+
+window.app = state;

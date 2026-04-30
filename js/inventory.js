@@ -993,3 +993,23 @@
     };
 
 })();
+
+window.loadInventory = loadInventory;
+
+window.saveInventory = saveInventory;
+
+window.renderInventory = renderInventory;
+
+window.addInventoryRow = addInventoryRow;
+
+window.clearInventory = clearInventory;
+
+window.exportInventory = exportInventory;
+
+window.getInventoryTotals = getInventoryTotals;
+
+window.getInventoryCost = getInventoryCost;
+
+window.getInventoryCache = getInventoryCache;
+
+window.compareInventory = compareInventory;

@@ -701,3 +701,23 @@
   };
 
 })();
+
+window.calculateJob = calculateJob;
+
+window.calculateJobCore = calculateJobCore;
+
+window.getMaterialNeeds = getMaterialNeeds;
+
+window.getMaterialNeedsCore = getMaterialNeedsCore;
+
+window.calculateTankLoads = calculateTankLoads;
+
+window.calculateDealScore = calculateDealScore;
+
+window.generateAIInsights = generateAIInsights;
+
+window.buildSchedule = buildSchedule;
+
+window.getBuilderMultiplier = getBuilderMultiplier;
+
+window.getSmartPricing = getSmartPricing;

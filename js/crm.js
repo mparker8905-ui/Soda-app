@@ -1417,3 +1417,27 @@ Mark Not Accepted
     };
 
 })();
+
+window.sendProposal = sendProposal;
+
+window.createLead = createLead;
+
+window.convertToProposal = convertToProposal;
+
+window.renderPipeline = renderPipeline;
+
+window.openProposal = openProposal;
+
+window.openFullProposal = openFullProposal;
+
+window.openFullProposalFromModal = openFullProposalFromModal;
+
+window.setProposalStatus = setProposalStatus;
+
+window.deleteProposalById = deleteProposalById;
+
+window.setTimeline = setTimeline;
+
+window.handleModalBackground = handleModalBackground;
+
+window.getSavedProposals = getSavedProposals;

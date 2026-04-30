@@ -487,3 +487,15 @@
   }
 
 })();
+
+window.render = render;
+
+window.requestRender = requestRender;
+
+window.syncStateFromUI = syncStateFromUI;
+
+window.renderHistory = renderHistory;
+
+window.renderSchedulePreview = renderSchedulePreview;
+
+window.resetToasts = resetToasts;

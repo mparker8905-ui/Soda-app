@@ -839,3 +839,11 @@
     };
 
 })();
+
+window.showToast = showToast;
+
+window.closeProposalModal = closeProposalModal;
+
+window.editJob = editJob;
+
+window.deleteJob = deleteJob;
