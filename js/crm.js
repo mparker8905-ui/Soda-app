@@ -1,899 +1,1419 @@
-//======================
-//== SEND PROPOSAL
-//======================
+/* =====================================
 
-function sendProposal(){
+   crm.js
 
-  try{
+   SoDa Outdoor Designs
 
-    let r = calculateJob()
+   CRM + Leads + Proposals + Pipeline
 
-let quoteDate = document.getElementById("quoteDate")?.value || ""
+===================================== */
 
-let quoteDateFormatted = quoteDate
+(function () {
 
-  ? new Date(quoteDate).toLocaleDateString()
+  "use strict";
 
-  : new Date().toLocaleDateString()
+  /* =====================================
 
-let customer = document.getElementById("customer")?.value || "Client"
-    let address = document.getElementById("address")?.value || ""
-    let packageType = document.getElementById("package")?.value || "standard"
+     CONSTANTS
 
-let materialCost = r.cost - r.laborCost - r.overheadCost
+  ===================================== */
 
-let materialNeeds = getMaterialNeeds(
+  const STORAGE_KEY = "soda_proposals";
 
-  { totalSqft: r.totalSqft },
+  const PIPELINE_STAGES = [
 
-  packageType,
+    { key: "lead", label: "Leads" },
 
- state.job.addons
+    { key: "proposal", label: "Proposals" },
 
-)
+    { key: "pending", label: "Pending" },
 
-let materialHTML = ""
+    { key: "won", label: "Won" },
 
-Object.keys(materialNeeds).forEach(k => {
+    { key: "lost", label: "Lost" }
 
-  let unit = MATERIAL_RATES[k]?.unit || ""
+  ];
 
-  materialHTML += `
-    <div class="line">
-      <span>${k.toUpperCase()}</span>
-      <span>${materialNeeds[k].toFixed(1)} ${unit}</span>
-    </div>
-  `
-})
+  window.PIPELINE_STAGES = PIPELINE_STAGES;
 
-let workflowHTML = `
+  /* =====================================
 
-<div class="section">
+     HELPERS
 
-  <div class="section-title">PROJECT WORKFLOW</div>
+  ===================================== */
 
-  <div style="color:#aaa;font-size:14px;line-height:1.5;">
+  function readCRM() {
 
-    <div style="margin-bottom:10px;">
+    try {
 
-      <b>1. Site Preparation</b><br>
+      return JSON.parse(
 
-      Soil conditioning may include aeration, lime/sulfur balancing, and organic amendments to create an optimal growing environment.
+        localStorage.getItem(STORAGE_KEY)
 
-    </div>
+      ) || [];
 
-    <div style="margin-bottom:10px;">
+    } catch (e) {
 
-      <b>2. Lawn Installation</b><br>
+      console.error("CRM read failed", e);
 
-      Professional hydroseeding application using Organic premium seed blends, fertilizer, mulch, and tackifier for maximum germination and coverage.
+      return [];
 
-    </div>
-
-    <div>
-
-     <b>3. ${packageType === "premium" ? "Enhanced Soil Optimization & Growth Support" : "Establishment & Follow-Up"}</b>
-
-      We provide guidance for watering and care to ensure proper germination and long-term success of your lawn.
-
-    </div>
-
-  </div>
-
-</div>
-
-`
-
-let whyHTML = `
-
-<div class="section">
-
-  <div class="section-title">WHY CHOOSE SODA OUTDOOR DESIGNS</div>
-
-  <div style="color:#aaa;font-size:14px;line-height:1.6;">
-
-    <div style="margin-bottom:10px;">
-
-      <b>Built With Purpose</b><br>
-
-    SoDa Outdoor Designs is a family-founded company, named after our daughters, and built on a commitment to doing things the right way—from the ground up. That foundation shapes how we approach every project—with pride, accountability, and long-term care in mind.
-
-    </div>
-
-    <div style="margin-bottom:10px;">
-
-      <b>Professional Process</b><br>
-
-      We don’t take shortcuts. Every lawn is installed using a structured system focused on soil health, proper nutrient balance, and optimal seed establishment for lasting results.
-
-    </div>
-
-    <div style="margin-bottom:10px;">
-
-      <b>Quality Materials</b><br>
-
-      We use professional-grade seed blends, fertilizers, and soil amendments designed to produce thicker, healthier, and more resilient lawns.
-
-    </div>
-
-    <div>
-
-      <b>Client-Focused Approach</b><br>
-
-      As a family-operated business, we value relationships. Every project is treated with the same level of care, communication, and attention to detail we would expect for our own property.
-
-    </div>
-
-  </div>
-
-</div>
-
-`
-
-   
-
-    let pricePerSqft = r.totalSqft ? r.price / r.totalSqft : 0
-
-let proposal = {
-
-  id: Date.now(),
-
-  customer,
-
-  address,
-
-  packageType,
-
-  quoteDate: quoteDateFormatted,
-
-  total: r.price,
-
-  sqft: r.totalSqft,
-
- status: "Proposal Sent",
-
-stage: "proposal",
-
-createdAt: Date.now(),
-
-  snapshot: {
-
-    sqft: document.getElementById("sqft")?.value,
-
-    houses: document.getElementById("houses")?.value,
-
-    package: packageType,
-
-    addons: state.job.addons,
-
-    pricingMode: document.getElementById("pricingMode")?.value,
-
-    targetMargin: document.getElementById("targetMargin")?.value
+    }
 
   }
 
-}
+  function writeCRM(list) {
 
-let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+    localStorage.setItem(
 
-let exists = list.find(p =>
+      STORAGE_KEY,
 
-  p.customer === proposal.customer &&
+      JSON.stringify(list)
 
-  p.address === proposal.address &&
+    );
 
-  p.quoteDate === proposal.quoteDate
+  }
 
-)
+  function val(id, fallback = "") {
 
-if(!exists){
+    const el =
 
-  list.push(proposal)
+      document.getElementById(id);
 
-  localStorage.setItem("soda_proposals", JSON.stringify(list))
+    return el ? el.value : fallback;
 
-}
+  }
 
-    let win = window.open("", "_blank")
+  function num(v) {
 
-    if(!win){
-      alert("Popup blocked")
-      return
+    const n = Number(v);
+
+    return Number.isFinite(n)
+
+      ? n
+
+      : 0;
+
+  }
+
+  function toast(msg, type) {
+
+    if (
+
+      typeof window.showToast ===
+
+      "function"
+
+    ) {
+
+      window.showToast(
+
+        msg,
+
+        type
+
+      );
+
     }
 
-renderPipeline()
+  }
 
-    // BUILD HTML SAFELY
-   
+  function rerender() {
 
-let html = `
+    if (
+
+      typeof window.renderPipeline ===
+
+      "function"
+
+    ) {
+
+      window.renderPipeline();
+
+    }
+
+    if (
+
+      typeof window.render ===
+
+      "function"
+
+    ) {
+
+      window.render();
+
+    }
+
+  }
+
+  /* =====================================
+
+     PUBLIC GETTER
+
+  ===================================== */
+
+  window.getSavedProposals =
+
+    function () {
+
+      return readCRM();
+
+    };
+
+  /* =====================================
+
+     CREATE LEAD
+
+  ===================================== */
+
+  window.createLead =
+
+    function () {
+
+      const customer = val(
+
+        "customer"
+
+      ).trim();
+
+      const address = val(
+
+        "address"
+
+      ).trim();
+
+      if (!customer) {
+
+        alert(
+
+          "Enter customer name"
+
+        );
+
+        return;
+
+      }
+
+      const lead = {
+
+        id: Date.now(),
+
+        customer,
+
+        address,
+
+        stage: "lead",
+
+        status: "New Lead",
+
+        total: 0,
+
+        sqft: 0,
+
+        createdAt:
+
+          Date.now()
+
+      };
+
+      const list = readCRM();
+
+      list.push(lead);
+
+      writeCRM(list);
+
+      rerender();
+
+      toast(
+
+        "Lead created",
+
+        "success"
+
+      );
+
+    };
+
+  /* =====================================
+
+     SEND PROPOSAL
+
+  ===================================== */
+
+  window.sendProposal =
+
+    function () {
+
+      try {
+
+        if (
+
+          typeof window.calculateJob !==
+
+          "function"
+
+        ) {
+
+          alert(
+
+            "Calculator unavailable"
+
+          );
+
+          return;
+
+        }
+
+        const r =
+
+          window.calculateJob();
+
+        const customer =
+
+          val(
+
+            "customer",
+
+            "Client"
+
+          );
+
+        const address =
+
+          val("address");
+
+        const quoteDate =
+
+          val("quoteDate");
+
+        const quoteDateFormatted =
+
+          quoteDate
+
+            ? new Date(
+
+                quoteDate
+
+              ).toLocaleDateString()
+
+            : new Date().toLocaleDateString();
+
+        const packageType =
+
+          val(
+
+            "package",
+
+            "standard"
+
+          );
+
+        const proposal = {
+
+          id: Date.now(),
+
+          customer,
+
+          address,
+
+          packageType,
+
+          quoteDate:
+
+            quoteDateFormatted,
+
+          total: r.price,
+
+          sqft: r.totalSqft,
+
+          stage: "proposal",
+
+          status:
+
+            "Proposal Sent",
+
+          createdAt:
+
+            Date.now(),
+
+          snapshot: {
+
+            sqft: val("sqft"),
+
+            houses:
+
+              val(
+
+                "houses"
+
+              ),
+
+            package:
+
+              packageType,
+
+            addons:
+
+              window.state
+
+                ?.job
+
+                ?.addons || {}
+
+          }
+
+        };
+
+        const list =
+
+          readCRM();
+
+        const exists =
+
+          list.find(
+
+            (p) =>
+
+              p.customer ===
+
+                proposal.customer &&
+
+              p.address ===
+
+                proposal.address &&
+
+              p.quoteDate ===
+
+                proposal.quoteDate
+
+          );
+
+        if (!exists) {
+
+          list.push(
+
+            proposal
+
+          );
+
+          writeCRM(
+
+            list
+
+          );
+
+        }
+
+        rerender();
+
+        openProposalWindow(
+
+          proposal,
+
+          r
+
+        );
+
+      } catch (e) {
+
+        console.error(e);
+
+        alert(
+
+          "Proposal error"
+
+        );
+
+      }
+
+    };
+
+  /* =====================================
+
+     PROPOSAL WINDOW
+
+  ===================================== */
+
+  function openProposalWindow(
+
+    proposal,
+
+    r
+
+  ) {
+
+    const win =
+
+      window.open(
+
+        "",
+
+        "_blank"
+
+      );
+
+    if (!win) {
+
+      alert(
+
+        "Popup blocked"
+
+      );
+
+      return;
+
+    }
+
+    const pricePerSqft =
+
+      r.totalSqft
+
+        ? r.price /
+
+          r.totalSqft
+
+        : 0;
+
+    const html = `
+
 <html>
+
 <head>
-  <title>Proposal</title>
 
-  <style>
- body{
-  font-family: -apple-system, BlinkMacSystemFont, Arial;
-  padding:40px 25px;
-  background:#000;
-  color:#d4af37;
-  max-width:700px;
-  margin:auto;
+<title>Proposal</title>
+
+<style>
+
+body{
+
+font-family:Arial;
+
+padding:40px;
+
+background:#000;
+
+color:#d4af37;
+
+max-width:720px;
+
+margin:auto;
+
 }
 
-    /* HEADER */
-    .header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-    .header{
-    padding-bottom:5px;
-    }
-    .brand h1{
-      margin:0;
-      font-size:26px;
-    }
+.section{
 
-    .tagline{
-      font-size:13px;
-      color:#aaa;
-      margin-top:3px;
-    }
+margin-top:20px;
 
-    .logo{
-      width:65px;
-    }
-
-    .gold-line{
-      height:2px;
-      background:linear-gradient(90deg, transparent,     #d4af37, transparent);
-      margin:15px 0 25px 0;
-    }
-
-    /* SECTIONS */
-    .section{
-      margin-top:20px;
-    }
-
-    .section-title{
-      font-weight:bold;
-      margin-bottom:6px;
-      letter-spacing:0.5px;
-    }
-
-    .line{
-      display:flex;
-      justify-content:space-between;
-      margin:4px 0;
-    }
-
-    /* HIGHLIGHT BOX */
-    .highlight{
-  background:#111;
-  border:2px solid #d4af37;
-  box-shadow:0 0 12px rgba(212,175,55,0.25);
 }
 
-    /* TOTAL */
-    .total{
-      margin-top:15px;
-      font-size:28px;
-      font-weight:bold;
-      text-align:right;
-    }
+.line{
 
-    /* CTA */
-    .cta button{
-  background:#d4af37;
-  color:#000;
-  box-shadow:0 0 10px rgba(212,175,55,0.4);
+display:flex;
+
+justify-content:space-between;
+
+margin:6px 0;
+
 }
 
-    .cta button{
-      width:100%;
-      padding:16px;
-      font-size:18px;
-      font-weight:bold;
-      background:black;
-      color:white;
-      border:none;
-      border-radius:8px;
-    }
+.total{
 
-    .signature{
-  border-top:1px solid #d4af37;
-  color:#aaa;
+font-size:34px;
+
+font-weight:800;
+
+text-align:right;
+
+margin-top:10px;
+
 }
 
-  </style>
+button{
+
+width:100%;
+
+padding:14px;
+
+margin-top:12px;
+
+font-weight:bold;
+
+border:none;
+
+cursor:pointer;
+
+}
+
+.primary{
+
+background:#d4af37;
+
+color:#000;
+
+}
+
+.reject{
+
+background:#550000;
+
+color:#fff;
+
+}
+
+</style>
+
 </head>
 
 <body>
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="brand">
-      <h1>SoDa Outdoor Designs</h1>
-      <div class="tagline">We build lawns from the soil up</div>
-    </div>
+<h1>SoDa Outdoor Designs</h1>
 
-    <img src="/logo.PNG" class="logo">
-  </div>
-
-  <div class="gold-line"></div>
-
-${whyHTML}
-
-  <!-- CLIENT -->
-  <div class="section">
-    <div class="section-title">CLIENT</div>
-    <div><b>${customer}</b></div>
-    <div>${address}</div>
-  </div>
+<div>We build lawns from the soil up</div>
 
 <div class="section">
 
-  <div class="section-title">PROPOSAL DATE</div>
+<b>Client</b><br>
 
-  <div>${quoteDateFormatted}</div>
+${proposal.customer}<br>
+
+${proposal.address}
 
 </div>
 
-  <!-- PACKAGE -->
-  <div class="section">
-    <div class="section-title">PACKAGE</div>
-    <div>${packageType.toUpperCase()}</div>
-  </div>
+<div class="section">
 
-  <!-- DETAILS -->
-  <div class="section">
-    <div class="section-title">PROJECT DETAILS</div>
+<b>Proposal Date</b><br>
 
-    <div class="line">
-      <span>Total Sqft</span>
-      <span>${r.totalSqft.toFixed(0)}</span>
-    </div>
+${proposal.quoteDate}
 
-    <div class="line">
-      <span>Houses</span>
-      <span>${r.houses}</span>
-    </div>
-
-    <div class="line">
-      <span>Price / Sqft</span>
-      <span>$${pricePerSqft.toFixed(2)}</span>
-    </div>
-
-    <div class="line">
-      <span>Labor</span>
-      <span>$${r.laborCost.toFixed(2)}</span>
-    </div>
-  </div>
-
-${workflowHTML}
+</div>
 
 <div class="section">
-  <div class="section-title">MATERIALS USED</div>
-  ${materialHTML}
+
+<b>Package</b><br>
+
+${proposal.packageType.toUpperCase()}
+
+</div>
+
+<div class="section">
+
+<div class="line">
+
+<span>Total Sqft</span>
+
+<span>${r.totalSqft.toFixed(
+
+      0
+
+    )}</span>
+
 </div>
 
 <div class="line">
-  <span>Material Cost</span>
-  <span>$${materialCost.toFixed(2)}</span>
+
+<span>Price / Sqft</span>
+
+<span>$${pricePerSqft.toFixed(
+
+      2
+
+    )}</span>
+
 </div>
 
-  <!-- TOTAL BOX -->
-  <div class="highlight">
+<div class="line">
 
-    <div style="font-weight:bold;margin-bottom:10px;">
-      TOTAL INVESTMENT
-    </div>
+<span>Labor</span>
 
-    <div class="total">
-      $${r.price.toFixed(2)}
-    </div>
+<span>$${r.laborCost.toFixed(
 
-  </div>
+      2
+
+    )}</span>
+
+</div>
+
+</div>
 
 <div class="section">
 
-  <div style="color:#aaa;font-size:14px;line-height:1.5;">
+<b>Total Investment</b>
 
-    Thank you for the opportunity to earn your business. This proposal outlines a professional lawn installation designed to promote strong root development, long-term turf health, and a clean, uniform appearance. 
+<div class="total">
 
-    Our process focuses on proper soil conditioning, nutrient balance, and high-quality materials to ensure lasting results.
+$${r.price.toFixed(
 
-  </div>
+      2
 
-</div>
-
-<div class="cta">
-
-  <button onclick="approveProposal()">Approve & Save Proposal</button>
-
-  <button onclick="markRejected()" style="margin-top:10px;background:#550000;color:#fff;">
-
-    Mark as Not Accepted
-
-  </button>
+    )}
 
 </div>
 
-  <!-- SIGNATURE -->
-  <div class="signature">
-    Client Signature
-  </div>
+</div>
+
+<button class="primary"
+
+onclick="approveProposal()">
+
+Approve Proposal
+
+</button>
+
+<button class="reject"
+
+onclick="markRejected()">
+
+Mark Not Accepted
+
+</button>
 
 </body>
+
 </html>
-`
 
-    // âœ… WRITE TO NEW WINDOW
-    win.document.open()
-    win.document.write(html)
-    win.proposalId = proposal.id
+`;
 
-win.approveProposal = function(){
+    win.document.open();
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+    win.document.write(
 
-  let index = list.findIndex(p => p.id === win.proposalId)
+      html
 
-  if(index !== -1){
+    );
 
-    list[index].status = "Accepted"
+    win.document.close();
 
-    localStorage.setItem("soda_proposals", JSON.stringify(list))
+    win.proposalId =
 
-  }
+      proposal.id;
 
- if(window.renderPipeline){
+    win.approveProposal =
 
-  window.renderPipeline()
+      function () {
 
-} else if(window.renderJobHistory){
+        setStatusById(
 
-  window.renderJobHistory()
+          win.proposalId,
 
-}
+          "Accepted"
 
-  win.print()
+        );
 
-}
+        win.print();
 
-win.markRejected = function(){
+      };
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+    win.markRejected =
 
-  let index = list.findIndex(p => p.id === win.proposalId)
+      function () {
 
-  if(index !== -1){
+        setStatusById(
 
-    list[index].status = "Not Accepted"
+          win.proposalId,
 
-    localStorage.setItem("soda_proposals", JSON.stringify(list))
+          "Not Accepted"
 
-  }
+        );
 
-if(window.renderPipeline){
+        alert(
 
-  window.renderPipeline()
+          "Marked as Not Accepted"
 
-} else if(window.renderJobHistory){
+        );
 
-  window.renderJobHistory()
+      };
 
-}
+    setTimeout(() => {
 
-  alert("Marked as Not Accepted")
+      try {
 
-}
-    win.document.close()
+        win.focus();
 
-    // âœ… SAFARI SAFE PRINT TRIGGER
-    setTimeout(function(){
-      try{
-        win.focus()
-        win.print()
-      } catch(e){
-        console.log("Print failed", e)
-      }
-    }, 500)
+        win.print();
 
-  } catch(e){
-    alert("Proposal error")
-    console.log(e)
-  }
-}
+      } catch (e) {}
 
-//=======================
-//==CREATE LEAD
-//=======================
-
-function createLead(){
-
-  let customer = document.getElementById("customer").value
-
-  let address = document.getElementById("address").value
-
-  if(!customer) return alert("Enter customer name")
-
-  let lead = {
-
-    id: Date.now(),
-
-    customer,
-
-    address,
-
-    stage: "lead",
-
-    status: "New Lead",
-
-    total: 0,
-
-    createdAt: Date.now()
+    }, 500);
 
   }
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+  /* =====================================
 
-  list.push(lead)
+     PIPELINE RENDER
 
-  localStorage.setItem("soda_proposals", JSON.stringify(list))
+  ===================================== */
 
-  // 🔥 AUTO-FILL FORM (PUT IT HERE)
+  window.renderPipeline =
 
-  document.getElementById("customer").value = customer
+    function () {
 
-  document.getElementById("address").value = address
+      const container =
 
-  renderPipeline()
+        document.getElementById(
 
-  showToast("Lead created", "success")
+          "jobHistoryList"
 
-}
+        );
 
-//============================
-//==CONVERT TO PROPOSAL
-//============================
+      if (!container)
 
-function convertToProposal(){
+        return;
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+      const list =
 
-  let index = list.findIndex(p => p.id === activeProposalId)
+        readCRM();
 
-  if(index === -1) return
+      let html =
 
-  let p = list[index]
+        `<div style="display:flex;gap:12px;overflow-x:auto;">`;
 
-  // ✅ update stage
+      PIPELINE_STAGES.forEach(
 
-  p.stage = "proposal"
+        (stage) => {
 
-  p.status = "Proposal Sent"
+          const items =
 
-  localStorage.setItem("soda_proposals", JSON.stringify(list))
+            list.filter(
 
-  // ✅ load into calculator (THIS is key)
+              (p) =>
 
-  document.getElementById("customer").value = p.customer || ""
+                matchStage(
 
-  document.getElementById("address").value = p.address || ""
+                  p,
 
-  // ✅ CLOSE modal before render (prevents freeze)
+                  stage.key
 
-  closeProposalModal()
+                )
 
-  // ✅ re-render UI
+            );
 
-  renderPipeline()
+          html += `
 
-  render()
+          <div style="
 
-  showToast("Converted to proposal", "success")
+            min-width:260px;
 
-}
+            background:#0d0d0d;
 
-//===================
-//== RENDER PIPELINE
-//===================
+            border:1px solid #333;
 
-function renderPipeline(){
+            border-radius:12px;
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+            padding:10px;
 
-  let container = document.getElementById("jobHistoryList")
+          ">
 
-  if(!container) return
+          <div style="
 
-  let html = `<div style="display:flex; gap:12px; overflow-x:auto;">`
+            font-weight:bold;
 
-  PIPELINE_STAGES.forEach(stage => {
+            color:#d4af37;
 
-  let items = list.filter(p => {
+            margin-bottom:10px;
 
-  if(stage.key === "lead") return p.stage === "lead"
+          ">
 
-  if(stage.key === "proposal") return p.stage === "proposal"
+            ${stage.label}
 
-  if(stage.key === "pending") return p.status === "Pending"
-
-  if(stage.key === "won") return p.status === "Accepted"
-
-  if(stage.key === "lost") return p.status === "Not Accepted"
-
-  return false
-
-})
-
-    html += `
-
-      <div style="
-
-        min-width:260px;
-
-        background:#0d0d0d;
-
-        border:1px solid #333;
-
-        border-radius:12px;
-
-        padding:10px;
-
-      ">
-
-        <div style="font-weight:bold;color:#d4af37;margin-bottom:10px;">
-
-          ${stage.label} (${items.length})
-
-        </div>
-
-        ${items.map(p => `
-
-          <div class="history-card" onclick="openProposal(${p.id})">
-
-            <div><b>${p.customer}</b></div>
-
-            <div style="font-size:12px;color:#aaa;">${p.address}</div>
-
-            <div style="margin-top:6px;">
-
-              💰 $${p.total.toFixed(0)}
-
-            </div>
+            (${items.length})
 
           </div>
 
-        `).join("")}
+          ${items
 
-      </div>
+            .map(
 
-    `
+              (
 
-  })
+                p
 
-  html += `</div>`
+              ) => `
 
-  container.innerHTML = html
+            <div class="history-card"
 
-}
+            onclick="openProposal(${p.id})">
 
-//=======================
-//=== OPEN PROPOSAL
-//=======================
+              <div><b>${p.customer}</b></div>
 
-function openProposal(id){
+              <div style="
 
-closeProposalModal()
+                font-size:12px;
 
-window.currentProposalId = id
+                color:#aaa;
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+              ">
 
-  let p = list.find(x => x.id === id)
+                ${
 
-  if(!p) return
+                  p.address ||
 
-  activeProposalId = id
+                  ""
 
-  const modal = document.getElementById("proposalModal");
+                }
 
-modal.style.display = "flex";
+              </div>
 
-document.body.classList.add("modal-open");
+              <div style="
 
-  let content = document.querySelector(".proposal-content")
+                margin-top:6px;
 
-document.querySelectorAll(".swipe-card").forEach(el => {
+              ">
 
-  el.style.transform = "translateX(0)";
+                💰 $${num(
 
-});
+                  p.total
 
- 
+                ).toFixed(
 
-  // 🔥 RESET POSITION EVERY TIME
+                  0
 
-  content.style.transform = "translateX(0)"
+                )}
 
-  content.style.opacity = 1
+              </div>
 
-  document.getElementById("modalCustomer").innerText = p.customer
+            </div>
 
-  document.getElementById("modalAddress").innerText = p.address
+          `
 
-  document.getElementById("modalBody").innerHTML = `
+            )
 
-    <div class="proposal-wrap">
+            .join(
 
-      <div class="row"><b>Date:</b><span>${p.quoteDate}</span></div>
+              ""
 
-      <div class="row"><b>Package:</b><span>${p.packageType.toUpperCase()}</span></div>
+            )}
 
-      <div class="row"><b>Sqft:</b><span>${p.sqft}</span></div>
+          </div>
 
-      <div class="price">💰 $${p.total.toFixed(2)}</div>
+        `;
 
-      <div class="row">
+        }
 
-        <b>Status:</b>
+      );
 
-        <span style="color:${
+      html +=
 
-          p.status === "Accepted" ? "#4cff9a" :
+        "</div>";
 
-          p.status === "Not Accepted" ? "#ff4d4d" : "#ffd24d"
+      container.innerHTML =
 
-        }">
+        html;
 
-          ${p.status}
+    };
 
-        </span>
+  function matchStage(
 
-      </div>
-      <button onclick="openFullProposalFromModal()"
+    p,
 
-        style="margin-top:15px;width:100%;">
+    key
 
-  View Full Proposal
+  ) {
 
-</button>
-    </div>
+    if (
 
-  `
+      key === "lead"
 
-}
+    )
 
-//=============================
-//=== OPEN FULL PROPOSAL
-//=============================
+      return (
 
-function openFullProposal(id){
+        p.stage ===
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+        "lead"
 
-  let proposal = list.find(p => p.id == id)
+      );
 
-  if(!proposal) return
+    if (
 
-  // Example: navigate or render full page
+      key ===
 
-  alert("Open full proposal for: " + proposal.customer)
+      "proposal"
 
-  // OR if you have a page/section:
+    )
 
-  // renderFullProposal(proposal)
+      return (
 
-}
+        p.stage ===
 
-//===============================
-//OPEN FULL PROPOSAL FROM MODAL
-//===============================
+        "proposal"
 
-function openFullProposalFromModal(){
+      );
 
-  openFullProposal(activeProposalId)
+    if (
 
-}
+      key ===
 
-//====================
-//SET PROPOSAL STATUS
-//====================
+      "pending"
 
-function setProposalStatus(status){
+    )
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+      return (
 
-  let index = list.findIndex(p => p.id === activeProposalId)
+        p.status ===
 
-  if(index !== -1){
+        "Pending"
 
-    list[index].status = status
+      );
 
-    if(status === "Accepted"){
+    if (
 
-      list[index].stage = "won"
+      key === "won"
 
-    }
+    )
 
-    else if(status === "Pending"){
+      return (
 
-      list[index].stage = "pending"
+        p.status ===
 
-    }
+        "Accepted"
 
-    else if(status === "Not Accepted"){
+      );
 
-      list[index].stage = "lost"
+    if (
 
-    }
+      key ===
 
-    localStorage.setItem("soda_proposals", JSON.stringify(list))
+      "lost"
+
+    )
+
+      return (
+
+        p.status ===
+
+        "Not Accepted"
+
+      );
+
+    return false;
 
   }
 
-  renderPipeline()
+  /* =====================================
 
-  openProposal(activeProposalId)
+     OPEN PROPOSAL MODAL
 
-}
+  ===================================== */
 
-//================
-//DELETE PROPOSAL
-//================
+  window.openProposal =
 
-function deleteProposalById(id){
+    function (id) {
 
-  let list = JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+      const list =
 
-  list = list.filter(p => p.id != id)
+        readCRM();
 
-  localStorage.setItem("soda_proposals", JSON.stringify(list))
+      const p =
 
- renderPipeline()
+        list.find(
 
-  showToast("Proposal deleted", "error")
+          (x) =>
 
-}
+            x.id == id
 
-app.timeline = "standard"
+        );
 
-function setTimeline(el){
+      if (!p) return;
 
-  let all = document.querySelectorAll("[data-timeline]")
+      window.activeProposalId =
 
-  all.forEach(t => t.classList.remove("active"))
+        id;
 
-  el.classList.add("active")
+      const modal =
 
-  app.timeline = el.dataset.timeline
+        document.getElementById(
 
-  render()
+          "proposalModal"
 
-}
+        );
 
-function handleModalBackground(e){
+      const body =
 
-  // only close if clicking OUTSIDE content
+        document.getElementById(
 
-   if(e.target === e.currentTarget){
+          "modalBody"
 
-    closeProposalModal()
+        );
+
+      const customer =
+
+        document.getElementById(
+
+          "modalCustomer"
+
+        );
+
+      const address =
+
+        document.getElementById(
+
+          "modalAddress"
+
+        );
+
+      if (
+
+        !modal ||
+
+        !body
+
+      )
+
+        return;
+
+      if (customer)
+
+        customer.innerText =
+
+          p.customer;
+
+      if (address)
+
+        address.innerText =
+
+          p.address ||
+
+          "";
+
+      body.innerHTML = `
+
+        <div class="proposal-wrap">
+
+          <div class="row">
+
+            <b>Date:</b>
+
+            <span>${
+
+              p.quoteDate ||
+
+              "-"
+
+            }</span>
+
+          </div>
+
+          <div class="row">
+
+            <b>Package:</b>
+
+            <span>${(
+
+              p.packageType ||
+
+              "lead"
+
+            ).toUpperCase()}</span>
+
+          </div>
+
+          <div class="row">
+
+            <b>Sqft:</b>
+
+            <span>${
+
+              p.sqft ||
+
+              0
+
+            }</span>
+
+          </div>
+
+          <div class="price">
+
+            💰 $${num(
+
+              p.total
+
+            ).toFixed(
+
+              2
+
+            )}
+
+          </div>
+
+          <div class="row">
+
+            <b>Status:</b>
+
+            <span>${
+
+              p.status
+
+            }</span>
+
+          </div>
+
+        </div>
+
+      `;
+
+      modal.style.display =
+
+        "flex";
+
+    };
+
+  /* =====================================
+
+     CLOSE MODAL
+
+  ===================================== */
+
+  window.closeProposalModal =
+
+    function () {
+
+      const modal =
+
+        document.getElementById(
+
+          "proposalModal"
+
+        );
+
+      if (modal) {
+
+        modal.style.display =
+
+          "none";
+
+      }
+
+    };
+
+  /* =====================================
+
+     STATUS UPDATE
+
+  ===================================== */
+
+  function setStatusById(
+
+    id,
+
+    status
+
+  ) {
+
+    const list =
+
+      readCRM();
+
+    const i =
+
+      list.findIndex(
+
+        (p) =>
+
+          p.id === id
+
+      );
+
+    if (i === -1)
+
+      return;
+
+    list[i].status =
+
+      status;
+
+    if (
+
+      status ===
+
+      "Accepted"
+
+    ) {
+
+      list[i].stage =
+
+        "won";
+
+    } else if (
+
+      status ===
+
+      "Pending"
+
+    ) {
+
+      list[i].stage =
+
+        "pending";
+
+    } else if (
+
+      status ===
+
+      "Not Accepted"
+
+    ) {
+
+      list[i].stage =
+
+        "lost";
+
+    }
+
+    writeCRM(list);
+
+    rerender();
 
   }
 
-}
+  window.setProposalStatus =
 
-//===================
-//GET SAVED PROPOSALS
-//===================
+    function (
 
-function getSavedProposals(){
+      status
 
-  return JSON.parse(localStorage.getItem("soda_proposals") || "[]")
+    ) {
 
-}
+      if (
 
+        !window.activeProposalId
+
+      )
+
+        return;
+
+      setStatusById(
+
+        window.activeProposalId,
+
+        status
+
+      );
+
+      window.openProposal(
+
+        window.activeProposalId
+
+      );
+
+    };
+
+  /* =====================================
+
+     DELETE
+
+  ===================================== */
+
+  window.deleteProposalById =
+
+    function (
+
+      id
+
+    ) {
+
+      let list =
+
+        readCRM();
+
+      list =
+
+        list.filter(
+
+          (p) =>
+
+            p.id != id
+
+        );
+
+      writeCRM(list);
+
+      rerender();
+
+      toast(
+
+        "Proposal deleted",
+
+        "error"
+
+      );
+
+    };
+
+  /* =====================================
+
+     TIMELINE
+
+  ===================================== */
+
+  window.setTimeline =
+
+    function (el) {
+
+      const all =
+
+        document.querySelectorAll(
+
+          "[data-timeline]"
+
+        );
+
+      all.forEach(
+
+        (x) =>
+
+          x.classList.remove(
+
+            "active"
+
+          )
+
+      );
+
+      el.classList.add(
+
+        "active"
+
+      );
+
+      if (
+
+        window.state?.ui
+
+      ) {
+
+        window.state.ui.timeline =
+
+          el.dataset.timeline;
+
+      }
+
+      rerender();
+
+    };
+
+  /* =====================================
+
+     BACKDROP CLOSE
+
+  ===================================== */
+
+  window.handleModalBackground =
+
+    function (e) {
+
+      if (
+
+        e.target ===
+
+        e.currentTarget
+
+      ) {
+
+        window.closeProposalModal();
+
+      }
+
+    };
+
+})();

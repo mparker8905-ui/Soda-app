@@ -1,305 +1,841 @@
+/* =====================================
 
-//=====================
-//== TOAST SYSTEM
-//=====================
+   ui.js
 
-function showToast(message, type = "success", targetCard = null){
+   SoDa Outdoor Designs
 
-  let toast = document.createElement("div")
-  toast.className = `toast toast-${type}`
-  toast.innerText = message
+   UI / Toasts / Modals / Helpers
 
-  // CLICK HANDLER
-  if(targetCard){
-    toast.style.cursor = "pointer"
+===================================== */
 
-    toast.onclick = () => {
-      let card = document.querySelector(`[data-card="${targetCard}"]`)
+(function () {
 
-      if(card){
-        // open it
-        card.classList.add("open")
+  "use strict";
 
-        // scroll to it
-        card.scrollIntoView({
-          behavior: "smooth",
-          block: "center"
-        })
+  /* =====================================
 
-        // temporary glow boost
-        card.classList.add("highlight")
-        setTimeout(() => {
-          card.classList.remove("highlight")
-        }, 2000)
-      }
+     DOM READY
+
+  ===================================== */
+
+  document.addEventListener("DOMContentLoaded", initUI);
+
+  function initUI() {
+
+    bindAddonToggles();
+
+    bindNumberFormatting();
+
+    bindModalEscClose();
+
+    bindQuickActions();
+
+    initThemeHelpers();
+
+  }
+
+  /* =====================================
+
+     TOAST SYSTEM
+
+  ===================================== */
+
+  let toastTimer = null;
+
+  window.showToast = function (message, type = "info", duration = 2600) {
+
+    let wrap = document.getElementById("toastWrap");
+
+    if (!wrap) {
+
+      wrap = document.createElement("div");
+
+      wrap.id = "toastWrap";
+
+      wrap.style.position = "fixed";
+
+      wrap.style.right = "18px";
+
+      wrap.style.bottom = "18px";
+
+      wrap.style.zIndex = "9999";
+
+      wrap.style.display = "flex";
+
+      wrap.style.flexDirection = "column";
+
+      wrap.style.gap = "10px";
+
+      document.body.appendChild(wrap);
+
     }
-  }
 
-let container = document.getElementById("toastContainer")
+    const toast = document.createElement("div");
 
-if(container){
+    toast.className = "soda-toast";
 
-  container.appendChild(toast)
+    const colors = {
 
-} else {
+      success: "#18b66a",
 
-  document.body.appendChild(toast) // fallback
+      error: "#c43b3b",
 
-}
+      warning: "#cfa11f",
 
-  setTimeout(() => toast.classList.add("show"), 10)
+      info: "#333"
 
-  setTimeout(() => {
-    toast.classList.remove("show")
-    setTimeout(() => toast.remove(), 300)
-  }, 3000)
-}
+    };
 
-}
+    toast.style.minWidth = "240px";
 
-//========================
-//===TOGGLE CARD 
-//========================
+    toast.style.maxWidth = "340px";
 
-function toggleCard(el){
-  let card = el.parentElement
+    toast.style.padding = "12px 14px";
 
-  document.querySelectorAll(".collapsible").forEach(c => {
-    if(c !== card) c.classList.remove("open")
-  })
+    toast.style.borderRadius = "10px";
 
-  card.classList.toggle("open")
-}
+    toast.style.color = "#fff";
 
-//====================
-//== OPEN CARD
-//====================
+    toast.style.fontWeight = "600";
 
-function openCard(name){
-  let card = document.querySelector(`[data-card="${name}"]`)
-  if(card){
-    card.classList.add("open")
-  }
-}
+    toast.style.fontSize = "14px";
 
-function highlightCard(name){
-  let card = document.querySelector(`[data-card="${name}"]`)
-  if(card){
-    card.classList.add("highlight")
-    setTimeout(() => {
-      card.classList.remove("highlight")
-    }, 2000)
-  }
-}
+    toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.25)";
 
-//===================
-//CLOSE PROPOSAL
-//===================
+    toast.style.background = colors[type] || colors.info;
 
-function closeProposalModal(){
+    toast.style.opacity = "0";
 
-  const modal = document.getElementById("proposalModal")
+    toast.style.transform = "translateY(10px)";
 
-  if(modal){
+    toast.style.transition =
 
-    modal.style.display = "none"
+      "opacity .18s ease, transform .18s ease";
 
-  }
+    toast.innerText = message;
 
-  document.body.classList.remove("modal-open")
+    wrap.appendChild(toast);
 
-}
+    requestAnimationFrame(() => {
 
-//================
-//DELETE JOB
-//================
+      toast.style.opacity = "1";
 
-function deleteJob(index){
+      toast.style.transform = "translateY(0)";
 
-  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+    });
 
-  history.splice(index, 1)
+    clearTimeout(toastTimer);
 
-  localStorage.setItem("jobHistory", JSON.stringify(history))
+    toastTimer = setTimeout(() => {
 
-  renderHistory()
+      toast.style.opacity = "0";
 
-}
+      toast.style.transform = "translateY(8px)";
 
-//===============
-//EDIT JOB
-//===============
+      setTimeout(() => {
 
-function editJob(index){
+        toast.remove();
 
-  let history = JSON.parse(localStorage.getItem("jobHistory") || "[]")
+      }, 220);
 
-  let job = history[index]
+    }, duration);
 
-  if(!job) return
+  };
 
-  document.getElementById("sqft").value = job.sqft
+  /* =====================================
 
-  document.getElementById("houses").value = job.houses
+     LOADING OVERLAY
 
-  requestRender()
+  ===================================== */
 
-}
+  window.showLoader = function (text = "Loading...") {
 
-//====================
-//=== SWIPE LOGIC MODAL
-//====================
+    let loader =
 
-let startX = 0
+      document.getElementById("globalLoader");
 
-let currentX = 0
+    if (!loader) {
 
-let isDragging = false
+      loader = document.createElement("div");
 
-function handleTouchStart(e){
+      loader.id = "globalLoader";
 
-  startX = e.touches[0].clientX
+      loader.style.position = "fixed";
 
-  isDragging = true
+      loader.style.inset = "0";
 
-}
+      loader.style.background =
 
-function handleTouchMove(e){
+        "rgba(0,0,0,.65)";
 
-  if(!isDragging) return
+      loader.style.display = "flex";
 
-  currentX = e.touches[0].clientX
+      loader.style.alignItems = "center";
 
-  let diff = currentX - startX
+      loader.style.justifyContent =
 
-  // 👉 ONLY allow swipe RIGHT
+        "center";
 
-  if(diff < 0) diff = 0
+      loader.style.zIndex = "99999";
 
-  let content = document.querySelector(".proposal-content")
+      loader.innerHTML = `
 
-  content.style.transition = "none"
+        <div style="
 
-  content.style.transform = `translateX(${diff}px)`
+          background:#111;
 
-  content.style.opacity = 1 - (diff / 300)
+          border:1px solid #333;
 
-}
+          color:#d4af37;
 
-function handleTouchEnd(){
+          padding:24px 28px;
 
-  if(!isDragging) return
+          border-radius:12px;
 
-  isDragging = false
+          font-weight:700;
 
-  let diff = currentX - startX
+          min-width:220px;
 
-  let content = document.querySelector(".proposal-content")
+          text-align:center;
 
-  // 👉 threshold to close
+        ">
 
-  if(diff > 120){
+          <div class="spin"
 
-    content.style.transition = "all 0.2s ease"
+            style="
 
-    content.style.transform = "translateX(100%)"
+              width:28px;
 
-    content.style.opacity = 0
+              height:28px;
 
-    setTimeout(() => {
+              border:3px solid #333;
 
-      closeProposalModal()
+              border-top:3px solid #d4af37;
 
-      content.style.transform = "translateX(0)"
+              border-radius:50%;
 
-      content.style.opacity = 1
+              margin:0 auto 14px auto;
 
-    }, 200)
+              animation:sodaSpin 1s linear infinite;
 
-  } else {
+            ">
 
-    // snap back
+          </div>
 
-    content.style.transition = "all 0.2s ease"
+          <div id="loaderText">${text}</div>
 
-    content.style.transform = "translateX(0)"
+        </div>
 
-    content.style.opacity = 1
+      `;
 
-  }
+      document.body.appendChild(loader);
 
-}
+      injectSpinKeyframes();
 
-//====================
+    } else {
 
-//=== SWIPE LOGIC DELETE
+      loader.style.display = "flex";
 
-//====================
+      const txt =
 
-let deleteStartX = 0
+        document.getElementById(
 
-let deleteCurrentX = 0
+          "loaderText"
 
-let activeCard = null
+        );
 
-document.addEventListener("touchstart", e => {
+      if (txt) txt.innerText = text;
 
-  if(document.body.classList.contains("modal-open")) return
+    }
 
-  let card = e.target.closest(".swipe-card")
+  };
 
-  if(!card) return
+  window.hideLoader = function () {
 
-  activeCard = card
+    const loader =
 
-  deleteStartX = e.touches[0].clientX
+      document.getElementById(
 
-})
+        "globalLoader"
 
-document.addEventListener("touchmove", e => {
+      );
 
-  if(document.body.classList.contains("modal-open")) return
+    if (loader) {
 
-  if(!activeCard) return
+      loader.style.display = "none";
 
-  deleteCurrentX = e.touches[0].clientX
+    }
 
-  let diff = deleteCurrentX - deleteStartX
+  };
 
-  if(diff > 0) diff = 0
+  function injectSpinKeyframes() {
 
-  if(diff < -120) diff = -120
+    if (
 
-  activeCard.style.transition = "none"
+      document.getElementById(
 
-  activeCard.style.transform = `translateX(${diff}px)`
+        "spinStyles"
 
-})
+      )
 
-document.addEventListener("touchend", e => {
+    )
 
-  if(document.body.classList.contains("modal-open")) return
+      return;
 
-  if(!activeCard) return
+    const style =
 
-  let diff = deleteCurrentX - deleteStartX
+      document.createElement("style");
 
-  if(diff < -80){
+    style.id = "spinStyles";
 
-    // 👉 reveal delete button instead of deleting
+    style.innerHTML = `
 
-    activeCard.style.transition = "all 0.2s ease"
+      @keyframes sodaSpin{
 
-    activeCard.style.transform = "translateX(-100px)"
+        from{transform:rotate(0deg);}
 
-  } else {
+        to{transform:rotate(360deg);}
 
-    activeCard.style.transition = "all 0.2s ease"
+      }
 
-    activeCard.style.transform = "translateX(0)"
+    `;
+
+    document.head.appendChild(style);
 
   }
 
-  activeCard = null
+  /* =====================================
 
-})
+     MODALS
+
+  ===================================== */
+
+  window.openModal = function (id) {
+
+    const modal =
+
+      document.getElementById(id);
+
+    if (!modal) return;
+
+    modal.style.display = "flex";
+
+    document.body.classList.add(
+
+      "modal-open"
+
+    );
+
+  };
+
+  window.closeModal = function (id) {
+
+    const modal =
+
+      document.getElementById(id);
+
+    if (!modal) return;
+
+    modal.style.display = "none";
+
+    document.body.classList.remove(
+
+      "modal-open"
+
+    );
+
+  };
+
+  function bindModalEscClose() {
+
+    document.addEventListener(
+
+      "keydown",
+
+      function (e) {
+
+        if (e.key !== "Escape") return;
+
+        document
+
+          .querySelectorAll(".modal")
+
+          .forEach((m) => {
+
+            m.style.display = "none";
+
+          });
+
+        document.body.classList.remove(
+
+          "modal-open"
+
+        );
+
+      }
+
+    );
+
+  }
+
+  /* =====================================
+
+     ADDON TOGGLES
+
+  ===================================== */
+
+  function bindAddonToggles() {
+
+    document
+
+      .querySelectorAll(
+
+        "[data-addon]"
+
+      )
+
+      .forEach((el) => {
+
+        el.addEventListener(
+
+          "click",
+
+          function () {
+
+            const key =
+
+              this.dataset.addon;
+
+            if (
+
+              !window.state ||
+
+              !window.state.job
+
+            )
+
+              return;
+
+            const addons =
+
+              window.state.job
+
+                .addons;
+
+            addons[key] =
+
+              !addons[key];
+
+            this.classList.toggle(
+
+              "active",
+
+              addons[key]
+
+            );
+
+            if (
+
+              typeof requestRender ===
+
+              "function"
+
+            ) {
+
+              requestRender();
+
+            }
+
+          }
+
+        );
+
+      });
+
+  }
+
+  /* =====================================
+
+     NUMBER FIELD HELPERS
+
+  ===================================== */
+
+  function bindNumberFormatting() {
+
+    document
+
+      .querySelectorAll(
+
+        "input[type='number']"
+
+      )
+
+      .forEach((input) => {
+
+        input.addEventListener(
+
+          "wheel",
+
+          function () {
+
+            this.blur();
+
+          }
+
+        );
+
+      });
+
+  }
+
+  /* =====================================
+
+     COPY TO CLIPBOARD
+
+  ===================================== */
+
+  window.copyText = async function (
+
+    text,
+
+    success = "Copied"
+
+  ) {
+
+    try {
+
+      await navigator.clipboard.writeText(
+
+        text
+
+      );
+
+      showToast(
+
+        success,
+
+        "success"
+
+      );
+
+    } catch (e) {
+
+      showToast(
+
+        "Copy failed",
+
+        "error"
+
+      );
+
+    }
+
+  };
+
+  /* =====================================
+
+     QUICK ACTIONS
+
+  ===================================== */
+
+  function bindQuickActions() {
+
+    document
+
+      .querySelectorAll(
+
+        "[data-click]"
+
+      )
+
+      .forEach((btn) => {
+
+        btn.addEventListener(
+
+          "click",
+
+          function () {
+
+            const fn =
+
+              this.dataset.click;
+
+            if (
+
+              fn &&
+
+              typeof window[
+
+                fn
+
+              ] ===
+
+                "function"
+
+            ) {
+
+              window[fn]();
+
+            }
+
+          }
+
+        );
+
+      });
+
+  }
+
+  /* =====================================
+
+     MONEY FORMATTERS
+
+  ===================================== */
+
+  window.money = function (
+
+    amount
+
+  ) {
+
+    const n =
+
+      Number(amount) || 0;
+
+    return (
+
+      "$" +
+
+      n.toLocaleString(
+
+        undefined,
+
+        {
+
+          minimumFractionDigits: 2,
+
+          maximumFractionDigits: 2
+
+        }
+
+      )
+
+    );
+
+  };
+
+  window.percent = function (
+
+    value
+
+  ) {
+
+    const n =
+
+      Number(value) || 0;
+
+    return `${n.toFixed(1)}%`;
+
+  };
+
+  /* =====================================
+
+     SAFE HTML
+
+  ===================================== */
+
+  window.escapeHTML =
+
+    function (str) {
+
+      return String(
+
+        str ?? ""
+
+      )
+
+        .replace(
+
+          /&/g,
+
+          "&amp;"
+
+        )
+
+        .replace(
+
+          /</g,
+
+          "&lt;"
+
+        )
+
+        .replace(
+
+          />/g,
+
+          "&gt;"
+
+        )
+
+        .replace(
+
+          /"/g,
+
+          "&quot;"
+
+        )
+
+        .replace(
+
+          /'/g,
+
+          "&#039;"
+
+        );
+
+    };
+
+  /* =====================================
+
+     THEME / POLISH
+
+  ===================================== */
+
+  function initThemeHelpers() {
+
+    document
+
+      .querySelectorAll(
+
+        ".card, .glass-card"
+
+      )
+
+      .forEach((card) => {
+
+        card.addEventListener(
+
+          "mouseenter",
+
+          function () {
+
+            this.style.transform =
+
+              "translateY(-2px)";
+
+          }
+
+        );
+
+        card.addEventListener(
+
+          "mouseleave",
+
+          function () {
+
+            this.style.transform =
+
+              "";
+
+          }
+
+        );
+
+      });
+
+  }
+
+  /* =====================================
+
+     CONFIRM WRAPPER
+
+  ===================================== */
+
+  window.confirmAction =
+
+    function (
+
+      message,
+
+      callback
+
+    ) {
+
+      const ok =
+
+        window.confirm(
+
+          message
+
+        );
+
+      if (
+
+        ok &&
+
+        typeof callback ===
+
+          "function"
+
+      ) {
+
+        callback();
+
+      }
+
+    };
+
+  /* =====================================
+
+     RESET UI
+
+  ===================================== */
+
+  window.resetUI =
+
+    function () {
+
+      document
+
+        .querySelectorAll(
+
+          ".active"
+
+        )
+
+        .forEach((el) => {
+
+          el.classList.remove(
+
+            "active"
+
+          );
+
+        });
+
+      document
+
+        .querySelectorAll(
+
+          ".modal"
+
+        )
+
+        .forEach((m) => {
+
+          m.style.display =
+
+            "none";
+
+        });
+
+      document.body.classList.remove(
+
+        "modal-open"
+
+      );
+
+    };
+
+})();

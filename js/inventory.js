@@ -1,451 +1,995 @@
-const MATERIAL_LABELS = {
+/* =====================================
 
-  seed: "Seed",
+   inventory.js
 
-  fertilizer: "Fertilizer",
+   SoDa Outdoor Designs
 
-  mulch: "Mulch",
+   Inventory Management + Local Storage
 
-  tackifier: "Tackifier",
+===================================== */
 
-  compost: "Compost",
+(function () {
 
-  biochar: "Biochar",
+  "use strict";
 
-  humic: "Humic Acid",
+  /* =====================================
 
-  lime: "Lime",
+     CONSTANTS
 
-  sulfur: "Sulfur",
+  ===================================== */
 
-  sprinklers: "Sprinklers",
+  const STORAGE_KEY = "inventory_full";
 
-  timers: "Timers"
+  const MATERIAL_LABELS = {
 
-}
+    seed: "Seed",
 
-//====================
-//==SAVE INVENTORY 
-//====================
+    fertilizer: "Fertilizer",
 
-function saveInventory(){
+    mulch: "Mulch",
 
-  function getSection(id){
-    let container = document.getElementById(id)
-    let rows = container.querySelectorAll(".material-row")
+    tackifier: "Tackifier",
 
-    let data = []
+    compost: "Compost",
 
-    rows.forEach(row => {
-      let select = row.querySelector("select")
-      let inputs = row.querySelectorAll("input")
+    biochar: "Biochar",
 
-      data.push({
-        type: select?.value || "",
-        name: inputs[0]?.value || "",
-        cost: parseFloat(inputs[1]?.value) || 0,
-        qty: parseFloat(inputs[2]?.value) || 0
+    humic: "Humic Acid",
+
+    biohum: "BioHumus",
+
+    lime: "Lime",
+
+    sulfur: "Sulfur",
+
+    sprinklers: "Sprinklers",
+
+    timers: "Sprinkler Timers"
+
+  };
+
+  window.MATERIAL_LABELS = MATERIAL_LABELS;
+
+  /* =====================================
+
+     HELPERS
+
+  ===================================== */
+
+  function readInventory() {
+
+    try {
+
+      return (
+
+        JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+
+          standard: [],
+
+          premium: [],
+
+          addons: []
+
+        }
+
+      );
+
+    } catch (e) {
+
+      console.error("Inventory read failed", e);
+
+      return {
+
+        standard: [],
+
+        premium: [],
+
+        addons: []
+
+      };
+
+    }
+
+  }
+
+  function writeInventory(data) {
+
+    localStorage.setItem(
+
+      STORAGE_KEY,
+
+      JSON.stringify(data)
+
+    );
+
+    window.inventoryCache = null;
+
+  }
+
+  function getContainer(type) {
+
+    if (type === "standard") {
+
+      return document.getElementById(
+
+        "standardMaterials"
+
+      );
+
+    }
+
+    if (type === "premium") {
+
+      return document.getElementById(
+
+        "premiumMaterials"
+
+      );
+
+    }
+
+    return document.getElementById(
+
+      "addonMaterials"
+
+    );
+
+  }
+
+  function getMaterialOptions(selected) {
+
+    const keys = Object.keys(MATERIAL_LABELS);
+
+    return keys
+
+      .map((key) => {
+
+        return `
+
+          <option value="${key}"
+
+            ${
+
+              key === selected
+
+                ? "selected"
+
+                : ""
+
+            }>
+
+            ${MATERIAL_LABELS[key]}
+
+          </option>
+
+        `;
+
       })
-    })
 
-    return data
-  }
-
-  let inventory = {
-    standard: getSection("standardMaterials"),
-    premium: getSection("premiumMaterials"),
-    addons: getSection("addonMaterials")
-  }
-
-  // âœ… SAVE FULL DATA
-
-localStorage.setItem("inventory_full", JSON.stringify(inventory))
-
- // silent autosave (no toast)
-
-inventoryCache = null
-
-}
-
-//==================
-//==LOAD INVENTORY
-//==================
-
-function loadInventory(){
-
-  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
-  function loadSection(id, items){
-
-    let container = document.getElementById(id)
-    container.innerHTML = ""
-
-    items.forEach(item => {
-
-      let row = document.createElement("div")
-      row.className = "material-row"
-
-      row.innerHTML = `
-        <div class="row-top">
-          <select class="mat-select" onchange="updateUnitLabel(this)">
-            <option value="seed" ${item.type==="seed"?"selected":""}>Seed</option>
-            <option value="fertilizer" ${item.type==="fertilizer"?"selected":""}>Fertilizer</option>
-            <option value="mulch" ${item.type==="mulch"?"selected":""}>Mulch</option>
-            <option value="tackifier" ${item.type==="tackifier"?"selected":""}>Tackifier</option>
-            <option value="compost" ${item.type==="compost"?"selected":""}>Compost</option>
-            <option value="biochar" ${item.type==="biochar"?"selected":""}>Biochar</option>
-            <option value="humic" ${item.type==="humic"?"selected":""}>Humic Acid</option>
-            <option value="lime" ${item.type==="lime"?"selected":""}>Lime</option>
-            <option value="sulfur" ${item.type==="sulfur"?"selected":""}>Sulfur</option>
-            <option value="sprinklers" ${item.type==="sprinklers"?"selected":""}>Sprinklers</option>
-            <option value="timers" ${item.type==="timers"?"selected":""}>Sprinkler Timers</option>
-          </select>
-
-          <button class="delete-btn" onclick="deleteRow(this)">🗑️</button>
-        </div>
-
-        <label class="mat-label">Material Name</label>
-        <input class="mat-input" value="${item.name}">
-
-        <label class="mat-label">Cost per Unit ($)</label>
-        <input class="mat-input" type="number" value="${item.cost}">
-
-        <label class="mat-label unit-label">Quantity Available</label>
-        <input class="mat-input" type="number" value="${item.qty}">
-      `
-
-      container.appendChild(row)
-
-      updateUnitLabel(row.querySelector("select"))
-    })
-  }
-
-  loadSection("standardMaterials", inventory.standard || [])
-  loadSection("premiumMaterials", inventory.premium || [])
-  loadSection("addonMaterials", inventory.addons || [])
-}
-
-//=======================
-//=== GET INVENTORY CACHE
-//=======================
-
-function getInventoryCache(forceRefresh = false){
-
-  if(forceRefresh || !inventoryCache){
-
-    inventoryCache = JSON.parse(localStorage.getItem("inventory_full") || "{}")
+      .join("");
 
   }
 
-  return inventoryCache
+  function safeNum(v) {
 
-}
+    const n = Number(v);
 
-let shownToasts = new Set()
+    return Number.isFinite(n) ? n : 0;
 
-//======================
-//== GET INVENTORY TOTALS
-//======================
-
-let activeProposalId = null
-
-function getInventoryTotals(){
-
-  let inventory = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
-  let totals = {}
-
-  Object.values(inventory).forEach(section => {
-    section.forEach(item => {
-
-      let type = item.type
-      let qty = item.qty || 0
-
-      totals[type] = (totals[type] || 0) + qty
-    })
-  })
-
-  return totals
-}
-
-//======================
-//== COMPARE INVENTORY
-//======================
-
-function compareInventory(needs, inventory){
-
-  let results = {}
-
-  for(let key in needs){
-
-    let required = needs[key]
-    let available = inventory[key] || 0
-    let shortage = required - available
-
-    results[key] = {
-      required,
-      available,
-      shortage: shortage > 0 ? shortage : 0,
-      status: shortage > 0 ? "short" : "ok"
-    }
   }
 
-  return results
-}
+  /* =====================================
 
-//=================
-// ADD MATERIAL ROW
-//=================
+     BUILD ROW HTML
 
-function addMaterialRow(type){
+  ===================================== */
 
-  let container
+  function buildRow(item = {}) {
 
-  if(type === "standard"){
-    container = document.getElementById("standardMaterials")
-  }
+    const type = item.type || "seed";
 
-  if(type === "premium"){
-    container = document.getElementById("premiumMaterials")
-  }
+    const unit =
 
-  if(type === "addons"){
-    container = document.getElementById("addonMaterials")
-  }
+      window.MATERIAL_RATES?.[type]?.unit ||
 
-  let row = document.createElement("div")
-  row.className = "material-row"
+      "units";
 
-  row.innerHTML = `
-    <div class="row-top">
-      <select class="mat-select" onchange="updateUnitLabel(this)">
-        <option value="seed">Seed</option>
-        <option value="fertilizer">Fertilizer</option>
-        <option value="mulch">Mulch</option>
-        <option value="tackifier">Tackifier</option>
-        <option value="compost">Compost</option>
-        <option value="biochar">Biochar</option>
-        <option value="humic">Humic Acid</option>
-        <option value="lime">Lime</option>
-        <option value="sulfur">Sulfur</option>
-        <option value="sprinklers">Sprinklers</option>
-        <option value="timers">Sprinkler Timers</option>
-      </select>
+    const row = document.createElement("div");
 
-      <button class="delete-btn" onclick="deleteRow(this)">🗑️</button>
-    </div>
-
-    <label class="mat-label">Material Name</label>
-    <input class="mat-input" placeholder="e.g. Ryegrass Seed">
-
-    <label class="mat-label">Cost per Unit ($)</label>
-    <input class="mat-input" type="number">
-
-    <label class="mat-label unit-label">Quantity Available</label>
-    <input class="mat-input" type="number">
-  `
-
-  container.appendChild(row)
-
-  // âœ… FIX: NOW it's in correct scope
-  updateUnitLabel(row.querySelector(".mat-select"))
-}
-
-//====================
-//=== DELETE ROW
-//====================
-
-function deleteRow(btn){
-  let row = btn.closest(".material-row")
-  if(row){
-    row.remove()
-  }
-}
-
-//==================
-// GET INVENTORY COST
-//==================
-
-function getInventoryCost(){
-
-  let saved = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
-  function sum(section){
-    let total = 0
-    ;(section || []).forEach(item => {
-      total += (item.cost || 0) * (item.qty || 0)
-    })
-    return total
-  }
-
-  let standard = sum(saved.standard)
-  let premium = sum(saved.premium)
-  let addons = sum(saved.addons)
-
-  return {
-    standard,
-    premium,
-    addons,
-    total: standard + premium + addons
-  }
-}
-
-//=========================
-//===USE INVENTORY FOR JOB
-//=========================
-
-function useInventoryForJob(){
-
-  if(!confirm("Use inventory for this job?")) return
-
-  let r = calculateJob()
- let needs = getMaterialNeeds(
-
-  { totalSqft: r.totalSqft },
-
-  document.getElementById("package")?.value || "standard",
-
- state.job.addons
-
-)
-
-  let full = JSON.parse(localStorage.getItem("inventory_full") || "{}")
-
-  function deduct(section){
-
-    (section || []).forEach(item => {
-
-      let type = item.type
-      let qty = Number(item.qty) || 0
-
-      if(needs[type] !== undefined){
-
-        let used = Math.min(qty, needs[type])
-
-        item.qty -= used
-        needs[type] -= used
-      }
-    })
-  }
-
-  deduct(full.standard)
-  deduct(full.premium)
-  deduct(full.addons)
-
-  localStorage.setItem("inventory_full", JSON.stringify(full))
-
-  loadInventory()
-  requestRender()
-
-  showToast("Inventory applied to job", "success")
-}
-
-//================
-//== FIX INVENTORY
-//================
-
-window.fixInventory = function(type, amount){
-
-  let container
-
-  if(type === "seed" || type === "fertilizer" || type === "mulch" || type === "tackifier"){
-    container = document.getElementById("standardMaterials")
-  } else if(type === "compost" || type === "biochar" || type === "humic"){
-    container = document.getElementById("premiumMaterials")
-  } else {
-    container = document.getElementById("addonMaterials")
-  }
-
-  if(!container) return
-
-  let rows = container.querySelectorAll(".material-row")
-  let found = false
-
-  // ðŸ” CHECK EXISTING ROWS
-  rows.forEach(row => {
-
-    let select = row.querySelector("select")
-    let inputs = row.querySelectorAll("input")
-
-    if(select && select.value === type){
-
-      let currentQty = Number(inputs[2]?.value) || 0
-      inputs[2].value = Math.ceil(currentQty + amount)
-      showToast(`${MATERIAL_LABELS[type]} +${Math.ceil(amount)} added`)
-      found = true
-    }
-
-  })
-
-  // âž• IF NOT FOUND â†’ CREATE NEW ROW
-  if(!found){
-
-    let row = document.createElement("div")
-    row.className = "material-row"
+    row.className = "material-row";
 
     row.innerHTML = `
+
       <div class="row-top">
-        <select class="mat-select">
-          <option value="seed" ${type==="seed"?"selected":""}>Seed</option>
-          <option value="fertilizer" ${type==="fertilizer"?"selected":""}>Fertilizer</option>
-          <option value="mulch" ${type==="mulch"?"selected":""}>Mulch</option>
-          <option value="tackifier" ${type==="tackifier"?"selected":""}>Tackifier</option>
-          <option value="compost" ${type==="compost"?"selected":""}>Compost</option>
-          <option value="biochar" ${type==="biochar"?"selected":""}>Biochar</option>
-          <option value="humic" ${type==="humic"?"selected":""}>Humic Acid</option>
-          <option value="lime" ${type==="lime"?"selected":""}>Lime</option>
-          <option value="sulfur" ${type==="sulfur"?"selected":""}>Sulfur</option>
-          <option value="sprinklers" ${type==="sprinklers"?"selected":""}>Sprinklers</option>
-          <option value="timers" ${type==="timers"?"selected":""}>Sprinkler Timers</option>
+
+        <select class="mat-select"
+
+          onchange="updateUnitLabel(this)">
+
+          ${getMaterialOptions(type)}
+
         </select>
 
-        <button class="delete-btn" onclick="deleteRow(this)">🗑️</button>
+        <button
+
+          class="delete-btn"
+
+          onclick="deleteRow(this)">
+
+          🗑️
+
+        </button>
+
       </div>
 
-      <label class="mat-label">Material Name</label>
-      <input class="mat-input" value="${MATERIAL_LABELS[type] || type}">
+      <label class="mat-label">
 
-      <label class="mat-label">Cost per Unit ($)</label>
-      <input class="mat-input" type="number" value="0">
+        Material Name
 
-      <label class="mat-label unit-label">Quantity Available</label>
-      <input class="mat-input" type="number" value="${Math.ceil(amount)}">
-    `
+      </label>
 
-    container.appendChild(row)
-   let label = MATERIAL_LABELS[type] || type
+      <input
 
-showToast(`${label} +${Math.ceil(amount)} added`)
+        class="mat-input"
 
-  // 💾SAVE + REFRESH
-  saveInventory()
-  loadInventory()
+        value="${item.name || ""}"
 
-  setTimeout(() => {
-    RequestRender()
-  }, 50)
-}
+        placeholder="Material Name">
 
-//================
-//UPDATE UNIT LABEL
-//================
+      <label class="mat-label">
 
-function updateUnitLabel(select){
+        Cost per Unit ($)
 
-  let row = select.closest(".material-row")
+      </label>
 
-  if(!row) return
+      <input
 
-  let label = row.querySelector(".unit-label")
+        class="mat-input"
 
-  let type = select.value
+        type="number"
 
-  let unit = MATERIAL_RATES[type]?.unit || "units"
+        value="${safeNum(item.cost)}">
 
-  if(label){
+      <label class="mat-label unit-label">
 
-    label.innerText = `Quantity Available (${unit})`
+        Quantity Available (${unit})
+
+      </label>
+
+      <input
+
+        class="mat-input"
+
+        type="number"
+
+        value="${safeNum(item.qty)}">
+
+    `;
+
+    return row;
 
   }
 
-}
+  /* =====================================
+
+     LOAD INVENTORY
+
+  ===================================== */
+
+  window.loadInventory = function () {
+
+    const data = readInventory();
+
+    renderSection(
+
+      "standardMaterials",
+
+      data.standard || []
+
+    );
+
+    renderSection(
+
+      "premiumMaterials",
+
+      data.premium || []
+
+    );
+
+    renderSection(
+
+      "addonMaterials",
+
+      data.addons || []
+
+    );
+
+  };
+
+  function renderSection(id, items) {
+
+    const container =
+
+      document.getElementById(id);
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    items.forEach((item) => {
+
+      const row = buildRow(item);
+
+      container.appendChild(row);
+
+    });
+
+  }
+
+  /* =====================================
+
+     SAVE INVENTORY
+
+  ===================================== */
+
+  window.saveInventory = function () {
+
+    const inventory = {
+
+      standard: parseSection(
+
+        "standardMaterials"
+
+      ),
+
+      premium: parseSection(
+
+        "premiumMaterials"
+
+      ),
+
+      addons: parseSection(
+
+        "addonMaterials"
+
+      )
+
+    };
+
+    writeInventory(inventory);
+
+  };
+
+  function parseSection(id) {
+
+    const container =
+
+      document.getElementById(id);
+
+    if (!container) return [];
+
+    const rows =
+
+      container.querySelectorAll(
+
+        ".material-row"
+
+      );
+
+    const items = [];
+
+    rows.forEach((row) => {
+
+      const select =
+
+        row.querySelector("select");
+
+      const inputs =
+
+        row.querySelectorAll("input");
+
+      items.push({
+
+        type: select?.value || "",
+
+        name: inputs[0]?.value || "",
+
+        cost: safeNum(inputs[1]?.value),
+
+        qty: safeNum(inputs[2]?.value)
+
+      });
+
+    });
+
+    return items;
+
+  }
+
+  /* =====================================
+
+     CACHE
+
+  ===================================== */
+
+  window.getInventoryCache =
+
+    function (forceRefresh = false) {
+
+      if (
+
+        forceRefresh ||
+
+        !window.inventoryCache
+
+      ) {
+
+        window.inventoryCache =
+
+          readInventory();
+
+      }
+
+      return window.inventoryCache;
+
+    };
+
+  /* =====================================
+
+     TOTALS
+
+  ===================================== */
+
+  window.getInventoryTotals =
+
+    function () {
+
+      const data = readInventory();
+
+      const totals = {};
+
+      Object.values(data).forEach(
+
+        (section) => {
+
+          section.forEach((item) => {
+
+            totals[item.type] =
+
+              (totals[item.type] || 0) +
+
+              safeNum(item.qty);
+
+          });
+
+        }
+
+      );
+
+      return totals;
+
+    };
+
+  /* =====================================
+
+     COST SUMMARY
+
+  ===================================== */
+
+  window.getInventoryCost =
+
+    function () {
+
+      const data = readInventory();
+
+      function sum(section) {
+
+        let total = 0;
+
+        (section || []).forEach(
+
+          (item) => {
+
+            total +=
+
+              safeNum(item.cost) *
+
+              safeNum(item.qty);
+
+          }
+
+        );
+
+        return total;
+
+      }
+
+      const standard = sum(
+
+        data.standard
+
+      );
+
+      const premium = sum(
+
+        data.premium
+
+      );
+
+      const addons = sum(
+
+        data.addons
+
+      );
+
+      return {
+
+        standard,
+
+        premium,
+
+        addons,
+
+        total:
+
+          standard +
+
+          premium +
+
+          addons
+
+      };
+
+    };
+
+  /* =====================================
+
+     COMPARE INVENTORY
+
+  ===================================== */
+
+  window.compareInventory =
+
+    function (needs = {}, inventory = {}) {
+
+      const results = {};
+
+      Object.keys(needs).forEach(
+
+        (key) => {
+
+          const required =
+
+            safeNum(needs[key]);
+
+          const available =
+
+            safeNum(inventory[key]);
+
+          const shortage =
+
+            required - available;
+
+          results[key] = {
+
+            required,
+
+            available,
+
+            shortage:
+
+              shortage > 0
+
+                ? shortage
+
+                : 0,
+
+            status:
+
+              shortage > 0
+
+                ? "short"
+
+                : "ok"
+
+          };
+
+        }
+
+      );
+
+      return results;
+
+    };
+
+  /* =====================================
+
+     ADD ROW
+
+  ===================================== */
+
+  window.addMaterialRow =
+
+    function (type = "standard") {
+
+      const container =
+
+        getContainer(type);
+
+      if (!container) return;
+
+      const row = buildRow({
+
+        type: "seed"
+
+      });
+
+      container.appendChild(row);
+
+    };
+
+  /* =====================================
+
+     DELETE ROW
+
+  ===================================== */
+
+  window.deleteRow =
+
+    function (btn) {
+
+      const row =
+
+        btn.closest(
+
+          ".material-row"
+
+        );
+
+      if (row) {
+
+        row.remove();
+
+        window.saveInventory();
+
+      }
+
+    };
+
+  /* =====================================
+
+     UNIT LABEL
+
+  ===================================== */
+
+  window.updateUnitLabel =
+
+    function (select) {
+
+      const row =
+
+        select.closest(
+
+          ".material-row"
+
+        );
+
+      if (!row) return;
+
+      const label =
+
+        row.querySelector(
+
+          ".unit-label"
+
+        );
+
+      const type = select.value;
+
+      const unit =
+
+        window.MATERIAL_RATES?.[
+
+          type
+
+        ]?.unit || "units";
+
+      if (label) {
+
+        label.innerText =
+
+          `Quantity Available (${unit})`;
+
+      }
+
+    };
+
+  /* =====================================
+
+     QUICK FIX INVENTORY
+
+  ===================================== */
+
+  window.fixInventory =
+
+    function (type, amount) {
+
+      const data = readInventory();
+
+      const qty = Math.ceil(
+
+        safeNum(amount)
+
+      );
+
+      let sectionName = "addons";
+
+      if (
+
+        [
+
+          "seed",
+
+          "fertilizer",
+
+          "mulch",
+
+          "tackifier"
+
+        ].includes(type)
+
+      ) {
+
+        sectionName = "standard";
+
+      }
+
+      if (
+
+        [
+
+          "compost",
+
+          "biochar",
+
+          "humic",
+
+          "biohum"
+
+        ].includes(type)
+
+      ) {
+
+        sectionName = "premium";
+
+      }
+
+      let found = false;
+
+      data[sectionName].forEach(
+
+        (item) => {
+
+          if (item.type === type) {
+
+            item.qty =
+
+              safeNum(item.qty) +
+
+              qty;
+
+            found = true;
+
+          }
+
+        }
+
+      );
+
+      if (!found) {
+
+        data[sectionName].push({
+
+          type,
+
+          name:
+
+            MATERIAL_LABELS[type] ||
+
+            type,
+
+          cost: 0,
+
+          qty
+
+        });
+
+      }
+
+      writeInventory(data);
+
+      if (
+
+        typeof window.loadInventory ===
+
+        "function"
+
+      ) {
+
+        window.loadInventory();
+
+      }
+
+      if (
+
+        typeof window.showToast ===
+
+        "function"
+
+      ) {
+
+        window.showToast(
+
+          `${MATERIAL_LABELS[type]} +${qty} added`,
+
+          "success"
+
+        );
+
+      }
+
+      if (
+
+        typeof window.requestRender ===
+
+        "function"
+
+      ) {
+
+        window.requestRender();
+
+      }
+
+    };
+
+  /* =====================================
+
+     USE INVENTORY FOR JOB
+
+  ===================================== */
+
+  window.useInventoryForJob =
+
+    function () {
+
+      if (
+
+        !confirm(
+
+          "Use inventory for this job?"
+
+        )
+
+      ) {
+
+        return;
+
+      }
+
+      if (
+
+        typeof window.calculateJob !==
+
+        "function"
+
+      ) {
+
+        return;
+
+      }
+
+      const r =
+
+        window.calculateJob();
+
+      const needs =
+
+        r.needs || {};
+
+      const data =
+
+        readInventory();
+
+      Object.values(data).forEach(
+
+        (section) => {
+
+          section.forEach(
+
+            (item) => {
+
+              const key =
+
+                item.type;
+
+              if (
+
+                needs[key] >
+
+                0
+
+              ) {
+
+                const use =
+
+                  Math.min(
+
+                    safeNum(
+
+                      item.qty
+
+                    ),
+
+                    safeNum(
+
+                      needs[
+
+                        key
+
+                      ]
+
+                    )
+
+                  );
+
+                item.qty -= use;
+
+                needs[key] -= use;
+
+              }
+
+            }
+
+          );
+
+        }
+
+      );
+
+      writeInventory(data);
+
+      window.loadInventory();
+
+      if (
+
+        typeof window.showToast ===
+
+        "function"
+
+      ) {
+
+        window.showToast(
+
+          "Inventory applied to job",
+
+          "success"
+
+        );
+
+      }
+
+      if (
+
+        typeof window.requestRender ===
+
+        "function"
+
+      ) {
+
+        window.requestRender();
+
+      }
+
+    };
+
+})();
