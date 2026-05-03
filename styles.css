@@ -830,11 +830,23 @@ th{
 
 .timeline-btn{
 
-  background:#111;
+  width:100%;
+
+  padding:18px;
+
+  border-radius:18px;
+
+  background:#0a0a0a;
 
   color:#fff;
 
-  border:1px solid #2a2a2a;
+  border:1px solid #222;
+
+  font-weight:700;
+
+  font-size:32px;
+
+  margin-bottom:16px;
 
 }
 
@@ -843,7 +855,5 @@ th{
   background:#d4af37;
 
   color:#000;
-
-  font-weight:700;
 
 }

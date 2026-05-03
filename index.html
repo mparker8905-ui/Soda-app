@@ -424,27 +424,33 @@ Create Lead
 
       <div class="nav-row">
 
-     <button class="timeline-btn active"
+  <button class="timeline-btn active"
 
-onclick="setTimeline(this,'fast')">
+        data-timeline="fast"
 
-Fast
+        onclick="setTimeline(this)">
 
-</button>
-
-<button class="timeline-btn"
-
-onclick="setTimeline(this,'standard')">
-
-Standard
+  Fast
 
 </button>
 
 <button class="timeline-btn"
 
-onclick="setTimeline(this,'extended')">
+        data-timeline="standard"
 
-Extended
+        onclick="setTimeline(this)">
+
+  Standard
+
+</button>
+
+<button class="timeline-btn"
+
+        data-timeline="extended"
+
+        onclick="setTimeline(this)">
+
+  Extended
 
 </button>
 
