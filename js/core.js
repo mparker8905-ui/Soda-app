@@ -774,6 +774,65 @@
 
   }
 
+
+//====================
+//BUILD SCHEDULE
+//====================
+
+window.buildSchedule = function(result){
+
+  const mode =
+
+    window.state?.ui?.timeline ||
+
+    "standard";
+
+  let days = 3;
+
+  if(mode === "fast") days = 1;
+
+  if(mode === "extended") days = 5;
+
+  const list = [];
+
+  for(let i=1;i<=days;i++){
+
+    list.push({
+
+      day:i,
+
+      title:
+
+        i === 1
+
+          ? "Prep & Setup"
+
+          : i === days
+
+          ? "Final Finish"
+
+          : "Hydroseed Application",
+
+      date:"Day " + i,
+
+      tasks:[
+
+        "Crew arrival",
+
+        "Material staging",
+
+        "Work completed"
+
+      ]
+
+    });
+
+  }
+
+  return list;
+
+};
+
   /* =====================================
 
      GLOBAL EXPORTS
