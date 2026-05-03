@@ -94,29 +94,53 @@
 
   }
 
+  function safeToast(msg, type = "info") {
+
+    try {
+
+      if (typeof window.showToast === "function") {
+
+        window.showToast(msg, type);
+
+      }
+
+    } catch (e) {}
+
+  }
+
   /* =====================================
 
      BUILDER MULTIPLIER
 
   ===================================== */
 
-  window.getBuilderMultiplier = function (houses) {
+  function getBuilderMultiplier(houses) {
 
-    houses = n(houses, 1);
+    try {
 
-    if (houses <= 1) return 1;
+      houses = n(houses, 1);
 
-    if (houses <= 5) return 0.95;
+      if (houses <= 1) return 1;
 
-    if (houses <= 10) return 0.9;
+      if (houses <= 5) return 0.95;
 
-    if (houses <= 20) return 0.85;
+      if (houses <= 10) return 0.9;
 
-    if (houses <= 50) return 0.8;
+      if (houses <= 20) return 0.85;
 
-    return 0.75;
+      if (houses <= 50) return 0.8;
 
-  };
+      return 0.75;
+
+    } catch (e) {
+
+      console.error(e);
+
+      return 1;
+
+    }
+
+  }
 
   /* =====================================
 
@@ -124,37 +148,47 @@
 
   ===================================== */
 
-  window.getAvgCostFromInventory = function (type, inventory) {
+  function getAvgCostFromInventory(type, inventory) {
 
-    const items = inventory?.[type] || [];
+    try {
 
-    if (!items.length) return COSTS[type] || 0;
+      const items = inventory?.[type] || [];
 
-    let totalCost = 0;
+      if (!items.length) return COSTS[type] || 0;
 
-    let totalQty = 0;
+      let totalCost = 0;
 
-    items.forEach((item) => {
+      let totalQty = 0;
 
-      totalCost += n(item.cost);
+      items.forEach(item => {
 
-      totalQty += n(item.qty);
+        totalCost += n(item.cost);
 
-    });
+        totalQty += n(item.qty);
 
-    if (!totalQty) return COSTS[type] || 0;
+      });
 
-    return totalCost / totalQty;
+      if (!totalQty) return COSTS[type] || 0;
 
-  };
+      return totalCost / totalQty;
+
+    } catch (e) {
+
+      console.error(e);
+
+      return COSTS[type] || 0;
+
+    }
+
+  }
 
   /* =====================================
 
-     MATERIAL NEEDS
+     MATERIAL NEEDS CORE
 
   ===================================== */
 
-  window.getMaterialNeedsCore = function (
+  function getMaterialNeedsCore(
 
     input = {},
 
@@ -164,99 +198,115 @@
 
   ) {
 
-    const sqft = n(input.totalSqft || input.sqft);
+    try {
 
-    const needs = {
+      const sqft = n(input.totalSqft || input.sqft);
 
-      seed: (sqft / 1000) * MATERIAL_RATES.seed.rate,
+      const needs = {
 
-      fertilizer:
+        seed: (sqft / 1000) * MATERIAL_RATES.seed.rate,
 
-        (sqft / 1000) * MATERIAL_RATES.fertilizer.rate,
+        fertilizer: (sqft / 1000) * MATERIAL_RATES.fertilizer.rate,
 
-      mulch: (sqft / 1000) * MATERIAL_RATES.mulch.rate,
+        mulch: (sqft / 1000) * MATERIAL_RATES.mulch.rate,
 
-      tackifier:
+        tackifier: (sqft / 1000) * MATERIAL_RATES.tackifier.rate
 
-        (sqft / 1000) * MATERIAL_RATES.tackifier.rate
+      };
 
-    };
+      if (packageType === "premium") {
 
-    if (packageType === "premium") {
+        needs.compost =
 
-      needs.compost =
+          (sqft / 1000) * MATERIAL_RATES.compost.rate;
 
-        (sqft / 1000) * MATERIAL_RATES.compost.rate;
+        needs.biochar =
 
-      needs.biochar =
+          (sqft / 1000) *
 
-        (sqft / 1000) *
+          (MATERIAL_RATES.biochar.rate * 0.5);
 
-        (MATERIAL_RATES.biochar.rate * 0.5);
+        needs.humic =
 
-      needs.humic =
+          (sqft / 1000) *
 
-        (sqft / 1000) *
+          (MATERIAL_RATES.humic.rate * 0.5);
 
-        (MATERIAL_RATES.humic.rate * 0.5);
+      }
+
+      if (addons.lime) {
+
+        needs.lime =
+
+          (sqft / 1000) * MATERIAL_RATES.lime.rate;
+
+      }
+
+      if (addons.sulfur) {
+
+        needs.sulfur =
+
+          (sqft / 1000) * MATERIAL_RATES.sulfur.rate;
+
+      }
+
+      if (addons.biochar) {
+
+        needs.biochar =
+
+          (needs.biochar || 0) +
+
+          (sqft / 1000) * MATERIAL_RATES.biochar.rate;
+
+      }
+
+      if (addons.humic) {
+
+        needs.humic =
+
+          (needs.humic || 0) +
+
+          (sqft / 1000) * MATERIAL_RATES.humic.rate;
+
+      }
+
+      return needs;
+
+    } catch (e) {
+
+      console.error(e);
+
+      return {};
 
     }
 
-    if (addons.lime) {
+  }
 
-      needs.lime =
+  function getMaterialNeeds(input = {}) {
 
-        (sqft / 1000) * MATERIAL_RATES.lime.rate;
+    try {
 
-    }
+      const s = window.state || {};
 
-    if (addons.sulfur) {
+      return getMaterialNeedsCore(
 
-      needs.sulfur =
+        input,
 
-        (sqft / 1000) * MATERIAL_RATES.sulfur.rate;
+        s.job?.package || "standard",
 
-    }
+        s.job?.addons || {}
 
-    if (addons.biochar) {
+      );
 
-      needs.biochar =
+    } catch (e) {
 
-        (needs.biochar || 0) +
+      console.error(e);
 
-        (sqft / 1000) * MATERIAL_RATES.biochar.rate;
-
-    }
-
-    if (addons.humic) {
-
-      needs.humic =
-
-        (needs.humic || 0) +
-
-        (sqft / 1000) * MATERIAL_RATES.humic.rate;
+      return {};
 
     }
 
-    return needs;
-
-  };
-
-  window.getMaterialNeeds = function (input = {}) {
-
-    const s = window.state || {};
-
-    return window.getMaterialNeedsCore(
-
-      input,
-
-      s.job?.package || "standard",
-
-      s.job?.addons || {}
-
-    );
-
-  };
+  }
 
   /* =====================================
 
@@ -264,7 +314,7 @@
 
   ===================================== */
 
-  window.getSmartPricing = function (
+  function getSmartPricing(
 
     totalCost,
 
@@ -278,71 +328,81 @@
 
   ) {
 
-    let baseMargin = 0.3;
+    try {
 
-    if (sqft < 3000) baseMargin = 0.4;
+      let baseMargin = 0.3;
 
-    else if (sqft < 8000) baseMargin = 0.35;
+      if (sqft < 3000) baseMargin = 0.4;
 
-    else if (sqft < 20000) baseMargin = 0.3;
+      else if (sqft < 8000) baseMargin = 0.35;
 
-    else baseMargin = 0.25;
+      else if (sqft < 20000) baseMargin = 0.3;
 
-    if (pricingMode === "win") {
+      else baseMargin = 0.25;
 
-      baseMargin -= 0.1;
+      if (pricingMode === "win") baseMargin -= 0.1;
 
-    }
+      if (houses >= 10) baseMargin -= 0.03;
 
-    if (houses >= 10) baseMargin -= 0.03;
+      if (houses >= 20) baseMargin -= 0.05;
 
-    if (houses >= 20) baseMargin -= 0.05;
+      if (totalCost > 5000) baseMargin += 0.05;
 
-    if (totalCost > 5000) {
+      if (baseMargin < 0.1) baseMargin = 0.1;
 
-      baseMargin += 0.05;
+      if (baseMargin > 0.9) baseMargin = 0.9;
 
-    }
+      let price = totalCost / (1 - baseMargin);
 
-    if (baseMargin < 0.1) baseMargin = 0.1;
+      if (competitor > 0) {
 
-    if (baseMargin > 0.9) baseMargin = 0.9;
+        if (competitor > price) {
 
-    let price = totalCost / (1 - baseMargin);
+          price = competitor * 0.98;
 
-    if (competitor > 0) {
+        } else {
 
-      if (competitor > price) {
+          price = Math.max(price, competitor * 0.95);
 
-        price = competitor * 0.98;
-
-      } else {
-
-        price = Math.max(price, competitor * 0.95);
+        }
 
       }
 
+      if (price < totalCost * 1.1) {
+
+        price = totalCost * 1.1;
+
+      }
+
+      const profit = price - totalCost;
+
+      return {
+
+        price,
+
+        profit,
+
+        margin: pct(profit, price)
+
+      };
+
+    } catch (e) {
+
+      console.error(e);
+
+      return {
+
+        price: totalCost || 0,
+
+        profit: 0,
+
+        margin: 0
+
+      };
+
     }
 
-    if (price < totalCost * 1.1) {
-
-      price = totalCost * 1.1;
-
-    }
-
-    const profit = price - totalCost;
-
-    return {
-
-      price,
-
-      profit,
-
-      margin: pct(profit, price)
-
-    };
-
-  };
+  }
 
   /* =====================================
 
@@ -350,323 +410,303 @@
 
   ===================================== */
 
-  window.calculateJobCore = function (
+  function calculateJobCore(state, options = {}) {
 
-    state,
+    try {
 
-    options = {}
+      const inventory =
 
-  ) {
+        state.inventory ||
 
-    const inventory =
+        (window.getInventoryCache?.() || {});
 
-      state.inventory ||
+      const sqft = n(state.job?.sqft);
 
-      (window.getInventoryCache
+      const houses = n(state.job?.houses, 1);
 
-        ? window.getInventoryCache()
+      const packageType =
 
-        : {});
+        options.packageOverride ||
 
-    const sqft = n(state.job?.sqft);
+        state.job?.package ||
 
-    const houses = n(state.job?.houses, 1);
+        "standard";
 
-    const packageType =
+      const pricingMode =
 
-      options.packageOverride ||
+        state.job?.pricingMode || "balanced";
 
-      state.job?.package ||
+      const competitor =
 
-      "standard";
+        n(state.job?.competitorPrice);
 
-    const pricingMode =
+      const strategy =
 
-      state.job?.pricingMode || "balanced";
+        state.job?.pricingStrategy || "normal";
 
-    const competitor = n(
+      const totalSqft = sqft * houses;
 
-      state.job?.competitorPrice
+      const builderMult =
 
-    );
+        getBuilderMultiplier(houses);
 
-    const strategy =
+      const hourlyRate =
 
-      state.job?.pricingStrategy || "normal";
+        n(state.job?.labor?.hourlyRate);
 
-    const totalSqft = sqft * houses;
+      const hoursPerHouse =
 
-    const builderMult =
+        n(state.job?.labor?.hoursPerHouse);
 
-      window.getBuilderMultiplier(houses);
+      const crewSize =
 
-    /* labor */
+        n(state.job?.labor?.crewSize, 1);
 
-    const hourlyRate = n(
+      const overheadPct =
 
-      state.job?.labor?.hourlyRate
+        n(state.job?.labor?.overhead);
 
-    );
+      const laborEfficiency =
 
-    const hoursPerHouse = n(
+        1 - (1 - builderMult) * 0.5;
 
-      state.job?.labor?.hoursPerHouse
+      const totalHours =
 
-    );
+        hoursPerHouse *
 
-    const crewSize = n(
+        houses *
 
-      state.job?.labor?.crewSize,
+        laborEfficiency;
 
-      1
+      const laborCost =
 
-    );
+        totalHours *
 
-    const overheadPct = n(
+        hourlyRate *
 
-      state.job?.labor?.overhead
+        crewSize;
 
-    );
+      const addons =
 
-    const laborEfficiency =
+        state.job?.addons || {};
 
-      1 - (1 - builderMult) * 0.5;
+      const needs =
 
-    const totalHours =
+        getMaterialNeedsCore(
 
-      hoursPerHouse *
+          { totalSqft },
 
-      houses *
+          packageType,
 
-      laborEfficiency;
-
-    const laborCost =
-
-      totalHours *
-
-      hourlyRate *
-
-      crewSize;
-
-    /* materials */
-
-    const addons =
-
-      state.job?.addons || {};
-
-    const needs =
-
-      window.getMaterialNeedsCore(
-
-        { totalSqft },
-
-        packageType,
-
-        addons
-
-      );
-
-    let materialCost = 0;
-
-    Object.keys(needs).forEach((type) => {
-
-      materialCost +=
-
-        needs[type] *
-
-        window.getAvgCostFromInventory(
-
-          type,
-
-          inventory
+          addons
 
         );
 
-    });
+      let materialCost = 0;
 
-    if (materialCost < 500) {
+      Object.keys(needs).forEach(type => {
 
-      materialCost = 500;
+        materialCost +=
 
-    }
+          needs[type] *
 
-    /* add-ons */
+          getAvgCostFromInventory(
 
-    if (addons.aeration)
+            type,
 
-      materialCost += totalSqft * 0.04;
+            inventory
 
-    if (
+          );
 
-      addons.compost &&
+      });
 
-      packageType !== "premium"
+      if (materialCost < 500) {
 
-    )
+        materialCost = 500;
 
-      materialCost += totalSqft * 0.1;
+      }
 
-    if (addons.biohum)
+      if (addons.aeration) materialCost += totalSqft * 0.04;
 
-      materialCost += totalSqft * 0.12;
+      if (addons.compost && packageType !== "premium") materialCost += totalSqft * 0.10;
 
-    if (addons.biochar)
+      if (addons.biohum) materialCost += totalSqft * 0.12;
 
-      materialCost += totalSqft * 0.2;
+      if (addons.biochar) materialCost += totalSqft * 0.20;
 
-    if (addons.humic)
+      if (addons.humic) materialCost += totalSqft * 0.01;
 
-      materialCost += totalSqft * 0.01;
+      if (addons.lime) materialCost += totalSqft * 0.004;
 
-    if (addons.lime)
+      if (addons.sulfur) materialCost += totalSqft * 0.008;
 
-      materialCost += totalSqft * 0.004;
+      if (addons.grow) {
 
-    if (addons.sulfur)
+        const weekly = 50 * 3 * houses;
 
-      materialCost += totalSqft * 0.008;
+        const install =
 
-    if (addons.grow) {
+          packageType === "standard"
 
-      const weekly = 50 * 3 * houses;
+            ? houses <= 1
 
-      const install =
+              ? totalSqft * 0.05
 
-        packageType === "standard"
+              : totalSqft * 0.03
 
-          ? houses <= 1
+            : 0;
 
-            ? totalSqft * 0.05
+        materialCost += weekly + install;
 
-            : totalSqft * 0.03
+      }
 
-          : 0;
+      const overheadCost =
 
-      materialCost += weekly + install;
+        (materialCost + laborCost) *
 
-    }
+        (overheadPct / 100);
 
-    const overheadCost =
+      const totalCost =
 
-      (materialCost + laborCost) *
+        materialCost +
 
-      (overheadPct / 100);
+        laborCost +
 
-    const totalCost =
+        overheadCost;
 
-      materialCost +
+      let pricing =
 
-      laborCost +
+        getSmartPricing(
 
-      overheadCost;
+          totalCost,
 
-    let pricing =
+          totalSqft,
 
-      window.getSmartPricing(
+          houses,
 
-        totalCost,
+          pricingMode,
 
-        totalSqft,
+          competitor
+
+        );
+
+      let price = pricing.price;
+
+      if (strategy === "market") {
+
+        price = Math.max(price, totalSqft * 0.35);
+
+      }
+
+      if (
+
+        strategy === "undercut" &&
+
+        competitor > 0
+
+      ) {
+
+        price = competitor * 0.97;
+
+      }
+
+      if (strategy === "builder") {
+
+        price *= 0.92;
+
+      }
+
+      if (price < totalCost * 1.1) {
+
+        price = totalCost * 1.1;
+
+      }
+
+      if (price < 1000) {
+
+        price = 1000;
+
+      }
+
+      const profit = price - totalCost;
+
+      const inventoryTotals =
+
+        window.getInventoryTotals?.() || {};
+
+      const comparison =
+
+        window.compareInventory?.(
+
+          needs,
+
+          inventoryTotals
+
+        ) || {};
+
+      return {
+
+        sqft,
 
         houses,
 
-        pricingMode,
+        totalSqft,
 
-        competitor
+        cost: totalCost,
 
-      );
+        price,
 
-    let price = pricing.price;
+        profit,
 
-    if (strategy === "market") {
+        laborCost,
 
-      price = Math.max(price, totalSqft * 0.35);
+        overheadCost,
+
+        totalHours,
+
+        needs,
+
+        comparison,
+
+        usingFallback: false
+
+      };
+
+    } catch (e) {
+
+      console.error("calculateJobCore failed:", e);
+
+      return {
+
+        sqft: 0,
+
+        houses: 1,
+
+        totalSqft: 0,
+
+        cost: 0,
+
+        price: 0,
+
+        profit: 0,
+
+        laborCost: 0,
+
+        overheadCost: 0,
+
+        totalHours: 0,
+
+        needs: {},
+
+        comparison: {},
+
+        usingFallback: true
+
+      };
 
     }
 
-    if (
-
-      strategy === "undercut" &&
-
-      competitor > 0
-
-    ) {
-
-      price = competitor * 0.97;
-
-    }
-
-    if (strategy === "builder") {
-
-      price *= 0.92;
-
-    }
-
-    if (price < totalCost * 1.1) {
-
-      price = totalCost * 1.1;
-
-    }
-
-    if (price < 1000) {
-
-      price = 1000;
-
-    }
-
-    const profit = price - totalCost;
-
-    const inventoryTotals =
-
-      window.getInventoryTotals
-
-        ? window.getInventoryTotals()
-
-        : {};
-
-    const comparison =
-
-      window.compareInventory
-
-        ? window.compareInventory(
-
-            needs,
-
-            inventoryTotals
-
-          )
-
-        : {};
-
-    return {
-
-      sqft,
-
-      houses,
-
-      totalSqft,
-
-      cost: totalCost,
-
-      price,
-
-      profit,
-
-      laborCost,
-
-      overheadCost,
-
-      totalHours,
-
-      needs,
-
-      comparison,
-
-      usingFallback: false
-
-    };
-
-  };
+  }
 
   /* =====================================
 
@@ -674,50 +714,84 @@
 
   ===================================== */
 
-  window.calculateJob = function (
+  function calculateJob(options = {}) {
 
-    options = {}
+    try {
 
-  ) {
+      const s = window.state || {};
 
-    const s = window.state || {};
+      const result = calculateJobCore(
 
-    return window.calculateJobCore(
+        {
 
-      {
+          job: s.job || {},
 
-        job: s.job,
+          inventory:
 
-        inventory:
+            window.getInventoryCache?.() || {}
 
-          window.getInventoryCache?.() || {}
+        },
 
-      },
+        options
 
-      options
+      );
 
-    );
+      return result;
 
-  };
+    } catch (e) {
+
+      console.error("calculateJob failed:", e);
+
+      safeToast("Calculation failed", "error");
+
+      return {
+
+        sqft: 0,
+
+        houses: 1,
+
+        totalSqft: 0,
+
+        cost: 0,
+
+        price: 0,
+
+        profit: 0,
+
+        laborCost: 0,
+
+        overheadCost: 0,
+
+        totalHours: 0,
+
+        needs: {},
+
+        comparison: {}
+
+      };
+
+    }
+
+  }
+
+  /* =====================================
+
+     GLOBAL EXPORTS
+
+  ===================================== */
+
+  window.calculateJob = calculateJob;
+
+  window.calculateJobCore = calculateJobCore;
+
+  window.getMaterialNeeds = getMaterialNeeds;
+
+  window.getMaterialNeedsCore = getMaterialNeedsCore;
+
+  window.getBuilderMultiplier = getBuilderMultiplier;
+
+  window.getAvgCostFromInventory = getAvgCostFromInventory;
+
+  window.getSmartPricing = getSmartPricing;
 
 })();
-
-window.calculateJob = calculateJob;
-
-window.calculateJobCore = calculateJobCore;
-
-window.getMaterialNeeds = getMaterialNeeds;
-
-window.getMaterialNeedsCore = getMaterialNeedsCore;
-
-window.calculateTankLoads = calculateTankLoads;
-
-window.calculateDealScore = calculateDealScore;
-
-window.generateAIInsights = generateAIInsights;
-
-window.buildSchedule = buildSchedule;
-
-window.getBuilderMultiplier = getBuilderMultiplier;
-
-window.getSmartPricing = getSmartPricing;

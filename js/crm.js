@@ -46,15 +46,11 @@
 
     try {
 
-      return JSON.parse(
-
-        localStorage.getItem(STORAGE_KEY)
-
-      ) || [];
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
     } catch (e) {
 
-      console.error("CRM read failed", e);
+      console.error("CRM read failed:", e);
 
       return [];
 
@@ -64,21 +60,21 @@
 
   function writeCRM(list) {
 
-    localStorage.setItem(
+    try {
 
-      STORAGE_KEY,
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list || []));
 
-      JSON.stringify(list)
+    } catch (e) {
 
-    );
+      console.error("CRM write failed:", e);
+
+    }
 
   }
 
   function val(id, fallback = "") {
 
-    const el =
-
-      document.getElementById(id);
+    const el = document.getElementById(id);
 
     return el ? el.value : fallback;
 
@@ -88,31 +84,23 @@
 
     const n = Number(v);
 
-    return Number.isFinite(n)
-
-      ? n
-
-      : 0;
+    return Number.isFinite(n) ? n : 0;
 
   }
 
-  function toast(msg, type) {
+  function toast(msg, type = "info") {
 
-    if (
+    try {
 
-      typeof window.showToast ===
+      if (typeof window.showToast === "function") {
 
-      "function"
+        window.showToast(msg, type);
 
-    ) {
+      }
 
-      window.showToast(
+    } catch (e) {
 
-        msg,
-
-        type
-
-      );
+      console.warn(e);
 
     }
 
@@ -120,27 +108,23 @@
 
   function rerender() {
 
-    if (
+    try {
 
-      typeof window.renderPipeline ===
+      if (typeof window.renderPipeline === "function") {
 
-      "function"
+        window.renderPipeline();
 
-    ) {
+      }
 
-      window.renderPipeline();
+      if (typeof window.render === "function") {
 
-    }
+        window.render();
 
-    if (
+      }
 
-      typeof window.render ===
+    } catch (e) {
 
-      "function"
-
-    ) {
-
-      window.render();
+      console.error("rerender failed:", e);
 
     }
 
@@ -152,13 +136,21 @@
 
   ===================================== */
 
-  window.getSavedProposals =
+  function getSavedProposals() {
 
-    function () {
+    try {
 
       return readCRM();
 
-    };
+    } catch (e) {
+
+      console.error(e);
+
+      return [];
+
+    }
+
+  }
 
   /* =====================================
 
@@ -166,29 +158,17 @@
 
   ===================================== */
 
-  window.createLead =
+  function createLead() {
 
-    function () {
+    try {
 
-      const customer = val(
+      const customer = val("customer").trim();
 
-        "customer"
-
-      ).trim();
-
-      const address = val(
-
-        "address"
-
-      ).trim();
+      const address = val("address").trim();
 
       if (!customer) {
 
-        alert(
-
-          "Enter customer name"
-
-        );
+        alert("Enter customer name");
 
         return;
 
@@ -210,9 +190,7 @@
 
         sqft: 0,
 
-        createdAt:
-
-          Date.now()
+        createdAt: Date.now()
 
       };
 
@@ -224,15 +202,17 @@
 
       rerender();
 
-      toast(
+      toast("Lead created", "success");
 
-        "Lead created",
+    } catch (e) {
 
-        "success"
+      console.error("createLead failed:", e);
 
-      );
+      toast("Create Lead failed", "error");
 
-    };
+    }
+
+  }
 
   /* =====================================
 
@@ -240,193 +220,103 @@
 
   ===================================== */
 
-  window.sendProposal =
+  function sendProposal() {
 
-    function () {
+    try {
 
-      try {
+      if (typeof window.calculateJob !== "function") {
 
-        if (
+        alert("Calculator unavailable");
 
-          typeof window.calculateJob !==
-
-          "function"
-
-        ) {
-
-          alert(
-
-            "Calculator unavailable"
-
-          );
-
-          return;
-
-        }
-
-        const r =
-
-          window.calculateJob();
-
-        const customer =
-
-          val(
-
-            "customer",
-
-            "Client"
-
-          );
-
-        const address =
-
-          val("address");
-
-        const quoteDate =
-
-          val("quoteDate");
-
-        const quoteDateFormatted =
-
-          quoteDate
-
-            ? new Date(
-
-                quoteDate
-
-              ).toLocaleDateString()
-
-            : new Date().toLocaleDateString();
-
-        const packageType =
-
-          val(
-
-            "package",
-
-            "standard"
-
-          );
-
-        const proposal = {
-
-          id: Date.now(),
-
-          customer,
-
-          address,
-
-          packageType,
-
-          quoteDate:
-
-            quoteDateFormatted,
-
-          total: r.price,
-
-          sqft: r.totalSqft,
-
-          stage: "proposal",
-
-          status:
-
-            "Proposal Sent",
-
-          createdAt:
-
-            Date.now(),
-
-          snapshot: {
-
-            sqft: val("sqft"),
-
-            houses:
-
-              val(
-
-                "houses"
-
-              ),
-
-            package:
-
-              packageType,
-
-            addons:
-
-              window.state
-
-                ?.job
-
-                ?.addons || {}
-
-          }
-
-        };
-
-        const list =
-
-          readCRM();
-
-        const exists =
-
-          list.find(
-
-            (p) =>
-
-              p.customer ===
-
-                proposal.customer &&
-
-              p.address ===
-
-                proposal.address &&
-
-              p.quoteDate ===
-
-                proposal.quoteDate
-
-          );
-
-        if (!exists) {
-
-          list.push(
-
-            proposal
-
-          );
-
-          writeCRM(
-
-            list
-
-          );
-
-        }
-
-        rerender();
-
-        openProposalWindow(
-
-          proposal,
-
-          r
-
-        );
-
-      } catch (e) {
-
-        console.error(e);
-
-        alert(
-
-          "Proposal error"
-
-        );
+        return;
 
       }
 
-    };
+      const r = window.calculateJob();
+
+      const customer = val("customer", "Client");
+
+      const address = val("address");
+
+      const quoteDate = val("quoteDate");
+
+      const packageType = val("package", "standard");
+
+      const quoteDateFormatted = quoteDate
+
+        ? new Date(quoteDate).toLocaleDateString()
+
+        : new Date().toLocaleDateString();
+
+      const proposal = {
+
+        id: Date.now(),
+
+        customer,
+
+        address,
+
+        packageType,
+
+        quoteDate: quoteDateFormatted,
+
+        total: num(r.price),
+
+        sqft: num(r.totalSqft),
+
+        stage: "proposal",
+
+        status: "Proposal Sent",
+
+        createdAt: Date.now(),
+
+        snapshot: {
+
+          sqft: val("sqft"),
+
+          houses: val("houses"),
+
+          package: packageType,
+
+          addons: window.state?.job?.addons || {}
+
+        }
+
+      };
+
+      const list = readCRM();
+
+      const exists = list.find(p =>
+
+        p.customer === proposal.customer &&
+
+        p.address === proposal.address &&
+
+        p.quoteDate === proposal.quoteDate
+
+      );
+
+      if (!exists) {
+
+        list.push(proposal);
+
+        writeCRM(list);
+
+      }
+
+      rerender();
+
+      openProposalWindow(proposal, r);
+
+    } catch (e) {
+
+      console.error("sendProposal failed:", e);
+
+      toast("Proposal failed", "error");
+
+    }
+
+  }
 
   /* =====================================
 
@@ -434,557 +324,245 @@
 
   ===================================== */
 
-  function openProposalWindow(
+  function openProposalWindow(proposal, r) {
 
-    proposal,
+    try {
 
-    r
+      const win = window.open("", "_blank");
 
-  ) {
+      if (!win) {
 
-    const win =
+        alert("Popup blocked");
 
-      window.open(
+        return;
 
-        "",
+      }
 
-        "_blank"
+      const pricePerSqft =
 
-      );
+        r.totalSqft > 0 ? r.price / r.totalSqft : 0;
 
-    if (!win) {
+      const html = `
 
-      alert(
+      <html>
 
-        "Popup blocked"
+      <head>
 
-      );
+      <title>Proposal</title>
 
-      return;
+      <style>
+
+      body{
+
+        font-family:Arial;
+
+        background:#000;
+
+        color:#d4af37;
+
+        padding:40px;
+
+        max-width:760px;
+
+        margin:auto;
+
+      }
+
+      .section{margin-top:20px;}
+
+      .line{
+
+        display:flex;
+
+        justify-content:space-between;
+
+        margin:6px 0;
+
+      }
+
+      .total{
+
+        font-size:34px;
+
+        font-weight:800;
+
+        text-align:right;
+
+        margin-top:12px;
+
+      }
+
+      button{
+
+        width:100%;
+
+        padding:14px;
+
+        margin-top:10px;
+
+        font-weight:bold;
+
+        border:none;
+
+        cursor:pointer;
+
+      }
+
+      .primary{
+
+        background:#d4af37;
+
+        color:#000;
+
+      }
+
+      .danger{
+
+        background:#550000;
+
+        color:#fff;
+
+      }
+
+      </style>
+
+      </head>
+
+      <body>
+
+      <h1>SoDa Outdoor Designs</h1>
+
+      <div>We build lawns from the soil up</div>
+
+      <div class="section">
+
+        <b>Client</b><br>
+
+        ${proposal.customer}<br>
+
+        ${proposal.address}
+
+      </div>
+
+      <div class="section">
+
+        <b>Proposal Date</b><br>
+
+        ${proposal.quoteDate}
+
+      </div>
+
+      <div class="section">
+
+        <b>Package</b><br>
+
+        ${proposal.packageType.toUpperCase()}
+
+      </div>
+
+      <div class="section">
+
+        <div class="line">
+
+          <span>Total Sqft</span>
+
+          <span>${num(r.totalSqft).toFixed(0)}</span>
+
+        </div>
+
+        <div class="line">
+
+          <span>Price / Sqft</span>
+
+          <span>$${pricePerSqft.toFixed(2)}</span>
+
+        </div>
+
+        <div class="line">
+
+          <span>Labor</span>
+
+          <span>$${num(r.laborCost).toFixed(2)}</span>
+
+        </div>
+
+      </div>
+
+      <div class="section">
+
+        <b>Total Investment</b>
+
+        <div class="total">$${num(r.price).toFixed(2)}</div>
+
+      </div>
+
+      <button class="primary" onclick="approveProposal()">
+
+        Approve Proposal
+
+      </button>
+
+      <button class="danger" onclick="markRejected()">
+
+        Mark Not Accepted
+
+      </button>
+
+      </body>
+
+      </html>
+
+      `;
+
+      win.document.open();
+
+      win.document.write(html);
+
+      win.document.close();
+
+      win.proposalId = proposal.id;
+
+      win.approveProposal = function () {
+
+        setStatusById(win.proposalId, "Accepted");
+
+        win.print();
+
+      };
+
+      win.markRejected = function () {
+
+        setStatusById(win.proposalId, "Not Accepted");
+
+        alert("Marked as Not Accepted");
+
+      };
+
+    } catch (e) {
+
+      console.error("proposal window failed:", e);
 
     }
-
-    const pricePerSqft =
-
-      r.totalSqft
-
-        ? r.price /
-
-          r.totalSqft
-
-        : 0;
-
-    const html = `
-
-<html>
-
-<head>
-
-<title>Proposal</title>
-
-<style>
-
-body{
-
-font-family:Arial;
-
-padding:40px;
-
-background:#000;
-
-color:#d4af37;
-
-max-width:720px;
-
-margin:auto;
-
-}
-
-.section{
-
-margin-top:20px;
-
-}
-
-.line{
-
-display:flex;
-
-justify-content:space-between;
-
-margin:6px 0;
-
-}
-
-.total{
-
-font-size:34px;
-
-font-weight:800;
-
-text-align:right;
-
-margin-top:10px;
-
-}
-
-button{
-
-width:100%;
-
-padding:14px;
-
-margin-top:12px;
-
-font-weight:bold;
-
-border:none;
-
-cursor:pointer;
-
-}
-
-.primary{
-
-background:#d4af37;
-
-color:#000;
-
-}
-
-.reject{
-
-background:#550000;
-
-color:#fff;
-
-}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>SoDa Outdoor Designs</h1>
-
-<div>We build lawns from the soil up</div>
-
-<div class="section">
-
-<b>Client</b><br>
-
-${proposal.customer}<br>
-
-${proposal.address}
-
-</div>
-
-<div class="section">
-
-<b>Proposal Date</b><br>
-
-${proposal.quoteDate}
-
-</div>
-
-<div class="section">
-
-<b>Package</b><br>
-
-${proposal.packageType.toUpperCase()}
-
-</div>
-
-<div class="section">
-
-<div class="line">
-
-<span>Total Sqft</span>
-
-<span>${r.totalSqft.toFixed(
-
-      0
-
-    )}</span>
-
-</div>
-
-<div class="line">
-
-<span>Price / Sqft</span>
-
-<span>$${pricePerSqft.toFixed(
-
-      2
-
-    )}</span>
-
-</div>
-
-<div class="line">
-
-<span>Labor</span>
-
-<span>$${r.laborCost.toFixed(
-
-      2
-
-    )}</span>
-
-</div>
-
-</div>
-
-<div class="section">
-
-<b>Total Investment</b>
-
-<div class="total">
-
-$${r.price.toFixed(
-
-      2
-
-    )}
-
-</div>
-
-</div>
-
-<button class="primary"
-
-onclick="approveProposal()">
-
-Approve Proposal
-
-</button>
-
-<button class="reject"
-
-onclick="markRejected()">
-
-Mark Not Accepted
-
-</button>
-
-</body>
-
-</html>
-
-`;
-
-    win.document.open();
-
-    win.document.write(
-
-      html
-
-    );
-
-    win.document.close();
-
-    win.proposalId =
-
-      proposal.id;
-
-    win.approveProposal =
-
-      function () {
-
-        setStatusById(
-
-          win.proposalId,
-
-          "Accepted"
-
-        );
-
-        win.print();
-
-      };
-
-    win.markRejected =
-
-      function () {
-
-        setStatusById(
-
-          win.proposalId,
-
-          "Not Accepted"
-
-        );
-
-        alert(
-
-          "Marked as Not Accepted"
-
-        );
-
-      };
-
-    setTimeout(() => {
-
-      try {
-
-        win.focus();
-
-        win.print();
-
-      } catch (e) {}
-
-    }, 500);
 
   }
 
   /* =====================================
 
-     PIPELINE RENDER
+     MATCH STAGE
 
   ===================================== */
 
-  window.renderPipeline =
+  function matchStage(p, key) {
 
-    function () {
+    if (key === "lead") return p.stage === "lead";
 
-      const container =
+    if (key === "proposal") return p.stage === "proposal";
 
-        document.getElementById(
+    if (key === "pending") return p.status === "Pending";
 
-          "jobHistoryList"
+    if (key === "won") return p.status === "Accepted";
 
-        );
-
-      if (!container)
-
-        return;
-
-      const list =
-
-        readCRM();
-
-      let html =
-
-        `<div style="display:flex;gap:12px;overflow-x:auto;">`;
-
-      PIPELINE_STAGES.forEach(
-
-        (stage) => {
-
-          const items =
-
-            list.filter(
-
-              (p) =>
-
-                matchStage(
-
-                  p,
-
-                  stage.key
-
-                )
-
-            );
-
-          html += `
-
-          <div style="
-
-            min-width:260px;
-
-            background:#0d0d0d;
-
-            border:1px solid #333;
-
-            border-radius:12px;
-
-            padding:10px;
-
-          ">
-
-          <div style="
-
-            font-weight:bold;
-
-            color:#d4af37;
-
-            margin-bottom:10px;
-
-          ">
-
-            ${stage.label}
-
-            (${items.length})
-
-          </div>
-
-          ${items
-
-            .map(
-
-              (
-
-                p
-
-              ) => `
-
-            <div class="history-card"
-
-            onclick="openProposal(${p.id})">
-
-              <div><b>${p.customer}</b></div>
-
-              <div style="
-
-                font-size:12px;
-
-                color:#aaa;
-
-              ">
-
-                ${
-
-                  p.address ||
-
-                  ""
-
-                }
-
-              </div>
-
-              <div style="
-
-                margin-top:6px;
-
-              ">
-
-                💰 $${num(
-
-                  p.total
-
-                ).toFixed(
-
-                  0
-
-                )}
-
-              </div>
-
-            </div>
-
-          `
-
-            )
-
-            .join(
-
-              ""
-
-            )}
-
-          </div>
-
-        `;
-
-        }
-
-      );
-
-      html +=
-
-        "</div>";
-
-      container.innerHTML =
-
-        html;
-
-    };
-
-  function matchStage(
-
-    p,
-
-    key
-
-  ) {
-
-    if (
-
-      key === "lead"
-
-    )
-
-      return (
-
-        p.stage ===
-
-        "lead"
-
-      );
-
-    if (
-
-      key ===
-
-      "proposal"
-
-    )
-
-      return (
-
-        p.stage ===
-
-        "proposal"
-
-      );
-
-    if (
-
-      key ===
-
-      "pending"
-
-    )
-
-      return (
-
-        p.status ===
-
-        "Pending"
-
-      );
-
-    if (
-
-      key === "won"
-
-    )
-
-      return (
-
-        p.status ===
-
-        "Accepted"
-
-      );
-
-    if (
-
-      key ===
-
-      "lost"
-
-    )
-
-      return (
-
-        p.status ===
-
-        "Not Accepted"
-
-      );
+    if (key === "lost") return p.status === "Not Accepted";
 
     return false;
 
@@ -992,311 +570,211 @@ Mark Not Accepted
 
   /* =====================================
 
-     OPEN PROPOSAL MODAL
+     RENDER PIPELINE
 
   ===================================== */
 
-  window.openProposal =
+  function renderPipeline() {
 
-    function (id) {
+    try {
 
-      const list =
+      const container =
 
-        readCRM();
+        document.getElementById("jobHistoryList");
 
-      const p =
+      if (!container) return;
 
-        list.find(
+      const list = readCRM();
 
-          (x) =>
+      let html =
 
-            x.id == id
+        `<div style="display:flex;gap:12px;overflow-x:auto;">`;
+
+      PIPELINE_STAGES.forEach(stage => {
+
+        const items = list.filter(p =>
+
+          matchStage(p, stage.key)
 
         );
+
+        html += `
+
+        <div class="glass-card" style="min-width:260px;">
+
+          <div style="
+
+            color:#d4af37;
+
+            font-weight:bold;
+
+            margin-bottom:10px;
+
+          ">
+
+            ${stage.label} (${items.length})
+
+          </div>
+
+          ${items.map(p => `
+
+            <div class="history-card"
+
+              onclick="openProposal(${p.id})">
+
+              <div><b>${p.customer}</b></div>
+
+              <div>${p.address || ""}</div>
+
+              <div>💰 $${num(p.total).toFixed(0)}</div>
+
+            </div>
+
+          `).join("")}
+
+        </div>
+
+        `;
+
+      });
+
+      html += `</div>`;
+
+      container.innerHTML = html;
+
+    } catch (e) {
+
+      console.error("renderPipeline failed:", e);
+
+    }
+
+  }
+
+  /* =====================================
+
+     OPEN PROPOSAL
+
+  ===================================== */
+
+  function openProposal(id) {
+
+    try {
+
+      const list = readCRM();
+
+      const p = list.find(x => x.id == id);
 
       if (!p) return;
 
-      window.activeProposalId =
+      window.activeProposalId = id;
 
-        id;
+      const modal = document.getElementById("proposalModal");
 
-      const modal =
+      const body = document.getElementById("modalBody");
 
-        document.getElementById(
+      if (!modal || !body) return;
 
-          "proposalModal"
+      const customer = document.getElementById("modalCustomer");
 
-        );
+      const address = document.getElementById("modalAddress");
 
-      const body =
+      if (customer) customer.innerText = p.customer;
 
-        document.getElementById(
-
-          "modalBody"
-
-        );
-
-      const customer =
-
-        document.getElementById(
-
-          "modalCustomer"
-
-        );
-
-      const address =
-
-        document.getElementById(
-
-          "modalAddress"
-
-        );
-
-      if (
-
-        !modal ||
-
-        !body
-
-      )
-
-        return;
-
-      if (customer)
-
-        customer.innerText =
-
-          p.customer;
-
-      if (address)
-
-        address.innerText =
-
-          p.address ||
-
-          "";
+      if (address) address.innerText = p.address || "";
 
       body.innerHTML = `
 
         <div class="proposal-wrap">
 
-          <div class="row">
+          <div><b>Status:</b> ${p.status}</div>
 
-            <b>Date:</b>
+          <div><b>Sqft:</b> ${p.sqft || 0}</div>
 
-            <span>${
-
-              p.quoteDate ||
-
-              "-"
-
-            }</span>
-
-          </div>
-
-          <div class="row">
-
-            <b>Package:</b>
-
-            <span>${(
-
-              p.packageType ||
-
-              "lead"
-
-            ).toUpperCase()}</span>
-
-          </div>
-
-          <div class="row">
-
-            <b>Sqft:</b>
-
-            <span>${
-
-              p.sqft ||
-
-              0
-
-            }</span>
-
-          </div>
-
-          <div class="price">
-
-            💰 $${num(
-
-              p.total
-
-            ).toFixed(
-
-              2
-
-            )}
-
-          </div>
-
-          <div class="row">
-
-            <b>Status:</b>
-
-            <span>${
-
-              p.status
-
-            }</span>
-
-          </div>
+          <div><b>Total:</b> $${num(p.total).toFixed(2)}</div>
 
         </div>
 
       `;
 
-      modal.style.display =
+      modal.style.display = "flex";
 
-        "flex";
+    } catch (e) {
 
-    };
-
-  /* =====================================
-
-     CLOSE MODAL
-
-  ===================================== */
-
-  window.closeProposalModal =
-
-    function () {
-
-      const modal =
-
-        document.getElementById(
-
-          "proposalModal"
-
-        );
-
-      if (modal) {
-
-        modal.style.display =
-
-          "none";
-
-      }
-
-    };
-
-  /* =====================================
-
-     STATUS UPDATE
-
-  ===================================== */
-
-  function setStatusById(
-
-    id,
-
-    status
-
-  ) {
-
-    const list =
-
-      readCRM();
-
-    const i =
-
-      list.findIndex(
-
-        (p) =>
-
-          p.id === id
-
-      );
-
-    if (i === -1)
-
-      return;
-
-    list[i].status =
-
-      status;
-
-    if (
-
-      status ===
-
-      "Accepted"
-
-    ) {
-
-      list[i].stage =
-
-        "won";
-
-    } else if (
-
-      status ===
-
-      "Pending"
-
-    ) {
-
-      list[i].stage =
-
-        "pending";
-
-    } else if (
-
-      status ===
-
-      "Not Accepted"
-
-    ) {
-
-      list[i].stage =
-
-        "lost";
+      console.error("openProposal failed:", e);
 
     }
 
-    writeCRM(list);
+  }
 
-    rerender();
+  function closeProposalModal() {
+
+    try {
+
+      const modal = document.getElementById("proposalModal");
+
+      if (modal) modal.style.display = "none";
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
 
   }
 
-  window.setProposalStatus =
+  /* =====================================
 
-    function (
+     STATUS
 
-      status
+  ===================================== */
 
-    ) {
+  function setStatusById(id, status) {
 
-      if (
+    try {
 
-        !window.activeProposalId
+      const list = readCRM();
 
-      )
+      const i = list.findIndex(p => p.id === id);
 
-        return;
+      if (i === -1) return;
 
-      setStatusById(
+      list[i].status = status;
 
-        window.activeProposalId,
+      if (status === "Accepted") list[i].stage = "won";
 
-        status
+      else if (status === "Pending") list[i].stage = "pending";
 
-      );
+      else if (status === "Not Accepted") list[i].stage = "lost";
 
-      window.openProposal(
+      writeCRM(list);
 
-        window.activeProposalId
+      rerender();
 
-      );
+    } catch (e) {
 
-    };
+      console.error(e);
+
+    }
+
+  }
+
+  function setProposalStatus(status) {
+
+    try {
+
+      if (!window.activeProposalId) return;
+
+      setStatusById(window.activeProposalId, status);
+
+      openProposal(window.activeProposalId);
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
 
   /* =====================================
 
@@ -1304,41 +782,27 @@ Mark Not Accepted
 
   ===================================== */
 
-  window.deleteProposalById =
+  function deleteProposalById(id) {
 
-    function (
+    try {
 
-      id
+      let list = readCRM();
 
-    ) {
-
-      let list =
-
-        readCRM();
-
-      list =
-
-        list.filter(
-
-          (p) =>
-
-            p.id != id
-
-        );
+      list = list.filter(p => p.id != id);
 
       writeCRM(list);
 
       rerender();
 
-      toast(
+      toast("Proposal deleted", "error");
 
-        "Proposal deleted",
+    } catch (e) {
 
-        "error"
+      console.error(e);
 
-      );
+    }
 
-    };
+  }
 
   /* =====================================
 
@@ -1346,41 +810,23 @@ Mark Not Accepted
 
   ===================================== */
 
-  window.setTimeline =
+  function setTimeline(el) {
 
-    function (el) {
+    try {
 
       const all =
 
-        document.querySelectorAll(
+        document.querySelectorAll("[data-timeline]");
 
-          "[data-timeline]"
+      all.forEach(x =>
 
-        );
-
-      all.forEach(
-
-        (x) =>
-
-          x.classList.remove(
-
-            "active"
-
-          )
+        x.classList.remove("active")
 
       );
 
-      el.classList.add(
+      el.classList.add("active");
 
-        "active"
-
-      );
-
-      if (
-
-        window.state?.ui
-
-      ) {
+      if (window.state?.ui) {
 
         window.state.ui.timeline =
 
@@ -1390,54 +836,56 @@ Mark Not Accepted
 
       rerender();
 
-    };
+    } catch (e) {
 
-  /* =====================================
+      console.error(e);
 
-     BACKDROP CLOSE
+    }
 
-  ===================================== */
+  }
 
-  window.handleModalBackground =
+  function handleModalBackground(e) {
 
-    function (e) {
+    try {
 
-      if (
+      if (e.target === e.currentTarget) {
 
-        e.target ===
-
-        e.currentTarget
-
-      ) {
-
-        window.closeProposalModal();
+        closeProposalModal();
 
       }
 
-    };
+    } catch (err) {
+
+      console.error(err);
+
+    }
+
+  }
+
+  /* =====================================
+
+     GLOBAL EXPORTS
+
+  ===================================== */
+
+  window.sendProposal = sendProposal;
+
+  window.createLead = createLead;
+
+  window.renderPipeline = renderPipeline;
+
+  window.openProposal = openProposal;
+
+  window.closeProposalModal = closeProposalModal;
+
+  window.setProposalStatus = setProposalStatus;
+
+  window.deleteProposalById = deleteProposalById;
+
+  window.setTimeline = setTimeline;
+
+  window.handleModalBackground = handleModalBackground;
+
+  window.getSavedProposals = getSavedProposals;
 
 })();
-
-window.sendProposal = sendProposal;
-
-window.createLead = createLead;
-
-window.convertToProposal = convertToProposal;
-
-window.renderPipeline = renderPipeline;
-
-window.openProposal = openProposal;
-
-window.openFullProposal = openFullProposal;
-
-window.openFullProposalFromModal = openFullProposalFromModal;
-
-window.setProposalStatus = setProposalStatus;
-
-window.deleteProposalById = deleteProposalById;
-
-window.setTimeline = setTimeline;
-
-window.handleModalBackground = handleModalBackground;
-
-window.getSavedProposals = getSavedProposals;

@@ -1,12 +1,12 @@
-/* =====================================
+/* ==========================================
 
    app.js
 
    SoDa Outdoor Designs
 
-   Bootstrap + Global Events + Rendering
+   Production Safe Bootstrap + Render Engine
 
-===================================== */
+========================================== */
 
 (function () {
 
@@ -14,239 +14,467 @@
 
   /* =====================================
 
-     INTERNALS
+     GLOBAL STATE
 
   ===================================== */
 
-  let renderTimer = null;
+  window.state =
 
-  let booted = false;
+    window.state || {
 
-  /* =====================================
+      job: {
 
-     SAFE FUNCTION CALLER
+        sqft: 0,
 
-  ===================================== */
+        houses: 1,
 
-  function callIfExists(fnName, ...args) {
+        package: "standard",
 
-    try {
+        pricingMode: "balanced",
 
-      const fn = window[fnName];
+        targetMargin: 0,
 
-      if (typeof fn === "function") {
+        pricingStrategy: "normal",
 
-        return fn(...args);
+        competitorPrice: 0,
 
-      }
+        labor: {
 
-    } catch (e) {
+          hourlyRate: 0,
 
-      console.error(`${fnName}() failed`, e);
+          hoursPerHouse: 0,
 
-    }
+          crewSize: 1,
 
-  }
+          overhead: 0
 
-  /* =====================================
+        },
 
-     REQUEST RENDER
+        addons: {
 
-  ===================================== */
+          aeration: false,
 
-  window.requestRender = function requestRender(delay = 120) {
+          compost: false,
 
-    if (renderTimer) {
+          biohum: false,
 
-      clearTimeout(renderTimer);
+          biochar: false,
 
-    }
+          humic: false,
 
-    renderTimer = setTimeout(() => {
+          grow: false,
 
-      renderTimer = null;
+          lime: false,
 
-      callIfExists("render");
-
-    }, delay);
-
-  };
-
-  /* =====================================
-
-     APP INIT
-
-  ===================================== */
-
-  window.initApp = function initApp() {
-
-    if (booted) return;
-
-    booted = true;
-
-    try {
-
-      callIfExists("syncStateFromUI");
-
-      callIfExists("loadInventory");
-
-      callIfExists("renderHistory");
-
-      callIfExists("renderPipeline");
-
-      callIfExists("renderSchedulePreview");
-
-      callIfExists("render");
-
-    } catch (e) {
-
-      console.error("App init failed:", e);
-
-    }
-
-  };
-
-  /* =====================================
-
-     WINDOW LOAD
-
-  ===================================== */
-
-  window.onload = function () {
-
-    window.initApp();
-
-  };
-
-  /* =====================================
-
-     DOM READY
-
-  ===================================== */
-
-  document.addEventListener("DOMContentLoaded", function () {
-
-    setDefaultDates();
-
-    bindTimelineRadios();
-
-    bindProjectStart();
-
-    bindGlobalInputs();
-
-  });
-
-  /* =====================================
-
-     DEFAULT DATE FIELDS
-
-  ===================================== */
-
-  function setDefaultDates() {
-
-    const quoteInput = document.getElementById("quoteDate");
-
-    if (quoteInput && !quoteInput.value) {
-
-      const today = new Date();
-
-      quoteInput.value = today.toISOString().split("T")[0];
-
-    }
-
-  }
-
-  /* =====================================
-
-     GLOBAL INPUT LISTENER
-
-     Sync state + autosave inventory + rerender
-
-  ===================================== */
-
-  function bindGlobalInputs() {
-
-    document.addEventListener("input", function (e) {
-
-      callIfExists("syncStateFromUI");
-
-      if (
-
-        e.target &&
-
-        e.target.closest &&
-
-        e.target.closest(".material-row")
-
-      ) {
-
-        callIfExists("saveInventory");
-
-      }
-
-      window.requestRender();
-
-    });
-
-    document.addEventListener("change", function () {
-
-      callIfExists("syncStateFromUI");
-
-      window.requestRender();
-
-    });
-
-  }
-
-  /* =====================================
-
-     TIMELINE RADIOS
-
-  ===================================== */
-
-  function bindTimelineRadios() {
-
-    const radios = document.querySelectorAll(
-
-      'input[name="timeline"]'
-
-    );
-
-    radios.forEach((radio) => {
-
-      radio.addEventListener("change", function () {
-
-        if (window.state?.ui) {
-
-          window.state.ui.timeline = radio.value;
+          sulfur: false
 
         }
 
-        window.requestRender();
+      },
 
-      });
+      ui: {
 
-    });
+        tankSize: 500,
+
+        timeline: "standard"
+
+      }
+
+    };
+
+  window.app = window.state;
+
+  window.shownToasts =
+
+    window.shownToasts || new Set();
+
+  /* =====================================
+
+     HELPERS
+
+  ===================================== */
+
+  function el(id) {
+
+    return document.getElementById(id);
+
+  }
+
+  function val(
+
+    id,
+
+    fallback = ""
+
+  ) {
+
+    const node = el(id);
+
+    return node
+
+      ? node.value
+
+      : fallback;
+
+  }
+
+  function num(
+
+    id,
+
+    fallback = 0
+
+  ) {
+
+    const n = Number(
+
+      val(id, fallback)
+
+    );
+
+    return Number.isFinite(n)
+
+      ? n
+
+      : fallback;
+
+  }
+
+  function html(
+
+    id,
+
+    content
+
+  ) {
+
+    const node = el(id);
+
+    if (node)
+
+      node.innerHTML =
+
+        content;
+
+  }
+
+  function exists(fn) {
+
+    return (
+
+      typeof fn ===
+
+      "function"
+
+    );
+
+  }
+
+  function safe(
+
+    fn,
+
+    label = "run"
+
+  ) {
+
+    try {
+
+      return fn();
+
+    } catch (e) {
+
+      console.error(
+
+        label + " failed:",
+
+        e
+
+      );
+
+    }
+
+  }
+
+  function toast(
+
+    msg,
+
+    type = "info"
+
+  ) {
+
+    try {
+
+      if (
+
+        exists(
+
+          window.showToast
+
+        )
+
+      ) {
+
+        window.showToast(
+
+          msg,
+
+          type
+
+        );
+
+      }
+
+    } catch (e) {}
 
   }
 
   /* =====================================
 
-     PROJECT START DATE
+     STATE SYNC
 
   ===================================== */
 
-  function bindProjectStart() {
+  function syncStateFromUI() {
 
-    const start = document.getElementById("projectStart");
+    try {
 
-    if (!start) return;
+      const s =
 
-    start.addEventListener("change", function () {
+        window.state;
 
-      window.requestRender();
+      s.job.sqft =
 
-    });
+        num("sqft", 0);
+
+      s.job.houses =
+
+        num(
+
+          "houses",
+
+          1
+
+        );
+
+      s.job.package =
+
+        val(
+
+          "package",
+
+          "standard"
+
+        );
+
+      s.job.pricingMode =
+
+        val(
+
+          "pricingMode",
+
+          "balanced"
+
+        );
+
+      s.job.targetMargin =
+
+        num(
+
+          "targetMargin",
+
+          0
+
+        );
+
+      s.job.pricingStrategy =
+
+        val(
+
+          "pricingStrategy",
+
+          "normal"
+
+        );
+
+      s.job.competitorPrice =
+
+        num(
+
+          "competitorPrice",
+
+          0
+
+        );
+
+      s.job.labor.hourlyRate =
+
+        num(
+
+          "hourlyRate",
+
+          0
+
+        );
+
+      s.job.labor.hoursPerHouse =
+
+        num(
+
+          "hoursPerHouse",
+
+          0
+
+        );
+
+      s.job.labor.crewSize =
+
+        num(
+
+          "crewSize",
+
+          1
+
+        );
+
+      s.job.labor.overhead =
+
+        num(
+
+          "overhead",
+
+          0
+
+        );
+
+      s.ui.tankSize =
+
+        num(
+
+          "tankSize",
+
+          500
+
+        );
+
+      s.job.addons = {
+
+        aeration:
+
+          !!el(
+
+            "aeration"
+
+          )?.checked,
+
+        compost:
+
+          !!el(
+
+            "compost"
+
+          )?.checked,
+
+        biohum:
+
+          !!el(
+
+            "biohum"
+
+          )?.checked,
+
+        biochar:
+
+          !!el(
+
+            "biochar"
+
+          )?.checked,
+
+        humic:
+
+          !!el(
+
+            "humic"
+
+          )?.checked,
+
+        grow:
+
+          !!el(
+
+            "grow"
+
+          )?.checked,
+
+        lime:
+
+          !!el(
+
+            "lime"
+
+          )?.checked,
+
+        sulfur:
+
+          !!el(
+
+            "sulfur"
+
+          )?.checked
+
+      };
+
+    } catch (e) {
+
+      console.error(
+
+        "syncStateFromUI:",
+
+        e
+
+      );
+
+    }
+
+  }
+
+  /* =====================================
+
+     RENDER DEBOUNCE
+
+  ===================================== */
+
+  let renderTimer =
+
+    null;
+
+  function requestRender() {
+
+    try {
+
+      clearTimeout(
+
+        renderTimer
+
+      );
+
+      renderTimer =
+
+        setTimeout(
+
+          render,
+
+          120
+
+        );
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
 
   }
 
@@ -254,103 +482,157 @@
 
      MAIN RENDER
 
-     Uses your existing core.js functions
-
   ===================================== */
 
-  window.render = function render() {
+  function render() {
 
     try {
 
-      callIfExists("syncStateFromUI");
+      if (
 
-      const resultsEl = document.getElementById("results");
+        !exists(
 
-      if (!resultsEl) return;
+          window.calculateJob
 
-      if (typeof window.calculateJob !== "function") {
+        )
 
-        resultsEl.innerHTML =
-
-          '<div class="glass-card">Calculator not loaded.</div>';
+      )
 
         return;
 
-      }
+      syncStateFromUI();
 
-      const r = window.calculateJob();
+      const r =
 
-      const comparison = r.comparison || {};
+        window.calculateJob();
 
-      const needs = r.needs || {};
+      if (!r) return;
 
       const margin =
 
-        r.price > 0 ? (r.profit / r.price) * 100 : 0;
+        r.price > 0
 
-      let dealScore = 0;
+          ? (r.profit /
 
-      let insights = [];
+              r.price) *
 
-      if (typeof window.calculateDealScore === "function") {
+            100
 
-        dealScore = window.calculateDealScore(r, comparison);
+          : 0;
 
-      }
+      const comparison =
 
-      if (typeof window.generateAIInsights === "function") {
+        r.comparison ||
 
-        insights = window.generateAIInsights(r, comparison) || [];
+        {};
 
-      }
+      const dealScore =
 
-      let tankHtml = "";
+        exists(
 
-      if (typeof window.calculateTankLoads === "function") {
+          window.calculateDealScore
 
-        const tankData = window.calculateTankLoads(
+        )
 
-          r,
+          ? window.calculateDealScore(
 
-          needs,
+              r,
 
-          window.state?.ui?.tankSize || 500
+              comparison
 
-        );
+            )
 
-        tankHtml = `
+          : 75;
 
-          <div class="glass-card">
+      const insights =
 
-            <h3>Tank Loads</h3>
+        exists(
 
-            <div>Total Loads: ${tankData.loads.toFixed(2)}</div>
+          window.generateAIInsights
 
-            <div>Coverage / Tank: ${tankData.coveragePerTank.toFixed(
+        )
 
-              0
+          ? window.generateAIInsights(
 
-            )} sqft</div>
+              r,
 
-          </div>
+              comparison
 
-        `;
+            )
 
-      }
+          : [];
 
-      resultsEl.innerHTML = `
+      const scoreColor =
+
+        dealScore >= 80
+
+          ? "#4cff9a"
+
+          : dealScore >=
+
+            60
+
+          ? "#ffd24d"
+
+          : "#ff4d4d";
+
+      const insightsHTML =
+
+        insights.length
+
+          ? insights
+
+              .map(
+
+                (i) => `
+
+              <div class="insight-row">
+
+                ${i.text}
+
+              </div>
+
+            `
+
+              )
+
+              .join("")
+
+          : `<div class="muted">No issues detected.</div>`;
+
+      html(
+
+        "results",
+
+        `
 
         <div class="glass-card">
 
           <h3>Job Pricing</h3>
 
-          <div>Total Cost: $${r.cost.toFixed(2)}</div>
+          <div>Total Cost: $${Number(
 
-          <div>Sell Price: $${r.price.toFixed(2)}</div>
+            r.cost
 
-          <div>Profit: $${r.profit.toFixed(2)}</div>
+          ).toFixed(2)}</div>
 
-          <div>Margin: ${margin.toFixed(1)}%</div>
+          <div>Sell Price: $${Number(
+
+            r.price
+
+          ).toFixed(2)}</div>
+
+          <div>Profit: $${Number(
+
+            r.profit
+
+          ).toFixed(2)}</div>
+
+          <div>Margin: ${margin.toFixed(
+
+            1
+
+          )}%</div>
 
         </div>
 
@@ -360,23 +642,11 @@
 
           <div style="
 
-            font-size:42px;
+            font-size:58px;
 
             font-weight:800;
 
-            color:${
-
-              dealScore >= 80
-
-                ? "#4cff9a"
-
-                : dealScore >= 60
-
-                ? "#ffd24d"
-
-                : "#ff4d4d"
-
-            };
+            color:${scoreColor};
 
           ">
 
@@ -386,116 +656,574 @@
 
         </div>
 
-        ${tankHtml}
-
         <div class="glass-card">
 
           <h3>Insights</h3>
 
-          ${
-
-            insights.length
-
-              ? insights
-
-                  .map((i) => `<div>• ${i.text}</div>`)
-
-                  .join("")
-
-              : "<div>No issues detected.</div>"
-
-          }
+          ${insightsHTML}
 
         </div>
 
-      `;
+      `
 
-      callIfExists("renderSchedulePreview");
+      );
 
-      callIfExists("renderPipeline");
+      safe(
 
-      fireWarnings(r, comparison, margin);
+        renderSchedulePreview,
+
+        "renderSchedulePreview"
+
+      );
+
+      safe(
+
+        renderHistory,
+
+        "renderHistory"
+
+      );
+
+      if (
+
+        exists(
+
+          window.renderPipeline
+
+        )
+
+      ) {
+
+        safe(
+
+          window.renderPipeline,
+
+          "renderPipeline"
+
+        );
+
+      }
 
     } catch (e) {
 
-      console.error("Render failed:", e);
+      console.error(
 
-      const resultsEl = document.getElementById("results");
+        "render failed:",
 
-      if (resultsEl) {
+        e
 
-        resultsEl.innerHTML =
+      );
 
-          '<div class="glass-card">Error in calculation</div>';
+      html(
+
+        "results",
+
+        `
+
+        <div class="glass-card">
+
+          <h3>Error</h3>
+
+          <div>Unable to calculate job.</div>
+
+        </div>
+
+      `
+
+      );
+
+    }
+
+  }
+
+  /* =====================================
+
+     HISTORY
+
+  ===================================== */
+
+  function renderHistory() {
+
+    try {
+
+      const wrap =
+
+        el(
+
+          "jobHistory"
+
+        );
+
+      if (!wrap)
+
+        return;
+
+      const jobs =
+
+        JSON.parse(
+
+          localStorage.getItem(
+
+            "jobHistory"
+
+          ) || "[]"
+
+        );
+
+      if (!jobs.length) {
+
+        wrap.innerHTML =
+
+          `<div class="muted">No saved jobs yet.</div>`;
+
+        return;
+
+      }
+
+      wrap.innerHTML =
+
+        jobs
+
+          .map(
+
+            (
+
+              job,
+
+              i
+
+            ) => `
+
+        <div class="history-card">
+
+          <div><strong>${job.sqft || 0} sqft</strong></div>
+
+          <div>$${Number(
+
+            job.price || 0
+
+          ).toFixed(2)}</div>
+
+          <div>${Number(
+
+            job.margin || 0
+
+          ).toFixed(
+
+            1
+
+          )}%</div>
+
+          <div class="row-actions">
+
+            <button onclick="editJob(${i})">Edit</button>
+
+            <button onclick="deleteJob(${i})">Delete</button>
+
+          </div>
+
+        </div>
+
+      `
+
+          )
+
+          .join("");
+
+    } catch (e) {
+
+      console.error(
+
+        "renderHistory:",
+
+        e
+
+      );
+
+    }
+
+  }
+
+  /* =====================================
+
+     SCHEDULE
+
+  ===================================== */
+
+  function renderSchedulePreview() {
+
+    try {
+
+      const wrap =
+
+        el(
+
+          "schedulePreview"
+
+        );
+
+      if (!wrap)
+
+        return;
+
+      if (
+
+        !exists(
+
+          window.buildSchedule
+
+        )
+
+      ) {
+
+        wrap.innerHTML =
+
+          "";
+
+        return;
+
+      }
+
+      const r =
+
+        window.calculateJob();
+
+      const schedule =
+
+        window.buildSchedule(
+
+          r
+
+        ) || [];
+
+      if (
+
+        !schedule.length
+
+      ) {
+
+        wrap.innerHTML =
+
+          `<div class="muted">No schedule yet.</div>`;
+
+        return;
+
+      }
+
+      wrap.innerHTML =
+
+        schedule
+
+          .map(
+
+            (
+
+              day
+
+            ) => `
+
+        <div class="glass-card">
+
+          <strong>
+
+            Day ${day.day} — ${day.title}
+
+          </strong>
+
+          <div class="muted">
+
+            ${day.date}
+
+          </div>
+
+          <div style="margin-top:8px;">
+
+            ${day.tasks
+
+              .map(
+
+                (
+
+                  t
+
+                ) => `<div>• ${t}</div>`
+
+              )
+
+              .join(
+
+                ""
+
+              )}
+
+          </div>
+
+        </div>
+
+      `
+
+          )
+
+          .join("");
+
+    } catch (e) {
+
+      console.error(
+
+        "renderSchedulePreview:",
+
+        e
+
+      );
+
+    }
+
+  }
+
+  /* =====================================
+
+     RESET TOASTS
+
+  ===================================== */
+
+  function resetToasts() {
+
+    try {
+
+      window.shownToasts.clear();
+
+    } catch (e) {}
+
+  }
+
+  /* =====================================
+
+     EVENTS
+
+  ===================================== */
+
+  document.addEventListener(
+
+    "input",
+
+    function (e) {
+
+      try {
+
+        syncStateFromUI();
+
+        if (
+
+          e.target.closest(
+
+            ".material-row"
+
+          )
+
+        ) {
+
+          if (
+
+            exists(
+
+              window.saveInventory
+
+            )
+
+          ) {
+
+            safe(
+
+              window.saveInventory,
+
+              "saveInventory"
+
+            );
+
+          }
+
+        }
+
+        requestRender();
+
+      } catch (err) {
+
+        console.error(
+
+          err
+
+        );
 
       }
 
     }
 
-  };
+  );
+
+  document.addEventListener(
+
+    "change",
+
+    function () {
+
+      requestRender();
+
+    }
+
+  );
+
+  document.addEventListener(
+
+    "DOMContentLoaded",
+
+    function () {
+
+      try {
+
+        const quote =
+
+          el(
+
+            "quoteDate"
+
+          );
+
+        if (
+
+          quote &&
+
+          !quote.value
+
+        ) {
+
+          const d =
+
+            new Date();
+
+          quote.value =
+
+            d
+
+              .toISOString()
+
+              .split(
+
+                "T"
+
+              )[0];
+
+        }
+
+      } catch (e) {}
+
+    }
+
+  );
 
   /* =====================================
 
-     TOAST WARNINGS
+     INIT
 
   ===================================== */
 
-  function fireWarnings(r, comparison, margin) {
+  window.onload =
 
-    const shown = window.shownToasts || new Set();
+    function () {
 
-    const shortage = Object.values(comparison).some(
+      safe(
 
-      (x) => x.status === "short"
+        syncStateFromUI,
 
-    );
-
-    if (shortage && !shown.has("materials")) {
-
-      callIfExists(
-
-        "showToast",
-
-        "📡 Inventory shortage detected",
-
-        "error"
+        "syncStateFromUI"
 
       );
 
-      shown.add("materials");
+      if (
 
-    }
+        exists(
 
-    if (margin < 25 && !shown.has("pricing")) {
+          window.loadInventory
 
-      callIfExists(
+        )
 
-        "showToast",
+      ) {
 
-        "📉 Low margin detected",
+        safe(
 
-        "warning"
+          window.loadInventory,
+
+          "loadInventory"
+
+        );
+
+      }
+
+      safe(
+
+        renderHistory,
+
+        "renderHistory"
 
       );
 
-      shown.add("pricing");
+      if (
 
-    }
+        exists(
 
-    window.shownToasts = shown;
+          window.renderPipeline
 
-  }
+        )
+
+      ) {
+
+        safe(
+
+          window.renderPipeline,
+
+          "renderPipeline"
+
+        );
+
+      }
+
+      safe(
+
+        render,
+
+        "render"
+
+      );
+
+    };
+
+  /* =====================================
+
+     EXPORTS
+
+  ===================================== */
+
+  window.syncStateFromUI =
+
+    syncStateFromUI;
+
+  window.requestRender =
+
+    requestRender;
+
+  window.render =
+
+    render;
+
+  window.renderHistory =
+
+    renderHistory;
+
+  window.renderSchedulePreview =
+
+    renderSchedulePreview;
+
+  window.resetToasts =
+
+    resetToasts;
 
 })();
-
-window.render = render;
-
-window.requestRender = requestRender;
-
-window.syncStateFromUI = syncStateFromUI;
-
-window.renderHistory = renderHistory;
-
-window.renderSchedulePreview = renderSchedulePreview;
-
-window.resetToasts = resetToasts;

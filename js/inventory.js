@@ -20,6 +20,16 @@
 
   const STORAGE_KEY = "inventory_full";
 
+  const EMPTY_DATA = {
+
+    standard: [],
+
+    premium: [],
+
+    addons: []
+
+  };
+
   const MATERIAL_LABELS = {
 
     seed: "Seed",
@@ -56,37 +66,53 @@
 
   ===================================== */
 
+  function safeNum(v) {
+
+    const n = Number(v);
+
+    return Number.isFinite(n) ? n : 0;
+
+  }
+
+  function toast(msg, type = "info") {
+
+    try {
+
+      if (typeof window.showToast === "function") {
+
+        window.showToast(msg, type);
+
+      }
+
+    } catch (e) {}
+
+  }
+
   function readInventory() {
 
     try {
 
-      return (
+      const raw = localStorage.getItem(STORAGE_KEY);
 
-        JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+      if (!raw) return structuredClone(EMPTY_DATA);
 
-          standard: [],
-
-          premium: [],
-
-          addons: []
-
-        }
-
-      );
-
-    } catch (e) {
-
-      console.error("Inventory read failed", e);
+      const parsed = JSON.parse(raw);
 
       return {
 
-        standard: [],
+        standard: parsed.standard || [],
 
-        premium: [],
+        premium: parsed.premium || [],
 
-        addons: []
+        addons: parsed.addons || []
 
       };
+
+    } catch (e) {
+
+      console.error("Inventory read failed:", e);
+
+      return structuredClone(EMPTY_DATA);
 
     }
 
@@ -94,15 +120,23 @@
 
   function writeInventory(data) {
 
-    localStorage.setItem(
+    try {
 
-      STORAGE_KEY,
+      localStorage.setItem(
 
-      JSON.stringify(data)
+        STORAGE_KEY,
 
-    );
+        JSON.stringify(data)
 
-    window.inventoryCache = null;
+      );
+
+      window.inventoryCache = null;
+
+    } catch (e) {
+
+      console.error("Inventory save failed:", e);
+
+    }
 
   }
 
@@ -110,53 +144,33 @@
 
     if (type === "standard") {
 
-      return document.getElementById(
-
-        "standardMaterials"
-
-      );
+      return document.getElementById("standardMaterials");
 
     }
 
     if (type === "premium") {
 
-      return document.getElementById(
-
-        "premiumMaterials"
-
-      );
+      return document.getElementById("premiumMaterials");
 
     }
 
-    return document.getElementById(
-
-      "addonMaterials"
-
-    );
+    return document.getElementById("addonMaterials");
 
   }
 
   function getMaterialOptions(selected) {
 
-    const keys = Object.keys(MATERIAL_LABELS);
-
-    return keys
+    return Object.keys(MATERIAL_LABELS)
 
       .map((key) => {
 
         return `
 
-          <option value="${key}"
+          <option value="${key}" ${
 
-            ${
+            key === selected ? "selected" : ""
 
-              key === selected
-
-                ? "selected"
-
-                : ""
-
-            }>
+          }>
 
             ${MATERIAL_LABELS[key]}
 
@@ -170,251 +184,301 @@
 
   }
 
-  function safeNum(v) {
-
-    const n = Number(v);
-
-    return Number.isFinite(n) ? n : 0;
-
-  }
-
   /* =====================================
 
-     BUILD ROW HTML
+     ROW BUILDER
 
   ===================================== */
 
   function buildRow(item = {}) {
 
-    const type = item.type || "seed";
+    try {
 
-    const unit =
+      const type = item.type || "seed";
 
-      window.MATERIAL_RATES?.[type]?.unit ||
+      const unit =
 
-      "units";
+        window.MATERIAL_RATES?.[type]?.unit ||
 
-    const row = document.createElement("div");
+        "units";
 
-    row.className = "material-row";
+      const row = document.createElement("div");
 
-    row.innerHTML = `
+      row.className = "material-row";
 
-      <div class="row-top">
+      row.innerHTML = `
 
-        <select class="mat-select"
+        <div class="row-top">
 
-          onchange="updateUnitLabel(this)">
+          <select class="mat-select"
 
-          ${getMaterialOptions(type)}
+            onchange="updateUnitLabel(this)">
 
-        </select>
+            ${getMaterialOptions(type)}
 
-        <button
+          </select>
 
-          class="delete-btn"
+          <button
 
-          onclick="deleteRow(this)">
+            class="delete-btn"
 
-          🗑️
+            onclick="deleteRow(this)">
 
-        </button>
+            ✕
 
-      </div>
+          </button>
 
-      <label class="mat-label">
+        </div>
 
-        Material Name
+        <label class="mat-label">
 
-      </label>
+          Material Name
 
-      <input
+        </label>
 
-        class="mat-input"
+        <input
 
-        value="${item.name || ""}"
+          class="mat-input"
 
-        placeholder="Material Name">
+          value="${item.name || ""}"
 
-      <label class="mat-label">
+          placeholder="Material Name">
 
-        Cost per Unit ($)
+        <label class="mat-label">
 
-      </label>
+          Cost per Unit ($)
 
-      <input
+        </label>
 
-        class="mat-input"
+        <input
 
-        type="number"
+          class="mat-input"
 
-        value="${safeNum(item.cost)}">
+          type="number"
 
-      <label class="mat-label unit-label">
+          step="0.01"
 
-        Quantity Available (${unit})
+          value="${safeNum(item.cost)}">
 
-      </label>
+        <label class="mat-label unit-label">
 
-      <input
+          Quantity Available (${unit})
 
-        class="mat-input"
+        </label>
 
-        type="number"
+        <input
 
-        value="${safeNum(item.qty)}">
+          class="mat-input"
 
-    `;
+          type="number"
 
-    return row;
+          step="0.01"
+
+          value="${safeNum(item.qty)}">
+
+      `;
+
+      return row;
+
+    } catch (e) {
+
+      console.error(e);
+
+      return document.createElement("div");
+
+    }
 
   }
-
-  /* =====================================
-
-     LOAD INVENTORY
-
-  ===================================== */
-
-  window.loadInventory = function () {
-
-    const data = readInventory();
-
-    renderSection(
-
-      "standardMaterials",
-
-      data.standard || []
-
-    );
-
-    renderSection(
-
-      "premiumMaterials",
-
-      data.premium || []
-
-    );
-
-    renderSection(
-
-      "addonMaterials",
-
-      data.addons || []
-
-    );
-
-  };
-
-  function renderSection(id, items) {
-
-    const container =
-
-      document.getElementById(id);
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    items.forEach((item) => {
-
-      const row = buildRow(item);
-
-      container.appendChild(row);
-
-    });
-
-  }
-
-  /* =====================================
-
-     SAVE INVENTORY
-
-  ===================================== */
-
-  window.saveInventory = function () {
-
-    const inventory = {
-
-      standard: parseSection(
-
-        "standardMaterials"
-
-      ),
-
-      premium: parseSection(
-
-        "premiumMaterials"
-
-      ),
-
-      addons: parseSection(
-
-        "addonMaterials"
-
-      )
-
-    };
-
-    writeInventory(inventory);
-
-  };
 
   function parseSection(id) {
 
-    const container =
+    try {
 
-      document.getElementById(id);
+      const container =
 
-    if (!container) return [];
+        document.getElementById(id);
 
-    const rows =
+      if (!container) return [];
 
-      container.querySelectorAll(
+      const rows =
 
-        ".material-row"
+        container.querySelectorAll(
 
-      );
+          ".material-row"
 
-    const items = [];
+        );
 
-    rows.forEach((row) => {
+      const items = [];
 
-      const select =
+      rows.forEach((row) => {
 
-        row.querySelector("select");
+        const select =
 
-      const inputs =
+          row.querySelector("select");
 
-        row.querySelectorAll("input");
+        const inputs =
 
-      items.push({
+          row.querySelectorAll("input");
 
-        type: select?.value || "",
+        items.push({
 
-        name: inputs[0]?.value || "",
+          type: select?.value || "seed",
 
-        cost: safeNum(inputs[1]?.value),
+          name: inputs[0]?.value || "",
 
-        qty: safeNum(inputs[2]?.value)
+          cost: safeNum(inputs[1]?.value),
+
+          qty: safeNum(inputs[2]?.value)
+
+        });
 
       });
 
-    });
+      return items;
 
-    return items;
+    } catch (e) {
+
+      console.error(e);
+
+      return [];
+
+    }
+
+  }
+
+  function renderSection(id, items) {
+
+    try {
+
+      const container =
+
+        document.getElementById(id);
+
+      if (!container) return;
+
+      container.innerHTML = "";
+
+      items.forEach((item) => {
+
+        container.appendChild(
+
+          buildRow(item)
+
+        );
+
+      });
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
 
   }
 
   /* =====================================
 
-     CACHE
+     LOAD / SAVE
 
   ===================================== */
 
-  window.getInventoryCache =
+  function loadInventory() {
 
-    function (forceRefresh = false) {
+    try {
+
+      const data = readInventory();
+
+      renderSection(
+
+        "standardMaterials",
+
+        data.standard
+
+      );
+
+      renderSection(
+
+        "premiumMaterials",
+
+        data.premium
+
+      );
+
+      renderSection(
+
+        "addonMaterials",
+
+        data.addons
+
+      );
+
+      renderInventory();
+
+    } catch (e) {
+
+      console.error(e);
+
+      toast("Load inventory failed", "error");
+
+    }
+
+  }
+
+  function saveInventory() {
+
+    try {
+
+      const data = {
+
+        standard: parseSection(
+
+          "standardMaterials"
+
+        ),
+
+        premium: parseSection(
+
+          "premiumMaterials"
+
+        ),
+
+        addons: parseSection(
+
+          "addonMaterials"
+
+        )
+
+      };
+
+      writeInventory(data);
+
+      renderInventory();
+
+      toast("Inventory saved", "success");
+
+    } catch (e) {
+
+      console.error(e);
+
+      toast("Save inventory failed", "error");
+
+    }
+
+  }
+
+  /* =====================================
+
+     CACHE / TOTALS / COST
+
+  ===================================== */
+
+  function getInventoryCache(
+
+    forceRefresh = false
+
+  ) {
+
+    try {
 
       if (
 
@@ -432,17 +496,19 @@
 
       return window.inventoryCache;
 
-    };
+    } catch (e) {
 
-  /* =====================================
+      console.error(e);
 
-     TOTALS
+      return readInventory();
 
-  ===================================== */
+    }
 
-  window.getInventoryTotals =
+  }
 
-    function () {
+  function getInventoryTotals() {
+
+    try {
 
       const data = readInventory();
 
@@ -468,17 +534,19 @@
 
       return totals;
 
-    };
+    } catch (e) {
 
-  /* =====================================
+      console.error(e);
 
-     COST SUMMARY
+      return {};
 
-  ===================================== */
+    }
 
-  window.getInventoryCost =
+  }
 
-    function () {
+  function getInventoryCost() {
+
+    try {
 
       const data = readInventory();
 
@@ -540,7 +608,97 @@
 
       };
 
-    };
+    } catch (e) {
+
+      console.error(e);
+
+      return {
+
+        standard: 0,
+
+        premium: 0,
+
+        addons: 0,
+
+        total: 0
+
+      };
+
+    }
+
+  }
+
+  /* =====================================
+
+     RENDER DASHBOARD
+
+  ===================================== */
+
+  function renderInventory() {
+
+    try {
+
+      const totals =
+
+        getInventoryCost();
+
+      const setText = (id, val) => {
+
+        const el =
+
+          document.getElementById(id);
+
+        if (el) el.textContent = val;
+
+      };
+
+      setText(
+
+        "standardValue",
+
+        "$" +
+
+          totals.standard.toFixed(0)
+
+      );
+
+      setText(
+
+        "premiumValue",
+
+        "$" +
+
+          totals.premium.toFixed(0)
+
+      );
+
+      setText(
+
+        "addonValue",
+
+        "$" +
+
+          totals.addons.toFixed(0)
+
+      );
+
+      setText(
+
+        "totalInventoryValue",
+
+        "$" +
+
+          totals.total.toFixed(0)
+
+      );
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
 
   /* =====================================
 
@@ -548,9 +706,15 @@
 
   ===================================== */
 
-  window.compareInventory =
+  function compareInventory(
 
-    function (needs = {}, inventory = {}) {
+    needs = {},
+
+    inventory = {}
+
+  ) {
+
+    try {
 
       const results = {};
 
@@ -600,17 +764,29 @@
 
       return results;
 
-    };
+    } catch (e) {
+
+      console.error(e);
+
+      return {};
+
+    }
+
+  }
 
   /* =====================================
 
-     ADD ROW
+     ROW ACTIONS
 
   ===================================== */
 
-  window.addMaterialRow =
+  function addInventoryRow(
 
-    function (type = "standard") {
+    type = "standard"
+
+  ) {
+
+    try {
 
       const container =
 
@@ -618,25 +794,27 @@
 
       if (!container) return;
 
-      const row = buildRow({
+      container.appendChild(
 
-        type: "seed"
+        buildRow({
 
-      });
+          type: "seed"
 
-      container.appendChild(row);
+        })
 
-    };
+      );
 
-  /* =====================================
+    } catch (e) {
 
-     DELETE ROW
+      console.error(e);
 
-  ===================================== */
+    }
 
-  window.deleteRow =
+  }
 
-    function (btn) {
+  function deleteRow(btn) {
+
+    try {
 
       const row =
 
@@ -646,25 +824,25 @@
 
         );
 
-      if (row) {
+      if (row) row.remove();
 
-        row.remove();
+      saveInventory();
 
-        window.saveInventory();
+    } catch (e) {
 
-      }
+      console.error(e);
 
-    };
+    }
 
-  /* =====================================
+  }
 
-     UNIT LABEL
+  function updateUnitLabel(
 
-  ===================================== */
+    select
 
-  window.updateUnitLabel =
+  ) {
 
-    function (select) {
+    try {
 
       const row =
 
@@ -684,7 +862,9 @@
 
         );
 
-      const type = select.value;
+      const type =
+
+        select.value;
 
       const unit =
 
@@ -696,177 +876,35 @@
 
       if (label) {
 
-        label.innerText =
+        label.textContent =
 
           `Quantity Available (${unit})`;
 
       }
 
-    };
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
 
   /* =====================================
 
-     QUICK FIX INVENTORY
+     UTILITIES
 
   ===================================== */
 
-  window.fixInventory =
+  function clearInventory() {
 
-    function (type, amount) {
-
-      const data = readInventory();
-
-      const qty = Math.ceil(
-
-        safeNum(amount)
-
-      );
-
-      let sectionName = "addons";
-
-      if (
-
-        [
-
-          "seed",
-
-          "fertilizer",
-
-          "mulch",
-
-          "tackifier"
-
-        ].includes(type)
-
-      ) {
-
-        sectionName = "standard";
-
-      }
-
-      if (
-
-        [
-
-          "compost",
-
-          "biochar",
-
-          "humic",
-
-          "biohum"
-
-        ].includes(type)
-
-      ) {
-
-        sectionName = "premium";
-
-      }
-
-      let found = false;
-
-      data[sectionName].forEach(
-
-        (item) => {
-
-          if (item.type === type) {
-
-            item.qty =
-
-              safeNum(item.qty) +
-
-              qty;
-
-            found = true;
-
-          }
-
-        }
-
-      );
-
-      if (!found) {
-
-        data[sectionName].push({
-
-          type,
-
-          name:
-
-            MATERIAL_LABELS[type] ||
-
-            type,
-
-          cost: 0,
-
-          qty
-
-        });
-
-      }
-
-      writeInventory(data);
-
-      if (
-
-        typeof window.loadInventory ===
-
-        "function"
-
-      ) {
-
-        window.loadInventory();
-
-      }
-
-      if (
-
-        typeof window.showToast ===
-
-        "function"
-
-      ) {
-
-        window.showToast(
-
-          `${MATERIAL_LABELS[type]} +${qty} added`,
-
-          "success"
-
-        );
-
-      }
-
-      if (
-
-        typeof window.requestRender ===
-
-        "function"
-
-      ) {
-
-        window.requestRender();
-
-      }
-
-    };
-
-  /* =====================================
-
-     USE INVENTORY FOR JOB
-
-  ===================================== */
-
-  window.useInventoryForJob =
-
-    function () {
+    try {
 
       if (
 
         !confirm(
 
-          "Use inventory for this job?"
+          "Clear all inventory?"
 
         )
 
@@ -876,140 +914,160 @@
 
       }
 
-      if (
+      writeInventory(
 
-        typeof window.calculateJob !==
+        structuredClone(
 
-        "function"
+          EMPTY_DATA
 
-      ) {
+        )
 
-        return;
+      );
 
-      }
+      loadInventory();
 
-      const r =
+      toast(
 
-        window.calculateJob();
+        "Inventory cleared",
 
-      const needs =
+        "success"
 
-        r.needs || {};
+      );
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  function exportInventory() {
+
+    try {
 
       const data =
 
         readInventory();
 
-      Object.values(data).forEach(
+      const blob = new Blob(
 
-        (section) => {
+        [
 
-          section.forEach(
+          JSON.stringify(
 
-            (item) => {
+            data,
 
-              const key =
+            null,
 
-                item.type;
+            2
 
-              if (
+          )
 
-                needs[key] >
+        ],
 
-                0
+        {
 
-              ) {
-
-                const use =
-
-                  Math.min(
-
-                    safeNum(
-
-                      item.qty
-
-                    ),
-
-                    safeNum(
-
-                      needs[
-
-                        key
-
-                      ]
-
-                    )
-
-                  );
-
-                item.qty -= use;
-
-                needs[key] -= use;
-
-              }
-
-            }
-
-          );
+          type: "application/json"
 
         }
 
       );
 
-      writeInventory(data);
+      const url =
 
-      window.loadInventory();
+        URL.createObjectURL(
 
-      if (
-
-        typeof window.showToast ===
-
-        "function"
-
-      ) {
-
-        window.showToast(
-
-          "Inventory applied to job",
-
-          "success"
+          blob
 
         );
 
-      }
+      const a =
 
-      if (
+        document.createElement(
 
-        typeof window.requestRender ===
+          "a"
 
-        "function"
+        );
 
-      ) {
+      a.href = url;
 
-        window.requestRender();
+      a.download =
 
-      }
+        "soda-inventory.json";
 
-    };
+      a.click();
+
+      URL.revokeObjectURL(
+
+        url
+
+      );
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  /* =====================================
+
+     GLOBAL EXPORTS
+
+  ===================================== */
+
+  window.loadInventory =
+
+    loadInventory;
+
+  window.saveInventory =
+
+    saveInventory;
+
+  window.renderInventory =
+
+    renderInventory;
+
+  window.addInventoryRow =
+
+    addInventoryRow;
+
+  window.addMaterialRow =
+
+    addInventoryRow;
+
+  window.deleteRow =
+
+    deleteRow;
+
+  window.updateUnitLabel =
+
+    updateUnitLabel;
+
+  window.clearInventory =
+
+    clearInventory;
+
+  window.exportInventory =
+
+    exportInventory;
+
+  window.getInventoryTotals =
+
+    getInventoryTotals;
+
+  window.getInventoryCost =
+
+    getInventoryCost;
+
+  window.getInventoryCache =
+
+    getInventoryCache;
+
+  window.compareInventory =
+
+    compareInventory;
 
 })();
-
-window.loadInventory = loadInventory;
-
-window.saveInventory = saveInventory;
-
-window.renderInventory = renderInventory;
-
-window.addInventoryRow = addInventoryRow;
-
-window.clearInventory = clearInventory;
-
-window.exportInventory = exportInventory;
-
-window.getInventoryTotals = getInventoryTotals;
-
-window.getInventoryCost = getInventoryCost;
-
-window.getInventoryCache = getInventoryCache;
-
-window.compareInventory = compareInventory;

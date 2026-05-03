@@ -14,23 +14,37 @@
 
   /* =====================================
 
-     DOM READY
+     INIT
 
   ===================================== */
 
-  document.addEventListener("DOMContentLoaded", initUI);
+  document.addEventListener(
+
+    "DOMContentLoaded",
+
+    initUI
+
+  );
 
   function initUI() {
 
-    bindAddonToggles();
+    try {
 
-    bindNumberFormatting();
+      bindAddonToggles();
 
-    bindModalEscClose();
+      bindNumberFormatting();
 
-    bindQuickActions();
+      bindModalEscClose();
 
-    initThemeHelpers();
+      bindQuickActions();
+
+      initThemeHelpers();
+
+    } catch (e) {
+
+      console.error("UI init failed:", e);
+
+    }
 
   }
 
@@ -42,265 +56,459 @@
 
   let toastTimer = null;
 
-  window.showToast = function (message, type = "info", duration = 2600) {
+  function showToast(
 
-    let wrap = document.getElementById("toastWrap");
+    message,
 
-    if (!wrap) {
+    type = "info",
 
-      wrap = document.createElement("div");
+    duration = 2600
 
-      wrap.id = "toastWrap";
+  ) {
 
-      wrap.style.position = "fixed";
+    try {
 
-      wrap.style.right = "18px";
+      let wrap =
 
-      wrap.style.bottom = "18px";
+        document.getElementById(
 
-      wrap.style.zIndex = "9999";
+          "toastWrap"
 
-      wrap.style.display = "flex";
+        );
 
-      wrap.style.flexDirection = "column";
+      if (!wrap) {
 
-      wrap.style.gap = "10px";
+        wrap =
 
-      document.body.appendChild(wrap);
+          document.createElement(
+
+            "div"
+
+          );
+
+        wrap.id = "toastWrap";
+
+        Object.assign(
+
+          wrap.style,
+
+          {
+
+            position: "fixed",
+
+            right: "18px",
+
+            bottom: "18px",
+
+            zIndex: "99999",
+
+            display: "flex",
+
+            flexDirection:
+
+              "column",
+
+            gap: "10px"
+
+          }
+
+        );
+
+        document.body.appendChild(
+
+          wrap
+
+        );
+
+      }
+
+      const toast =
+
+        document.createElement(
+
+          "div"
+
+        );
+
+      toast.className =
+
+        "soda-toast";
+
+      const colors = {
+
+        success: "#18b66a",
+
+        error: "#c43b3b",
+
+        warning: "#cfa11f",
+
+        info: "#222"
+
+      };
+
+      Object.assign(
+
+        toast.style,
+
+        {
+
+          minWidth: "240px",
+
+          maxWidth: "340px",
+
+          padding:
+
+            "12px 14px",
+
+          borderRadius:
+
+            "10px",
+
+          color: "#fff",
+
+          fontWeight:
+
+            "600",
+
+          fontSize: "14px",
+
+          background:
+
+            colors[type] ||
+
+            colors.info,
+
+          boxShadow:
+
+            "0 12px 30px rgba(0,0,0,.25)",
+
+          opacity: "0",
+
+          transform:
+
+            "translateY(10px)",
+
+          transition:
+
+            "opacity .18s ease, transform .18s ease"
+
+        }
+
+      );
+
+      toast.innerText =
+
+        message;
+
+      wrap.appendChild(
+
+        toast
+
+      );
+
+      requestAnimationFrame(
+
+        () => {
+
+          toast.style.opacity =
+
+            "1";
+
+          toast.style.transform =
+
+            "translateY(0)";
+
+        }
+
+      );
+
+      clearTimeout(
+
+        toastTimer
+
+      );
+
+      toastTimer =
+
+        setTimeout(
+
+          () => {
+
+            toast.style.opacity =
+
+              "0";
+
+            toast.style.transform =
+
+              "translateY(8px)";
+
+            setTimeout(
+
+              () => {
+
+                toast.remove();
+
+              },
+
+              220
+
+            );
+
+          },
+
+          duration
+
+        );
+
+    } catch (e) {
+
+      console.error(
+
+        "Toast failed:",
+
+        e
+
+      );
 
     }
 
-    const toast = document.createElement("div");
-
-    toast.className = "soda-toast";
-
-    const colors = {
-
-      success: "#18b66a",
-
-      error: "#c43b3b",
-
-      warning: "#cfa11f",
-
-      info: "#333"
-
-    };
-
-    toast.style.minWidth = "240px";
-
-    toast.style.maxWidth = "340px";
-
-    toast.style.padding = "12px 14px";
-
-    toast.style.borderRadius = "10px";
-
-    toast.style.color = "#fff";
-
-    toast.style.fontWeight = "600";
-
-    toast.style.fontSize = "14px";
-
-    toast.style.boxShadow = "0 12px 30px rgba(0,0,0,.25)";
-
-    toast.style.background = colors[type] || colors.info;
-
-    toast.style.opacity = "0";
-
-    toast.style.transform = "translateY(10px)";
-
-    toast.style.transition =
-
-      "opacity .18s ease, transform .18s ease";
-
-    toast.innerText = message;
-
-    wrap.appendChild(toast);
-
-    requestAnimationFrame(() => {
-
-      toast.style.opacity = "1";
-
-      toast.style.transform = "translateY(0)";
-
-    });
-
-    clearTimeout(toastTimer);
-
-    toastTimer = setTimeout(() => {
-
-      toast.style.opacity = "0";
-
-      toast.style.transform = "translateY(8px)";
-
-      setTimeout(() => {
-
-        toast.remove();
-
-      }, 220);
-
-    }, duration);
-
-  };
+  }
 
   /* =====================================
 
-     LOADING OVERLAY
+     LOADER
 
   ===================================== */
 
-  window.showLoader = function (text = "Loading...") {
+  function showLoader(
 
-    let loader =
+    text = "Loading..."
 
-      document.getElementById("globalLoader");
+  ) {
 
-    if (!loader) {
+    try {
 
-      loader = document.createElement("div");
+      let loader =
 
-      loader.id = "globalLoader";
+        document.getElementById(
 
-      loader.style.position = "fixed";
+          "globalLoader"
 
-      loader.style.inset = "0";
+        );
 
-      loader.style.background =
+      if (!loader) {
 
-        "rgba(0,0,0,.65)";
+        loader =
 
-      loader.style.display = "flex";
+          document.createElement(
 
-      loader.style.alignItems = "center";
+            "div"
 
-      loader.style.justifyContent =
+          );
 
-        "center";
+        loader.id =
 
-      loader.style.zIndex = "99999";
+          "globalLoader";
 
-      loader.innerHTML = `
+        loader.innerHTML = `
 
-        <div style="
+          <div class="loader-box">
+
+            <div class="loader-spin"></div>
+
+            <div id="loaderText">${text}</div>
+
+          </div>
+
+        `;
+
+        Object.assign(
+
+          loader.style,
+
+          {
+
+            position:
+
+              "fixed",
+
+            inset: "0",
+
+            background:
+
+              "rgba(0,0,0,.65)",
+
+            display: "flex",
+
+            alignItems:
+
+              "center",
+
+            justifyContent:
+
+              "center",
+
+            zIndex: "999999"
+
+          }
+
+        );
+
+        document.body.appendChild(
+
+          loader
+
+        );
+
+        injectLoaderCSS();
+
+      } else {
+
+        loader.style.display =
+
+          "flex";
+
+        const txt =
+
+          document.getElementById(
+
+            "loaderText"
+
+          );
+
+        if (txt)
+
+          txt.innerText =
+
+            text;
+
+      }
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  function hideLoader() {
+
+    try {
+
+      const loader =
+
+        document.getElementById(
+
+          "globalLoader"
+
+        );
+
+      if (loader) {
+
+        loader.style.display =
+
+          "none";
+
+      }
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  function injectLoaderCSS() {
+
+    try {
+
+      if (
+
+        document.getElementById(
+
+          "loaderCSS"
+
+        )
+
+      )
+
+        return;
+
+      const style =
+
+        document.createElement(
+
+          "style"
+
+        );
+
+      style.id =
+
+        "loaderCSS";
+
+      style.innerHTML = `
+
+        .loader-box{
 
           background:#111;
 
-          border:1px solid #333;
-
           color:#d4af37;
+
+          border:1px solid #333;
 
           padding:24px 28px;
 
           border-radius:12px;
 
-          font-weight:700;
-
           min-width:220px;
 
           text-align:center;
 
-        ">
+          font-weight:700;
 
-          <div class="spin"
+        }
 
-            style="
+        .loader-spin{
 
-              width:28px;
+          width:28px;
 
-              height:28px;
+          height:28px;
 
-              border:3px solid #333;
+          border:3px solid #333;
 
-              border-top:3px solid #d4af37;
+          border-top:3px solid #d4af37;
 
-              border-radius:50%;
+          border-radius:50%;
 
-              margin:0 auto 14px auto;
+          margin:0 auto 14px auto;
 
-              animation:sodaSpin 1s linear infinite;
+          animation:sodaSpin 1s linear infinite;
 
-            ">
+        }
 
-          </div>
+        @keyframes sodaSpin{
 
-          <div id="loaderText">${text}</div>
+          from{transform:rotate(0deg);}
 
-        </div>
+          to{transform:rotate(360deg);}
+
+        }
 
       `;
 
-      document.body.appendChild(loader);
+      document.head.appendChild(
 
-      injectSpinKeyframes();
-
-    } else {
-
-      loader.style.display = "flex";
-
-      const txt =
-
-        document.getElementById(
-
-          "loaderText"
-
-        );
-
-      if (txt) txt.innerText = text;
-
-    }
-
-  };
-
-  window.hideLoader = function () {
-
-    const loader =
-
-      document.getElementById(
-
-        "globalLoader"
+        style
 
       );
 
-    if (loader) {
+    } catch (e) {
 
-      loader.style.display = "none";
+      console.error(e);
 
     }
-
-  };
-
-  function injectSpinKeyframes() {
-
-    if (
-
-      document.getElementById(
-
-        "spinStyles"
-
-      )
-
-    )
-
-      return;
-
-    const style =
-
-      document.createElement("style");
-
-    style.id = "spinStyles";
-
-    style.innerHTML = `
-
-      @keyframes sodaSpin{
-
-        from{transform:rotate(0deg);}
-
-        to{transform:rotate(360deg);}
-
-      }
-
-    `;
-
-    document.head.appendChild(style);
 
   }
 
@@ -310,41 +518,87 @@
 
   ===================================== */
 
-  window.openModal = function (id) {
+  function openModal(id) {
 
-    const modal =
+    try {
 
-      document.getElementById(id);
+      const modal =
 
-    if (!modal) return;
+        document.getElementById(
 
-    modal.style.display = "flex";
+          id
 
-    document.body.classList.add(
+        );
 
-      "modal-open"
+      if (!modal) return;
 
-    );
+      modal.style.display =
 
-  };
+        "flex";
 
-  window.closeModal = function (id) {
+      document.body.classList.add(
 
-    const modal =
+        "modal-open"
 
-      document.getElementById(id);
+      );
 
-    if (!modal) return;
+    } catch (e) {
 
-    modal.style.display = "none";
+      console.error(e);
 
-    document.body.classList.remove(
+    }
 
-      "modal-open"
+  }
 
-    );
+  function closeModal(id) {
 
-  };
+    try {
+
+      const modal =
+
+        document.getElementById(
+
+          id
+
+        );
+
+      if (!modal) return;
+
+      modal.style.display =
+
+        "none";
+
+      document.body.classList.remove(
+
+        "modal-open"
+
+      );
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  function closeProposalModal() {
+
+    try {
+
+      closeModal(
+
+        "proposalModal"
+
+      );
+
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
 
   function bindModalEscClose() {
 
@@ -354,23 +608,43 @@
 
       function (e) {
 
-        if (e.key !== "Escape") return;
+        try {
 
-        document
+          if (
 
-          .querySelectorAll(".modal")
+            e.key !==
 
-          .forEach((m) => {
+            "Escape"
 
-            m.style.display = "none";
+          )
 
-          });
+            return;
 
-        document.body.classList.remove(
+          document
 
-          "modal-open"
+            .querySelectorAll(
 
-        );
+              ".modal"
+
+            )
+
+            .forEach(
+
+              (m) =>
+
+                (m.style.display =
+
+                  "none")
+
+            );
+
+          document.body.classList.remove(
+
+            "modal-open"
+
+          );
+
+        } catch (err) {}
 
       }
 
@@ -386,151 +660,153 @@
 
   function bindAddonToggles() {
 
-    document
+    try {
 
-      .querySelectorAll(
+      document
 
-        "[data-addon]"
+        .querySelectorAll(
 
-      )
+          "[data-addon]"
 
-      .forEach((el) => {
+        )
 
-        el.addEventListener(
+        .forEach((el) => {
 
-          "click",
+          el.addEventListener(
 
-          function () {
+            "click",
 
-            const key =
+            function () {
 
-              this.dataset.addon;
+              try {
 
-            if (
+                const key =
 
-              !window.state ||
+                  this.dataset
 
-              !window.state.job
+                    .addon;
 
-            )
+                if (
 
-              return;
+                  !window.state
 
-            const addons =
+                    ?.job
 
-              window.state.job
+                    ?.addons
 
-                .addons;
+                )
 
-            addons[key] =
+                  return;
 
-              !addons[key];
+                const addons =
 
-            this.classList.toggle(
+                  window.state
 
-              "active",
+                    .job
 
-              addons[key]
+                    .addons;
 
-            );
+                addons[key] =
 
-            if (
+                  !addons[
 
-              typeof requestRender ===
+                    key
 
-              "function"
+                  ];
 
-            ) {
+                this.classList.toggle(
 
-              requestRender();
+                  "active",
+
+                  addons[
+
+                    key
+
+                  ]
+
+                );
+
+                if (
+
+                  typeof window.requestRender ===
+
+                  "function"
+
+                ) {
+
+                  window.requestRender();
+
+                }
+
+              } catch (e) {
+
+                console.error(
+
+                  e
+
+                );
+
+              }
 
             }
 
-          }
+          );
 
-        );
+        });
 
-      });
+    } catch (e) {
+
+      console.error(e);
+
+    }
 
   }
 
   /* =====================================
 
-     NUMBER FIELD HELPERS
+     INPUT HELPERS
 
   ===================================== */
 
   function bindNumberFormatting() {
 
-    document
+    try {
 
-      .querySelectorAll(
+      document
 
-        "input[type='number']"
+        .querySelectorAll(
 
-      )
+          "input[type='number']"
 
-      .forEach((input) => {
+        )
 
-        input.addEventListener(
+        .forEach(
 
-          "wheel",
+          (input) => {
 
-          function () {
+            input.addEventListener(
 
-            this.blur();
+              "wheel",
+
+              function () {
+
+                this.blur();
+
+              }
+
+            );
 
           }
 
         );
 
-      });
-
-  }
-
-  /* =====================================
-
-     COPY TO CLIPBOARD
-
-  ===================================== */
-
-  window.copyText = async function (
-
-    text,
-
-    success = "Copied"
-
-  ) {
-
-    try {
-
-      await navigator.clipboard.writeText(
-
-        text
-
-      );
-
-      showToast(
-
-        success,
-
-        "success"
-
-      );
-
     } catch (e) {
 
-      showToast(
-
-        "Copy failed",
-
-        "error"
-
-      );
+      console.error(e);
 
     }
 
-  };
+  }
 
   /* =====================================
 
@@ -540,113 +816,173 @@
 
   function bindQuickActions() {
 
-    document
+    try {
 
-      .querySelectorAll(
+      document
 
-        "[data-click]"
+        .querySelectorAll(
 
-      )
+          "[data-click]"
 
-      .forEach((btn) => {
+        )
 
-        btn.addEventListener(
+        .forEach(
 
-          "click",
+          (btn) => {
 
-          function () {
+            btn.addEventListener(
 
-            const fn =
+              "click",
 
-              this.dataset.click;
+              function () {
 
-            if (
+                try {
 
-              fn &&
+                  const fn =
 
-              typeof window[
+                    this
 
-                fn
+                      .dataset
 
-              ] ===
+                      .click;
 
-                "function"
+                  if (
 
-            ) {
+                    fn &&
 
-              window[fn]();
+                    typeof window[
 
-            }
+                      fn
+
+                    ] ===
+
+                      "function"
+
+                  ) {
+
+                    window[
+
+                      fn
+
+                    ]();
+
+                  }
+
+                } catch (e) {
+
+                  console.error(
+
+                    e
+
+                  );
+
+                }
+
+              }
+
+            );
 
           }
 
         );
 
-      });
+    } catch (e) {
+
+      console.error(e);
+
+    }
 
   }
 
   /* =====================================
 
-     MONEY FORMATTERS
+     FORMATTERS
 
   ===================================== */
 
-  window.money = function (
+  function money(
 
     amount
 
   ) {
 
-    const n =
+    try {
 
-      Number(amount) || 0;
+      const n =
 
-    return (
+        Number(amount) ||
 
-      "$" +
+        0;
 
-      n.toLocaleString(
+      return (
 
-        undefined,
+        "$" +
 
-        {
+        n.toLocaleString(
 
-          minimumFractionDigits: 2,
+          undefined,
 
-          maximumFractionDigits: 2
+          {
 
-        }
+            minimumFractionDigits: 2,
 
-      )
+            maximumFractionDigits: 2
 
-    );
+          }
 
-  };
+        )
 
-  window.percent = function (
+      );
+
+    } catch (e) {
+
+      return "$0.00";
+
+    }
+
+  }
+
+  function percent(
 
     value
 
   ) {
 
-    const n =
+    try {
 
-      Number(value) || 0;
+      const n =
 
-    return `${n.toFixed(1)}%`;
+        Number(value) ||
 
-  };
+        0;
+
+      return `${n.toFixed(
+
+        1
+
+      )}%`;
+
+    } catch (e) {
+
+      return "0.0%";
+
+    }
+
+  }
 
   /* =====================================
 
-     SAFE HTML
+     HTML ESCAPE
 
   ===================================== */
 
-  window.escapeHTML =
+  function escapeHTML(
 
-    function (str) {
+    str
+
+  ) {
+
+    try {
 
       return String(
 
@@ -694,55 +1030,73 @@
 
         );
 
-    };
+    } catch (e) {
+
+      return "";
+
+    }
+
+  }
 
   /* =====================================
 
-     THEME / POLISH
+     POLISH
 
   ===================================== */
 
   function initThemeHelpers() {
 
-    document
+    try {
 
-      .querySelectorAll(
+      document
 
-        ".card, .glass-card"
+        .querySelectorAll(
 
-      )
+          ".card,.glass-card"
 
-      .forEach((card) => {
+        )
 
-        card.addEventListener(
+        .forEach(
 
-          "mouseenter",
+          (card) => {
 
-          function () {
+            card.addEventListener(
 
-            this.style.transform =
+              "mouseenter",
 
-              "translateY(-2px)";
+              function () {
+
+                this.style.transform =
+
+                  "translateY(-2px)";
+
+              }
+
+            );
+
+            card.addEventListener(
+
+              "mouseleave",
+
+              function () {
+
+                this.style.transform =
+
+                  "";
+
+              }
+
+            );
 
           }
 
         );
 
-        card.addEventListener(
+    } catch (e) {
 
-          "mouseleave",
+      console.error(e);
 
-          function () {
-
-            this.style.transform =
-
-              "";
-
-          }
-
-        );
-
-      });
+    }
 
   }
 
@@ -752,15 +1106,15 @@
 
   ===================================== */
 
-  window.confirmAction =
+  function confirmAction(
 
-    function (
+    message,
 
-      message,
+    callback
 
-      callback
+  ) {
 
-    ) {
+    try {
 
       const ok =
 
@@ -784,7 +1138,13 @@
 
       }
 
-    };
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
 
   /* =====================================
 
@@ -792,9 +1152,9 @@
 
   ===================================== */
 
-  window.resetUI =
+  function resetUI() {
 
-    function () {
+    try {
 
       document
 
@@ -804,15 +1164,15 @@
 
         )
 
-        .forEach((el) => {
+        .forEach((el) =>
 
           el.classList.remove(
 
             "active"
 
-          );
+          )
 
-        });
+        );
 
       document
 
@@ -822,13 +1182,15 @@
 
         )
 
-        .forEach((m) => {
+        .forEach(
 
-          m.style.display =
+          (m) =>
 
-            "none";
+            (m.style.display =
 
-        });
+              "none")
+
+        );
 
       document.body.classList.remove(
 
@@ -836,14 +1198,80 @@
 
       );
 
-    };
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  /* =====================================
+
+     OPTIONAL LEGACY FUNCTIONS
+
+  ===================================== */
+
+  function editJob() {}
+
+  function deleteJob() {}
+
+  /* =====================================
+
+     EXPORTS
+
+  ===================================== */
+
+  window.showToast =
+
+    showToast;
+
+  window.showLoader =
+
+    showLoader;
+
+  window.hideLoader =
+
+    hideLoader;
+
+  window.openModal =
+
+    openModal;
+
+  window.closeModal =
+
+    closeModal;
+
+  window.closeProposalModal =
+
+    closeProposalModal;
+
+  window.money =
+
+    money;
+
+  window.percent =
+
+    percent;
+
+  window.escapeHTML =
+
+    escapeHTML;
+
+  window.confirmAction =
+
+    confirmAction;
+
+  window.resetUI =
+
+    resetUI;
+
+  window.editJob =
+
+    editJob;
+
+  window.deleteJob =
+
+    deleteJob;
 
 })();
-
-window.showToast = showToast;
-
-window.closeProposalModal = closeProposalModal;
-
-window.editJob = editJob;
-
-window.deleteJob = deleteJob;
