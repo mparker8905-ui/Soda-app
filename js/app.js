@@ -1227,3 +1227,29 @@
     resetToasts;
 
 })();
+
+//=================
+//MANUAL REFRESH
+//=================
+
+window.manualRefresh = function () {
+
+  try {
+
+    if (typeof loadInventory === "function") loadInventory();
+
+    if (typeof renderPipeline === "function") renderPipeline();
+
+    if (typeof renderHistory === "function") renderHistory();
+
+    if (typeof render === "function") render();
+
+    showToast("Refreshed", "success");
+
+  } catch (e) {
+
+    console.error(e);
+
+  }
+
+};

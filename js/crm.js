@@ -810,39 +810,63 @@
 
   ===================================== */
 
-  function setTimeline(el) {
+function setTimeline(el) {
 
-    try {
+  try {
 
-      const all =
+    const all =
 
-        document.querySelectorAll("[data-timeline]");
+      document.querySelectorAll("[data-timeline]");
 
-      all.forEach(x =>
+    all.forEach(btn =>
 
-        x.classList.remove("active")
+      btn.classList.remove("active")
 
-      );
+    );
 
-      el.classList.add("active");
+    el.classList.add("active");
 
-      if (window.state?.ui) {
+    if (window.state?.ui) {
 
-        window.state.ui.timeline =
+      window.state.ui.timeline =
 
-          el.dataset.timeline;
-
-      }
-
-      rerender();
-
-    } catch (e) {
-
-      console.error(e);
+        el.dataset.timeline;
 
     }
 
+    if (typeof render === "function") {
+
+      render();
+
+    }
+
+    if (typeof showToast === "function") {
+
+      showToast(
+
+        "Timeline: " +
+
+        el.dataset.timeline,
+
+        "success"
+
+      );
+
+    }
+
+  } catch (e) {
+
+    console.error(
+
+      "setTimeline failed:",
+
+      e
+
+    );
+
   }
+
+}
 
   function handleModalBackground(e) {
 
