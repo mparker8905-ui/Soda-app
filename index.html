@@ -56,13 +56,13 @@
 
            Put your real logo file in root folder:
 
-           /logo.png
+           /logo.PNG
 
       -->
 
       <img
 
-        src="/logo.png"
+        src="/logo.PNG"
 
         alt="SoDa Outdoor Designs Logo"
 
@@ -98,11 +98,11 @@
 
       <a href="crm.html" class="nav-btn">CRM</a>
 
-      <button class="nav-btn gold" onclick="render()">
+    <button onclick="manualRefresh()" class="btn-gold">
 
-        Refresh Dashboard
+Refresh Dashboard
 
-      </button>
+</button>
 
     </section>
 
@@ -388,23 +388,25 @@
 
       <div class="nav-row mt-18">
 
-        <button class="nav-btn gold" onclick="render()">
+      <button onclick="calculateJob()" class="btn-gold">
 
-          Calculate Job
+Calculate Job
 
-        </button>
+</button>
 
-        <button class="nav-btn" onclick="sendProposal()">
+<button onclick="sendProposal()" class="btn-gold">
 
-          Send Proposal
+Send Proposal
 
-        </button>
+</button>
 
-        <button class="nav-btn" onclick="createLead()">
+<button onclick="createLead()" class="btn-gold">
 
-          Create Lead
+Create Lead
 
-        </button>
+</button>
+
+     
 
       </div>
 
@@ -422,47 +424,29 @@
 
       <div class="nav-row">
 
-        <button
+     <button class="timeline-btn active"
 
-          class="nav-btn"
+onclick="setTimeline(this,'fast')">
 
-          data-timeline="fast"
+Fast
 
-          onclick="setTimeline(this)"
+</button>
 
-        >
+<button class="timeline-btn"
 
-          Fast
+onclick="setTimeline(this,'standard')">
 
-        </button>
+Standard
 
-        <button
+</button>
 
-          class="nav-btn gold"
+<button class="timeline-btn"
 
-          data-timeline="standard"
+onclick="setTimeline(this,'extended')">
 
-          onclick="setTimeline(this)"
+Extended
 
-        >
-
-          Standard
-
-        </button>
-
-        <button
-
-          class="nav-btn"
-
-          data-timeline="extended"
-
-          onclick="setTimeline(this)"
-
-        >
-
-          Extended
-
-        </button>
+</button>
 
       </div>
 
