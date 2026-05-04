@@ -1253,3 +1253,66 @@ window.manualRefresh = function () {
   }
 
 };
+
+
+document.addEventListener("click", function (e) {
+
+  try {
+
+    const btn = e.target.closest("[data-action]");
+
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+
+    switch (action) {
+
+      case "createLead":
+
+        window.createLead?.();
+
+        break;
+
+      case "sendProposal":
+
+        window.sendProposal?.();
+
+        break;
+
+      case "closeModal":
+
+        window.closeProposalModal?.();
+
+        break;
+
+      case "refresh":
+
+        window.render?.();
+
+        window.renderPipeline?.();
+
+        window.loadInventory?.();
+
+        break;
+
+      case "deleteProposal":
+
+        const id = btn.dataset.id;
+
+        window.deleteProposalById?.(Number(id));
+
+        break;
+
+      default:
+
+        console.warn("Unknown action:", action);
+
+    }
+
+  } catch (err) {
+
+    console.error("Action handler failed:", err);
+
+  }
+
+});

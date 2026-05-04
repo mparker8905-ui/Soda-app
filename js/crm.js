@@ -1084,13 +1084,13 @@ function setTimeline(el) {
 
   window.sendProposal = sendProposal;
 
+  window.closeProposalModal = closeProposalModal;
+
   window.createLead = createLead;
 
   window.renderPipeline = renderPipeline;
 
   window.openProposal = openProposal;
-
-  window.closeProposalModal = closeProposalModal;
 
   window.setProposalStatus = setProposalStatus;
 

@@ -40,6 +40,10 @@
 
       initThemeHelpers();
 
+      bindTimelineHandler();
+   
+      setInitialTimelineState();
+
     } catch (e) {
 
       console.error("UI init failed:", e);
@@ -894,7 +898,109 @@
 
   }
 
-  /* =====================================
+  /* 
+
+//======================
+//BIND TIMELINE HANDLER
+//======================
+
+function bindTimelineHandler() {
+
+  document.addEventListener("click", function (e) {
+
+    const el = e.target.closest("[data-timeline]");
+
+    if (!el) return;
+
+    try {
+
+      // remove active from all
+
+      document
+
+        .querySelectorAll("[data-timeline]")
+
+        .forEach(x => x.classList.remove("active"));
+
+      // add active to clicked
+
+      el.classList.add("active");
+
+      // update state
+
+      if (window.state?.ui) {
+
+        window.state.ui.timeline = el.dataset.timeline;
+
+      }
+
+      // feedback
+
+      if (window.showToast) {
+
+        showToast("Timeline: " + el.dataset.timeline, "success");
+
+      }
+
+      // re-render app
+
+      if (window.render) {
+
+        window.render();
+
+      }
+
+    } catch (err) {
+
+      console.error("Timeline failed:", err);
+
+    }
+
+  });
+
+}
+
+//=====================
+//SET INITIAL TIMELINE
+//=====================
+
+function setInitialTimelineState() {
+
+  try {
+
+    const active =
+
+      window.state?.ui?.timeline || "standard";
+
+    // remove any existing active states
+
+    document
+
+      .querySelectorAll("[data-timeline]")
+
+      .forEach(el => el.classList.remove("active"));
+
+    // set correct one
+
+    const el =
+
+      document.querySelector(`[data-timeline="${active}"]`);
+
+    if (el) {
+
+      el.classList.add("active");
+
+    }
+
+  } catch (e) {
+
+    console.error("setInitialTimelineState failed:", e);
+
+  }
+
+}
+
+=====================================
 
      FORMATTERS
 
