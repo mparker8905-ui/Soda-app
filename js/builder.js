@@ -143,3 +143,115 @@ window.renderBuilderSchedule = function(startDate, houses){
 };
 
 })();
+
+//=======================
+//SAVE BUILDER TO CRM
+//=======================
+
+window.saveBuilderToCRM = function(){
+
+  try{
+
+    const customer = prompt("Builder / Project Name:");
+
+    if(!customer) return;
+
+    const address = prompt("Project Location:");
+
+    
+
+    const sqft =
+
+      Number(document.getElementById("builderSqft")?.value) || 0;
+
+    const houses =
+
+      Number(document.getElementById("builderHouses")?.value) || 1;
+
+    const pkg =
+
+      document.getElementById("builderPackage")?.value || "standard";
+
+    const result =
+
+      window.calculateJobCore({
+
+        job:{
+
+          sqft,
+
+          houses,
+
+          package:pkg,
+
+          addons:{}
+
+        }
+
+      });
+
+    const builderMult =
+
+      window.getBuilderMultiplier(houses);
+
+    const price =
+
+      result.price * builderMult;
+
+    const proposal = {
+
+      id: Date.now(),
+
+      type: "builder", // 🔥 IMPORTANT FLAG
+
+      customer,
+
+      address,
+
+      sqft: sqft * houses,
+
+      houses,
+
+      packageType: pkg,
+
+      total: price,
+
+      cost: result.cost,
+
+      status: "Proposal Sent",
+
+      stage: "proposal",
+
+      createdAt: Date.now()
+
+    };
+
+    let list =
+
+      JSON.parse(localStorage.getItem("soda_proposals") || "[]");
+
+    list.push(proposal);
+
+    localStorage.setItem(
+
+      "soda_proposals",
+
+      JSON.stringify(list)
+
+    );
+
+    if(window.renderPipeline){
+
+      window.renderPipeline();
+
+    }
+
+    showToast("Builder project added to CRM","success");
+
+  }catch(e){
+
+    console.error(e);
+
+  }
+
+};

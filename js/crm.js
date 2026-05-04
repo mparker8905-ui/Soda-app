@@ -20,19 +20,21 @@
 
   const STORAGE_KEY = "soda_proposals";
 
-  const PIPELINE_STAGES = [
+const PIPELINE_STAGES = [
 
-    { key: "lead", label: "Leads" },
+  { key: "lead", label: "Leads" },
 
-    { key: "proposal", label: "Proposals" },
+  { key: "proposal", label: "Proposals" },
 
-    { key: "pending", label: "Pending" },
+  { key: "builder", label: "Builder Projects" }, // 🔥 NEW
 
-    { key: "won", label: "Won" },
+  { key: "pending", label: "Pending" },
 
-    { key: "lost", label: "Lost" }
+  { key: "won", label: "Won" },
 
-  ];
+  { key: "lost", label: "Lost" }
+
+];
 
   window.PIPELINE_STAGES = PIPELINE_STAGES;
 
@@ -552,21 +554,57 @@
 
   ===================================== */
 
-  function matchStage(p, key) {
+function matchStage(p, key){
 
-    if (key === "lead") return p.stage === "lead";
+  // 🔥 BUILDER COLUMN (isolated)
 
-    if (key === "proposal") return p.stage === "proposal";
+  if(key === "builder"){
 
-    if (key === "pending") return p.status === "Pending";
+    return p.type === "builder";
 
-    if (key === "won") return p.status === "Accepted";
+  }
 
-    if (key === "lost") return p.status === "Not Accepted";
+  // 🚫 prevent builders from showing in other columns
+
+  if(p.type === "builder"){
 
     return false;
 
   }
+
+  if(key === "lead"){
+
+    return p.stage === "lead";
+
+  }
+
+  if(key === "proposal"){
+
+    return p.stage === "proposal";
+
+  }
+
+  if(key === "pending"){
+
+    return p.status === "Pending";
+
+  }
+
+  if(key === "won"){
+
+    return p.status === "Accepted";
+
+  }
+
+  if(key === "lost"){
+
+    return p.status === "Not Accepted";
+
+  }
+
+  return false;
+
+}
 
   /* =====================================
 
@@ -574,33 +612,45 @@
 
   ===================================== */
 
-  function renderPipeline() {
+function renderPipeline() {
 
-    try {
+  try {
 
-      const container =
+    const container =
 
-        document.getElementById("jobHistoryList");
+      document.getElementById("jobHistoryList");
 
-      if (!container) return;
+    if (!container) return;
 
-      const list = readCRM();
+    const list = readCRM();
 
-      let html =
+    let html =
 
-        `<div style="display:flex;gap:12px;overflow-x:auto;">`;
+      `<div style="display:flex;gap:12px;overflow-x:auto;">`;
 
-      PIPELINE_STAGES.forEach(stage => {
+    PIPELINE_STAGES.forEach(stage => {
 
-        const items = list.filter(p =>
+      const items = list.filter(p =>
 
-          matchStage(p, stage.key)
+        matchStage(p, stage.key)
 
-        );
+      );
 
-        html += `
+      html += `
 
-        <div class="glass-card" style="min-width:260px;">
+        <div class="glass-card"
+
+     style="
+
+       min-width:260px;
+
+       ${stage.key === "builder"
+
+         ? "border:2px solid #d4af37;"
+
+         : ""}
+
+     ">
 
           <div style="
 
@@ -616,39 +666,99 @@
 
           </div>
 
-          ${items.map(p => `
+          ${items.map(p => {
 
-            <div class="history-card"
+            const isBuilder =
 
-              onclick="openProposal(${p.id})">
+              p.type === "builder";
 
-              <div><b>${p.customer}</b></div>
+            const total =
 
-              <div>${p.address || ""}</div>
+              Number(p.total || 0);
 
-              <div>💰 $${num(p.total).toFixed(0)}</div>
+            const houses =
 
-            </div>
+              Number(p.houses || 0);
 
-          `).join("")}
+            return `
+
+              <div class="history-card"
+
+                onclick="openProposal(${p.id})">
+
+                <div>
+
+                  <b>${p.customer}</b>
+
+                  ${isBuilder
+
+                    ? `<span style="
+
+                        color:#d4af37;
+
+                        font-size:11px;
+
+                        margin-left:6px;
+
+                      ">[BUILDER]</span>`
+
+                    : ""
+
+                  }
+
+                </div>
+
+                <div style="font-size:12px;color:#aaa;">
+
+                  ${p.address || ""}
+
+                </div>
+
+                ${isBuilder ? `
+
+                  <div style="
+
+                    font-size:11px;
+
+                    color:#888;
+
+                  ">
+
+                    Houses: ${houses}
+
+                  </div>
+
+                ` : ""}
+
+                <div style="margin-top:6px;">
+
+                  💰 $${total.toFixed(0)}
+
+                </div>
+
+              </div>
+
+            `;
+
+          }).join("")}
 
         </div>
 
-        `;
+      `;
 
-      });
+    });
 
-      html += `</div>`;
+    html += `</div>`;
 
-      container.innerHTML = html;
+    container.innerHTML = html;
 
-    } catch (e) {
+  } catch (e) {
 
-      console.error("renderPipeline failed:", e);
-
-    }
+    console.error("renderPipeline failed:", e);
 
   }
+
+}
 
   /* =====================================
 
@@ -656,71 +766,151 @@
 
   ===================================== */
 
-  function openProposal(id) {
+function openProposal(id) {
 
-    try {
+  try {
 
-      const list = readCRM();
+    const list = readCRM();
 
-      const p = list.find(x => x.id == id);
+    const p = list.find(x => x.id == id);
 
-      if (!p) return;
+    if (!p) return;
 
-      window.activeProposalId = id;
+    window.activeProposalId = id;
 
-      const modal = document.getElementById("proposalModal");
+    const modal = document.getElementById("proposalModal");
 
-      const body = document.getElementById("modalBody");
+    const body = document.getElementById("modalBody");
 
-      if (!modal || !body) return;
+    if (!modal || !body) return;
 
-      const customer = document.getElementById("modalCustomer");
+    const customer = document.getElementById("modalCustomer");
 
-      const address = document.getElementById("modalAddress");
+    const address = document.getElementById("modalAddress");
 
-      if (customer) customer.innerText = p.customer;
+    if (customer) customer.innerText = p.customer || "";
 
-      if (address) address.innerText = p.address || "";
+    if (address) address.innerText = p.address || "";
 
-      body.innerHTML = `
+    const isBuilder = p.type === "builder";
 
-        <div class="proposal-wrap">
+    const total = Number(p.total || 0);
 
-          <div><b>Status:</b> ${p.status}</div>
+    const cost = Number(p.cost || 0);
 
-          <div><b>Sqft:</b> ${p.sqft || 0}</div>
+    const houses = Number(p.houses || 0);
 
-          <div><b>Total:</b> $${num(p.total).toFixed(2)}</div>
+    const pricePerLot =
+
+      houses > 0 ? total / houses : 0;
+
+    const costPerLot =
+
+      houses > 0 ? cost / houses : 0;
+
+    body.innerHTML = `
+
+      <div class="proposal-wrap">
+
+        <div class="row">
+
+          <b>Status:</b>
+
+          <span>${p.status || "-"}</span>
 
         </div>
 
-      `;
+        <div class="row">
 
-      modal.style.display = "flex";
+          <b>Sqft:</b>
 
-    } catch (e) {
+          <span>${p.sqft || 0}</span>
 
-      console.error("openProposal failed:", e);
+        </div>
 
-    }
+        <div class="row">
+
+          <b>Total:</b>
+
+          <span>$${total.toFixed(2)}</span>
+
+        </div>
+
+        ${isBuilder ? `
+
+          <div style="
+
+            margin-top:15px;
+
+            border-top:1px solid #333;
+
+            padding-top:12px;
+
+          ">
+
+            <div style="
+
+              color:#d4af37;
+
+              font-weight:bold;
+
+              margin-bottom:10px;
+
+            ">
+
+              BUILDER PROJECT DETAILS
+
+            </div>
+
+            <div class="row">
+
+              <b>Houses:</b>
+
+              <span>${houses}</span>
+
+            </div>
+
+            <div class="row">
+
+              <b>Total Cost:</b>
+
+              <span>$${cost.toFixed(2)}</span>
+
+            </div>
+
+            <div class="row">
+
+              <b>Cost / Lot:</b>
+
+              <span>$${costPerLot.toFixed(2)}</span>
+
+            </div>
+
+            <div class="row">
+
+              <b>Price / Lot:</b>
+
+              <span>$${pricePerLot.toFixed(2)}</span>
+
+            </div>
+
+          </div>
+
+        ` : ""}
+
+      </div>
+
+    `;
+
+    modal.style.display = "flex";
+
+  } catch (e) {
+
+    console.error("openProposal failed:", e);
 
   }
 
-  function closeProposalModal() {
-
-    try {
-
-      const modal = document.getElementById("proposalModal");
-
-      if (modal) modal.style.display = "none";
-
-    } catch (e) {
-
-      console.error(e);
-
-    }
-
-  }
+}
 
   /* =====================================
 
