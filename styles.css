@@ -857,3 +857,21 @@ th{
   color:#000;
 
 }
+
+[data-timeline] {
+
+  background: #111;
+
+  color: #ccc;
+
+}
+
+[data-timeline].active {
+
+  background: #d4af37;
+
+  color: #000;
+
+  font-weight: 700;
+
+}

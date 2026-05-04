@@ -100,11 +100,7 @@
 
  <a href="builder.html" class="nav-btn">Builder</a>
 
-    <button onclick="manualRefresh()" class="btn-gold">
-
-Refresh Dashboard
-
-</button>
+  <button data-action="refresh">Refresh</button>
 
     </section>
 
@@ -396,17 +392,9 @@ Calculate Job
 
 </button>
 
-<button onclick="sendProposal()" class="btn-gold">
+<button data-action="createLead">Create Lead</button>
 
-Send Proposal
-
-</button>
-
-<button onclick="createLead()" class="btn-gold">
-
-Create Lead
-
-</button>
+<button data-action="sendProposal">Send Proposal</button>
 
      
 
@@ -426,35 +414,11 @@ Create Lead
 
       <div class="nav-row">
 
-  <button class="timeline-btn active"
+<button data-timeline="fast">Fast</button>
 
-        data-timeline="fast"
+<button data-timeline="standard">Standard</button>
 
-        onclick="setTimeline(this)">
-
-  Fast
-
-</button>
-
-<button class="timeline-btn"
-
-        data-timeline="standard"
-
-        onclick="setTimeline(this)">
-
-  Standard
-
-</button>
-
-<button class="timeline-btn"
-
-        data-timeline="extended"
-
-        onclick="setTimeline(this)">
-
-  Extended
-
-</button>
+<button data-timeline="extended">Extended</button>
 
       </div>
 
@@ -575,17 +539,7 @@ Create Lead
 
         </button>
 
-        <button
-
-          class="btn"
-
-          onclick="closeProposalModal()"
-
-        >
-
-          Close
-
-        </button>
+       <button data-action="closeModal">Close</button>
 
       </div>
 
