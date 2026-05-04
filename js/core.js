@@ -787,47 +787,329 @@ window.buildSchedule = function(result){
 
     "standard";
 
-  let days = 3;
+  const addons =
 
-  if(mode === "fast") days = 1;
+    window.state?.job?.addons || {};
 
-  if(mode === "extended") days = 5;
+  const sqft =
+
+    result?.totalSqft || 0;
+
+  const houses =
+
+    result?.houses || 1;
+
+  const grow =
+
+    addons.grow === true;
+
+  /* --------------------------
+
+     DATE HELPERS
+
+  -------------------------- */
+
+  function getStartDate(){
+
+    const raw =
+
+      document.getElementById(
+
+        "projectStart"
+
+      )?.value;
+
+    if(raw){
+
+      const d = new Date(raw);
+
+      if(!isNaN(d)) return d;
+
+    }
+
+    return new Date();
+
+  }
+
+  function addDays(base, days){
+
+    const d = new Date(base);
+
+    d.setDate(
+
+      d.getDate() + days
+
+    );
+
+    return d;
+
+  }
+
+  function fmt(date){
+
+    return date.toLocaleDateString(
+
+      undefined,
+
+      {
+
+        weekday:"short",
+
+        month:"short",
+
+        day:"numeric",
+
+        year:"numeric"
+
+      }
+
+    );
+
+  }
+
+  const start = getStartDate();
 
   const list = [];
 
-  for(let i=1;i<=days;i++){
+  const soilTasks = [];
+
+  if(addons.aeration)
+
+    soilTasks.push("Aeration");
+
+  if(addons.compost)
+
+    soilTasks.push("Compost");
+
+  if(addons.lime)
+
+    soilTasks.push("Lime Treatment");
+
+  if(addons.sulfur)
+
+    soilTasks.push("Sulfur Treatment");
+
+  if(!soilTasks.length)
+
+    soilTasks.push("Basic Soil Prep");
+
+  /* --------------------------
+
+     FAST
+
+  -------------------------- */
+
+  if(mode === "fast"){
 
     list.push({
 
-      day:i,
+      day:1,
 
-      title:
+      title:"Soil Prep Day",
 
-        i === 1
+      date:fmt(start),
 
-          ? "Prep & Setup"
+      tasks:soilTasks
 
-          : i === days
+    });
 
-          ? "Final Finish"
+    list.push({
 
-          : "Hydroseed Application",
+      day:2,
 
-      date:"Day " + i,
+      title:"Hydroseeding Day",
+
+      date:fmt(addDays(start,1)),
 
       tasks:[
 
-        "Crew arrival",
+        "Hydroseed lawn",
 
-        "Material staging",
+        ...(grow ? ["Install Grow System"] : [])
 
-        "Work completed"
+      ]
+
+    });
+
+    list.push({
+
+      day:3,
+
+      title:"Final Lawn Inspection",
+
+      date:fmt(addDays(start,22)),
+
+      tasks:[
+
+        ...(grow ? ["Remove Grow System"] : []),
+
+        "Final lawn walkthrough"
+
+      ]
+
+    });
+
+    return list;
+
+  }
+
+  /* --------------------------
+
+     EXTENDED
+
+  -------------------------- */
+
+  if(mode === "extended"){
+
+    list.push({
+
+      day:1,
+
+      title:"Soil Prep Day",
+
+      date:fmt(start),
+
+      tasks:[
+
+        ...(addons.aeration ? ["Aeration"] : []),
+
+        ...(addons.lime ? ["Lime Treatment"] : []),
+
+        ...(addons.sulfur ? ["Sulfur Treatment"] : [])
+
+      ]
+
+    });
+
+    list.push({
+
+      day:2,
+
+      title:"Compost Day",
+
+      date:fmt(addDays(start,3)),
+
+      tasks:[
+
+        addons.compost
+
+          ? "Apply Compost"
+
+          : "Soil Conditioning"
+
+      ]
+
+    });
+
+    list.push({
+
+      day:3,
+
+      title:"Hydroseeding Day",
+
+      date:fmt(addDays(start,6)),
+
+      tasks:[
+
+        "Hydroseed lawn",
+
+        ...(grow ? ["Install Grow System"] : [])
+
+      ]
+
+    });
+
+    list.push({
+
+      day:4,
+
+      title:"Final Lawn Inspection",
+
+      date:fmt(addDays(start,34)),
+
+      tasks:[
+
+        ...(grow ? ["Remove Grow System"] : []),
+
+        "Final lawn walkthrough"
+
+      ]
+
+    });
+
+    return list;
+
+  }
+
+  /* --------------------------
+
+     STANDARD
+
+  -------------------------- */
+
+  list.push({
+
+    day:1,
+
+    title:"Soil Prep Day",
+
+    date:fmt(start),
+
+    tasks:soilTasks
+
+  });
+
+  const hydroDays =
+
+    sqft > 6000 || houses > 1
+
+      ? 2
+
+      : 1;
+
+  for(let i=0;i<hydroDays;i++){
+
+    list.push({
+
+      day:list.length + 1,
+
+      title:"Hydroseeding Day",
+
+      date:fmt(addDays(start,3 + i)),
+
+      tasks:[
+
+        "Hydroseed lawn",
+
+        ...(grow && i === 0
+
+          ? ["Install Grow System"]
+
+          : [])
 
       ]
 
     });
 
   }
+
+  list.push({
+
+    day:list.length + 1,
+
+    title:"Final Lawn Inspection",
+
+    date:fmt(addDays(start,24)),
+
+    tasks:[
+
+      ...(grow ? ["Remove Grow System"] : []),
+
+      "Final lawn walkthrough"
+
+    ]
+
+  });
 
   return list;
 
