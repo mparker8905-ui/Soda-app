@@ -1,98 +1,597 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Builder Projects — SoDa Outdoor Designs</title>
-  <link rel="stylesheet" href="styles.css" />
+
+  <meta
+
+    name="viewport"
+
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+
+  />
+
+  <title>
+
+    Builder Projects — SoDa Outdoor Designs
+
+  </title>
+
+  <meta
+
+    name="description"
+
+    content="Builder subdivision and multi-lot estimating system."
+
+  />
+
+  <link rel="stylesheet" href="./styles.css" />
+
 </head>
 
 <body>
 
-  <!-- ===== HEADER ===== -->
-  <header class="topbar">
-    <div class="brand-wrap">
-      <div class="brand-text">SoDa Outdoor Designs</div>
-      <img src="logo.png" class="brand-logo" />
+<!-- =====================================
+
+     HEADER
+
+===================================== -->
+
+<header class="topbar">
+
+  <div class="brand-wrap">
+
+    <div>
+
+      <div class="brand-text">
+
+        SoDa Outdoor Designs
+
+      </div>
+
+      <div class="brand-sub">
+
+        Builder Project Management
+
+      </div>
+
     </div>
-    <div class="gold-divider"></div>
-  </header>
 
-  <main class="container">
+    <img
 
-    <!-- ===== NAV ===== -->
-    <div class="card">
-      <button class="btn ghost" onclick="location.href='index.html'">← Calculator</button>
-      <button class="btn ghost" onclick="location.href='inventory.html'">Inventory</button>
-      <button class="btn ghost" onclick="location.href='crm.html'">CRM</button>
+      src="/logo.PNG"
+
+      class="brand-logo"
+
+      id="logoImg"
+
+    />
+
+  </div>
+
+  <div class="gold-divider"></div>
+
+</header>
+
+<!-- =====================================
+
+     MAIN
+
+===================================== -->
+
+<main class="page-shell">
+
+<!-- =====================================
+
+     NAV
+
+===================================== -->
+
+<section class="nav-row">
+
+  <a href="index.html" class="nav-btn">
+
+    ← Calculator
+
+  </a>
+
+  <a href="inventory.html" class="nav-btn">
+
+    Inventory
+
+  </a>
+
+  <a href="crm.html" class="nav-btn">
+
+    CRM
+
+  </a>
+
+  <button
+
+    class="btn-gold"
+
+    data-action="refreshBuilder"
+
+  >
+
+    Refresh
+
+  </button>
+
+</section>
+
+<!-- =====================================
+
+     PAGE INTRO
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Builder Project Calculator
+
+  </div>
+
+  <div class="card-sub">
+
+    Estimate subdivisions,
+
+    multi-lot hydroseeding contracts,
+
+    and large-scale builder projects.
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     INPUTS
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Builder Project Details
+
+  </div>
+
+  <div class="grid-2">
+
+    <div class="field">
+
+      <label>
+
+        Builder Name
+
+      </label>
+
+      <input
+
+        id="builderName"
+
+        type="text"
+
+        placeholder="Builder Company"
+
+      />
+
     </div>
 
-    <!-- ===== PAGE TITLE ===== -->
-    <div class="card">
-      <h2>Builder Project Calculator</h2>
-      <p class="muted">
-        Estimate large-scale residential projects, subdivisions, and multi-lot contracts.
-      </p>
+    <div class="field">
+
+      <label>
+
+        Project Name
+
+      </label>
+
+      <input
+
+        id="builderProject"
+
+        type="text"
+
+        placeholder="Subdivision Name"
+
+      />
+
     </div>
 
-    <!-- ===== INPUTS ===== -->
-    <div class="card">
+    <div class="field">
 
-      <h3>Project Details</h3>
+      <label>
 
-      <label>Sqft Per House</label>
-      <input id="builderSqft" type="number" placeholder="2000" />
+        Sqft Per House
 
-      <label>Number of Houses</label>
-      <input id="builderHouses" type="number" placeholder="10" />
+      </label>
 
-      <label>Project Start Date</label>
-      <input id="builderStart" type="date" />
+      <input
 
-      <label>Package</label>
+        id="builderSqft"
+
+        type="number"
+
+        placeholder="2000"
+
+      />
+
+    </div>
+
+    <div class="field">
+
+      <label>
+
+        Number of Houses
+
+      </label>
+
+      <input
+
+        id="builderHouses"
+
+        type="number"
+
+        placeholder="10"
+
+      />
+
+    </div>
+
+    <div class="field">
+
+      <label>
+
+        Project Start Date
+
+      </label>
+
+      <input
+
+        id="builderStart"
+
+        type="date"
+
+      />
+
+    </div>
+
+    <div class="field">
+
+      <label>
+
+        Package
+
+      </label>
+
       <select id="builderPackage">
-        <option value="standard">Standard</option>
-        <option value="premium">Premium</option>
+
+        <option value="standard">
+
+          Standard
+
+        </option>
+
+        <option value="premium">
+
+          Premium
+
+        </option>
+
       </select>
 
-      <label>Pricing Mode</label>
+    </div>
+
+    <div class="field">
+
+      <label>
+
+        Pricing Mode
+
+      </label>
+
       <select id="builderPricingMode">
-        <option value="balanced">Balanced</option>
-        <option value="win">Win Job</option>
+
+        <option value="balanced">
+
+          Balanced
+
+        </option>
+
+        <option value="win">
+
+          Win Job
+
+        </option>
+
+        <option value="max">
+
+          Max Profit
+
+        </option>
+
       </select>
 
-      <label>Competitor Price (optional)</label>
-      <input id="builderCompetitor" type="number" placeholder="0" />
-
-      <button class="btn primary" onclick="calculateBuilderUI()">
-        Calculate Builder Project
-      </button>
-       
-      <button class="btn gold" onclick="saveBuilderToCRM()">
-
-  Save to CRM
-
-</button>
     </div>
 
-    <!-- ===== RESULTS ===== -->
-    <div id="builderResults"></div>
+    <div class="field">
 
-    <!-- ===== SCHEDULE ===== -->
-    <div class="card">
-      <h3>Project Schedule</h3>
-      <div id="builderSchedule"></div>
+      <label>
+
+        Competitor Price
+
+      </label>
+
+      <input
+
+        id="builderCompetitor"
+
+        type="number"
+
+        placeholder="0"
+
+      />
+
     </div>
 
-  </main>
+  </div>
 
-  <!-- ===== SCRIPTS ===== -->
-  <script src="./js/state.js"></script>
+  <div class="nav-row mt-18">
+
+    <button
+
+      class="btn-gold"
+
+      data-action="calculateBuilder"
+
+    >
+
+      Calculate Builder Project
+
+    </button>
+
+    <button
+
+      class="btn-gold"
+
+      data-action="saveBuilderCRM"
+
+    >
+
+      Save to CRM
+
+    </button>
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     RESULTS
+
+===================================== -->
+
+<section class="section-space">
+
+  <div id="builderResults"></div>
+
+</section>
+
+<!-- =====================================
+
+     SCHEDULE
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Project Schedule
+
+  </div>
+
+  <div id="builderSchedule"></div>
+
+</section>
+
+<!-- =====================================
+
+     BUILDER PIPELINE PREVIEW
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Builder CRM Projects
+
+  </div>
+
+  <div class="card-sub">
+
+    Builder projects automatically connect
+
+    into the CRM pipeline system.
+
+  </div>
+
+  <div id="builderCRMPreview"></div>
+
+</section>
+
+</main>
+
+<!-- =====================================
+
+     BUILDER HELPERS
+
+===================================== -->
+
+<script>
+
+window.addEventListener("load", function () {
+
+  refreshBuilderPage();
+
+});
+
+function refreshBuilderPage() {
+
+  try {
+
+    if (window.renderBuilderCRMPreview) {
+
+      renderBuilderCRMPreview();
+
+    }
+
+    if (window.showToast) {
+
+      showToast("Builder Page Refreshed", "success");
+
+    }
+
+  } catch (e) {
+
+    console.error("refreshBuilderPage failed:", e);
+
+  }
+
+}
+
+function renderBuilderCRMPreview() {
+
+  const wrap =
+
+    document.getElementById("builderCRMPreview");
+
+  if (!wrap) return;
+
+  try {
+
+    const list = JSON.parse(
+
+      localStorage.getItem("soda_proposals") || "[]"
+
+    );
+
+    const builders = list.filter(
+
+      p => p.isBuilderProject
+
+    );
+
+    if (!builders.length) {
+
+      wrap.innerHTML =
+
+        `<div class="card-sub">No builder projects yet.</div>`;
+
+      return;
+
+    }
+
+    wrap.innerHTML = builders.map(p => `
+
+      <div class="history-card">
+
+        <div class="history-top">
+
+          <strong>
+
+            ${safe(p.customer || "Builder")}
+
+          </strong>
+
+          <span>
+
+            ${p.status || "Proposal"}
+
+          </span>
+
+        </div>
+
+        <div class="history-details">
+
+          ${safe(p.projectName || "")}
+
+        </div>
+
+        <div class="history-date mt-10">
+
+          Houses:
+
+          ${Number(p.houses || 0)}
+
+        </div>
+
+        <div class="history-date">
+
+          Total:
+
+          $${Number(p.total || 0).toFixed(0)}
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+  } catch (e) {
+
+    console.error(e);
+
+  }
+
+}
+
+function safe(str) {
+
+  return String(str || "")
+
+    .replaceAll("&", "&amp;")
+
+    .replaceAll("<", "&lt;")
+
+    .replaceAll(">", "&gt;");
+
+}
+
+</script>
+
+<!-- =====================================
+
+     SCRIPTS
+
+===================================== -->
+
+<script src="./js/shield.js"></script>
+
+<script src="./js/state.js"></script>
 
 <script src="./js/core.js"></script>
+
+<script src="./js/inventory.js"></script>
+
+<script src="./js/crm.js"></script>
 
 <script src="./js/ui.js"></script>
 
 <script src="./js/app.js"></script>
 
 <script src="./js/builder.js"></script>
+
+</body>
+
+</html>

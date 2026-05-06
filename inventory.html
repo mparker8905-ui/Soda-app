@@ -24,497 +24,589 @@
 
   />
 
- <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css">
 
 </head>
 
 <body>
 
-  <!-- =====================================
+<!-- =====================================
 
-       GLOBAL HEADER
+     HEADER
 
-  ====================================== -->
+===================================== -->
 
-  <header class="topbar">
+<header class="topbar">
 
-    <div class="brand-wrap">
+  <div class="brand-wrap">
 
-      <div class="brand-left">
+    <div>
 
-        <div>
+      <div class="brand-text">
 
-          <div class="brand-text">SoDa Outdoor Designs</div>
+        SoDa Outdoor Designs
 
-          <div class="brand-sub">
+      </div>
 
-            Inventory Management System
+      <div class="brand-sub">
 
-          </div>
+        Inventory Management System
+
+      </div>
+
+    </div>
+
+    <img
+
+      src="/logo.PNG"
+
+      class="brand-logo"
+
+      id="logoImg"
+
+    />
+
+  </div>
+
+  <div class="gold-divider"></div>
+
+</header>
+
+<!-- =====================================
+
+     MAIN
+
+===================================== -->
+
+<main class="page-shell">
+
+<!-- =====================================
+
+     NAV
+
+===================================== -->
+
+<section class="nav-row">
+
+  <a href="index.html" class="nav-btn">
+
+    ← Calculator
+
+  </a>
+
+  <a href="crm.html" class="nav-btn">
+
+    CRM
+
+  </a>
+
+  <a href="builder.html" class="nav-btn">
+
+    Builder
+
+  </a>
+
+  <button
+
+    class="btn-gold"
+
+    data-action="refreshInventory"
+
+  >
+
+    Refresh
+
+  </button>
+
+</section>
+
+<!-- =====================================
+
+     INTRO
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Inventory Manager
+
+  </div>
+
+  <div class="card-sub">
+
+    Manage materials,
+
+    quantities,
+
+    costs,
+
+    shortages,
+
+    and real-time stock values.
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     VALUE CARDS
+
+===================================== -->
+
+<section class="grid-2 section-space">
+
+  <div class="card">
+
+    <div class="card-sub">Standard Inventory</div>
+
+    <div id="invStandardValue" class="score-big good">$0</div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-sub">Premium Inventory</div>
+
+    <div id="invPremiumValue" class="score-big good">$0</div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-sub">Add-On Inventory</div>
+
+    <div id="invAddonValue" class="score-big good">$0</div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-sub">Total Inventory Value</div>
+
+    <div id="invTotalValue" class="score-big warn">$0</div>
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     STANDARD
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Standard Materials
+
+  </div>
+
+  <div class="card-sub">
+
+    Seed, fertilizer, mulch, tackifier, etc.
+
+  </div>
+
+  <div id="standardMaterials"></div>
+
+  <div class="nav-row mt-18">
+
+    <button
+
+      class="btn-gold"
+
+      data-action="addStandardMaterial"
+
+    >
+
+      + Add Standard Material
+
+    </button>
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     PREMIUM
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Premium Materials
+
+  </div>
+
+  <div class="card-sub">
+
+    Compost, biochar, humic, premium soil inputs.
+
+  </div>
+
+  <div id="premiumMaterials"></div>
+
+  <div class="nav-row mt-18">
+
+    <button
+
+      class="btn-gold"
+
+      data-action="addPremiumMaterial"
+
+    >
+
+      + Add Premium Material
+
+    </button>
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     ADDONS
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Add-On Materials
+
+  </div>
+
+  <div class="card-sub">
+
+    Lime, sulfur, sprinklers, timers, extras.
+
+  </div>
+
+  <div id="addonMaterials"></div>
+
+  <div class="nav-row mt-18">
+
+    <button
+
+      class="btn-gold"
+
+      data-action="addAddonMaterial"
+
+    >
+
+      + Add Add-On Material
+
+    </button>
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     CONTROLS
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Inventory Controls
+
+  </div>
+
+  <div class="nav-row mt-14">
+
+    <button
+
+      class="btn-gold"
+
+      data-action="saveInventory"
+
+    >
+
+      Save Inventory
+
+    </button>
+
+    <button
+
+      class="btn"
+
+      data-action="reloadInventory"
+
+    >
+
+      Reload
+
+    </button>
+
+    <button
+
+      class="btn"
+
+      data-action="exportInventory"
+
+    >
+
+      Export JSON
+
+    </button>
+
+    <button
+
+      class="btn-red"
+
+      data-action="clearInventory"
+
+    >
+
+      Clear All
+
+    </button>
+
+  </div>
+
+  <div class="card-sub mt-18">
+
+    Inventory updates automatically feed
+
+    job costing,
+
+    shortage alerts,
+
+    and proposal pricing.
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     TOTALS
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Live Inventory Totals
+
+  </div>
+
+  <div id="inventoryTotals"></div>
+
+</section>
+
+</main>
+
+<!-- =====================================
+
+     PAGE HELPERS
+
+===================================== -->
+
+<script>
+
+window.addEventListener("load", function () {
+
+  if (window.loadInventory) {
+
+    loadInventory();
+
+  }
+
+  renderInventoryTotals();
+
+});
+
+function refreshInventoryPage() {
+
+  try {
+
+    if (window.loadInventory) {
+
+      loadInventory();
+
+    }
+
+    renderInventoryTotals();
+
+    if (window.showToast) {
+
+      showToast("Inventory Refreshed", "success");
+
+    }
+
+  } catch (e) {
+
+    console.error("refreshInventoryPage failed:", e);
+
+  }
+
+}
+
+function renderInventoryTotals() {
+
+  if (
+
+    typeof getInventoryCost !== "function" ||
+
+    typeof getInventoryTotals !== "function"
+
+  ) return;
+
+  const costs = getInventoryCost();
+
+  const totals = getInventoryTotals();
+
+  setText("invStandardValue", "$" + costs.standard.toFixed(0));
+
+  setText("invPremiumValue", "$" + costs.premium.toFixed(0));
+
+  setText("invAddonValue", "$" + costs.addons.toFixed(0));
+
+  setText("invTotalValue", "$" + costs.total.toFixed(0));
+
+  const list =
+
+    document.getElementById("inventoryTotals");
+
+  if (!list) return;
+
+  const rows = Object.keys(totals).map(key => {
+
+    const qty =
+
+      Number(totals[key] || 0);
+
+    const unit =
+
+      window.MATERIAL_RATES?.[key]?.unit || "units";
+
+    return `
+
+      <div class="metric">
+
+        <div class="metric-label">
+
+          ${key.toUpperCase()}
+
+        </div>
+
+        <div class="metric-value">
+
+          ${qty.toFixed(1)} ${unit}
 
         </div>
 
       </div>
 
-      <img
+    `;
 
-        src="/logo.PNG"
+  });
 
-        alt="SoDa Outdoor Designs Logo"
+  list.innerHTML = rows.length
 
-        class="brand-logo"
+    ? rows.join("")
 
-        onerror="this.style.display='none'"
+    : `<div class="card-sub">No materials saved yet.</div>`;
 
-      />
+}
 
-    </div>
+function exportInventoryJSON() {
 
-    <div class="gold-divider"></div>
+  try {
 
-  </header>
+    const data =
 
-  <!-- =====================================
+      localStorage.getItem("inventory_full") || "{}";
 
-       PAGE CONTENT
+    const blob = new Blob(
 
-  ====================================== -->
+      [data],
 
-  <main class="page-shell">
+      { type: "application/json" }
 
-    <!-- =====================================
+    );
 
-         NAVIGATION
+    const url =
 
-    ====================================== -->
+      URL.createObjectURL(blob);
 
-    <section class="nav-row">
+    const a =
 
-      <a href="index.html" class="nav-btn">
+      document.createElement("a");
 
-        ← Calculator
+    a.href = url;
 
-      </a>
+    a.download = "soda_inventory.json";
 
-      <a href="crm.html" class="nav-btn">
+    a.click();
 
-        CRM
+    URL.revokeObjectURL(url);
 
-      </a>
+  } catch (e) {
 
-      <button
+    console.error(e);
 
-        class="nav-btn gold"
+    alert("Export failed");
 
-        onclick="loadInventory(); if(window.renderInventoryTotals) renderInventoryTotals();"
+  }
 
-      >
+}
 
-    <button data-action="refresh">Refresh</button>
+function clearInventoryData() {
 
-    </section>
+  if (!confirm("Clear all inventory data?"))
 
-    <!-- =====================================
+    return;
 
-         PAGE INTRO
+  localStorage.removeItem("inventory_full");
 
-    ====================================== -->
+  if (window.loadInventory) {
 
-    <section class="card section-space">
+    loadInventory();
 
-      <div class="card-title">Inventory Manager</div>
+  }
 
-      <div class="card-sub">
+  renderInventoryTotals();
 
-        Manage materials, quantities, costs, shortages,
+}
 
-        and real-time stock values.
+function setText(id, value) {
 
-      </div>
+  const el =
 
-    </section>
+    document.getElementById(id);
 
-    <!-- =====================================
+  if (el) {
 
-         VALUE CARDS
+    el.innerText = value;
 
-    ====================================== -->
+  }
 
-    <section class="grid-2 section-space">
+}
 
-      <div class="card">
+</script>
 
-        <div class="card-sub">Standard Inventory</div>
+<!-- =====================================
 
-        <div id="invStandardValue" class="score-big good">$0</div>
+     SCRIPTS
 
-      </div>
-
-      <div class="card">
-
-        <div class="card-sub">Premium Inventory</div>
-
-        <div id="invPremiumValue" class="score-big good">$0</div>
-
-      </div>
-
-      <div class="card">
-
-        <div class="card-sub">Add-On Inventory</div>
-
-        <div id="invAddonValue" class="score-big good">$0</div>
-
-      </div>
-
-      <div class="card">
-
-        <div class="card-sub">Total Inventory Value</div>
-
-        <div id="invTotalValue" class="score-big warn">$0</div>
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         STANDARD MATERIALS
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Standard Materials</div>
-
-      <div class="card-sub">
-
-        Seed, fertilizer, mulch, tackifier, etc.
-
-      </div>
-
-      <div id="standardMaterials"></div>
-
-      <div class="nav-row mt-18">
-
-        <button
-
-          class="nav-btn gold"
-
-          onclick="addMaterialRow('standard')"
-
-        >
-
-          + Add Standard Material
-
-        </button>
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         PREMIUM MATERIALS
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Premium Materials</div>
-
-      <div class="card-sub">
-
-        Compost, biochar, humic, premium soil inputs.
-
-      </div>
-
-      <div id="premiumMaterials"></div>
-
-      <div class="nav-row mt-18">
-
-        <button
-
-          class="nav-btn gold"
-
-          onclick="addMaterialRow('premium')"
-
-        >
-
-          + Add Premium Material
-
-        </button>
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         ADDON MATERIALS
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Add-On Materials</div>
-
-      <div class="card-sub">
-
-        Lime, sulfur, sprinklers, timers, extras.
-
-      </div>
-
-      <div id="addonMaterials"></div>
-
-      <div class="nav-row mt-18">
-
-        <button
-
-          class="nav-btn gold"
-
-          onclick="addMaterialRow('addons')"
-
-        >
-
-          + Add Add-On Material
-
-        </button>
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         ACTION BUTTONS
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Inventory Controls</div>
-
-      <div class="nav-row mt-14">
-
-        <button
-
-          class="btn-gold"
-
-          onclick="saveInventory(); if(window.renderInventoryTotals) renderInventoryTotals();"
-
-        >
-
-          Save Inventory
-
-        </button>
-
-        <button
-
-          class="btn"
-
-          onclick="loadInventory(); if(window.renderInventoryTotals) renderInventoryTotals();"
-
-        >
-
-          Reload
-
-        </button>
-
-        <button
-
-          class="btn"
-
-          onclick="exportInventoryJSON()"
-
-        >
-
-          Export JSON
-
-        </button>
-
-        <button
-
-          class="btn-red"
-
-          onclick="clearInventoryData()"
-
-        >
-
-          Clear All
-
-        </button>
-
-      </div>
-
-      <div class="card-sub mt-18">
-
-        Inventory updates automatically feed job costing,
-
-        shortage alerts, and proposal pricing.
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         LIVE TOTALS / SHORTAGES
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Live Inventory Totals</div>
-
-      <div id="inventoryTotals"></div>
-
-    </section>
-
-  </main>
-
-
-
-  <!-- =====================================
-
-       PAGE INIT HELPERS
-
-  ====================================== -->
-
-  <script>
-
-    window.addEventListener("load", () => {
-
-      if (typeof loadInventory === "function") loadInventory();
-
-      if (typeof renderInventoryTotals === "function") renderInventoryTotals();
-
-    });
-
-    function renderInventoryTotals(){
-
-      if(
-
-        typeof getInventoryCost !== "function" ||
-
-        typeof getInventoryTotals !== "function"
-
-      ) return;
-
-      const costs = getInventoryCost();
-
-      const totals = getInventoryTotals();
-
-      const elStandard = document.getElementById("invStandardValue");
-
-      const elPremium  = document.getElementById("invPremiumValue");
-
-      const elAddon    = document.getElementById("invAddonValue");
-
-      const elTotal    = document.getElementById("invTotalValue");
-
-      const list       = document.getElementById("inventoryTotals");
-
-      if(elStandard) elStandard.innerText = "$" + costs.standard.toFixed(0);
-
-      if(elPremium)  elPremium.innerText  = "$" + costs.premium.toFixed(0);
-
-      if(elAddon)    elAddon.innerText    = "$" + costs.addons.toFixed(0);
-
-      if(elTotal)    elTotal.innerText    = "$" + costs.total.toFixed(0);
-
-      if(list){
-
-        const rows = Object.keys(totals).map(key => {
-
-          const qty = Number(totals[key] || 0);
-
-          const unit =
-
-            window.MATERIAL_RATES?.[key]?.unit || "units";
-
-          return `
-
-            <div class="metric">
-
-              <div class="metric-label">${key.toUpperCase()}</div>
-
-              <div class="metric-value">
-
-                ${qty.toFixed(1)} ${unit}
-
-              </div>
-
-            </div>
-
-          `;
-
-        });
-
-        list.innerHTML = rows.length
-
-          ? rows.join("")
-
-          : `<div class="card-sub">No materials saved yet.</div>`;
-
-      }
-
-    }
-
-    function exportInventoryJSON(){
-
-      try{
-
-        const data =
-
-          localStorage.getItem("inventory_full") || "{}";
-
-        const blob = new Blob(
-
-          [data],
-
-          { type:"application/json" }
-
-        );
-
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-
-        a.href = url;
-
-        a.download = "soda_inventory.json";
-
-        a.click();
-
-        URL.revokeObjectURL(url);
-
-      }catch(e){
-
-        alert("Export failed");
-
-      }
-
-    }
-
-    function clearInventoryData(){
-
-      if(!confirm("Clear all inventory data?")) return;
-
-      localStorage.removeItem("inventory_full");
-
-      if(typeof loadInventory === "function") loadInventory();
-
-      renderInventoryTotals();
-
-    }
-
-  </script>
-
-  <!-- =====================================
-
-       SCRIPTS
-
-  ====================================== -->
+===================================== -->
 
 <script src="./js/shield.js"></script>
 

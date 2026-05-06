@@ -24,552 +24,597 @@
 
   />
 
- <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css">
 
 </head>
 
 <body>
 
-  <!-- =====================================
+<!-- =====================================
 
-       GLOBAL HEADER
+     HEADER
 
-  ====================================== -->
+===================================== -->
 
-  <header class="topbar">
+<header class="topbar">
 
-    <div class="brand-wrap">
+  <div class="brand-wrap">
 
-      <div class="brand-left">
+    <div>
 
-        <div>
+      <div class="brand-text">
 
-          <div class="brand-text">SoDa Outdoor Designs</div>
-
-          <div class="brand-sub">
-
-            Sales CRM Pipeline
-
-          </div>
-
-        </div>
+        SoDa Outdoor Designs
 
       </div>
 
-      <img
+      <div class="brand-sub">
 
-        src="/logo.png"
+        Sales CRM Pipeline
 
-        alt="SoDa Outdoor Designs Logo"
+      </div>
 
-        class="brand-logo"
+    </div>
 
-        onerror="this.style.display='none'"
+    <img
+
+      src="/logo.PNG"
+
+      class="brand-logo"
+
+      id="logoImg"
+
+    />
+
+  </div>
+
+  <div class="gold-divider"></div>
+
+</header>
+
+<!-- =====================================
+
+     MAIN
+
+===================================== -->
+
+<main class="page-shell">
+
+<!-- =====================================
+
+     NAV
+
+===================================== -->
+
+<section class="nav-row">
+
+  <a href="index.html" class="nav-btn">
+
+    ← Calculator
+
+  </a>
+
+  <a href="inventory.html" class="nav-btn">
+
+    Inventory
+
+  </a>
+
+  <a href="builder.html" class="nav-btn">
+
+    Builder
+
+  </a>
+
+  <button
+
+    data-action="refreshCRM"
+
+    class="btn-gold"
+
+  >
+
+    Refresh CRM
+
+  </button>
+
+</section>
+
+<!-- =====================================
+
+     INTRO
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Sales CRM Pipeline
+
+  </div>
+
+  <div class="card-sub">
+
+    Manage leads, proposals,
+
+    pending jobs, accepted deals,
+
+    and lost opportunities.
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     CREATE LEAD
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Create New Lead
+
+  </div>
+
+  <div class="grid-2">
+
+    <div class="field">
+
+      <label>Customer Name</label>
+
+      <input
+
+        id="customer"
+
+        type="text"
+
+        placeholder="Customer Name"
 
       />
 
     </div>
 
-    <div class="gold-divider"></div>
+    <div class="field">
 
-  </header>
+      <label>Project Address</label>
 
-  <!-- =====================================
+      <input
 
-       PAGE CONTENT
+        id="address"
 
-  ====================================== -->
+        type="text"
 
-  <main class="page-shell">
+        placeholder="Project Address"
 
-    <!-- =====================================
-
-         NAVIGATION
-
-    ====================================== -->
-
-    <section class="nav-row">
-
-      <a href="index.html" class="nav-btn">
-
-        ← Calculator
-
-      </a>
-
-      <a href="inventory.html" class="nav-btn">
-
-        Inventory
-
-      </a>
-
-      <button
-
-        class="nav-btn gold"
-
-        onclick="renderPipeline()"
-
-      >
-
-    <button data-action="refresh">Refresh</button>
-
- </section>
-
-    <!-- =====================================
-
-         PAGE INTRO
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Sales CRM Pipeline</div>
-
-      <div class="card-sub">
-
-        Manage leads, proposals, pending jobs,
-
-        accepted deals and lost opportunities.
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         QUICK LEAD FORM
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Create New Lead</div>
-
-      <div class="grid-2">
-
-        <div class="field">
-
-          <label for="customer">Customer Name</label>
-
-          <input
-
-            id="customer"
-
-            type="text"
-
-            placeholder="Customer Name"
-
-          />
-
-        </div>
-
-        <div class="field">
-
-          <label for="address">Project Address</label>
-
-          <input
-
-            id="address"
-
-            type="text"
-
-            placeholder="Project Address"
-
-          />
-
-        </div>
-
-      </div>
-
-      <div class="nav-row mt-18">
-
-        <button
-
-          class="btn-gold"
-
-          onclick="createLead()"
-
-        >
-
-          + Add Lead
-
-        </button>
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         KPI CARDS
-
-    ====================================== -->
-
-    <section class="grid-2 section-space">
-
-      <div class="card">
-
-        <div class="card-sub">Total Leads</div>
-
-        <div id="crmLeads" class="score-big warn">0</div>
-
-      </div>
-
-      <div class="card">
-
-        <div class="card-sub">Proposals</div>
-
-        <div id="crmProposals" class="score-big warn">0</div>
-
-      </div>
-
-      <div class="card">
-
-        <div class="card-sub">Won Jobs</div>
-
-        <div id="crmWon" class="score-big good">0</div>
-
-      </div>
-
-      <div class="card">
-
-        <div class="card-sub">Lost Jobs</div>
-
-        <div id="crmLost" class="score-big bad">0</div>
-
-      </div>
-
-    </section>
-
-    <!-- =====================================
-
-         PIPELINE BOARD
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">Pipeline Board</div>
-
-      <div class="card-sub">
-
-        Tap any record to manage status.
-
-      </div>
-
-      <div id="jobHistoryList"></div>
-
-    </section>
-
-    <!-- =====================================
-
-         FULL CUSTOMER LIST
-
-    ====================================== -->
-
-    <section class="card section-space">
-
-      <div class="card-title">All Records</div>
-
-      <div id="crmList"></div>
-
-    </section>
-
-  </main>
-
-  <!-- =====================================
-
-       MODAL
-
-  ====================================== -->
-
-  <div
-
-    id="proposalModal"
-
-    class="modal"
-
-    onclick="handleModalBackground(event)"
-
-  >
-
-    <div class="modal-content proposal-content">
-
-      <h2 id="modalCustomer">Customer</h2>
-
-      <div
-
-        id="modalAddress"
-
-        class="card-sub mt-10"
-
-      ></div>
-
-      <div
-
-        id="modalBody"
-
-        class="mt-18"
-
-      ></div>
-
-      <div class="nav-row mt-18">
-
-        <button
-
-          class="btn-green"
-
-          onclick="setProposalStatus('Accepted')"
-
-        >
-
-          Won
-
-        </button>
-
-        <button
-
-          class="btn"
-
-          onclick="setProposalStatus('Pending')"
-
-        >
-
-          Pending
-
-        </button>
-
-        <button
-
-          class="btn-red"
-
-          onclick="setProposalStatus('Not Accepted')"
-
-        >
-
-          Lost
-
-        </button>
-
-        <button
-
-          class="btn"
-
-          onclick="deleteProposalById(activeProposalId)"
-
-        >
-
-          Delete
-
-        </button>
-
-        <button
-
-          class="btn"
-
-          onclick="closeProposalModal()"
-
-        >
-
-          Close
-
-        </button>
-
-      </div>
+      />
 
     </div>
 
   </div>
 
+  <div class="nav-row mt-18">
 
-  <!-- =====================================
+    <button
 
-       PAGE HELPERS
+      data-action="createLead"
 
-  ====================================== -->
+      class="btn-gold"
 
-  <script>
+    >
 
-    window.addEventListener("load", () => {
+      + Add Lead
 
-      refreshCRM();
+    </button>
 
-    });
+  </div>
 
-    function refreshCRM(){
+</section>
 
-      if(typeof renderPipeline === "function"){
+<!-- =====================================
 
-        renderPipeline();
+     KPI CARDS
 
-      }
+===================================== -->
 
-      renderCRMStats();
+<section class="grid-2 section-space">
 
-      renderCRMList();
+  <div class="card">
+
+    <div class="card-sub">Total Leads</div>
+
+    <div id="crmLeads" class="score-big warn">0</div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-sub">Proposals</div>
+
+    <div id="crmProposals" class="score-big warn">0</div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-sub">Won Jobs</div>
+
+    <div id="crmWon" class="score-big good">0</div>
+
+  </div>
+
+  <div class="card">
+
+    <div class="card-sub">Lost Jobs</div>
+
+    <div id="crmLost" class="score-big bad">0</div>
+
+  </div>
+
+</section>
+
+<!-- =====================================
+
+     PIPELINE
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    Pipeline Board
+
+  </div>
+
+  <div class="card-sub">
+
+    Tap any record to manage status.
+
+  </div>
+
+  <div id="jobHistoryList"></div>
+
+</section>
+
+<!-- =====================================
+
+     FULL LIST
+
+===================================== -->
+
+<section class="card section-space">
+
+  <div class="card-title">
+
+    All Records
+
+  </div>
+
+  <div id="crmList"></div>
+
+</section>
+
+</main>
+
+<!-- =====================================
+
+     MODAL
+
+===================================== -->
+
+<div
+
+  id="proposalModal"
+
+  class="modal"
+
+>
+
+  <div class="modal-content proposal-content">
+
+    <h2 id="modalCustomer">
+
+      Customer
+
+    </h2>
+
+    <div
+
+      id="modalAddress"
+
+      class="card-sub mt-10"
+
+    ></div>
+
+    <div
+
+      id="modalBody"
+
+      class="mt-18"
+
+    ></div>
+
+    <div class="nav-row mt-18">
+
+      <button
+
+        class="btn-green"
+
+        data-action="acceptProposal"
+
+      >
+
+        Won
+
+      </button>
+
+      <button
+
+        class="btn"
+
+        data-action="pendingProposal"
+
+      >
+
+        Pending
+
+      </button>
+
+      <button
+
+        class="btn-red"
+
+        data-action="loseProposal"
+
+      >
+
+        Lost
+
+      </button>
+
+      <button
+
+        class="btn"
+
+        data-action="deleteProposal"
+
+      >
+
+        Delete
+
+      </button>
+
+      <button
+
+        class="btn"
+
+        data-action="closeModal"
+
+      >
+
+        Close
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- =====================================
+
+     CRM HELPERS
+
+===================================== -->
+
+<script>
+
+function refreshCRM() {
+
+  try {
+
+    if (window.renderPipeline) {
+
+      renderPipeline();
 
     }
 
-    function renderCRMStats(){
+    renderCRMStats();
 
-      const list = getCRMData();
+    renderCRMList();
 
-      const leads = list.filter(
+    if (window.showToast) {
 
-        x => x.stage === "lead"
-
-      ).length;
-
-      const proposals = list.filter(
-
-        x => x.stage === "proposal"
-
-      ).length;
-
-      const won = list.filter(
-
-        x => x.status === "Accepted"
-
-      ).length;
-
-      const lost = list.filter(
-
-        x => x.status === "Not Accepted"
-
-      ).length;
-
-      setText("crmLeads", leads);
-
-      setText("crmProposals", proposals);
-
-      setText("crmWon", won);
-
-      setText("crmLost", lost);
+      showToast("CRM Refreshed", "success");
 
     }
 
-    function renderCRMList(){
+  } catch (e) {
 
-      const list = getCRMData();
+    console.error("refreshCRM failed:", e);
 
-      const wrap = document.getElementById("crmList");
+  }
 
-      if(!wrap) return;
+}
 
-      if(!list.length){
+function renderCRMStats() {
 
-        wrap.innerHTML =
+  const list = getCRMData();
 
-          `<div class="card-sub">No records yet.</div>`;
+  const leads = list.filter(
 
-        return;
+    x => x.stage === "lead"
 
-      }
+  ).length;
 
-      wrap.innerHTML = list
+  const proposals = list.filter(
 
-        .sort((a,b)=>
+    x => x.stage === "proposal"
 
-          Number(b.createdAt||0) -
+  ).length;
 
-          Number(a.createdAt||0)
+  const won = list.filter(
 
-        )
+    x => x.status === "Accepted"
 
-        .map(item => {
+  ).length;
 
-          const amount =
+  const lost = list.filter(
 
-            Number(item.total || 0).toFixed(0);
+    x => x.status === "Not Accepted"
 
-          const status =
+  ).length;
 
-            item.status || "New Lead";
+  setText("crmLeads", leads);
 
-          return `
+  setText("crmProposals", proposals);
 
-            <div
+  setText("crmWon", won);
 
-              class="history-card"
+  setText("crmLost", lost);
 
-              onclick="openProposal(${item.id})"
+}
 
-            >
+function renderCRMList() {
 
-              <div class="history-top">
+  const list = getCRMData();
 
-                <strong>${safe(item.customer || "Lead")}</strong>
+  const wrap =
 
-                <span>${status}</span>
+    document.getElementById("crmList");
 
-              </div>
+  if (!wrap) return;
 
-              <div class="history-details">
+  if (!list.length) {
 
-                ${safe(item.address || "")}
+    wrap.innerHTML =
 
-              </div>
+      `<div class="card-sub">No records yet.</div>`;
 
-              <div class="history-date mt-10">
+    return;
 
-                $${amount}
+  }
 
-              </div>
+  wrap.innerHTML = list
 
-            </div>
+    .sort((a, b) =>
 
-          `;
+      Number(b.createdAt || 0) -
 
-        })
+      Number(a.createdAt || 0)
 
-        .join("");
+    )
 
-    }
+    .map(item => {
 
-    function getCRMData(){
+      const amount =
 
-      try{
+        Number(item.total || 0).toFixed(0);
 
-        return JSON.parse(
+      const status =
 
-          localStorage.getItem("soda_proposals") || "[]"
+        item.status || "New Lead";
 
-        );
+      return `
 
-      }catch(e){
+        <div
 
-        return [];
+          class="history-card"
 
-      }
+          data-open-proposal="${item.id}"
 
-    }
+        >
 
-    function setText(id,val){
+          <div class="history-top">
 
-      const el = document.getElementById(id);
+            <strong>${safe(item.customer || "Lead")}</strong>
 
-      if(el) el.innerText = val;
+            <span>${status}</span>
 
-    }
+          </div>
 
-    function safe(str){
+          <div class="history-details">
 
-      return String(str)
+            ${safe(item.address || "")}
 
-        .replaceAll("&","&amp;")
+          </div>
 
-        .replaceAll("<","&lt;")
+          <div class="history-date mt-10">
 
-        .replaceAll(">","&gt;");
+            $${amount}
 
-    }
+          </div>
 
-  </script>
+        </div>
 
-  <!-- =====================================
+      `;
 
-       SCRIPTS
+    })
 
-  ====================================== -->
+    .join("");
+
+}
+
+function getCRMData() {
+
+  try {
+
+    return JSON.parse(
+
+      localStorage.getItem("soda_proposals") || "[]"
+
+    );
+
+  } catch (e) {
+
+    return [];
+
+  }
+
+}
+
+function setText(id, val) {
+
+  const el = document.getElementById(id);
+
+  if (el) {
+
+    el.innerText = val;
+
+  }
+
+}
+
+function safe(str) {
+
+  return String(str)
+
+    .replaceAll("&", "&amp;")
+
+    .replaceAll("<", "&lt;")
+
+    .replaceAll(">", "&gt;");
+
+}
+
+window.addEventListener("load", function () {
+
+  refreshCRM();
+
+});
+
+</script>
+
+<!-- =====================================
+
+     SCRIPTS
+
+===================================== -->
 
 <script src="./js/shield.js"></script>
 
