@@ -1255,53 +1255,170 @@ window.manualRefresh = function () {
 };
 
 
+/* =====================================
+
+   GLOBAL EVENT SYSTEM (REQUIRED)
+
+===================================== */
+
 document.addEventListener("click", function (e) {
+
+  const btn = e.target.closest("[data-action]");
+
+  if (!btn) return;
+
+  const action = btn.dataset.action;
 
   try {
 
-    const btn = e.target.closest("[data-action]");
-
-    if (!btn) return;
-
-    const action = btn.dataset.action;
-
     switch (action) {
+
+      case "refresh":
+
+        requestRender();
+
+        showToast("Refreshed", "success");
+
+        break;
+
+      case "calculateJob":
+
+        requestRender();
+
+        break;
 
       case "createLead":
 
-        window.createLead?.();
+        if (window.createLead) createLead();
 
         break;
 
       case "sendProposal":
 
-        window.sendProposal?.();
+        if (window.sendProposal) sendProposal();
+
+        break;
+
+      case "acceptProposal":
+
+        if (window.setProposalStatus)
+
+          setProposalStatus("Accepted");
+
+        break;
+
+      case "pendingProposal":
+
+        if (window.setProposalStatus)
+
+          setProposalStatus("Pending");
+
+        break;
+
+      case "loseProposal":
+
+        if (window.setProposalStatus)
+
+          setProposalStatus("Not Accepted");
 
         break;
 
       case "closeModal":
 
-        window.closeProposalModal?.();
+        if (window.closeProposalModal)
+
+          closeProposalModal();
 
         break;
+       case "refreshCRM":
 
-      case "refresh":
+  if (window.refreshCRM)
 
-        window.render?.();
+    refreshCRM();
 
-        window.renderPipeline?.();
+  break;
 
-        window.loadInventory?.();
+case "deleteProposal":
 
-        break;
+  if (
 
-      case "deleteProposal":
+    window.deleteProposalById &&
 
-        const id = btn.dataset.id;
+    window.activeProposalId
 
-        window.deleteProposalById?.(Number(id));
+  ) {
 
-        break;
+    deleteProposalById(activeProposalId);
+
+  }
+
+  break;
+
+case "refreshInventory":
+
+  refreshInventoryPage();
+
+  break;
+
+case "addStandardMaterial":
+
+  addMaterialRow("standard");
+
+  break;
+
+case "addPremiumMaterial":
+
+  addMaterialRow("premium");
+
+  break;
+
+case "addAddonMaterial":
+
+  addMaterialRow("addons");
+
+  break;
+
+case "reloadInventory":
+
+  loadInventory();
+
+  renderInventoryTotals();
+
+  break;
+
+case "exportInventory":
+
+  exportInventoryJSON();
+
+  break;
+
+case "clearInventory":
+
+  clearInventoryData();
+
+  break;
+
+case "refreshBuilder":
+
+  refreshBuilderPage();
+
+  break;
+
+case "calculateBuilder":
+
+  if (window.calculateBuilderUI)
+
+    calculateBuilderUI();
+
+  break;
+
+case "saveBuilderCRM":
+
+  if (window.saveBuilderToCRM)
+
+    saveBuilderToCRM();
+
+  break;
 
       default:
 
@@ -1311,7 +1428,7 @@ document.addEventListener("click", function (e) {
 
   } catch (err) {
 
-    console.error("Action handler failed:", err);
+    console.error("Action failed:", action, err);
 
   }
 
