@@ -38,15 +38,21 @@
 
       bindQuickActions();
 
+      bindTimelineHandler();
+
       initThemeHelpers();
 
-      bindTimelineHandler();
-   
       setInitialTimelineState();
 
     } catch (e) {
 
-      console.error("UI init failed:", e);
+      console.error(
+
+        "UI init failed:",
+
+        e
+
+      );
 
     }
 
@@ -108,9 +114,7 @@
 
             display: "flex",
 
-            flexDirection:
-
-              "column",
+            flexDirection: "column",
 
             gap: "10px"
 
@@ -160,19 +164,13 @@
 
           maxWidth: "340px",
 
-          padding:
+          padding: "12px 14px",
 
-            "12px 14px",
-
-          borderRadius:
-
-            "10px",
+          borderRadius: "10px",
 
           color: "#fff",
 
-          fontWeight:
-
-            "600",
+          fontWeight: "600",
 
           fontSize: "14px",
 
@@ -332,9 +330,7 @@
 
           {
 
-            position:
-
-              "fixed",
+            position: "fixed",
 
             inset: "0",
 
@@ -344,13 +340,9 @@
 
             display: "flex",
 
-            alignItems:
+            alignItems: "center",
 
-              "center",
-
-            justifyContent:
-
-              "center",
+            justifyContent: "center",
 
             zIndex: "999999"
 
@@ -380,11 +372,13 @@
 
           );
 
-        if (txt)
+        if (txt) {
 
           txt.innerText =
 
             text;
+
+        }
 
       }
 
@@ -436,9 +430,7 @@
 
         )
 
-      )
-
-        return;
+      ) return;
 
       const style =
 
@@ -620,9 +612,7 @@
 
             "Escape"
 
-          )
-
-            return;
+          ) return;
 
           document
 
@@ -634,11 +624,13 @@
 
             .forEach(
 
-              (m) =>
+              (m) => {
 
-                (m.style.display =
+                m.style.display =
 
-                  "none")
+                  "none";
+
+              }
 
             );
 
@@ -653,6 +645,188 @@
       }
 
     );
+
+  }
+
+  /* =====================================
+
+     TIMELINE BUTTONS
+
+  ===================================== */
+
+  function bindTimelineHandler() {
+
+    try {
+
+      document.addEventListener(
+
+        "click",
+
+        function (e) {
+
+          const el =
+
+            e.target.closest(
+
+              "[data-timeline]"
+
+            );
+
+          if (!el) return;
+
+          try {
+
+            document
+
+              .querySelectorAll(
+
+                "[data-timeline]"
+
+              )
+
+              .forEach(btn => {
+
+                btn.classList.remove(
+
+                  "active"
+
+                );
+
+              });
+
+            el.classList.add(
+
+              "active"
+
+            );
+
+            if (window.state?.ui) {
+
+              window.state.ui.timeline =
+
+                el.dataset.timeline;
+
+            }
+
+            if (
+
+              typeof window.showToast ===
+
+              "function"
+
+            ) {
+
+              showToast(
+
+                "Timeline: " +
+
+                el.dataset.timeline,
+
+                "success"
+
+              );
+
+            }
+
+            if (
+
+              typeof window.render ===
+
+              "function"
+
+            ) {
+
+              window.render();
+
+            }
+
+          } catch (err) {
+
+            console.error(
+
+              "Timeline failed:",
+
+              err
+
+            );
+
+          }
+
+        }
+
+      );
+
+    } catch (e) {
+
+      console.error(
+
+        "bindTimelineHandler failed:",
+
+        e
+
+      );
+
+    }
+
+  }
+
+  function setInitialTimelineState() {
+
+    try {
+
+      const active =
+
+        window.state?.ui?.timeline ||
+
+        "standard";
+
+      document
+
+        .querySelectorAll(
+
+          "[data-timeline]"
+
+        )
+
+        .forEach(btn => {
+
+          btn.classList.remove(
+
+            "active"
+
+          );
+
+        });
+
+      const current =
+
+        document.querySelector(
+
+          `[data-timeline="${active}"]`
+
+        );
+
+      if (current) {
+
+        current.classList.add(
+
+          "active"
+
+        );
+
+      }
+
+    } catch (e) {
+
+      console.error(
+
+        "setInitialTimelineState failed:",
+
+        e
+
+      );
+
+    }
 
   }
 
@@ -698,9 +872,7 @@
 
                     ?.addons
 
-                )
-
-                  return;
+                ) return;
 
                 const addons =
 
@@ -898,109 +1070,7 @@
 
   }
 
-  /* 
-
-//======================
-//BIND TIMELINE HANDLER
-//======================
-
-function bindTimelineHandler() {
-
-  document.addEventListener("click", function (e) {
-
-    const el = e.target.closest("[data-timeline]");
-
-    if (!el) return;
-
-    try {
-
-      // remove active from all
-
-      document
-
-        .querySelectorAll("[data-timeline]")
-
-        .forEach(x => x.classList.remove("active"));
-
-      // add active to clicked
-
-      el.classList.add("active");
-
-      // update state
-
-      if (window.state?.ui) {
-
-        window.state.ui.timeline = el.dataset.timeline;
-
-      }
-
-      // feedback
-
-      if (window.showToast) {
-
-        showToast("Timeline: " + el.dataset.timeline, "success");
-
-      }
-
-      // re-render app
-
-      if (window.render) {
-
-        window.render();
-
-      }
-
-    } catch (err) {
-
-      console.error("Timeline failed:", err);
-
-    }
-
-  });
-
-}
-
-//=====================
-//SET INITIAL TIMELINE
-//=====================
-
-function setInitialTimelineState() {
-
-  try {
-
-    const active =
-
-      window.state?.ui?.timeline || "standard";
-
-    // remove any existing active states
-
-    document
-
-      .querySelectorAll("[data-timeline]")
-
-      .forEach(el => el.classList.remove("active"));
-
-    // set correct one
-
-    const el =
-
-      document.querySelector(`[data-timeline="${active}"]`);
-
-    if (el) {
-
-      el.classList.add("active");
-
-    }
-
-  } catch (e) {
-
-    console.error("setInitialTimelineState failed:", e);
-
-  }
-
-}
-
-=====================================
+  /* =====================================
 
      FORMATTERS
 

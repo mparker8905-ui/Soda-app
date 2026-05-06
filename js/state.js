@@ -496,6 +496,8 @@
 
         "standard";
 
+      applyStateToUI();
+
     } catch (e) {}
 
   }
@@ -670,6 +672,12 @@
 
         );
 
+      /* ================================
+
+         ADDONS
+
+      ================================= */
+
       Object.keys(
 
         s.job.addons
@@ -702,23 +710,25 @@
 
       );
 
-      const timeline =
+      /* ================================
+
+         TIMELINE BUTTONS
+
+      ================================= */
+
+      const activeTimeline =
 
         document.querySelector(
 
-          'input[name="timeline"]:checked'
+          "[data-timeline].active"
 
         );
 
-      if (
-
-        timeline
-
-      ) {
+      if (activeTimeline) {
 
         s.ui.timeline =
 
-          timeline.value;
+          activeTimeline.dataset.timeline;
 
       }
 
@@ -886,6 +896,12 @@
 
       );
 
+      /* ================================
+
+         ADDON CHECKBOXES
+
+      ================================= */
+
       Object.keys(
 
         s.job.addons
@@ -924,19 +940,45 @@
 
       );
 
-      const radio =
+      /* ================================
 
-        document.querySelector(
+         TIMELINE BUTTONS
 
-          `input[name="timeline"][value="${s.ui.timeline}"]`
+      ================================= */
 
-        );
+      document
 
-      if (radio)
+        .querySelectorAll(
 
-        radio.checked =
+          "[data-timeline]"
 
-          true;
+        )
+
+        .forEach(btn => {
+
+          btn.classList.remove(
+
+            "active"
+
+          );
+
+          if (
+
+            btn.dataset.timeline ===
+
+            s.ui.timeline
+
+          ) {
+
+            btn.classList.add(
+
+              "active"
+
+            );
+
+          }
+
+        });
 
     } catch (e) {
 

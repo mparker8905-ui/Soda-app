@@ -46,27 +46,93 @@
 
   const MATERIAL_RATES = {
 
-    seed: { rate: 5, unit: "lbs" },
+    seed: {
 
-    fertilizer: { rate: 4, unit: "lbs" },
+      rate: 5,
 
-    mulch: { rate: 70, unit: "lbs" },
+      unit: "lbs"
 
-    tackifier: { rate: 3, unit: "lbs" },
+    },
 
-    compost: { rate: 0.5, unit: "yd3" },
+    fertilizer: {
 
-    biochar: { rate: 10, unit: "lbs" },
+      rate: 4,
 
-    humic: { rate: 1, unit: "lbs" },
+      unit: "lbs"
 
-    lime: { rate: 4, unit: "lbs" },
+    },
 
-    sulfur: { rate: 8, unit: "lbs" },
+    mulch: {
 
-    sprinklers: { rate: 1, unit: "units" },
+      rate: 70,
 
-    timers: { rate: 1, unit: "units" }
+      unit: "lbs"
+
+    },
+
+    tackifier: {
+
+      rate: 3,
+
+      unit: "lbs"
+
+    },
+
+    compost: {
+
+      rate: 0.5,
+
+      unit: "yd3"
+
+    },
+
+    biochar: {
+
+      rate: 10,
+
+      unit: "lbs"
+
+    },
+
+    humic: {
+
+      rate: 1,
+
+      unit: "lbs"
+
+    },
+
+    lime: {
+
+      rate: 4,
+
+      unit: "lbs"
+
+    },
+
+    sulfur: {
+
+      rate: 8,
+
+      unit: "lbs"
+
+    },
+
+    sprinklers: {
+
+      rate: 1,
+
+      unit: "units"
+
+    },
+
+    timers: {
+
+      rate: 1,
+
+      unit: "units"
+
+    }
 
   };
 
@@ -84,23 +150,49 @@
 
     const x = Number(v);
 
-    return Number.isFinite(x) ? x : d;
+    return Number.isFinite(x)
+
+      ? x
+
+      : d;
 
   }
 
   function pct(part, whole) {
 
-    return whole ? (part / whole) * 100 : 0;
+    return whole
+
+      ? (part / whole) * 100
+
+      : 0;
 
   }
 
-  function safeToast(msg, type = "info") {
+  function safeToast(
+
+    msg,
+
+    type = "info"
+
+  ) {
 
     try {
 
-      if (typeof window.showToast === "function") {
+      if (
 
-        window.showToast(msg, type);
+        typeof window.showToast ===
+
+        "function"
+
+      ) {
+
+        window.showToast(
+
+          msg,
+
+          type
+
+        );
 
       }
 
@@ -114,21 +206,41 @@
 
   ===================================== */
 
-  function getBuilderMultiplier(houses) {
+  function getBuilderMultiplier(
+
+    houses
+
+  ) {
 
     try {
 
-      houses = n(houses, 1);
+      houses = n(
 
-      if (houses <= 1) return 1;
+        houses,
 
-      if (houses <= 5) return 0.95;
+        1
 
-      if (houses <= 10) return 0.9;
+      );
 
-      if (houses <= 20) return 0.85;
+      if (houses <= 1)
 
-      if (houses <= 50) return 0.8;
+        return 1;
+
+      if (houses <= 5)
+
+        return 0.95;
+
+      if (houses <= 10)
+
+        return 0.90;
+
+      if (houses <= 20)
+
+        return 0.85;
+
+      if (houses <= 50)
+
+        return 0.80;
 
       return 0.75;
 
@@ -148,13 +260,23 @@
 
   ===================================== */
 
-  function getAvgCostFromInventory(type, inventory) {
+  function getAvgCostFromInventory(
+
+    type,
+
+    inventory
+
+  ) {
 
     try {
 
-      const items = inventory?.[type] || [];
+      const items =
 
-      if (!items.length) return COSTS[type] || 0;
+        inventory?.[type] || [];
+
+      if (!items.length)
+
+        return COSTS[type] || 0;
 
       let totalCost = 0;
 
@@ -168,7 +290,9 @@
 
       });
 
-      if (!totalQty) return COSTS[type] || 0;
+      if (!totalQty)
+
+        return COSTS[type] || 0;
 
       return totalCost / totalQty;
 
@@ -200,37 +324,77 @@
 
     try {
 
-      const sqft = n(input.totalSqft || input.sqft);
+      const sqft =
+
+        n(
+
+          input.totalSqft ||
+
+          input.sqft
+
+        );
 
       const needs = {
 
-        seed: (sqft / 1000) * MATERIAL_RATES.seed.rate,
+        seed:
 
-        fertilizer: (sqft / 1000) * MATERIAL_RATES.fertilizer.rate,
+          (sqft / 1000) *
 
-        mulch: (sqft / 1000) * MATERIAL_RATES.mulch.rate,
+          MATERIAL_RATES.seed.rate,
 
-        tackifier: (sqft / 1000) * MATERIAL_RATES.tackifier.rate
+        fertilizer:
+
+          (sqft / 1000) *
+
+          MATERIAL_RATES.fertilizer.rate,
+
+        mulch:
+
+          (sqft / 1000) *
+
+          MATERIAL_RATES.mulch.rate,
+
+        tackifier:
+
+          (sqft / 1000) *
+
+          MATERIAL_RATES.tackifier.rate
 
       };
 
-      if (packageType === "premium") {
+      if (
+
+        packageType ===
+
+        "premium"
+
+      ) {
 
         needs.compost =
 
-          (sqft / 1000) * MATERIAL_RATES.compost.rate;
+          (sqft / 1000) *
+
+          MATERIAL_RATES.compost.rate;
 
         needs.biochar =
 
           (sqft / 1000) *
 
-          (MATERIAL_RATES.biochar.rate * 0.5);
+          (
+
+            MATERIAL_RATES.biochar.rate * 0.5
+
+          );
 
         needs.humic =
 
           (sqft / 1000) *
 
-          (MATERIAL_RATES.humic.rate * 0.5);
+          (
+
+            MATERIAL_RATES.humic.rate * 0.5
+
+          );
 
       }
 
@@ -238,7 +402,9 @@
 
         needs.lime =
 
-          (sqft / 1000) * MATERIAL_RATES.lime.rate;
+          (sqft / 1000) *
+
+          MATERIAL_RATES.lime.rate;
 
       }
 
@@ -246,7 +412,9 @@
 
         needs.sulfur =
 
-          (sqft / 1000) * MATERIAL_RATES.sulfur.rate;
+          (sqft / 1000) *
+
+          MATERIAL_RATES.sulfur.rate;
 
       }
 
@@ -256,7 +424,13 @@
 
           (needs.biochar || 0) +
 
-          (sqft / 1000) * MATERIAL_RATES.biochar.rate;
+          (
+
+            (sqft / 1000) *
+
+            MATERIAL_RATES.biochar.rate
+
+          );
 
       }
 
@@ -266,7 +440,13 @@
 
           (needs.humic || 0) +
 
-          (sqft / 1000) * MATERIAL_RATES.humic.rate;
+          (
+
+            (sqft / 1000) *
+
+            MATERIAL_RATES.humic.rate
+
+          );
 
       }
 
@@ -282,17 +462,25 @@
 
   }
 
-  function getMaterialNeeds(input = {}) {
+  function getMaterialNeeds(
+
+    input = {}
+
+  ) {
 
     try {
 
-      const s = window.state || {};
+      const s =
+
+        window.state || {};
 
       return getMaterialNeedsCore(
 
         input,
 
-        s.job?.package || "standard",
+        s.job?.package ||
+
+        "standard",
 
         s.job?.addons || {}
 
@@ -330,51 +518,99 @@
 
     try {
 
-      let baseMargin = 0.3;
+      let baseMargin = 0.30;
 
-      if (sqft < 3000) baseMargin = 0.4;
+      if (sqft < 3000)
 
-      else if (sqft < 8000) baseMargin = 0.35;
+        baseMargin = 0.40;
 
-      else if (sqft < 20000) baseMargin = 0.3;
+      else if (sqft < 8000)
 
-      else baseMargin = 0.25;
+        baseMargin = 0.35;
 
-      if (pricingMode === "win") baseMargin -= 0.1;
+      else if (sqft < 20000)
 
-      if (houses >= 10) baseMargin -= 0.03;
+        baseMargin = 0.30;
 
-      if (houses >= 20) baseMargin -= 0.05;
+      else
 
-      if (totalCost > 5000) baseMargin += 0.05;
+        baseMargin = 0.25;
 
-      if (baseMargin < 0.1) baseMargin = 0.1;
+      if (
 
-      if (baseMargin > 0.9) baseMargin = 0.9;
+        pricingMode === "win"
 
-      let price = totalCost / (1 - baseMargin);
+      ) {
+
+        baseMargin -= 0.10;
+
+      }
+
+      if (houses >= 10)
+
+        baseMargin -= 0.03;
+
+      if (houses >= 20)
+
+        baseMargin -= 0.05;
+
+      if (totalCost > 5000)
+
+        baseMargin += 0.05;
+
+      if (baseMargin < 0.10)
+
+        baseMargin = 0.10;
+
+      if (baseMargin > 0.90)
+
+        baseMargin = 0.90;
+
+      let price =
+
+        totalCost /
+
+        (1 - baseMargin);
 
       if (competitor > 0) {
 
         if (competitor > price) {
 
-          price = competitor * 0.98;
+          price =
+
+            competitor * 0.98;
 
         } else {
 
-          price = Math.max(price, competitor * 0.95);
+          price = Math.max(
+
+            price,
+
+            competitor * 0.95
+
+          );
 
         }
 
       }
 
-      if (price < totalCost * 1.1) {
+      if (
 
-        price = totalCost * 1.1;
+        price <
+
+        totalCost * 1.10
+
+      ) {
+
+        price =
+
+          totalCost * 1.10;
 
       }
 
-      const profit = price - totalCost;
+      const profit =
+
+        price - totalCost;
 
       return {
 
@@ -382,7 +618,15 @@
 
         profit,
 
-        margin: pct(profit, price)
+        margin:
+
+          pct(
+
+            profit,
+
+            price
+
+          )
 
       };
 
@@ -392,7 +636,9 @@
 
       return {
 
-        price: totalCost || 0,
+        price:
+
+          totalCost || 0,
 
         profit: 0,
 
@@ -410,7 +656,13 @@
 
   ===================================== */
 
-  function calculateJobCore(state, options = {}) {
+  function calculateJobCore(
+
+    state,
+
+    options = {}
+
+  ) {
 
     try {
 
@@ -418,11 +670,25 @@
 
         state.inventory ||
 
-        (window.getInventoryCache?.() || {});
+        (
 
-      const sqft = n(state.job?.sqft);
+          window.getInventoryCache?.() || {}
 
-      const houses = n(state.job?.houses, 1);
+        );
+
+      const sqft =
+
+        n(state.job?.sqft);
+
+      const houses =
+
+        n(
+
+          state.job?.houses,
+
+          1
+
+        );
 
       const packageType =
 
@@ -434,41 +700,79 @@
 
       const pricingMode =
 
-        state.job?.pricingMode || "balanced";
+        state.job?.pricingMode ||
+
+        "balanced";
 
       const competitor =
 
-        n(state.job?.competitorPrice);
+        n(
+
+          state.job?.competitorPrice
+
+        );
 
       const strategy =
 
-        state.job?.pricingStrategy || "normal";
+        state.job?.pricingStrategy ||
 
-      const totalSqft = sqft * houses;
+        "normal";
+
+      const totalSqft =
+
+        sqft * houses;
 
       const builderMult =
 
-        getBuilderMultiplier(houses);
+        getBuilderMultiplier(
+
+          houses
+
+        );
 
       const hourlyRate =
 
-        n(state.job?.labor?.hourlyRate);
+        n(
+
+          state.job?.labor?.hourlyRate
+
+        );
 
       const hoursPerHouse =
 
-        n(state.job?.labor?.hoursPerHouse);
+        n(
+
+          state.job?.labor?.hoursPerHouse
+
+        );
 
       const crewSize =
 
-        n(state.job?.labor?.crewSize, 1);
+        n(
+
+          state.job?.labor?.crewSize,
+
+          1
+
+        );
 
       const overheadPct =
 
-        n(state.job?.labor?.overhead);
+        n(
+
+          state.job?.labor?.overhead
+
+        );
 
       const laborEfficiency =
 
-        1 - (1 - builderMult) * 0.5;
+        1 -
+
+        (
+
+          (1 - builderMult) * 0.5
+
+        );
 
       const totalHours =
 
@@ -494,7 +798,11 @@
 
         getMaterialNeedsCore(
 
-          { totalSqft },
+          {
+
+            totalSqft
+
+          },
 
           packageType,
 
@@ -504,21 +812,23 @@
 
       let materialCost = 0;
 
-      Object.keys(needs).forEach(type => {
+      Object.keys(needs)
 
-        materialCost +=
+        .forEach(type => {
 
-          needs[type] *
+          materialCost +=
 
-          getAvgCostFromInventory(
+            needs[type] *
 
-            type,
+            getAvgCostFromInventory(
 
-            inventory
+              type,
 
-          );
+              inventory
 
-      });
+            );
+
+        });
 
       if (materialCost < 500) {
 
@@ -526,23 +836,47 @@
 
       }
 
-      if (addons.aeration) materialCost += totalSqft * 0.04;
+      if (addons.aeration)
 
-      if (addons.compost && packageType !== "premium") materialCost += totalSqft * 0.10;
+        materialCost += totalSqft * 0.04;
 
-      if (addons.biohum) materialCost += totalSqft * 0.12;
+      if (
 
-      if (addons.biochar) materialCost += totalSqft * 0.20;
+        addons.compost &&
 
-      if (addons.humic) materialCost += totalSqft * 0.01;
+        packageType !== "premium"
 
-      if (addons.lime) materialCost += totalSqft * 0.004;
+      ) {
 
-      if (addons.sulfur) materialCost += totalSqft * 0.008;
+        materialCost += totalSqft * 0.10;
+
+      }
+
+      if (addons.biohum)
+
+        materialCost += totalSqft * 0.12;
+
+      if (addons.biochar)
+
+        materialCost += totalSqft * 0.20;
+
+      if (addons.humic)
+
+        materialCost += totalSqft * 0.01;
+
+      if (addons.lime)
+
+        materialCost += totalSqft * 0.004;
+
+      if (addons.sulfur)
+
+        materialCost += totalSqft * 0.008;
 
       if (addons.grow) {
 
-        const weekly = 50 * 3 * houses;
+        const weekly =
+
+          50 * 3 * houses;
 
         const install =
 
@@ -556,15 +890,27 @@
 
             : 0;
 
-        materialCost += weekly + install;
+        materialCost +=
+
+          weekly + install;
 
       }
 
       const overheadCost =
 
-        (materialCost + laborCost) *
+        (
 
-        (overheadPct / 100);
+          materialCost +
+
+          laborCost
+
+        ) *
+
+        (
+
+          overheadPct / 100
+
+        );
 
       const totalCost =
 
@@ -590,11 +936,23 @@
 
         );
 
-      let price = pricing.price;
+      let price =
 
-      if (strategy === "market") {
+        pricing.price;
 
-        price = Math.max(price, totalSqft * 0.35);
+      if (
+
+        strategy === "market"
+
+      ) {
+
+        price = Math.max(
+
+          price,
+
+          totalSqft * 0.35
+
+        );
 
       }
 
@@ -606,19 +964,33 @@
 
       ) {
 
-        price = competitor * 0.97;
+        price =
+
+          competitor * 0.97;
 
       }
 
-      if (strategy === "builder") {
+      if (
+
+        strategy === "builder"
+
+      ) {
 
         price *= 0.92;
 
       }
 
-      if (price < totalCost * 1.1) {
+      if (
 
-        price = totalCost * 1.1;
+        price <
+
+        totalCost * 1.10
+
+      ) {
+
+        price =
+
+          totalCost * 1.10;
 
       }
 
@@ -628,7 +1000,9 @@
 
       }
 
-      const profit = price - totalCost;
+      const profit =
+
+        price - totalCost;
 
       const inventoryTotals =
 
@@ -652,7 +1026,9 @@
 
         totalSqft,
 
-        cost: totalCost,
+        cost:
+
+          totalCost,
 
         price,
 
@@ -674,7 +1050,13 @@
 
     } catch (e) {
 
-      console.error("calculateJobCore failed:", e);
+      console.error(
+
+        "calculateJobCore failed:",
+
+        e
+
+      );
 
       return {
 
@@ -714,17 +1096,25 @@
 
   ===================================== */
 
-  function calculateJob(options = {}) {
+  function calculateJob(
+
+    options = {}
+
+  ) {
 
     try {
 
-      const s = window.state || {};
+      const s =
 
-      const result = calculateJobCore(
+        window.state || {};
+
+      return calculateJobCore(
 
         {
 
-          job: s.job || {},
+          job:
+
+            s.job || {},
 
           inventory:
 
@@ -736,13 +1126,23 @@
 
       );
 
-      return result;
-
     } catch (e) {
 
-      console.error("calculateJob failed:", e);
+      console.error(
 
-      safeToast("Calculation failed", "error");
+        "calculateJob failed:",
+
+        e
+
+      );
+
+      safeToast(
+
+        "Calculation failed",
+
+        "error"
+
+      );
 
       return {
 
@@ -774,346 +1174,717 @@
 
   }
 
+  /* =====================================
 
-//====================
-//BUILD SCHEDULE
-//====================
+     BUILD SCHEDULE
 
-window.buildSchedule = function(result){
+  ===================================== */
 
-  const mode =
+  window.buildSchedule =
 
-    window.state?.ui?.timeline ||
+    function (result) {
 
-    "standard";
+      try {
 
-  const addons =
+        const mode =
 
-    window.state?.job?.addons || {};
+          window.state?.ui?.timeline ||
 
-  const sqft =
+          "standard";
 
-    result?.totalSqft || 0;
+        const addons =
 
-  const houses =
+          window.state?.job?.addons || {};
 
-    result?.houses || 1;
+        const sqft =
 
-  const grow =
+          result?.totalSqft || 0;
 
-    addons.grow === true;
+        const houses =
 
-  /* --------------------------
+          result?.houses || 1;
 
-     DATE HELPERS
+        const grow =
 
-  -------------------------- */
+          addons.grow === true;
 
-  function getStartDate(){
+        function getStartDate() {
 
-    const raw =
+          const raw =
 
-      document.getElementById(
+            document.getElementById(
 
-        "projectStart"
+              "projectStart"
 
-      )?.value;
+            )?.value;
 
-    if(raw){
+          if (raw) {
 
-      const d = new Date(raw);
+            const d =
 
-      if(!isNaN(d)) return d;
+              new Date(raw);
 
-    }
+            if (!isNaN(d))
 
-    return new Date();
+              return d;
 
-  }
+          }
 
-  function addDays(base, days){
+          return new Date();
 
-    const d = new Date(base);
+        }
 
-    d.setDate(
+        function addDays(
 
-      d.getDate() + days
+          base,
 
-    );
+          days
 
-    return d;
+        ) {
 
-  }
+          const d =
 
-  function fmt(date){
+            new Date(base);
 
-    return date.toLocaleDateString(
+          d.setDate(
 
-      undefined,
+            d.getDate() + days
 
-      {
+          );
 
-        weekday:"short",
+          return d;
 
-        month:"short",
+        }
 
-        day:"numeric",
+        function fmt(date) {
 
-        year:"numeric"
+          return date.toLocaleDateString(
+
+            undefined,
+
+            {
+
+              weekday: "short",
+
+              month: "short",
+
+              day: "numeric",
+
+              year: "numeric"
+
+            }
+
+          );
+
+        }
+
+        const start =
+
+          getStartDate();
+
+        const list = [];
+
+        const soilTasks = [];
+
+        if (addons.aeration)
+
+          soilTasks.push("Aeration");
+
+        if (addons.compost)
+
+          soilTasks.push("Compost");
+
+        if (addons.lime)
+
+          soilTasks.push("Lime Treatment");
+
+        if (addons.sulfur)
+
+          soilTasks.push("Sulfur Treatment");
+
+        if (!soilTasks.length) {
+
+          soilTasks.push(
+
+            "Basic Soil Prep"
+
+          );
+
+        }
+
+        /* FAST */
+
+        if (mode === "fast") {
+
+          list.push({
+
+            day: 1,
+
+            title:
+
+              "Soil Prep Day",
+
+            date:
+
+              fmt(start),
+
+            tasks:
+
+              soilTasks
+
+          });
+
+          list.push({
+
+            day: 2,
+
+            title:
+
+              "Hydroseeding Day",
+
+            date:
+
+              fmt(
+
+                addDays(
+
+                  start,
+
+                  1
+
+                )
+
+              ),
+
+            tasks: [
+
+              "Hydroseed lawn",
+
+              ...(grow
+
+                ? ["Install Grow System"]
+
+                : [])
+
+            ]
+
+          });
+
+          list.push({
+
+            day: 3,
+
+            title:
+
+              "Final Lawn Inspection",
+
+            date:
+
+              fmt(
+
+                addDays(
+
+                  start,
+
+                  22
+
+                )
+
+              ),
+
+            tasks: [
+
+              ...(grow
+
+                ? ["Remove Grow System"]
+
+                : []),
+
+              "Final lawn walkthrough"
+
+            ]
+
+          });
+
+          return list;
+
+        }
+
+        /* EXTENDED */
+
+        if (
+
+          mode === "extended"
+
+        ) {
+
+          list.push({
+
+            day: 1,
+
+            title:
+
+              "Soil Prep Day",
+
+            date:
+
+              fmt(start),
+
+            tasks: [
+
+              ...(addons.aeration
+
+                ? ["Aeration"]
+
+                : []),
+
+              ...(addons.lime
+
+                ? ["Lime Treatment"]
+
+                : []),
+
+              ...(addons.sulfur
+
+                ? ["Sulfur Treatment"]
+
+                : [])
+
+            ]
+
+          });
+
+          list.push({
+
+            day: 2,
+
+            title:
+
+              "Compost Day",
+
+            date:
+
+              fmt(
+
+                addDays(
+
+                  start,
+
+                  3
+
+                )
+
+              ),
+
+            tasks: [
+
+              addons.compost
+
+                ? "Apply Compost"
+
+                : "Soil Conditioning"
+
+            ]
+
+          });
+
+          list.push({
+
+            day: 3,
+
+            title:
+
+              "Hydroseeding Day",
+
+            date:
+
+              fmt(
+
+                addDays(
+
+                  start,
+
+                  6
+
+                )
+
+              ),
+
+            tasks: [
+
+              "Hydroseed lawn",
+
+              ...(grow
+
+                ? ["Install Grow System"]
+
+                : [])
+
+            ]
+
+          });
+
+          list.push({
+
+            day: 4,
+
+            title:
+
+              "Final Lawn Inspection",
+
+            date:
+
+              fmt(
+
+                addDays(
+
+                  start,
+
+                  34
+
+                )
+
+              ),
+
+            tasks: [
+
+              ...(grow
+
+                ? ["Remove Grow System"]
+
+                : []),
+
+              "Final lawn walkthrough"
+
+            ]
+
+          });
+
+          return list;
+
+        }
+
+        /* STANDARD */
+
+        list.push({
+
+          day: 1,
+
+          title:
+
+            "Soil Prep Day",
+
+          date:
+
+            fmt(start),
+
+          tasks:
+
+            soilTasks
+
+        });
+
+        const hydroDays =
+
+          sqft > 6000 ||
+
+          houses > 1
+
+            ? 2
+
+            : 1;
+
+        for (
+
+          let i = 0;
+
+          i < hydroDays;
+
+          i++
+
+        ) {
+
+          list.push({
+
+            day:
+
+              list.length + 1,
+
+            title:
+
+              "Hydroseeding Day",
+
+            date:
+
+              fmt(
+
+                addDays(
+
+                  start,
+
+                  3 + i
+
+                )
+
+              ),
+
+            tasks: [
+
+              "Hydroseed lawn",
+
+              ...(grow && i === 0
+
+                ? ["Install Grow System"]
+
+                : [])
+
+            ]
+
+          });
+
+        }
+
+        list.push({
+
+          day:
+
+            list.length + 1,
+
+          title:
+
+            "Final Lawn Inspection",
+
+          date:
+
+            fmt(
+
+              addDays(
+
+                start,
+
+                24
+
+              )
+
+            ),
+
+          tasks: [
+
+            ...(grow
+
+              ? ["Remove Grow System"]
+
+              : []),
+
+            "Final lawn walkthrough"
+
+          ]
+
+        });
+
+        return list;
+
+      } catch (e) {
+
+        console.error(
+
+          "buildSchedule failed:",
+
+          e
+
+        );
+
+        return [];
 
       }
 
-    );
+    };
 
-  }
+  /* =====================================
 
-  const start = getStartDate();
+     DEAL SCORE
 
-  const list = [];
+  ===================================== */
 
-  const soilTasks = [];
+  window.calculateDealScore =
 
-  if(addons.aeration)
+    function (
 
-    soilTasks.push("Aeration");
+      result,
 
-  if(addons.compost)
+      comparison = {}
 
-    soilTasks.push("Compost");
+    ) {
 
-  if(addons.lime)
+      try {
 
-    soilTasks.push("Lime Treatment");
+        let score = 100;
 
-  if(addons.sulfur)
+        if (result.margin < 15)
 
-    soilTasks.push("Sulfur Treatment");
+          score -= 25;
 
-  if(!soilTasks.length)
+        if (result.margin < 10)
 
-    soilTasks.push("Basic Soil Prep");
+          score -= 20;
 
-  /* --------------------------
+        Object.values(comparison)
 
-     FAST
+          .forEach(item => {
 
-  -------------------------- */
+            if (
 
-  if(mode === "fast"){
+              item.status === "short"
 
-    list.push({
+            ) {
 
-      day:1,
+              score -= 5;
 
-      title:"Soil Prep Day",
+            }
 
-      date:fmt(start),
+          });
 
-      tasks:soilTasks
+        if (
 
-    });
+          result.totalSqft > 20000
 
-    list.push({
+        ) {
 
-      day:2,
+          score += 5;
 
-      title:"Hydroseeding Day",
+        }
 
-      date:fmt(addDays(start,1)),
+        if (
 
-      tasks:[
+          result.houses > 10
 
-        "Hydroseed lawn",
+        ) {
 
-        ...(grow ? ["Install Grow System"] : [])
+          score += 5;
 
-      ]
+        }
 
-    });
+        if (score < 0)
 
-    list.push({
+          score = 0;
 
-      day:3,
+        if (score > 100)
 
-      title:"Final Lawn Inspection",
+          score = 100;
 
-      date:fmt(addDays(start,22)),
+        return Math.round(score);
 
-      tasks:[
+      } catch (e) {
 
-        ...(grow ? ["Remove Grow System"] : []),
+        console.error(e);
 
-        "Final lawn walkthrough"
+        return 75;
 
-      ]
+      }
 
-    });
+    };
 
-    return list;
+  /* =====================================
 
-  }
+     AI INSIGHTS
 
-  /* --------------------------
+  ===================================== */
 
-     EXTENDED
+  window.generateAIInsights =
 
-  -------------------------- */
+    function (
 
-  if(mode === "extended"){
+      result,
 
-    list.push({
+      comparison = {}
 
-      day:1,
+    ) {
 
-      title:"Soil Prep Day",
+      try {
 
-      date:fmt(start),
+        const insights = [];
 
-      tasks:[
+        if (result.margin < 15) {
 
-        ...(addons.aeration ? ["Aeration"] : []),
+          insights.push({
 
-        ...(addons.lime ? ["Lime Treatment"] : []),
+            type: "warning",
 
-        ...(addons.sulfur ? ["Sulfur Treatment"] : [])
+            text:
 
-      ]
+              "Low projected profit margin."
 
-    });
+          });
 
-    list.push({
+        }
 
-      day:2,
+        if (result.houses > 10) {
 
-      title:"Compost Day",
+          insights.push({
 
-      date:fmt(addDays(start,3)),
+            type: "info",
 
-      tasks:[
+            text:
 
-        addons.compost
+              "Large builder project detected."
 
-          ? "Apply Compost"
+          });
 
-          : "Soil Conditioning"
+        }
 
-      ]
+        Object.keys(comparison)
 
-    });
+          .forEach(key => {
 
-    list.push({
+            const item =
 
-      day:3,
+              comparison[key];
 
-      title:"Hydroseeding Day",
+            if (
 
-      date:fmt(addDays(start,6)),
+              item.status === "short"
 
-      tasks:[
+            ) {
 
-        "Hydroseed lawn",
+              insights.push({
 
-        ...(grow ? ["Install Grow System"] : [])
+                type: "warning",
 
-      ]
+                text:
 
-    });
+                  `Inventory shortage: ${key}`
 
-    list.push({
+              });
 
-      day:4,
+            }
 
-      title:"Final Lawn Inspection",
+          });
 
-      date:fmt(addDays(start,34)),
+        if (!insights.length) {
 
-      tasks:[
+          insights.push({
 
-        ...(grow ? ["Remove Grow System"] : []),
+            type: "success",
 
-        "Final lawn walkthrough"
+            text:
 
-      ]
+              "Project looks profitable."
 
-    });
+          });
 
-    return list;
+        }
 
-  }
+        return insights;
 
-  /* --------------------------
+      } catch (e) {
 
-     STANDARD
+        console.error(e);
 
-  -------------------------- */
+        return [];
 
-  list.push({
+      }
 
-    day:1,
-
-    title:"Soil Prep Day",
-
-    date:fmt(start),
-
-    tasks:soilTasks
-
-  });
-
-  const hydroDays =
-
-    sqft > 6000 || houses > 1
-
-      ? 2
-
-      : 1;
-
-  for(let i=0;i<hydroDays;i++){
-
-    list.push({
-
-      day:list.length + 1,
-
-      title:"Hydroseeding Day",
-
-      date:fmt(addDays(start,3 + i)),
-
-      tasks:[
-
-        "Hydroseed lawn",
-
-        ...(grow && i === 0
-
-          ? ["Install Grow System"]
-
-          : [])
-
-      ]
-
-    });
-
-  }
-
-  list.push({
-
-    day:list.length + 1,
-
-    title:"Final Lawn Inspection",
-
-    date:fmt(addDays(start,24)),
-
-    tasks:[
-
-      ...(grow ? ["Remove Grow System"] : []),
-
-      "Final lawn walkthrough"
-
-    ]
-
-  });
-
-  return list;
-
-};
+    };
 
   /* =====================================
 
@@ -1121,18 +1892,32 @@ window.buildSchedule = function(result){
 
   ===================================== */
 
-  window.calculateJob = calculateJob;
+  window.calculateJob =
 
-  window.calculateJobCore = calculateJobCore;
+    calculateJob;
 
-  window.getMaterialNeeds = getMaterialNeeds;
+  window.calculateJobCore =
 
-  window.getMaterialNeedsCore = getMaterialNeedsCore;
+    calculateJobCore;
 
-  window.getBuilderMultiplier = getBuilderMultiplier;
+  window.getMaterialNeeds =
 
-  window.getAvgCostFromInventory = getAvgCostFromInventory;
+    getMaterialNeeds;
 
-  window.getSmartPricing = getSmartPricing;
+  window.getMaterialNeedsCore =
+
+    getMaterialNeedsCore;
+
+  window.getBuilderMultiplier =
+
+    getBuilderMultiplier;
+
+  window.getAvgCostFromInventory =
+
+    getAvgCostFromInventory;
+
+  window.getSmartPricing =
+
+    getSmartPricing;
 
 })();

@@ -454,6 +454,108 @@
 
   /* ===================================
 
+     SAFE TOAST
+
+  =================================== */
+
+  function showSafeToast(
+
+    msg,
+
+    type = "info"
+
+  ) {
+
+    try {
+
+      if (
+
+        typeof window.showToast ===
+
+        "function"
+
+      ) {
+
+        window.showToast(
+
+          msg,
+
+          type
+
+        );
+
+      } else {
+
+        console.log(
+
+          "[" + type + "]",
+
+          msg
+
+        );
+
+      }
+
+    } catch (e) {
+
+      console.error(
+
+        "Toast failed:",
+
+        e
+
+      );
+
+    }
+
+  }
+
+  /* ===================================
+
+     SAFE DATE
+
+  =================================== */
+
+  function safeDate(value) {
+
+    try {
+
+      const d = new Date(value);
+
+      if (isNaN(d)) {
+
+        return new Date();
+
+      }
+
+      return d;
+
+    } catch (e) {
+
+      return new Date();
+
+    }
+
+  }
+
+  /* ===================================
+
+     SAFE ARRAY
+
+  =================================== */
+
+  function safeArray(v) {
+
+    return Array.isArray(v)
+
+      ? v
+
+      : [];
+
+  }
+
+  /* ===================================
+
      EXPORTS
 
   =================================== */
@@ -492,4 +594,17 @@
 
     safeNum;
 
+  window.showSafeToast =
+
+    showSafeToast;
+
+  window.safeDate =
+
+    safeDate;
+
+  window.safeArray =
+
+    safeArray;
+
 })();
+

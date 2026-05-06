@@ -20,21 +20,21 @@
 
   const STORAGE_KEY = "soda_proposals";
 
-const PIPELINE_STAGES = [
+  const PIPELINE_STAGES = [
 
-  { key: "lead", label: "Leads" },
+    { key: "lead", label: "Leads" },
 
-  { key: "proposal", label: "Proposals" },
+    { key: "proposal", label: "Proposals" },
 
-  { key: "builder", label: "Builder Projects" }, // 🔥 NEW
+    { key: "builder", label: "Builder Projects" },
 
-  { key: "pending", label: "Pending" },
+    { key: "pending", label: "Pending" },
 
-  { key: "won", label: "Won" },
+    { key: "won", label: "Won" },
 
-  { key: "lost", label: "Lost" }
+    { key: "lost", label: "Lost" }
 
-];
+  ];
 
   window.PIPELINE_STAGES = PIPELINE_STAGES;
 
@@ -48,7 +48,11 @@ const PIPELINE_STAGES = [
 
     try {
 
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      return JSON.parse(
+
+        localStorage.getItem(STORAGE_KEY) || "[]"
+
+      );
 
     } catch (e) {
 
@@ -64,7 +68,13 @@ const PIPELINE_STAGES = [
 
     try {
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list || []));
+      localStorage.setItem(
+
+        STORAGE_KEY,
+
+        JSON.stringify(list || [])
+
+      );
 
     } catch (e) {
 
@@ -342,7 +352,11 @@ const PIPELINE_STAGES = [
 
       const pricePerSqft =
 
-        r.totalSqft > 0 ? r.price / r.totalSqft : 0;
+        r.totalSqft > 0
+
+          ? r.price / r.totalSqft
+
+          : 0;
 
       const html = `
 
@@ -370,7 +384,11 @@ const PIPELINE_STAGES = [
 
       }
 
-      .section{margin-top:20px;}
+      .section{
+
+        margin-top:20px;
+
+      }
 
       .line{
 
@@ -494,17 +512,25 @@ const PIPELINE_STAGES = [
 
         <b>Total Investment</b>
 
-        <div class="total">$${num(r.price).toFixed(2)}</div>
+        <div class="total">
+
+          $${num(r.price).toFixed(2)}
+
+        </div>
 
       </div>
 
-      <button class="primary" onclick="approveProposal()">
+      <button class="primary"
+
+        onclick="approveProposal()">
 
         Approve Proposal
 
       </button>
 
-      <button class="danger" onclick="markRejected()">
+      <button class="danger"
+
+        onclick="markRejected()">
 
         Mark Not Accepted
 
@@ -526,7 +552,13 @@ const PIPELINE_STAGES = [
 
       win.approveProposal = function () {
 
-        setStatusById(win.proposalId, "Accepted");
+        setStatusById(
+
+          win.proposalId,
+
+          "Accepted"
+
+        );
 
         win.print();
 
@@ -534,7 +566,13 @@ const PIPELINE_STAGES = [
 
       win.markRejected = function () {
 
-        setStatusById(win.proposalId, "Not Accepted");
+        setStatusById(
+
+          win.proposalId,
+
+          "Not Accepted"
+
+        );
 
         alert("Marked as Not Accepted");
 
@@ -554,57 +592,53 @@ const PIPELINE_STAGES = [
 
   ===================================== */
 
-function matchStage(p, key){
+  function matchStage(p, key) {
 
-  // 🔥 BUILDER COLUMN (isolated)
+    if (key === "builder") {
 
-  if(key === "builder"){
+      return p.type === "builder";
 
-    return p.type === "builder";
+    }
 
-  }
+    if (p.type === "builder") {
 
-  // 🚫 prevent builders from showing in other columns
+      return false;
 
-  if(p.type === "builder"){
+    }
+
+    if (key === "lead") {
+
+      return p.stage === "lead";
+
+    }
+
+    if (key === "proposal") {
+
+      return p.stage === "proposal";
+
+    }
+
+    if (key === "pending") {
+
+      return p.status === "Pending";
+
+    }
+
+    if (key === "won") {
+
+      return p.status === "Accepted";
+
+    }
+
+    if (key === "lost") {
+
+      return p.status === "Not Accepted";
+
+    }
 
     return false;
 
   }
-
-  if(key === "lead"){
-
-    return p.stage === "lead";
-
-  }
-
-  if(key === "proposal"){
-
-    return p.stage === "proposal";
-
-  }
-
-  if(key === "pending"){
-
-    return p.status === "Pending";
-
-  }
-
-  if(key === "won"){
-
-    return p.status === "Accepted";
-
-  }
-
-  if(key === "lost"){
-
-    return p.status === "Not Accepted";
-
-  }
-
-  return false;
-
-}
 
   /* =====================================
 
@@ -612,241 +646,45 @@ function matchStage(p, key){
 
   ===================================== */
 
-function renderPipeline() {
+  function renderPipeline() {
 
-  try {
+    try {
 
-    const container =
+      const container =
 
-      document.getElementById("jobHistoryList");
+        document.getElementById("jobHistoryList");
 
-    if (!container) return;
+      if (!container) return;
 
-    const list = readCRM();
+      const list = readCRM();
 
-    let html =
+      let html =
 
-      `<div style="display:flex;gap:12px;overflow-x:auto;">`;
+        `<div style="display:flex;gap:12px;overflow-x:auto;">`;
 
-    PIPELINE_STAGES.forEach(stage => {
+      PIPELINE_STAGES.forEach(stage => {
 
-      const items = list.filter(p =>
+        const items = list.filter(p =>
 
-        matchStage(p, stage.key)
+          matchStage(p, stage.key)
 
-      );
+        );
 
-      html += `
+        html += `
 
-        <div class="glass-card"
+          <div class="glass-card"
 
-     style="
+            style="
 
-       min-width:260px;
+              min-width:260px;
 
-       ${stage.key === "builder"
+              ${stage.key === "builder"
 
-         ? "border:2px solid #d4af37;"
+                ? "border:2px solid #d4af37;"
 
-         : ""}
+                : ""}
 
-     ">
-
-          <div style="
-
-            color:#d4af37;
-
-            font-weight:bold;
-
-            margin-bottom:10px;
-
-          ">
-
-            ${stage.label} (${items.length})
-
-          </div>
-
-          ${items.map(p => {
-
-            const isBuilder =
-
-              p.type === "builder";
-
-            const total =
-
-              Number(p.total || 0);
-
-            const houses =
-
-              Number(p.houses || 0);
-
-            return `
-
-              <div class="history-card"
-
-                onclick="openProposal(${p.id})">
-
-                <div>
-
-                  <b>${p.customer}</b>
-
-                  ${isBuilder
-
-                    ? `<span style="
-
-                        color:#d4af37;
-
-                        font-size:11px;
-
-                        margin-left:6px;
-
-                      ">[BUILDER]</span>`
-
-                    : ""
-
-                  }
-
-                </div>
-
-                <div style="font-size:12px;color:#aaa;">
-
-                  ${p.address || ""}
-
-                </div>
-
-                ${isBuilder ? `
-
-                  <div style="
-
-                    font-size:11px;
-
-                    color:#888;
-
-                  ">
-
-                    Houses: ${houses}
-
-                  </div>
-
-                ` : ""}
-
-                <div style="margin-top:6px;">
-
-                  💰 $${total.toFixed(0)}
-
-                </div>
-
-              </div>
-
-            `;
-
-          }).join("")}
-
-        </div>
-
-      `;
-
-    });
-
-    html += `</div>`;
-
-    container.innerHTML = html;
-
-  } catch (e) {
-
-    console.error("renderPipeline failed:", e);
-
-  }
-
-}
-
-  /* =====================================
-
-     OPEN PROPOSAL
-
-  ===================================== */
-
-function openProposal(id) {
-
-  try {
-
-    const list = readCRM();
-
-    const p = list.find(x => x.id == id);
-
-    if (!p) return;
-
-    window.activeProposalId = id;
-
-    const modal = document.getElementById("proposalModal");
-
-    const body = document.getElementById("modalBody");
-
-    if (!modal || !body) return;
-
-    const customer = document.getElementById("modalCustomer");
-
-    const address = document.getElementById("modalAddress");
-
-    if (customer) customer.innerText = p.customer || "";
-
-    if (address) address.innerText = p.address || "";
-
-    const isBuilder = p.type === "builder";
-
-    const total = Number(p.total || 0);
-
-    const cost = Number(p.cost || 0);
-
-    const houses = Number(p.houses || 0);
-
-    const pricePerLot =
-
-      houses > 0 ? total / houses : 0;
-
-    const costPerLot =
-
-      houses > 0 ? cost / houses : 0;
-
-    body.innerHTML = `
-
-      <div class="proposal-wrap">
-
-        <div class="row">
-
-          <b>Status:</b>
-
-          <span>${p.status || "-"}</span>
-
-        </div>
-
-        <div class="row">
-
-          <b>Sqft:</b>
-
-          <span>${p.sqft || 0}</span>
-
-        </div>
-
-        <div class="row">
-
-          <b>Total:</b>
-
-          <span>$${total.toFixed(2)}</span>
-
-        </div>
-
-        ${isBuilder ? `
-
-          <div style="
-
-            margin-top:15px;
-
-            border-top:1px solid #333;
-
-            padding-top:12px;
-
-          ">
+            ">
 
             <div style="
 
@@ -858,59 +696,327 @@ function openProposal(id) {
 
             ">
 
-              BUILDER PROJECT DETAILS
+              ${stage.label} (${items.length})
 
             </div>
 
-            <div class="row">
+            ${items.map(p => {
 
-              <b>Houses:</b>
+              const isBuilder =
 
-              <span>${houses}</span>
+                p.type === "builder";
 
-            </div>
+              const total =
 
-            <div class="row">
+                Number(p.total || 0);
 
-              <b>Total Cost:</b>
+              const houses =
 
-              <span>$${cost.toFixed(2)}</span>
+                Number(p.houses || 0);
 
-            </div>
+              return `
 
-            <div class="row">
+                <div class="history-card"
 
-              <b>Cost / Lot:</b>
+                  onclick="openProposal(${p.id})">
 
-              <span>$${costPerLot.toFixed(2)}</span>
+                  <div>
 
-            </div>
+                    <b>${p.customer}</b>
 
-            <div class="row">
+                    ${isBuilder
 
-              <b>Price / Lot:</b>
+                      ? `<span style="
 
-              <span>$${pricePerLot.toFixed(2)}</span>
+                          color:#d4af37;
 
-            </div>
+                          font-size:11px;
+
+                          margin-left:6px;
+
+                        ">[BUILDER]</span>`
+
+                      : ""
+
+                    }
+
+                  </div>
+
+                  <div style="
+
+                    font-size:12px;
+
+                    color:#aaa;
+
+                  ">
+
+                    ${p.address || ""}
+
+                  </div>
+
+                  ${isBuilder ? `
+
+                    <div style="
+
+                      font-size:11px;
+
+                      color:#888;
+
+                    ">
+
+                      Houses: ${houses}
+
+                    </div>
+
+                  ` : ""}
+
+                  <div style="margin-top:6px;">
+
+                    💰 $${total.toFixed(0)}
+
+                  </div>
+
+                </div>
+
+              `;
+
+            }).join("")}
 
           </div>
 
-        ` : ""}
+        `;
 
-      </div>
+      });
 
-    `;
+      html += `</div>`;
 
-    modal.style.display = "flex";
+      container.innerHTML = html;
 
-  } catch (e) {
+    } catch (e) {
 
-    console.error("openProposal failed:", e);
+      console.error("renderPipeline failed:", e);
+
+    }
 
   }
 
-}
+  /* =====================================
+
+     OPEN PROPOSAL
+
+  ===================================== */
+
+  function openProposal(id) {
+
+    try {
+
+      const list = readCRM();
+
+      const p = list.find(x => x.id == id);
+
+      if (!p) return;
+
+      window.activeProposalId = id;
+
+      const modal =
+
+        document.getElementById("proposalModal");
+
+      const body =
+
+        document.getElementById("modalBody");
+
+      if (!modal || !body) return;
+
+      const customer =
+
+        document.getElementById("modalCustomer");
+
+      const address =
+
+        document.getElementById("modalAddress");
+
+      if (customer) {
+
+        customer.innerText = p.customer || "";
+
+      }
+
+      if (address) {
+
+        address.innerText = p.address || "";
+
+      }
+
+      const isBuilder =
+
+        p.type === "builder";
+
+      const total =
+
+        Number(p.total || 0);
+
+      const cost =
+
+        Number(p.cost || 0);
+
+      const houses =
+
+        Number(p.houses || 0);
+
+      const pricePerLot =
+
+        houses > 0
+
+          ? total / houses
+
+          : 0;
+
+      const costPerLot =
+
+        houses > 0
+
+          ? cost / houses
+
+          : 0;
+
+      body.innerHTML = `
+
+        <div class="proposal-wrap">
+
+          <div class="row">
+
+            <b>Status:</b>
+
+            <span>${p.status || "-"}</span>
+
+          </div>
+
+          <div class="row">
+
+            <b>Sqft:</b>
+
+            <span>${p.sqft || 0}</span>
+
+          </div>
+
+          <div class="row">
+
+            <b>Total:</b>
+
+            <span>$${total.toFixed(2)}</span>
+
+          </div>
+
+          ${isBuilder ? `
+
+            <div style="
+
+              margin-top:15px;
+
+              border-top:1px solid #333;
+
+              padding-top:12px;
+
+            ">
+
+              <div style="
+
+                color:#d4af37;
+
+                font-weight:bold;
+
+                margin-bottom:10px;
+
+              ">
+
+                BUILDER PROJECT DETAILS
+
+              </div>
+
+              <div class="row">
+
+                <b>Houses:</b>
+
+                <span>${houses}</span>
+
+              </div>
+
+              <div class="row">
+
+                <b>Total Cost:</b>
+
+                <span>$${cost.toFixed(2)}</span>
+
+              </div>
+
+              <div class="row">
+
+                <b>Cost / Lot:</b>
+
+                <span>$${costPerLot.toFixed(2)}</span>
+
+              </div>
+
+              <div class="row">
+
+                <b>Price / Lot:</b>
+
+                <span>$${pricePerLot.toFixed(2)}</span>
+
+              </div>
+
+            </div>
+
+          ` : ""}
+
+        </div>
+
+      `;
+
+      modal.style.display = "flex";
+
+    } catch (e) {
+
+      console.error("openProposal failed:", e);
+
+    }
+
+  }
+
+  /* =====================================
+
+     CLOSE MODAL
+
+  ===================================== */
+
+  function closeProposalModal() {
+
+    try {
+
+      const modal =
+
+        document.getElementById("proposalModal");
+
+      if (modal) {
+
+        modal.style.display = "none";
+
+      }
+
+    } catch (e) {
+
+      console.error(
+
+        "closeProposalModal failed:",
+
+        e
+
+      );
+
+    }
+
+  }
 
   /* =====================================
 
@@ -930,11 +1036,19 @@ function openProposal(id) {
 
       list[i].status = status;
 
-      if (status === "Accepted") list[i].stage = "won";
+      if (status === "Accepted") {
 
-      else if (status === "Pending") list[i].stage = "pending";
+        list[i].stage = "won";
 
-      else if (status === "Not Accepted") list[i].stage = "lost";
+      } else if (status === "Pending") {
+
+        list[i].stage = "pending";
+
+      } else if (status === "Not Accepted") {
+
+        list[i].stage = "lost";
+
+      }
 
       writeCRM(list);
 
@@ -954,7 +1068,13 @@ function openProposal(id) {
 
       if (!window.activeProposalId) return;
 
-      setStatusById(window.activeProposalId, status);
+      setStatusById(
+
+        window.activeProposalId,
+
+        status
+
+      );
 
       openProposal(window.activeProposalId);
 
@@ -984,6 +1104,8 @@ function openProposal(id) {
 
       rerender();
 
+      closeProposalModal();
+
       toast("Proposal deleted", "error");
 
     } catch (e) {
@@ -1000,63 +1122,91 @@ function openProposal(id) {
 
   ===================================== */
 
-function setTimeline(el) {
+  function setTimeline(elOrValue) {
 
-  try {
+    try {
 
-    const all =
+      const buttons =
 
-      document.querySelectorAll("[data-timeline]");
+        document.querySelectorAll(
 
-    all.forEach(btn =>
+          "[data-timeline]"
 
-      btn.classList.remove("active")
+        );
 
-    );
+      let value = "";
 
-    el.classList.add("active");
+      if (
 
-    if (window.state?.ui) {
+        typeof elOrValue === "string"
 
-      window.state.ui.timeline =
+      ) {
 
-        el.dataset.timeline;
+        value = elOrValue;
 
-    }
+      } else {
 
-    if (typeof render === "function") {
+        value =
 
-      render();
+          elOrValue?.dataset?.timeline ||
 
-    }
+          "standard";
 
-    if (typeof showToast === "function") {
+      }
 
-      showToast(
+      buttons.forEach(btn => {
 
-        "Timeline: " +
+        const active =
 
-        el.dataset.timeline,
+          btn.dataset.timeline === value;
 
-        "success"
+        btn.classList.toggle(
+
+          "active",
+
+          active
+
+        );
+
+      });
+
+      if (window.state?.ui) {
+
+        window.state.ui.timeline =
+
+          value;
+
+      }
+
+      if (
+
+        typeof render === "function"
+
+      ) {
+
+        render();
+
+      }
+
+    } catch (e) {
+
+      console.error(
+
+        "setTimeline failed:",
+
+        e
 
       );
 
     }
 
-  } catch (e) {
-
-    console.error(
-
-      "setTimeline failed:",
-
-      e
-
-    );
-
   }
 
-}
+  /* =====================================
+
+     MODAL BACKGROUND
+
+  ===================================== */
 
   function handleModalBackground(e) {
 
@@ -1075,6 +1225,38 @@ function setTimeline(el) {
     }
 
   }
+
+  /* =====================================
+
+     TIMELINE INIT
+
+  ===================================== */
+
+  document.addEventListener(
+
+    "DOMContentLoaded",
+
+    function () {
+
+      try {
+
+        setTimeline(
+
+          window.state?.ui?.timeline ||
+
+          "standard"
+
+        );
+
+      } catch (e) {
+
+        console.error(e);
+
+      }
+
+    }
+
+  );
 
   /* =====================================
 

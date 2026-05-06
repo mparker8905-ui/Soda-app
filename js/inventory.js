@@ -88,13 +88,29 @@
 
   }
 
+  function clone(obj) {
+
+    return JSON.parse(JSON.stringify(obj));
+
+  }
+
+  /* =====================================
+
+     STORAGE
+
+  ===================================== */
+
   function readInventory() {
 
     try {
 
       const raw = localStorage.getItem(STORAGE_KEY);
 
-      if (!raw) return structuredClone(EMPTY_DATA);
+      if (!raw) {
+
+        return clone(EMPTY_DATA);
+
+      }
 
       const parsed = JSON.parse(raw);
 
@@ -112,7 +128,7 @@
 
       console.error("Inventory read failed:", e);
 
-      return structuredClone(EMPTY_DATA);
+      return clone(EMPTY_DATA);
 
     }
 
@@ -140,21 +156,39 @@
 
   }
 
+  /* =====================================
+
+     DOM HELPERS
+
+  ===================================== */
+
   function getContainer(type) {
 
     if (type === "standard") {
 
-      return document.getElementById("standardMaterials");
+      return document.getElementById(
+
+        "standardMaterials"
+
+      );
 
     }
 
     if (type === "premium") {
 
-      return document.getElementById("premiumMaterials");
+      return document.getElementById(
+
+        "premiumMaterials"
+
+      );
 
     }
 
-    return document.getElementById("addonMaterials");
+    return document.getElementById(
+
+      "addonMaterials"
+
+    );
 
   }
 
@@ -166,11 +200,9 @@
 
         return `
 
-          <option value="${key}" ${
+          <option value="${key}"
 
-            key === selected ? "selected" : ""
-
-          }>
+            ${key === selected ? "selected" : ""}>
 
             ${MATERIAL_LABELS[key]}
 
@@ -290,6 +322,12 @@
 
   }
 
+  /* =====================================
+
+     PARSE SECTION
+
+  ===================================== */
+
   function parseSection(id) {
 
     try {
@@ -346,6 +384,12 @@
 
   }
 
+  /* =====================================
+
+     RENDER SECTION
+
+  ===================================== */
+
   function renderSection(id, items) {
 
     try {
@@ -378,7 +422,7 @@
 
   /* =====================================
 
-     LOAD / SAVE
+     LOAD INVENTORY
 
   ===================================== */
 
@@ -418,11 +462,23 @@
 
       console.error(e);
 
-      toast("Load inventory failed", "error");
+      toast(
+
+        "Load inventory failed",
+
+        "error"
+
+      );
 
     }
 
   }
+
+  /* =====================================
+
+     SAVE INVENTORY
+
+  ===================================== */
 
   function saveInventory() {
 
@@ -454,13 +510,17 @@
 
       renderInventory();
 
-      toast("Inventory saved", "success");
-
     } catch (e) {
 
       console.error(e);
 
-      toast("Save inventory failed", "error");
+      toast(
+
+        "Save inventory failed",
+
+        "error"
+
+      );
 
     }
 
@@ -468,7 +528,7 @@
 
   /* =====================================
 
-     CACHE / TOTALS / COST
+     CACHE
 
   ===================================== */
 
@@ -505,6 +565,12 @@
     }
 
   }
+
+  /* =====================================
+
+     TOTALS
+
+  ===================================== */
 
   function getInventoryTotals() {
 
@@ -543,6 +609,12 @@
     }
 
   }
+
+  /* =====================================
+
+     COST SUMMARY
+
+  ===================================== */
 
   function getInventoryCost() {
 
@@ -648,9 +720,15 @@
 
           document.getElementById(id);
 
-        if (el) el.textContent = val;
+        if (el) {
+
+          el.textContent = val;
+
+        }
 
       };
+
+      /* calculator page */
 
       setText(
 
@@ -658,7 +736,7 @@
 
         "$" +
 
-          totals.standard.toFixed(0)
+        totals.standard.toFixed(0)
 
       );
 
@@ -668,7 +746,7 @@
 
         "$" +
 
-          totals.premium.toFixed(0)
+        totals.premium.toFixed(0)
 
       );
 
@@ -678,7 +756,7 @@
 
         "$" +
 
-          totals.addons.toFixed(0)
+        totals.addons.toFixed(0)
 
       );
 
@@ -688,13 +766,135 @@
 
         "$" +
 
-          totals.total.toFixed(0)
+        totals.total.toFixed(0)
 
       );
 
+      /* inventory page */
+
+      setText(
+
+        "invStandardValue",
+
+        "$" +
+
+        totals.standard.toFixed(0)
+
+      );
+
+      setText(
+
+        "invPremiumValue",
+
+        "$" +
+
+        totals.premium.toFixed(0)
+
+      );
+
+      setText(
+
+        "invAddonValue",
+
+        "$" +
+
+        totals.addons.toFixed(0)
+
+      );
+
+      setText(
+
+        "invTotalValue",
+
+        "$" +
+
+        totals.total.toFixed(0)
+
+      );
+
+      /* live totals */
+
+      const totalsWrap =
+
+        document.getElementById(
+
+          "inventoryTotals"
+
+        );
+
+      if (totalsWrap) {
+
+        const qtyTotals =
+
+          getInventoryTotals();
+
+        const rows =
+
+          Object.keys(qtyTotals)
+
+            .map(key => {
+
+              const qty =
+
+                safeNum(
+
+                  qtyTotals[key]
+
+                );
+
+              const unit =
+
+                window.MATERIAL_RATES?.[
+
+                  key
+
+                ]?.unit || "units";
+
+              return `
+
+                <div class="metric">
+
+                  <div class="metric-label">
+
+                    ${key.toUpperCase()}
+
+                  </div>
+
+                  <div class="metric-value">
+
+                    ${qty.toFixed(1)} ${unit}
+
+                  </div>
+
+                </div>
+
+              `;
+
+            })
+
+            .join("");
+
+        totalsWrap.innerHTML =
+
+          rows ||
+
+          `<div class="muted">
+
+            No inventory saved.
+
+          </div>`;
+
+      }
+
     } catch (e) {
 
-      console.error(e);
+      console.error(
+
+        "renderInventory failed:",
+
+        e
+
+      );
 
     }
 
@@ -776,7 +976,7 @@
 
   /* =====================================
 
-     ROW ACTIONS
+     ADD ROW
 
   ===================================== */
 
@@ -794,13 +994,19 @@
 
       if (!container) return;
 
-      container.appendChild(
+      const row = buildRow({
 
-        buildRow({
+        type: "seed"
 
-          type: "seed"
+      });
 
-        })
+      container.appendChild(row);
+
+      toast(
+
+        "Material row added",
+
+        "success"
 
       );
 
@@ -811,6 +1017,12 @@
     }
 
   }
+
+  /* =====================================
+
+     DELETE ROW
+
+  ===================================== */
 
   function deleteRow(btn) {
 
@@ -824,7 +1036,11 @@
 
         );
 
-      if (row) row.remove();
+      if (row) {
+
+        row.remove();
+
+      }
 
       saveInventory();
 
@@ -836,11 +1052,13 @@
 
   }
 
-  function updateUnitLabel(
+  /* =====================================
 
-    select
+     UPDATE UNIT LABEL
 
-  ) {
+  ===================================== */
+
+  function updateUnitLabel(select) {
 
     try {
 
@@ -862,9 +1080,7 @@
 
         );
 
-      const type =
-
-        select.value;
+      const type = select.value;
 
       const unit =
 
@@ -892,7 +1108,7 @@
 
   /* =====================================
 
-     UTILITIES
+     CLEAR INVENTORY
 
   ===================================== */
 
@@ -916,11 +1132,7 @@
 
       writeInventory(
 
-        structuredClone(
-
-          EMPTY_DATA
-
-        )
+        clone(EMPTY_DATA)
 
       );
 
@@ -942,13 +1154,17 @@
 
   }
 
+  /* =====================================
+
+     EXPORT INVENTORY
+
+  ===================================== */
+
   function exportInventory() {
 
     try {
 
-      const data =
-
-        readInventory();
+      const data = readInventory();
 
       const blob = new Blob(
 
@@ -976,19 +1192,11 @@
 
       const url =
 
-        URL.createObjectURL(
-
-          blob
-
-        );
+        URL.createObjectURL(blob);
 
       const a =
 
-        document.createElement(
-
-          "a"
-
-        );
+        document.createElement("a");
 
       a.href = url;
 
@@ -998,9 +1206,35 @@
 
       a.click();
 
-      URL.revokeObjectURL(
+      URL.revokeObjectURL(url);
 
-        url
+    } catch (e) {
+
+      console.error(e);
+
+    }
+
+  }
+
+  /* =====================================
+
+     PAGE REFRESH
+
+  ===================================== */
+
+  window.refreshInventoryPage = function () {
+
+    try {
+
+      loadInventory();
+
+      renderInventory();
+
+      toast(
+
+        "Inventory refreshed",
+
+        "success"
 
       );
 
@@ -1010,7 +1244,45 @@
 
     }
 
-  }
+  };
+
+  /* =====================================
+
+     AUTO SAVE
+
+  ===================================== */
+
+  document.addEventListener(
+
+    "input",
+
+    function (e) {
+
+      try {
+
+        if (
+
+          e.target.closest(
+
+            ".material-row"
+
+          )
+
+        ) {
+
+          saveInventory();
+
+        }
+
+      } catch (err) {
+
+        console.error(err);
+
+      }
+
+    }
+
+  );
 
   /* =====================================
 

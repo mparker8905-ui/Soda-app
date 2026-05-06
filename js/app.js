@@ -100,13 +100,7 @@
 
   }
 
-  function val(
-
-    id,
-
-    fallback = ""
-
-  ) {
+  function val(id, fallback = "") {
 
     const node = el(id);
 
@@ -118,13 +112,7 @@
 
   }
 
-  function num(
-
-    id,
-
-    fallback = 0
-
-  ) {
+  function num(id, fallback = 0) {
 
     const n = Number(
 
@@ -140,43 +128,25 @@
 
   }
 
-  function html(
-
-    id,
-
-    content
-
-  ) {
+  function html(id, content) {
 
     const node = el(id);
 
-    if (node)
+    if (node) {
 
-      node.innerHTML =
+      node.innerHTML = content;
 
-        content;
+    }
 
   }
 
   function exists(fn) {
 
-    return (
-
-      typeof fn ===
-
-      "function"
-
-    );
+    return typeof fn === "function";
 
   }
 
-  function safe(
-
-    fn,
-
-    label = "run"
-
-  ) {
+  function safe(fn, label = "run") {
 
     try {
 
@@ -196,25 +166,11 @@
 
   }
 
-  function toast(
-
-    msg,
-
-    type = "info"
-
-  ) {
+  function toast(msg, type = "info") {
 
     try {
 
-      if (
-
-        exists(
-
-          window.showToast
-
-        )
-
-      ) {
+      if (exists(window.showToast)) {
 
         window.showToast(
 
@@ -226,7 +182,11 @@
 
       }
 
-    } catch (e) {}
+    } catch (e) {
+
+      console.error(e);
+
+    }
 
   }
 
@@ -240,9 +200,7 @@
 
     try {
 
-      const s =
-
-        window.state;
+      const s = window.state;
 
       s.job.sqft =
 
@@ -250,179 +208,65 @@
 
       s.job.houses =
 
-        num(
-
-          "houses",
-
-          1
-
-        );
+        num("houses", 1);
 
       s.job.package =
 
-        val(
-
-          "package",
-
-          "standard"
-
-        );
+        val("package", "standard");
 
       s.job.pricingMode =
 
-        val(
-
-          "pricingMode",
-
-          "balanced"
-
-        );
+        val("pricingMode", "balanced");
 
       s.job.targetMargin =
 
-        num(
-
-          "targetMargin",
-
-          0
-
-        );
+        num("targetMargin", 0);
 
       s.job.pricingStrategy =
 
-        val(
-
-          "pricingStrategy",
-
-          "normal"
-
-        );
+        val("pricingStrategy", "normal");
 
       s.job.competitorPrice =
 
-        num(
-
-          "competitorPrice",
-
-          0
-
-        );
+        num("competitorPrice", 0);
 
       s.job.labor.hourlyRate =
 
-        num(
-
-          "hourlyRate",
-
-          0
-
-        );
+        num("hourlyRate", 0);
 
       s.job.labor.hoursPerHouse =
 
-        num(
-
-          "hoursPerHouse",
-
-          0
-
-        );
+        num("hoursPerHouse", 0);
 
       s.job.labor.crewSize =
 
-        num(
-
-          "crewSize",
-
-          1
-
-        );
+        num("crewSize", 1);
 
       s.job.labor.overhead =
 
-        num(
-
-          "overhead",
-
-          0
-
-        );
+        num("overhead", 0);
 
       s.ui.tankSize =
 
-        num(
-
-          "tankSize",
-
-          500
-
-        );
+        num("tankSize", 500);
 
       s.job.addons = {
 
-        aeration:
+    aeration: !!el("addon_aeration")?.checked,
 
-          !!el(
+compost: !!el("addon_compost")?.checked,
 
-            "aeration"
+biohum: !!el("addon_biohum")?.checked,
 
-          )?.checked,
+biochar: !!el("addon_biochar")?.checked,
 
-        compost:
+humic: !!el("addon_humic")?.checked,
 
-          !!el(
+grow: !!el("addon_grow")?.checked,
 
-            "compost"
+lime: !!el("addon_lime")?.checked,
 
-          )?.checked,
-
-        biohum:
-
-          !!el(
-
-            "biohum"
-
-          )?.checked,
-
-        biochar:
-
-          !!el(
-
-            "biochar"
-
-          )?.checked,
-
-        humic:
-
-          !!el(
-
-            "humic"
-
-          )?.checked,
-
-        grow:
-
-          !!el(
-
-            "grow"
-
-          )?.checked,
-
-        lime:
-
-          !!el(
-
-            "lime"
-
-          )?.checked,
-
-        sulfur:
-
-          !!el(
-
-            "sulfur"
-
-          )?.checked
+sulfur: !!el("addon_sulfur")?.checked
 
       };
 
@@ -446,19 +290,13 @@
 
   ===================================== */
 
-  let renderTimer =
-
-    null;
+  let renderTimer = null;
 
   function requestRender() {
 
     try {
 
-      clearTimeout(
-
-        renderTimer
-
-      );
+      clearTimeout(renderTimer);
 
       renderTimer =
 
@@ -490,15 +328,9 @@
 
       if (
 
-        !exists(
+        !exists(window.calculateJob)
 
-          window.calculateJob
-
-        )
-
-      )
-
-        return;
+      ) return;
 
       syncStateFromUI();
 
@@ -512,27 +344,17 @@
 
         r.price > 0
 
-          ? (r.profit /
-
-              r.price) *
-
-            100
+          ? (r.profit / r.price) * 100
 
           : 0;
 
       const comparison =
 
-        r.comparison ||
-
-        {};
+        r.comparison || {};
 
       const dealScore =
 
-        exists(
-
-          window.calculateDealScore
-
-        )
+        exists(window.calculateDealScore)
 
           ? window.calculateDealScore(
 
@@ -546,11 +368,7 @@
 
       const insights =
 
-        exists(
-
-          window.generateAIInsights
-
-        )
+        exists(window.generateAIInsights)
 
           ? window.generateAIInsights(
 
@@ -568,9 +386,7 @@
 
           ? "#4cff9a"
 
-          : dealScore >=
-
-            60
+          : dealScore >= 60
 
           ? "#ffd24d"
 
@@ -586,19 +402,27 @@
 
                 (i) => `
 
-              <div class="insight-row">
+                <div class="insight-row">
 
-                ${i.text}
+                  ${i.text}
 
-              </div>
+                </div>
 
-            `
+              `
 
               )
 
               .join("")
 
-          : `<div class="muted">No issues detected.</div>`;
+          : `
+
+            <div class="muted">
+
+              No issues detected.
+
+            </div>
+
+          `;
 
       html(
 
@@ -610,29 +434,37 @@
 
           <h3>Job Pricing</h3>
 
-          <div>Total Cost: $${Number(
+          <div>
 
-            r.cost
+            Total Cost:
 
-          ).toFixed(2)}</div>
+            $${Number(r.cost).toFixed(2)}
 
-          <div>Sell Price: $${Number(
+          </div>
 
-            r.price
+          <div>
 
-          ).toFixed(2)}</div>
+            Sell Price:
 
-          <div>Profit: $${Number(
+            $${Number(r.price).toFixed(2)}
 
-            r.profit
+          </div>
 
-          ).toFixed(2)}</div>
+          <div>
 
-          <div>Margin: ${margin.toFixed(
+            Profit:
 
-            1
+            $${Number(r.profit).toFixed(2)}
 
-          )}%</div>
+          </div>
+
+          <div>
+
+            Margin:
+
+            ${margin.toFixed(1)}%
+
+          </div>
 
         </div>
 
@@ -686,11 +518,7 @@
 
       if (
 
-        exists(
-
-          window.renderPipeline
-
-        )
+        exists(window.renderPipeline)
 
       ) {
 
@@ -724,7 +552,11 @@
 
           <h3>Error</h3>
 
-          <div>Unable to calculate job.</div>
+          <div>
+
+            Unable to calculate job.
+
+          </div>
 
         </div>
 
@@ -748,15 +580,9 @@
 
       const wrap =
 
-        el(
+        el("jobHistory");
 
-          "jobHistory"
-
-        );
-
-      if (!wrap)
-
-        return;
+      if (!wrap) return;
 
       const jobs =
 
@@ -774,7 +600,11 @@
 
         wrap.innerHTML =
 
-          `<div class="muted">No saved jobs yet.</div>`;
+          `<div class="muted">
+
+            No saved jobs yet.
+
+          </div>`;
 
         return;
 
@@ -786,45 +616,71 @@
 
           .map(
 
-            (
+            (job, i) => `
 
-              job,
+          <div class="history-card">
 
-              i
+            <div>
 
-            ) => `
+              <strong>
 
-        <div class="history-card">
+                ${job.sqft || 0} sqft
 
-          <div><strong>${job.sqft || 0} sqft</strong></div>
+              </strong>
 
-          <div>$${Number(
+            </div>
 
-            job.price || 0
+            <div>
 
-          ).toFixed(2)}</div>
+              $${Number(
 
-          <div>${Number(
+                job.price || 0
 
-            job.margin || 0
+              ).toFixed(2)}
 
-          ).toFixed(
+            </div>
 
-            1
+            <div>
 
-          )}%</div>
+              ${Number(
 
-          <div class="row-actions">
+                job.margin || 0
 
-            <button onclick="editJob(${i})">Edit</button>
+              ).toFixed(1)}%
 
-            <button onclick="deleteJob(${i})">Delete</button>
+            </div>
+
+            <div class="row-actions">
+
+              <button
+
+                data-action="editJob"
+
+                data-id="${i}"
+
+              >
+
+                Edit
+
+              </button>
+
+              <button
+
+                data-action="deleteJob"
+
+                data-id="${i}"
+
+              >
+
+                Delete
+
+              </button>
+
+            </div>
 
           </div>
 
-        </div>
-
-      `
+        `
 
           )
 
@@ -856,29 +712,17 @@
 
       const wrap =
 
-        el(
+        el("schedulePreview");
 
-          "schedulePreview"
-
-        );
-
-      if (!wrap)
-
-        return;
+      if (!wrap) return;
 
       if (
 
-        !exists(
-
-          window.buildSchedule
-
-        )
+        !exists(window.buildSchedule)
 
       ) {
 
-        wrap.innerHTML =
-
-          "";
+        wrap.innerHTML = "";
 
         return;
 
@@ -890,21 +734,17 @@
 
       const schedule =
 
-        window.buildSchedule(
+        window.buildSchedule(r) || [];
 
-          r
-
-        ) || [];
-
-      if (
-
-        !schedule.length
-
-      ) {
+      if (!schedule.length) {
 
         wrap.innerHTML =
 
-          `<div class="muted">No schedule yet.</div>`;
+          `<div class="muted">
+
+            No schedule yet.
+
+          </div>`;
 
         return;
 
@@ -916,51 +756,45 @@
 
           .map(
 
-            (
+            (day) => `
 
-              day
+          <div class="glass-card">
 
-            ) => `
+            <strong>
 
-        <div class="glass-card">
+              Day ${day.day}
 
-          <strong>
+              — ${day.title}
 
-            Day ${day.day} — ${day.title}
+            </strong>
 
-          </strong>
+            <div class="muted">
 
-          <div class="muted">
+              ${day.date}
 
-            ${day.date}
+            </div>
 
-          </div>
+            <div style="margin-top:8px;">
 
-          <div style="margin-top:8px;">
+              ${day.tasks
 
-            ${day.tasks
+                .map(
 
-              .map(
+                  (t) => `
 
-                (
+                    <div>• ${t}</div>
 
-                  t
+                  `
 
-                ) => `<div>• ${t}</div>`
+                )
 
-              )
+                .join("")}
 
-              .join(
-
-                ""
-
-              )}
+            </div>
 
           </div>
 
-        </div>
-
-      `
+        `
 
           )
 
@@ -992,13 +826,17 @@
 
       window.shownToasts.clear();
 
-    } catch (e) {}
+    } catch (e) {
+
+      console.error(e);
+
+    }
 
   }
 
   /* =====================================
 
-     EVENTS
+     INPUT EVENTS
 
   ===================================== */
 
@@ -1024,11 +862,7 @@
 
           if (
 
-            exists(
-
-              window.saveInventory
-
-            )
+            exists(window.saveInventory)
 
           ) {
 
@@ -1048,11 +882,7 @@
 
       } catch (err) {
 
-        console.error(
-
-          err
-
-        );
+        console.error(err);
 
       }
 
@@ -1072,6 +902,12 @@
 
   );
 
+  /* =====================================
+
+     INIT
+
+  ===================================== */
+
   document.addEventListener(
 
     "DOMContentLoaded",
@@ -1082,11 +918,7 @@
 
         const quote =
 
-          el(
-
-            "quoteDate"
-
-          );
+          el("quoteDate");
 
         if (
 
@@ -1102,19 +934,39 @@
 
           quote.value =
 
-            d
-
-              .toISOString()
-
-              .split(
-
-                "T"
-
-              )[0];
+            d.toISOString().split("T")[0];
 
         }
 
-      } catch (e) {}
+        const active =
+
+          window.state?.ui?.timeline ||
+
+          "standard";
+
+        const btn =
+
+          document.querySelector(
+
+            `[data-timeline="${active}"]`
+
+          );
+
+        if (btn) {
+
+          btn.classList.add(
+
+            "active"
+
+          );
+
+        }
+
+      } catch (e) {
+
+        console.error(e);
+
+      }
 
     }
 
@@ -1122,79 +974,69 @@
 
   /* =====================================
 
-     INIT
+     WINDOW LOAD
 
   ===================================== */
 
-  window.onload =
+  window.onload = function () {
 
-    function () {
+    safe(
 
-      safe(
+      syncStateFromUI,
 
-        syncStateFromUI,
+      "syncStateFromUI"
 
-        "syncStateFromUI"
+    );
 
-      );
+    if (
 
-      if (
+      exists(window.loadInventory)
 
-        exists(
-
-          window.loadInventory
-
-        )
-
-      ) {
-
-        safe(
-
-          window.loadInventory,
-
-          "loadInventory"
-
-        );
-
-      }
+    ) {
 
       safe(
 
-        renderHistory,
+        window.loadInventory,
 
-        "renderHistory"
+        "loadInventory"
 
       );
 
-      if (
+    }
 
-        exists(
+    safe(
 
-          window.renderPipeline
+      renderHistory,
 
-        )
+      "renderHistory"
 
-      ) {
+    );
 
-        safe(
+    if (
 
-          window.renderPipeline,
+      exists(window.renderPipeline)
 
-          "renderPipeline"
-
-        );
-
-      }
+    ) {
 
       safe(
 
-        render,
+        window.renderPipeline,
 
-        "render"
+        "renderPipeline"
 
       );
 
-    };
+    }
+
+    safe(
+
+      render,
+
+      "render"
+
+    );
+
+  };
 
   /* =====================================
 
@@ -1228,23 +1070,63 @@
 
 })();
 
-//=================
-//MANUAL REFRESH
-//=================
+/* =====================================
+
+   MANUAL REFRESH
+
+===================================== */
 
 window.manualRefresh = function () {
 
   try {
 
-    if (typeof loadInventory === "function") loadInventory();
+    if (
 
-    if (typeof renderPipeline === "function") renderPipeline();
+      typeof loadInventory === "function"
 
-    if (typeof renderHistory === "function") renderHistory();
+    ) {
 
-    if (typeof render === "function") render();
+      loadInventory();
 
-    showToast("Refreshed", "success");
+    }
+
+    if (
+
+      typeof renderPipeline === "function"
+
+    ) {
+
+      renderPipeline();
+
+    }
+
+    if (
+
+      typeof renderHistory === "function"
+
+    ) {
+
+      renderHistory();
+
+    }
+
+    if (
+
+      typeof render === "function"
+
+    ) {
+
+      render();
+
+    }
+
+    showToast(
+
+      "Refreshed",
+
+      "success"
+
+    );
 
   } catch (e) {
 
@@ -1254,182 +1136,420 @@ window.manualRefresh = function () {
 
 };
 
-
 /* =====================================
 
-   GLOBAL EVENT SYSTEM (REQUIRED)
+   GLOBAL EVENT SYSTEM
 
 ===================================== */
 
-document.addEventListener("click", function (e) {
+document.addEventListener(
 
-  const btn = e.target.closest("[data-action]");
+  "click",
 
-  if (!btn) return;
+  function (e) {
 
-  const action = btn.dataset.action;
+    const btn =
 
-  try {
+      e.target.closest("[data-action]");
 
-    switch (action) {
+    if (!btn) return;
 
-      case "refresh":
+    const action =
 
-        requestRender();
+      btn.dataset.action;
 
-        showToast("Refreshed", "success");
+    try {
 
-        break;
+      switch (action) {
 
-      case "calculateJob":
+        case "refresh":
 
-        requestRender();
+          if (window.manualRefresh) {
 
-        break;
+            manualRefresh();
 
-      case "createLead":
+          }
 
-        if (window.createLead) createLead();
+          break;
 
-        break;
+        case "calculateJob":
 
-      case "sendProposal":
+          requestRender();
 
-        if (window.sendProposal) sendProposal();
+          break;
 
-        break;
+        case "createLead":
 
-      case "acceptProposal":
+          if (window.createLead) {
 
-        if (window.setProposalStatus)
+            createLead();
 
-          setProposalStatus("Accepted");
+          }
 
-        break;
+          break;
 
-      case "pendingProposal":
+        case "sendProposal":
 
-        if (window.setProposalStatus)
+          if (window.sendProposal) {
 
-          setProposalStatus("Pending");
+            sendProposal();
 
-        break;
+          }
 
-      case "loseProposal":
+          break;
 
-        if (window.setProposalStatus)
+        case "acceptProposal":
 
-          setProposalStatus("Not Accepted");
+          if (
 
-        break;
+            window.setProposalStatus
 
-      case "closeModal":
+          ) {
 
-        if (window.closeProposalModal)
+            setProposalStatus(
 
-          closeProposalModal();
+              "Accepted"
 
-        break;
-       case "refreshCRM":
+            );
 
-  if (window.refreshCRM)
+          }
 
-    refreshCRM();
+          break;
 
-  break;
+        case "pendingProposal":
 
-case "deleteProposal":
+          if (
 
-  if (
+            window.setProposalStatus
 
-    window.deleteProposalById &&
+          ) {
 
-    window.activeProposalId
+            setProposalStatus(
 
-  ) {
+              "Pending"
 
-    deleteProposalById(activeProposalId);
+            );
 
-  }
+          }
 
-  break;
+          break;
 
-case "refreshInventory":
+        case "loseProposal":
 
-  refreshInventoryPage();
+          if (
 
-  break;
+            window.setProposalStatus
 
-case "addStandardMaterial":
+          ) {
 
-  addMaterialRow("standard");
+            setProposalStatus(
 
-  break;
+              "Not Accepted"
 
-case "addPremiumMaterial":
+            );
 
-  addMaterialRow("premium");
+          }
 
-  break;
+          break;
 
-case "addAddonMaterial":
+        case "closeModal":
 
-  addMaterialRow("addons");
+          if (
 
-  break;
+            window.closeProposalModal
 
-case "reloadInventory":
+          ) {
 
-  loadInventory();
+            closeProposalModal();
 
-  renderInventoryTotals();
+          }
 
-  break;
+          break;
 
-case "exportInventory":
+        case "refreshCRM":
 
-  exportInventoryJSON();
+          if (window.refreshCRM) {
 
-  break;
+            refreshCRM();
 
-case "clearInventory":
+          }
 
-  clearInventoryData();
+          break;
 
-  break;
+        case "deleteProposal":
 
-case "refreshBuilder":
+          if (
 
-  refreshBuilderPage();
+            window.deleteProposalById &&
 
-  break;
+            window.activeProposalId
 
-case "calculateBuilder":
+          ) {
 
-  if (window.calculateBuilderUI)
+            deleteProposalById(
 
-    calculateBuilderUI();
+              activeProposalId
 
-  break;
+            );
 
-case "saveBuilderCRM":
+          }
 
-  if (window.saveBuilderToCRM)
+          break;
 
-    saveBuilderToCRM();
+        case "refreshInventory":
 
-  break;
+          refreshInventoryPage();
 
-      default:
+          break;
 
-        console.warn("Unknown action:", action);
+        case "addStandardMaterial":
+
+          addMaterialRow(
+
+            "standard"
+
+          );
+
+          break;
+
+        case "addPremiumMaterial":
+
+          addMaterialRow(
+
+            "premium"
+
+          );
+
+          break;
+
+        case "addAddonMaterial":
+
+          addMaterialRow(
+
+            "addons"
+
+          );
+
+          break;
+
+        case "reloadInventory":
+
+          loadInventory();
+
+          renderInventoryTotals();
+
+          break;
+
+        case "exportInventory":
+
+          exportInventoryJSON();
+
+          break;
+
+        case "clearInventory":
+
+          clearInventoryData();
+
+          break;
+
+        case "refreshBuilder":
+
+          refreshBuilderPage();
+
+          break;
+
+        case "calculateBuilder":
+
+          if (
+
+            window.calculateBuilderUI
+
+          ) {
+
+            calculateBuilderUI();
+
+          }
+
+          break;
+
+        case "saveBuilderCRM":
+
+          if (
+
+            window.saveBuilderToCRM
+
+          ) {
+
+            saveBuilderToCRM();
+
+          }
+
+          break;
+
+        case "editJob":
+
+          if (window.editJob) {
+
+            const id =
+
+              Number(
+
+                btn.dataset.id
+
+              );
+
+            editJob(id);
+
+          }
+
+          break;
+
+        case "deleteJob":
+
+          if (window.deleteJob) {
+
+            const id =
+
+              Number(
+
+                btn.dataset.id
+
+              );
+
+            deleteJob(id);
+
+          }
+
+          break;
+
+        default:
+
+          console.warn(
+
+            "Unknown action:",
+
+            action
+
+          );
+
+      }
+
+    } catch (err) {
+
+      console.error(
+
+        "Action failed:",
+
+        action,
+
+        err
+
+      );
 
     }
 
-  } catch (err) {
+  }
 
-    console.error("Action failed:", action, err);
+);
+
+/* =====================================
+
+   TIMELINE EVENT SYSTEM
+
+===================================== */
+
+document.addEventListener(
+
+  "click",
+
+  function (e) {
+
+    const btn =
+
+      e.target.closest("[data-timeline]");
+
+    if (!btn) return;
+
+    try {
+
+      const value =
+
+        btn.dataset.timeline;
+
+      document
+
+        .querySelectorAll(
+
+          "[data-timeline]"
+
+        )
+
+        .forEach((b) =>
+
+          b.classList.remove(
+
+            "active"
+
+          )
+
+        );
+
+      btn.classList.add(
+
+        "active"
+
+      );
+
+      if (window.state?.ui) {
+
+        window.state.ui.timeline =
+
+          value;
+
+      }
+
+      if (
+
+        typeof requestRender ===
+
+        "function"
+
+      ) {
+
+        requestRender();
+
+      }
+
+      if (
+
+        typeof showToast ===
+
+        "function"
+
+      ) {
+
+        showToast(
+
+          "Timeline: " + value,
+
+          "success"
+
+        );
+
+      }
+
+    } catch (err) {
+
+      console.error(
+
+        "Timeline failed:",
+
+        err
+
+      );
+
+    }
 
   }
 
-});
+);
