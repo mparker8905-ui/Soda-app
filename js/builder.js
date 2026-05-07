@@ -4,7 +4,7 @@
 
    SoDa Outdoor Designs
 
-   Builder Production Pricing Engine UI
+   Builder Estimator + CRM + Materials
 
 ===================================== */
 
@@ -14,7 +14,31 @@
 
 /* =====================================
 
-   CALCULATE BUILDER UI
+   HELPERS
+
+===================================== */
+
+function n(v,d=0){
+
+  const x = Number(v);
+
+  return Number.isFinite(x)
+
+    ? x
+
+    : d;
+
+}
+
+function money(v){
+
+  return "$" + n(v).toFixed(2);
+
+}
+
+/* =====================================
+
+   MAIN CALCULATOR
 
 ===================================== */
 
@@ -24,23 +48,27 @@ window.calculateBuilderUI = function(){
 
     const sqft =
 
-      Number(
+      n(
 
-        document.getElementById("builderSqft")?.value
+        document.getElementById("builderSqft")?.value,
 
-      ) || 0;
+        0
+
+      );
 
     const houses =
 
-      Number(
+      n(
 
-        document.getElementById("builderHouses")?.value
+        document.getElementById("builderHouses")?.value,
 
-      ) || 1;
+        1
+
+      );
 
     const start =
 
-      document.getElementById("builderStart")?.value;
+      document.getElementById("builderStart")?.value || "";
 
     const pkg =
 
@@ -56,53 +84,225 @@ window.calculateBuilderUI = function(){
 
     const competitor =
 
-      Number(
+      n(
 
-        document.getElementById("builderCompetitor")?.value
+        document.getElementById("builderCompetitor")?.value,
 
-      ) || 0;
-
-    /* =========================
-
-       BUILDER ENGINE
-
-    ========================= */
-
-    const result =
-
-      window.calculateBuilderProject({
-
-        sqft,
-
-        houses,
-
-        package: pkg,
-
-        pricingMode,
-
-        competitorPrice: competitor
-
-      });
-
-    if(!result){
-
-      showToast(
-
-        "Builder calculation failed",
-
-        "error"
+        0
 
       );
 
-      return;
+    const totalSqft =
 
-    }
+      Math.max(1, sqft * houses);
 
-    /* =========================
+    /* =====================================
 
-       RENDER RESULTS
+       INVENTORY
 
-    ========================= */
+    ===================================== */
+
+    const inventory =
+
+      window.getInventoryCache?.(true) || {};
+
+    /* =====================================
+
+       CORE CALC
+
+    ===================================== */
+
+    const result =
+
+      window.calculateJobCore({
+
+        inventory,
+
+        job:{
+
+          sqft,
+
+          houses,
+
+          package: pkg,
+
+          pricingMode,
+
+          competitorPrice: competitor,
+
+          labor:{
+
+            hourlyRate: 75,
+
+            hoursPerHouse: 3,
+
+            crewSize: 2,
+
+            overhead: 12
+
+          },
+
+          addons:{}
+
+        }
+
+      });
+
+    /* =====================================
+
+       BUILDER PRICE
+
+    ===================================== */
+
+    const targetMargin = 0.30;
+
+    const builderPrice =
+
+      result.cost / (1 - targetMargin);
+
+    const profit =
+
+      builderPrice - result.cost;
+
+    const margin =
+
+      builderPrice > 0
+
+        ? (profit / builderPrice) * 100
+
+        : 0;
+
+    const pricePerHouse =
+
+      houses > 0
+
+        ? builderPrice / houses
+
+        : 0;
+
+    const pricePerSqft =
+
+      totalSqft > 0
+
+        ? builderPrice / totalSqft
+
+        : 0;
+
+    const builderDiscount =
+
+      (1 -
+
+        window.getBuilderMultiplier(houses)
+
+      ) * 100;
+
+    const sprayDays =
+
+      houses > 10
+
+        ? 3
+
+        : houses > 5
+
+        ? 2
+
+        : 1;
+
+    /* =====================================
+
+       MATERIALS
+
+    ===================================== */
+
+    const materialsHTML =
+
+      Object.entries(result.needs || {})
+
+        .map(([key,val]) => {
+
+          const unit =
+
+            window.MATERIAL_RATES?.[key]?.unit ||
+
+            "";
+
+          return `
+
+            <div class="metric">
+
+              <div class="metric-label">
+
+                ${key.toUpperCase()}
+
+              </div>
+
+              <div class="metric-value">
+
+                ${Number(val).toFixed(1)} ${unit}
+
+              </div>
+
+            </div>
+
+          `;
+
+        })
+
+        .join("");
+
+    /* =====================================
+
+       INVENTORY SHORTAGES
+
+    ===================================== */
+
+    const inventoryTotals =
+
+      window.getInventoryTotals?.() || {};
+
+    const shortages =
+
+      window.compareInventory?.(
+
+        result.needs,
+
+        inventoryTotals
+
+      ) || {};
+
+    const shortageHTML =
+
+      Object.entries(shortages)
+
+        .filter(([_,v]) => v.shortage > 0)
+
+        .map(([key,v]) => `
+
+          <div class="metric">
+
+            <div class="metric-label">
+
+              ${key.toUpperCase()}
+
+            </div>
+
+            <div class="metric-value bad">
+
+              Short ${v.shortage.toFixed(1)}
+
+            </div>
+
+          </div>
+
+        `)
+
+        .join("");
+
+    /* =====================================
+
+       RENDER
+
+    ===================================== */
 
     document.getElementById(
 
@@ -114,13 +314,31 @@ window.calculateBuilderUI = function(){
 
         <h3>Builder Summary</h3>
 
-        <div>Houses: ${result.houses}</div>
+        <div>Houses: ${houses}</div>
 
-        <div>Total Sqft: ${result.totalSqft.toLocaleString()}</div>
+        <div>
 
-        <div>Estimated Spray Days: ${result.sprayDays}</div>
+          Total Sqft:
 
-        <div>Package: ${result.packageType}</div>
+          ${totalSqft.toLocaleString()}
+
+        </div>
+
+        <div>
+
+          Estimated Spray Days:
+
+          ${sprayDays}
+
+        </div>
+
+        <div>
+
+          Package:
+
+          ${pkg}
+
+        </div>
 
       </div>
 
@@ -128,13 +346,37 @@ window.calculateBuilderUI = function(){
 
         <h3>Financials</h3>
 
-        <div>Total Cost: $${result.totalCost.toFixed(2)}</div>
+        <div>
 
-        <div>Builder Price: $${result.price.toFixed(2)}</div>
+          Total Cost:
 
-        <div>Profit: $${result.profit.toFixed(2)}</div>
+          ${money(result.cost)}
 
-        <div>Margin: ${result.margin.toFixed(1)}%</div>
+        </div>
+
+        <div>
+
+          Builder Price:
+
+          ${money(builderPrice)}
+
+        </div>
+
+        <div>
+
+          Profit:
+
+          ${money(profit)}
+
+        </div>
+
+        <div>
+
+          Margin:
+
+          ${margin.toFixed(1)}%
+
+        </div>
 
       </div>
 
@@ -142,13 +384,71 @@ window.calculateBuilderUI = function(){
 
         <h3>Production Metrics</h3>
 
-        <div>Labor Cost: $${result.laborCost.toFixed(2)}</div>
+        <div>
 
-        <div>Material Cost: $${result.materialCost.toFixed(2)}</div>
+          Labor Cost:
 
-        <div>Mobilization: $${result.mobilization.toFixed(2)}</div>
+          ${money(result.laborCost)}
 
-        <div>Overhead: $${result.overhead.toFixed(2)}</div>
+        </div>
+
+        <div>
+
+          Material Cost:
+
+          ${money(
+
+            result.cost -
+
+            result.laborCost -
+
+            result.overheadCost
+
+          )}
+
+        </div>
+
+        <div>
+
+          Mobilization:
+
+          $750.00
+
+        </div>
+
+        <div>
+
+          Overhead:
+
+          ${money(result.overheadCost)}
+
+        </div>
+
+      </div>
+
+      <div class="glass-card">
+
+        <h3>Material Usage</h3>
+
+        ${materialsHTML}
+
+      </div>
+
+      <div class="glass-card">
+
+        <h3>Inventory Shortages</h3>
+
+        ${
+
+          shortageHTML ||
+
+          `<div class="good">
+
+            Inventory levels sufficient
+
+          </div>`
+
+        }
 
       </div>
 
@@ -156,21 +456,33 @@ window.calculateBuilderUI = function(){
 
         <h3>Builder Metrics</h3>
 
-        <div>Price Per House: $${result.pricePerHouse.toFixed(2)}</div>
+        <div>
 
-        <div>Price Per Sqft: $${result.pricePerSqft.toFixed(2)}</div>
+          Price Per House:
 
-        <div>Builder Discount: ${result.builderDiscount.toFixed(1)}%</div>
+          ${money(pricePerHouse)}
+
+        </div>
+
+        <div>
+
+          Price Per Sqft:
+
+          ${money(pricePerSqft)}
+
+        </div>
+
+        <div>
+
+          Builder Discount:
+
+          ${builderDiscount.toFixed(1)}%
+
+        </div>
 
       </div>
 
     `;
-
-    /* =========================
-
-       SCHEDULE
-
-    ========================= */
 
     renderBuilderSchedule(
 
@@ -180,11 +492,23 @@ window.calculateBuilderUI = function(){
 
     );
 
-    /* =========================
+    window.lastBuilderResult = {
 
-       SUCCESS
+      ...result,
 
-    ========================= */
+      totalSqft,
+
+      builderPrice,
+
+      profit,
+
+      margin,
+
+      houses,
+
+      packageType: pkg
+
+    };
 
     showToast(
 
@@ -194,7 +518,7 @@ window.calculateBuilderUI = function(){
 
     );
 
-  } catch(e){
+  }catch(e){
 
     console.error(e);
 
@@ -212,7 +536,7 @@ window.calculateBuilderUI = function(){
 
 /* =====================================
 
-   BUILDER SCHEDULE
+   SCHEDULE
 
 ===================================== */
 
@@ -242,7 +566,7 @@ window.renderBuilderSchedule = function(
 
         <div class="muted">
 
-          Select a project start date
+          Select a start date
 
         </div>
 
@@ -256,7 +580,7 @@ window.renderBuilderSchedule = function(
 
       new Date(startDate);
 
-    function addDays(d, days){
+    function addDays(d,days){
 
       const x = new Date(d);
 
@@ -280,9 +604,7 @@ window.renderBuilderSchedule = function(
 
           month:"short",
 
-          day:"numeric",
-
-          year:"numeric"
+          day:"numeric"
 
         }
 
@@ -290,63 +612,37 @@ window.renderBuilderSchedule = function(
 
     }
 
-    /* =========================
-
-       SPRAY DAYS
-
-    ========================= */
-
     const hydroDays =
 
-      houses >= 50 ? 7 :
+      houses > 10
 
-      houses >= 25 ? 5 :
+        ? 3
 
-      houses >= 10 ? 3 :
+        : houses > 5
 
-      houses >= 5 ? 2 : 1;
+        ? 2
+
+        : 1;
 
     const html = [];
-
-    /* =========================
-
-       SOIL PREP
-
-    ========================= */
 
     html.push(`
 
       <div class="glass-card">
 
-        <strong>Soil Prep Phase</strong>
+        <strong>
 
-        <div class="muted">
+          Soil Prep Phase
 
-          ${fmt(start)}
+        </strong>
 
-        </div>
-
-        <div style="margin-top:8px;">
-
-          • Site prep<br>
-
-          • Grading review<br>
-
-          • Access planning
-
-        </div>
+        <div>${fmt(start)}</div>
 
       </div>
 
     `);
 
-    /* =========================
-
-       HYDROSEED PHASES
-
-    ========================= */
-
-    for(let i = 0; i < hydroDays; i++){
+    for(let i=0;i<hydroDays;i++){
 
       html.push(`
 
@@ -354,23 +650,13 @@ window.renderBuilderSchedule = function(
 
           <strong>
 
-            Hydroseed Production Day ${i + 1}
+            Hydroseed Phase
 
           </strong>
 
-          <div class="muted">
+          <div>
 
-            ${fmt(addDays(start, 3 + i))}
-
-          </div>
-
-          <div style="margin-top:8px;">
-
-            • Production hydroseeding<br>
-
-            • Crew deployment<br>
-
-            • Material loading
+            ${fmt(addDays(start,3+i))}
 
           </div>
 
@@ -380,31 +666,19 @@ window.renderBuilderSchedule = function(
 
     }
 
-    /* =========================
-
-       FINAL INSPECTION
-
-    ========================= */
-
     html.push(`
 
       <div class="glass-card">
 
-        <strong>Final Inspection</strong>
+        <strong>
 
-        <div class="muted">
+          Final Inspection
 
-          ${fmt(addDays(start, 24))}
+        </strong>
 
-        </div>
+        <div>
 
-        <div style="margin-top:8px;">
-
-          • Builder walkthrough<br>
-
-          • Coverage inspection<br>
-
-          • Punch list review
+          ${fmt(addDays(start,24))}
 
         </div>
 
@@ -416,13 +690,15 @@ window.renderBuilderSchedule = function(
 
       html.join("");
 
-  } catch(e){
+  }catch(e){
 
     console.error(e);
 
   }
 
 };
+
+})();
 
 /* =====================================
 
@@ -434,6 +710,20 @@ window.saveBuilderToCRM = function(){
 
   try{
 
+    if(!window.lastBuilderResult){
+
+      showToast(
+
+        "Calculate builder project first",
+
+        "warning"
+
+      );
+
+      return;
+
+    }
+
     const customer =
 
       prompt("Builder / Project Name:");
@@ -442,85 +732,11 @@ window.saveBuilderToCRM = function(){
 
     const address =
 
-      prompt("Project Location:") || "";
-
-    const sqft =
-
-      Number(
-
-        document.getElementById("builderSqft")?.value
-
-      ) || 0;
-
-    const houses =
-
-      Number(
-
-        document.getElementById("builderHouses")?.value
-
-      ) || 1;
-
-    const pkg =
-
-      document.getElementById("builderPackage")?.value ||
-
-      "standard";
-
-    const pricingMode =
-
-      document.getElementById("builderPricingMode")?.value ||
-
-      "balanced";
-
-    const competitor =
-
-      Number(
-
-        document.getElementById("builderCompetitor")?.value
-
-      ) || 0;
-
-    /* =========================
-
-       BUILDER ENGINE
-
-    ========================= */
+      prompt("Project Location:");
 
     const result =
 
-      window.calculateBuilderProject({
-
-        sqft,
-
-        houses,
-
-        package: pkg,
-
-        pricingMode,
-
-        competitorPrice: competitor
-
-      });
-
-    if(!result){
-
-      showToast(
-
-        "Unable to save project",
-
-        "error"
-
-      );
-
-      return;
-
-    }
-
-    /* =========================
-
-       CRM PROPOSAL
-
-    ========================= */
+      window.lastBuilderResult;
 
     const proposal = {
 
@@ -534,47 +750,47 @@ window.saveBuilderToCRM = function(){
 
       sqft: result.totalSqft,
 
-      houses,
+      houses: result.houses,
 
-      packageType: pkg,
+      packageType:
 
-      pricingMode,
+        result.packageType,
 
-      total: result.price,
+      total:
 
-      cost: result.totalCost,
+        result.builderPrice,
 
-      profit: result.profit,
+      cost:
 
-      margin: result.margin,
+        result.cost,
 
-      sprayDays: result.sprayDays,
+      needs:
 
-      status: "Proposal Sent",
+        result.needs,
 
-      stage: "builder",
+      status:
 
-      createdAt: Date.now()
+        "Proposal Sent",
+
+      stage:
+
+        "proposal",
+
+      createdAt:
+
+        Date.now()
 
     };
 
-    /* =========================
+    let list = JSON.parse(
 
-       SAVE
+      localStorage.getItem(
 
-    ========================= */
+        "soda_proposals"
 
-    let list =
+      ) || "[]"
 
-      JSON.parse(
-
-        localStorage.getItem(
-
-          "soda_proposals"
-
-        ) || "[]"
-
-      );
+    );
 
     list.push(proposal);
 
@@ -586,29 +802,11 @@ window.saveBuilderToCRM = function(){
 
     );
 
-    /* =========================
-
-       RERENDER
-
-    ========================= */
-
     if(window.renderPipeline){
 
       window.renderPipeline();
 
     }
-
-    if(window.refreshCRM){
-
-      window.refreshCRM();
-
-    }
-
-    /* =========================
-
-       SUCCESS
-
-    ========================= */
 
     showToast(
 
@@ -618,44 +816,10 @@ window.saveBuilderToCRM = function(){
 
     );
 
-  } catch(e){
-
-    console.error(e);
-
-    showToast(
-
-      "Save failed",
-
-      "error"
-
-    );
-
-  }
-
-};
-
-/* =====================================
-
-   OPTIONAL REFRESH
-
-===================================== */
-
-window.refreshBuilderPage = function(){
-
-  try{
-
-    if(window.calculateBuilderUI){
-
-      calculateBuilderUI();
-
-    }
-
-  } catch(e){
+  }catch(e){
 
     console.error(e);
 
   }
 
 };
-
-})();

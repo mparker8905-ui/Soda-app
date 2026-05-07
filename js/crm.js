@@ -96,7 +96,11 @@
 
     const n = Number(v);
 
-    return Number.isFinite(n) ? n : 0;
+    return Number.isFinite(n)
+
+      ? n
+
+      : 0;
 
   }
 
@@ -174,9 +178,13 @@
 
     try {
 
-      const customer = val("customer").trim();
+      const customer =
 
-      const address = val("address").trim();
+        val("customer").trim();
+
+      const address =
+
+        val("address").trim();
 
       if (!customer) {
 
@@ -214,13 +222,31 @@
 
       rerender();
 
-      toast("Lead created", "success");
+      toast(
+
+        "Lead created",
+
+        "success"
+
+      );
 
     } catch (e) {
 
-      console.error("createLead failed:", e);
+      console.error(
 
-      toast("Create Lead failed", "error");
+        "createLead failed:",
+
+        e
+
+      );
+
+      toast(
+
+        "Create Lead failed",
+
+        "error"
+
+      );
 
     }
 
@@ -236,29 +262,57 @@
 
     try {
 
-      if (typeof window.calculateJob !== "function") {
+      if (
 
-        alert("Calculator unavailable");
+        typeof window.calculateJob !==
+
+        "function"
+
+      ) {
+
+        alert(
+
+          "Calculator unavailable"
+
+        );
 
         return;
 
       }
 
-      const r = window.calculateJob();
+      const r =
 
-      const customer = val("customer", "Client");
+        window.calculateJob();
 
-      const address = val("address");
+      const customer =
 
-      const quoteDate = val("quoteDate");
+        val("customer", "Client");
 
-      const packageType = val("package", "standard");
+      const address =
 
-      const quoteDateFormatted = quoteDate
+        val("address");
 
-        ? new Date(quoteDate).toLocaleDateString()
+      const quoteDate =
 
-        : new Date().toLocaleDateString();
+        val("quoteDate");
+
+      const packageType =
+
+        val("package", "standard");
+
+      const quoteDateFormatted =
+
+        quoteDate
+
+          ? new Date(
+
+              quoteDate
+
+            ).toLocaleDateString()
+
+          : new Date()
+
+              .toLocaleDateString();
 
       const proposal = {
 
@@ -270,27 +324,53 @@
 
         packageType,
 
-        quoteDate: quoteDateFormatted,
+        quoteDate:
 
-        total: num(r.price),
+          quoteDateFormatted,
 
-        sqft: num(r.totalSqft),
+        total:
 
-        stage: "proposal",
+          num(r.price),
 
-        status: "Proposal Sent",
+        sqft:
 
-        createdAt: Date.now(),
+          num(r.totalSqft),
+
+        needs:
+
+          r.needs || {},
+
+        stage:
+
+          "proposal",
+
+        status:
+
+          "Proposal Sent",
+
+        createdAt:
+
+          Date.now(),
 
         snapshot: {
 
-          sqft: val("sqft"),
+          sqft:
 
-          houses: val("houses"),
+            val("sqft"),
 
-          package: packageType,
+          houses:
 
-          addons: window.state?.job?.addons || {}
+            val("houses"),
+
+          package:
+
+            packageType,
+
+          addons:
+
+            window.state?.job
+
+              ?.addons || {}
 
         }
 
@@ -298,13 +378,21 @@
 
       const list = readCRM();
 
-      const exists = list.find(p =>
+      const exists = list.find(
 
-        p.customer === proposal.customer &&
+        p =>
 
-        p.address === proposal.address &&
+          p.customer ===
 
-        p.quoteDate === proposal.quoteDate
+            proposal.customer &&
+
+          p.address ===
+
+            proposal.address &&
+
+          p.quoteDate ===
+
+            proposal.quoteDate
 
       );
 
@@ -318,13 +406,31 @@
 
       rerender();
 
-      openProposalWindow(proposal, r);
+      openProposalWindow(
+
+        proposal,
+
+        r
+
+      );
 
     } catch (e) {
 
-      console.error("sendProposal failed:", e);
+      console.error(
 
-      toast("Proposal failed", "error");
+        "sendProposal failed:",
+
+        e
+
+      );
+
+      toast(
+
+        "Proposal failed",
+
+        "error"
+
+      );
 
     }
 
@@ -336,11 +442,19 @@
 
   ===================================== */
 
-  function openProposalWindow(proposal, r) {
+  function openProposalWindow(
+
+    proposal,
+
+    r
+
+  ) {
 
     try {
 
-      const win = window.open("", "_blank");
+      const win =
+
+        window.open("", "_blank");
 
       if (!win) {
 
@@ -354,7 +468,9 @@
 
         r.totalSqft > 0
 
-          ? r.price / r.totalSqft
+          ? r.price /
+
+            r.totalSqft
 
           : 0;
 
@@ -452,7 +568,11 @@
 
       <h1>SoDa Outdoor Designs</h1>
 
-      <div>We build lawns from the soil up</div>
+      <div>
+
+        We build lawns from the soil up
+
+      </div>
 
       <div class="section">
 
@@ -486,7 +606,11 @@
 
           <span>Total Sqft</span>
 
-          <span>${num(r.totalSqft).toFixed(0)}</span>
+          <span>
+
+            ${num(r.totalSqft).toFixed(0)}
+
+          </span>
 
         </div>
 
@@ -494,7 +618,11 @@
 
           <span>Price / Sqft</span>
 
-          <span>$${pricePerSqft.toFixed(2)}</span>
+          <span>
+
+            $${pricePerSqft.toFixed(2)}
+
+          </span>
 
         </div>
 
@@ -502,7 +630,11 @@
 
           <span>Labor</span>
 
-          <span>$${num(r.laborCost).toFixed(2)}</span>
+          <span>
+
+            $${num(r.laborCost).toFixed(2)}
+
+          </span>
 
         </div>
 
@@ -548,39 +680,55 @@
 
       win.document.close();
 
-      win.proposalId = proposal.id;
+      win.proposalId =
 
-      win.approveProposal = function () {
+        proposal.id;
 
-        setStatusById(
+      win.approveProposal =
 
-          win.proposalId,
+        function () {
 
-          "Accepted"
+          setStatusById(
 
-        );
+            win.proposalId,
 
-        win.print();
+            "Accepted"
 
-      };
+          );
 
-      win.markRejected = function () {
+          win.print();
 
-        setStatusById(
+        };
 
-          win.proposalId,
+      win.markRejected =
 
-          "Not Accepted"
+        function () {
 
-        );
+          setStatusById(
 
-        alert("Marked as Not Accepted");
+            win.proposalId,
 
-      };
+            "Not Accepted"
+
+          );
+
+          alert(
+
+            "Marked as Not Accepted"
+
+          );
+
+        };
 
     } catch (e) {
 
-      console.error("proposal window failed:", e);
+      console.error(
+
+        "proposal window failed:",
+
+        e
+
+      );
 
     }
 
@@ -632,7 +780,13 @@
 
     if (key === "lost") {
 
-      return p.status === "Not Accepted";
+      return (
+
+        p.status ===
+
+        "Not Accepted"
+
+      );
 
     }
 
@@ -652,7 +806,11 @@
 
       const container =
 
-        document.getElementById("jobHistoryList");
+        document.getElementById(
+
+          "jobHistoryList"
+
+        );
 
       if (!container) return;
 
@@ -660,17 +818,35 @@
 
       let html =
 
-        `<div style="display:flex;gap:12px;overflow-x:auto;">`;
+        `<div style="
 
-      PIPELINE_STAGES.forEach(stage => {
+          display:flex;
 
-        const items = list.filter(p =>
+          gap:12px;
 
-          matchStage(p, stage.key)
+          overflow-x:auto;
 
-        );
+        ">`;
 
-        html += `
+      PIPELINE_STAGES.forEach(
+
+        stage => {
+
+          const items =
+
+            list.filter(p =>
+
+              matchStage(
+
+                p,
+
+                stage.key
+
+              )
+
+            );
+
+          html += `
 
           <div class="glass-card"
 
@@ -678,11 +854,17 @@
 
               min-width:260px;
 
-              ${stage.key === "builder"
+              ${
 
-                ? "border:2px solid #d4af37;"
+                stage.key ===
 
-                : ""}
+                "builder"
+
+                  ? "border:2px solid #d4af37;"
+
+                  : ""
+
+              }
 
             ">
 
@@ -696,7 +878,9 @@
 
             ">
 
-              ${stage.label} (${items.length})
+              ${stage.label}
+
+              (${items.length})
 
             </div>
 
@@ -718,6 +902,46 @@
 
                 <div class="history-card"
 
+                  style="
+
+                    border:1px solid ${
+
+                      p.status ===
+
+                      "Accepted"
+
+                        ? "#1f7a43"
+
+                        : p.status ===
+
+                          "Not Accepted"
+
+                        ? "#8b1e1e"
+
+                        : "#2a2a2a"
+
+                    };
+
+                    background:${
+
+                      p.status ===
+
+                      "Accepted"
+
+                        ? "rgba(31,122,67,.14)"
+
+                        : p.status ===
+
+                          "Not Accepted"
+
+                        ? "rgba(139,30,30,.16)"
+
+                        : "#111"
+
+                    };
+
+                  "
+
                   onclick="openProposal(${p.id})">
 
                   <div>
@@ -734,7 +958,11 @@
 
                           margin-left:6px;
 
-                        ">[BUILDER]</span>`
+                        ">
+
+                          [BUILDER]
+
+                        </span>`
 
                       : ""
 
@@ -754,7 +982,9 @@
 
                   </div>
 
-                  ${isBuilder ? `
+                  ${isBuilder
+
+                    ? `
 
                     <div style="
 
@@ -768,9 +998,17 @@
 
                     </div>
 
-                  ` : ""}
+                    `
 
-                  <div style="margin-top:6px;">
+                    : ""
+
+                  }
+
+                  <div style="
+
+                    margin-top:6px;
+
+                  ">
 
                     💰 $${total.toFixed(0)}
 
@@ -784,9 +1022,11 @@
 
           </div>
 
-        `;
+          `;
 
-      });
+        }
+
+      );
 
       html += `</div>`;
 
@@ -794,7 +1034,13 @@
 
     } catch (e) {
 
-      console.error("renderPipeline failed:", e);
+      console.error(
+
+        "renderPipeline failed:",
+
+        e
+
+      );
 
     }
 
@@ -812,39 +1058,69 @@
 
       const list = readCRM();
 
-      const p = list.find(x => x.id == id);
+      const p =
+
+        list.find(
+
+          x => x.id == id
+
+        );
 
       if (!p) return;
 
-      window.activeProposalId = id;
+      window.activeProposalId =
+
+        id;
 
       const modal =
 
-        document.getElementById("proposalModal");
+        document.getElementById(
+
+          "proposalModal"
+
+        );
 
       const body =
 
-        document.getElementById("modalBody");
+        document.getElementById(
 
-      if (!modal || !body) return;
+          "modalBody"
+
+        );
+
+      if (!modal || !body)
+
+        return;
 
       const customer =
 
-        document.getElementById("modalCustomer");
+        document.getElementById(
+
+          "modalCustomer"
+
+        );
 
       const address =
 
-        document.getElementById("modalAddress");
+        document.getElementById(
+
+          "modalAddress"
+
+        );
 
       if (customer) {
 
-        customer.innerText = p.customer || "";
+        customer.innerText =
+
+          p.customer || "";
 
       }
 
       if (address) {
 
-        address.innerText = p.address || "";
+        address.innerText =
+
+          p.address || "";
 
       }
 
@@ -880,6 +1156,32 @@
 
           : 0;
 
+      const materialHTML =
+
+        Object.entries(
+
+          p.needs || {}
+
+        )
+
+        .map(([k,v]) => `
+
+          <div class="row">
+
+            <b>${k}</b>
+
+            <span>
+
+              ${Number(v).toFixed(1)}
+
+            </span>
+
+          </div>
+
+        `)
+
+        .join("");
+
       body.innerHTML = `
 
         <div class="proposal-wrap">
@@ -888,7 +1190,33 @@
 
             <b>Status:</b>
 
-            <span>${p.status || "-"}</span>
+            <span style="
+
+              color:${
+
+                p.status ===
+
+                "Accepted"
+
+                  ? "#4cff9a"
+
+                  : p.status ===
+
+                    "Not Accepted"
+
+                  ? "#ff4d4d"
+
+                  : "#d4af37"
+
+              };
+
+              font-weight:700;
+
+            ">
+
+              ${p.status || "-"}
+
+            </span>
 
           </div>
 
@@ -896,7 +1224,11 @@
 
             <b>Sqft:</b>
 
-            <span>${p.sqft || 0}</span>
+            <span>
+
+              ${p.sqft || 0}
+
+            </span>
 
           </div>
 
@@ -904,7 +1236,11 @@
 
             <b>Total:</b>
 
-            <span>$${total.toFixed(2)}</span>
+            <span>
+
+              $${total.toFixed(2)}
+
+            </span>
 
           </div>
 
@@ -946,7 +1282,11 @@
 
                 <b>Total Cost:</b>
 
-                <span>$${cost.toFixed(2)}</span>
+                <span>
+
+                  $${cost.toFixed(2)}
+
+                </span>
 
               </div>
 
@@ -954,7 +1294,11 @@
 
                 <b>Cost / Lot:</b>
 
-                <span>$${costPerLot.toFixed(2)}</span>
+                <span>
+
+                  $${costPerLot.toFixed(2)}
+
+                </span>
 
               </div>
 
@@ -962,7 +1306,11 @@
 
                 <b>Price / Lot:</b>
 
-                <span>$${pricePerLot.toFixed(2)}</span>
+                <span>
+
+                  $${pricePerLot.toFixed(2)}
+
+                </span>
 
               </div>
 
@@ -970,15 +1318,59 @@
 
           ` : ""}
 
+          <div style="
+
+            margin-top:18px;
+
+            border-top:1px solid #333;
+
+            padding-top:12px;
+
+          ">
+
+            <div style="
+
+              color:#d4af37;
+
+              font-weight:bold;
+
+              margin-bottom:10px;
+
+            ">
+
+              MATERIAL REQUIREMENTS
+
+            </div>
+
+            ${materialHTML ||
+
+              `<div class="muted">
+
+                No material data
+
+              </div>`
+
+            }
+
+          </div>
+
         </div>
 
       `;
 
-      modal.style.display = "flex";
+      modal.style.display =
+
+        "flex";
 
     } catch (e) {
 
-      console.error("openProposal failed:", e);
+      console.error(
+
+        "openProposal failed:",
+
+        e
+
+      );
 
     }
 
@@ -996,11 +1388,17 @@
 
       const modal =
 
-        document.getElementById("proposalModal");
+        document.getElementById(
+
+          "proposalModal"
+
+        );
 
       if (modal) {
 
-        modal.style.display = "none";
+        modal.style.display =
+
+          "none";
 
       }
 
@@ -1024,35 +1422,103 @@
 
   ===================================== */
 
-  function setStatusById(id, status) {
+  function setStatusById(
+
+    id,
+
+    status
+
+  ) {
 
     try {
 
       const list = readCRM();
 
-      const i = list.findIndex(p => p.id === id);
+      const i =
 
-      if (i === -1) return;
+        list.findIndex(
 
-      list[i].status = status;
+          p => p.id === id
 
-      if (status === "Accepted") {
+        );
+
+      if (i === -1)
+
+        return;
+
+      list[i].status =
+
+        status;
+
+      if (
+
+        status === "Accepted"
+
+      ) {
 
         list[i].stage = "won";
 
-      } else if (status === "Pending") {
+        /* =========================
 
-        list[i].stage = "pending";
+           INVENTORY DEDUCTION
 
-      } else if (status === "Not Accepted") {
+        ========================= */
 
-        list[i].stage = "lost";
+        if (
+
+          list[i].needs &&
+
+          window.consumeInventory
+
+        ) {
+
+          consumeInventory(
+
+            list[i].needs
+
+          );
+
+        }
+
+      }
+
+      else if (
+
+        status === "Pending"
+
+      ) {
+
+        list[i].stage =
+
+          "pending";
+
+      }
+
+      else if (
+
+        status ===
+
+        "Not Accepted"
+
+      ) {
+
+        list[i].stage =
+
+          "lost";
 
       }
 
       writeCRM(list);
 
       rerender();
+
+      toast(
+
+        "Proposal updated",
+
+        "success"
+
+      );
 
     } catch (e) {
 
@@ -1062,11 +1528,19 @@
 
   }
 
-  function setProposalStatus(status) {
+  function setProposalStatus(
+
+    status
+
+  ) {
 
     try {
 
-      if (!window.activeProposalId) return;
+      if (
+
+        !window.activeProposalId
+
+      ) return;
 
       setStatusById(
 
@@ -1076,7 +1550,11 @@
 
       );
 
-      openProposal(window.activeProposalId);
+      openProposal(
+
+        window.activeProposalId
+
+      );
 
     } catch (e) {
 
@@ -1092,13 +1570,23 @@
 
   ===================================== */
 
-  function deleteProposalById(id) {
+  function deleteProposalById(
+
+    id
+
+  ) {
 
     try {
 
       let list = readCRM();
 
-      list = list.filter(p => p.id != id);
+      list =
+
+        list.filter(
+
+          p => p.id != id
+
+        );
 
       writeCRM(list);
 
@@ -1106,7 +1594,13 @@
 
       closeProposalModal();
 
-      toast("Proposal deleted", "error");
+      toast(
+
+        "Proposal deleted",
+
+        "error"
+
+      );
 
     } catch (e) {
 
@@ -1122,7 +1616,11 @@
 
   ===================================== */
 
-  function setTimeline(elOrValue) {
+  function setTimeline(
+
+    elOrValue
+
+  ) {
 
     try {
 
@@ -1138,7 +1636,9 @@
 
       if (
 
-        typeof elOrValue === "string"
+        typeof elOrValue ===
+
+        "string"
 
       ) {
 
@@ -1148,7 +1648,9 @@
 
         value =
 
-          elOrValue?.dataset?.timeline ||
+          elOrValue?.dataset
+
+            ?.timeline ||
 
           "standard";
 
@@ -1158,7 +1660,9 @@
 
         const active =
 
-          btn.dataset.timeline === value;
+          btn.dataset.timeline ===
+
+          value;
 
         btn.classList.toggle(
 
@@ -1180,7 +1684,9 @@
 
       if (
 
-        typeof render === "function"
+        typeof render ===
+
+        "function"
 
       ) {
 
@@ -1208,11 +1714,21 @@
 
   ===================================== */
 
-  function handleModalBackground(e) {
+  function handleModalBackground(
+
+    e
+
+  ) {
 
     try {
 
-      if (e.target === e.currentTarget) {
+      if (
+
+        e.target ===
+
+        e.currentTarget
+
+      ) {
 
         closeProposalModal();
 
@@ -1242,7 +1758,9 @@
 
         setTimeline(
 
-          window.state?.ui?.timeline ||
+          window.state?.ui
+
+            ?.timeline ||
 
           "standard"
 
@@ -1260,28 +1778,48 @@
 
   /* =====================================
 
-     GLOBAL EXPORTS
+     EXPORTS
 
   ===================================== */
 
-  window.sendProposal = sendProposal;
+  window.sendProposal =
 
-  window.closeProposalModal = closeProposalModal;
+    sendProposal;
 
-  window.createLead = createLead;
+  window.closeProposalModal =
 
-  window.renderPipeline = renderPipeline;
+    closeProposalModal;
 
-  window.openProposal = openProposal;
+  window.createLead =
 
-  window.setProposalStatus = setProposalStatus;
+    createLead;
 
-  window.deleteProposalById = deleteProposalById;
+  window.renderPipeline =
 
-  window.setTimeline = setTimeline;
+    renderPipeline;
 
-  window.handleModalBackground = handleModalBackground;
+  window.openProposal =
 
-  window.getSavedProposals = getSavedProposals;
+    openProposal;
+
+  window.setProposalStatus =
+
+    setProposalStatus;
+
+  window.deleteProposalById =
+
+    deleteProposalById;
+
+  window.setTimeline =
+
+    setTimeline;
+
+  window.handleModalBackground =
+
+    handleModalBackground;
+
+  window.getSavedProposals =
+
+    getSavedProposals;
 
 })();
