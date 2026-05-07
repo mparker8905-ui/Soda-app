@@ -46,6 +46,12 @@ window.calculateBuilderUI = function(){
 
   try{
 
+    /* =====================================
+
+       INPUTS
+
+    ===================================== */
+
     const sqft =
 
       n(
@@ -92,6 +98,82 @@ window.calculateBuilderUI = function(){
 
       );
 
+    /* =====================================
+
+       NEW LABOR INPUTS
+
+    ===================================== */
+
+    const crewSize =
+
+      n(
+
+        document.getElementById("builderCrewSize")?.value,
+
+        3
+
+      );
+
+    const hourlyRate =
+
+      n(
+
+        document.getElementById("builderHourlyRate")?.value,
+
+        25
+
+      );
+
+    const productionRate =
+
+      n(
+
+        document.getElementById("builderProductionRate")?.value,
+
+        10000
+
+      );
+
+    const hoursPerDay =
+
+      n(
+
+        document.getElementById("builderHoursPerDay")?.value,
+
+        8
+
+      );
+
+    const overheadPct =
+
+      n(
+
+        document.getElementById("builderOverhead")?.value,
+
+        12
+
+      );
+
+    const mobilization =
+
+      n(
+
+        document.getElementById("builderMobilization")?.value,
+
+        750
+
+      );
+
+    const targetMargin =
+
+      n(
+
+        document.getElementById("builderTargetMargin")?.value,
+
+        30
+
+      ) / 100;
+
     const totalSqft =
 
       Math.max(1, sqft * houses);
@@ -108,45 +190,125 @@ window.calculateBuilderUI = function(){
 
     /* =====================================
 
-       CORE CALC
+       MATERIAL NEEDS
 
     ===================================== */
 
-    const result =
+    const needs =
 
-      window.calculateJobCore({
+      window.getMaterialNeedsCore(
 
-        inventory,
+        {
 
-        job:{
+          totalSqft
 
-          sqft,
+        },
 
-          houses,
+        pkg,
 
-          package: pkg,
+        {}
 
-          pricingMode,
+      );
 
-          competitorPrice: competitor,
+    /* =====================================
 
-          labor:{
+       MATERIAL COST
 
-            hourlyRate: 75,
+    ===================================== */
 
-            hoursPerHouse: 3,
+    let materialCost = 0;
 
-            crewSize: 2,
+    Object.keys(needs).forEach(type => {
 
-            overhead: 12
+      const qty =
 
-          },
+        n(needs[type]);
 
-          addons:{}
+      const avgCost =
 
-        }
+        window.getAvgCostFromInventory?.(
 
-      });
+          type,
+
+          inventory
+
+        ) || 0;
+
+      materialCost +=
+
+        qty * avgCost;
+
+    });
+
+    /* =====================================
+
+       PRODUCTION CALCULATIONS
+
+    ===================================== */
+
+    const sprayDays =
+
+      Math.max(
+
+        1,
+
+        Math.ceil(
+
+          totalSqft / productionRate
+
+        )
+
+      );
+
+    const laborHours =
+
+      sprayDays *
+
+      hoursPerDay *
+
+      crewSize;
+
+    const laborCost =
+
+      laborHours *
+
+      hourlyRate;
+
+    /* =====================================
+
+       OVERHEAD
+
+    ===================================== */
+
+    const overheadCost =
+
+      (
+
+        materialCost +
+
+        laborCost +
+
+        mobilization
+
+      ) *
+
+      (overheadPct / 100);
+
+    /* =====================================
+
+       TOTAL COST
+
+    ===================================== */
+
+    const totalCost =
+
+      materialCost +
+
+      laborCost +
+
+      mobilization +
+
+      overheadCost;
 
     /* =====================================
 
@@ -154,15 +316,65 @@ window.calculateBuilderUI = function(){
 
     ===================================== */
 
-    const targetMargin = 0.30;
+    let builderPrice =
 
-    const builderPrice =
+      totalCost / (1 - targetMargin);
 
-      result.cost / (1 - targetMargin);
+    /* =====================================
+
+       COMPETITOR ADJUSTMENT
+
+    ===================================== */
+
+    if(competitor > 0){
+
+      builderPrice =
+
+        Math.max(
+
+          builderPrice,
+
+          competitor * 0.97
+
+        );
+
+    }
+
+    /* =====================================
+
+       BUILDER MULTIPLIER
+
+    ===================================== */
+
+    const builderMultiplier =
+
+      window.getBuilderMultiplier?.(houses) || 1;
+
+    builderPrice *= builderMultiplier;
+
+    /* =====================================
+
+       SAFETY FLOOR
+
+    ===================================== */
+
+    if(builderPrice < totalCost * 1.1){
+
+      builderPrice =
+
+        totalCost * 1.1;
+
+    }
+
+    /* =====================================
+
+       PROFITS
+
+    ===================================== */
 
     const profit =
 
-      builderPrice - result.cost;
+      builderPrice - totalCost;
 
     const margin =
 
@@ -190,33 +402,17 @@ window.calculateBuilderUI = function(){
 
     const builderDiscount =
 
-      (1 -
-
-        window.getBuilderMultiplier(houses)
-
-      ) * 100;
-
-    const sprayDays =
-
-      houses > 10
-
-        ? 3
-
-        : houses > 5
-
-        ? 2
-
-        : 1;
+      (1 - builderMultiplier) * 100;
 
     /* =====================================
 
-       MATERIALS
+       MATERIAL USAGE
 
     ===================================== */
 
     const materialsHTML =
 
-      Object.entries(result.needs || {})
+      Object.entries(needs || {})
 
         .map(([key,val]) => {
 
@@ -264,7 +460,7 @@ window.calculateBuilderUI = function(){
 
       window.compareInventory?.(
 
-        result.needs,
+        needs,
 
         inventoryTotals
 
@@ -350,7 +546,7 @@ window.calculateBuilderUI = function(){
 
           Total Cost:
 
-          ${money(result.cost)}
+          ${money(totalCost)}
 
         </div>
 
@@ -386,9 +582,33 @@ window.calculateBuilderUI = function(){
 
         <div>
 
+          Spray Days:
+
+          ${sprayDays}
+
+        </div>
+
+        <div>
+
+          Crew Size:
+
+          ${crewSize}
+
+        </div>
+
+        <div>
+
+          Labor Hours:
+
+          ${laborHours.toFixed(1)}
+
+        </div>
+
+        <div>
+
           Labor Cost:
 
-          ${money(result.laborCost)}
+          ${money(laborCost)}
 
         </div>
 
@@ -396,15 +616,7 @@ window.calculateBuilderUI = function(){
 
           Material Cost:
 
-          ${money(
-
-            result.cost -
-
-            result.laborCost -
-
-            result.overheadCost
-
-          )}
+          ${money(materialCost)}
 
         </div>
 
@@ -412,7 +624,7 @@ window.calculateBuilderUI = function(){
 
           Mobilization:
 
-          $750.00
+          ${money(mobilization)}
 
         </div>
 
@@ -420,7 +632,7 @@ window.calculateBuilderUI = function(){
 
           Overhead:
 
-          ${money(result.overheadCost)}
+          ${money(overheadCost)}
 
         </div>
 
@@ -484,6 +696,12 @@ window.calculateBuilderUI = function(){
 
     `;
 
+    /* =====================================
+
+       SCHEDULE
+
+    ===================================== */
+
     renderBuilderSchedule(
 
       start,
@@ -492,11 +710,31 @@ window.calculateBuilderUI = function(){
 
     );
 
+    /* =====================================
+
+       SAVE LAST RESULT
+
+    ===================================== */
+
     window.lastBuilderResult = {
 
-      ...result,
-
       totalSqft,
+
+      houses,
+
+      packageType: pkg,
+
+      needs,
+
+      materialCost,
+
+      laborCost,
+
+      overheadCost,
+
+      mobilization,
+
+      cost: totalCost,
 
       builderPrice,
 
@@ -504,9 +742,15 @@ window.calculateBuilderUI = function(){
 
       margin,
 
-      houses,
+      sprayDays,
 
-      packageType: pkg
+      laborHours,
+
+      crewSize,
+
+      hourlyRate,
+
+      productionRate
 
     };
 
@@ -764,6 +1008,22 @@ window.saveBuilderToCRM = function(){
 
         result.cost,
 
+      laborCost:
+
+        result.laborCost,
+
+      materialCost:
+
+        result.materialCost,
+
+      overheadCost:
+
+        result.overheadCost,
+
+      mobilization:
+
+        result.mobilization,
+
       needs:
 
         result.needs,
@@ -775,6 +1035,10 @@ window.saveBuilderToCRM = function(){
       stage:
 
         "proposal",
+
+      inventoryDeducted:
+
+        false,
 
       createdAt:
 
