@@ -1886,6 +1886,340 @@
 
     };
 
+/* =====================================
+
+   BUILDER PRICING ENGINE
+
+===================================== */
+
+function calculateBuilderProject(input = {}) {
+
+  try {
+
+    const sqft =
+
+      Number(input.sqft) || 0;
+
+    const houses =
+
+      Number(input.houses) || 1;
+
+    const packageType =
+
+      input.package || "standard";
+
+    const pricingMode =
+
+      input.pricingMode || "balanced";
+
+    const competitor =
+
+      Number(input.competitorPrice) || 0;
+
+    const totalSqft =
+
+      sqft * houses;
+
+    /* =========================
+
+       PRODUCTION RATES
+
+    ========================= */
+
+    const productionRate =
+
+      packageType === "premium"
+
+        ? 6500
+
+        : 8500;
+
+    const sprayDays =
+
+      Math.max(
+
+        1,
+
+        Math.ceil(totalSqft / productionRate)
+
+      );
+
+    /* =========================
+
+       CREW COSTS
+
+    ========================= */
+
+    const crewDayCost =
+
+      packageType === "premium"
+
+        ? 1800
+
+        : 1500;
+
+    const laborCost =
+
+      sprayDays * crewDayCost;
+
+    /* =========================
+
+       MATERIAL COSTS
+
+    ========================= */
+
+    let materialRate =
+
+      packageType === "premium"
+
+        ? 0.16
+
+        : 0.11;
+
+    /* bulk efficiency */
+
+    if(totalSqft > 50000){
+
+      materialRate *= 0.92;
+
+    }
+
+    if(totalSqft > 100000){
+
+      materialRate *= 0.88;
+
+    }
+
+    const materialCost =
+
+      totalSqft * materialRate;
+
+    /* =========================
+
+       MOBILIZATION
+
+    ========================= */
+
+    let mobilization =
+
+      750;
+
+    if(houses >= 20){
+
+      mobilization = 1500;
+
+    }
+
+    if(houses >= 50){
+
+      mobilization = 2500;
+
+    }
+
+    /* =========================
+
+       EQUIPMENT / OVERHEAD
+
+    ========================= */
+
+    const overhead =
+
+      (laborCost + materialCost) * 0.18;
+
+    /* =========================
+
+       TOTAL COST
+
+    ========================= */
+
+    const totalCost =
+
+      laborCost +
+
+      materialCost +
+
+      overhead +
+
+      mobilization;
+
+    /* =========================
+
+       TARGET MARGINS
+
+    ========================= */
+
+    let targetMargin = 0.32;
+
+    if(pricingMode === "win"){
+
+      targetMargin = 0.24;
+
+    }
+
+    if(pricingMode === "balanced"){
+
+      targetMargin = 0.30;
+
+    }
+
+    /* =========================
+
+       BUILDER DISCOUNT
+
+    ========================= */
+
+    let builderDiscount = 0;
+
+    if(houses >= 10){
+
+      builderDiscount = 0.03;
+
+    }
+
+    if(houses >= 25){
+
+      builderDiscount = 0.05;
+
+    }
+
+    if(houses >= 50){
+
+      builderDiscount = 0.08;
+
+    }
+
+    /* =========================
+
+       FINAL PRICE
+
+    ========================= */
+
+    let price =
+
+      totalCost / (1 - targetMargin);
+
+    price =
+
+      price * (1 - builderDiscount);
+
+    /* =========================
+
+       COMPETITOR LOGIC
+
+    ========================= */
+
+    if(
+
+      competitor > 0 &&
+
+      competitor < price
+
+    ){
+
+      price = competitor * 0.98;
+
+    }
+
+    /* =========================
+
+       HARD MINIMUMS
+
+    ========================= */
+
+    const minimumMargin = 0.18;
+
+    const minimumPrice =
+
+      totalCost / (1 - minimumMargin);
+
+    if(price < minimumPrice){
+
+      price = minimumPrice;
+
+    }
+
+    if(price < 2500){
+
+      price = 2500;
+
+    }
+
+    /* =========================
+
+       PROFITS
+
+    ========================= */
+
+    const profit =
+
+      price - totalCost;
+
+    const margin =
+
+      (profit / price) * 100;
+
+    return {
+
+      sqft,
+
+      houses,
+
+      totalSqft,
+
+      sprayDays,
+
+      laborCost,
+
+      materialCost,
+
+      overhead,
+
+      mobilization,
+
+      totalCost,
+
+      price,
+
+      profit,
+
+      margin,
+
+      pricePerHouse:
+
+        price / houses,
+
+      pricePerSqft:
+
+        price / totalSqft,
+
+      builderDiscount:
+
+        builderDiscount * 100,
+
+      packageType
+
+    };
+
+  } catch (e) {
+
+    console.error(
+
+      "calculateBuilderProject failed:",
+
+      e
+
+    );
+
+    return null;
+
+  }
+
+}
+
+window.calculateBuilderProject =
+
+  calculateBuilderProject;
+
   /* =====================================
 
      GLOBAL EXPORTS
