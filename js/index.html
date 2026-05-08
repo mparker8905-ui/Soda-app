@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <title>SoDa Outdoor Designs</title>
+
+  <meta name="description"
+
+    content="Professional hydroseeding pricing, scheduling, inventory and CRM system." />
+
+  <link rel="stylesheet" href="./styles.css">
+
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+
+<header class="topbar">
+
+  <div class="brand-wrap">
+
+    <div>
+
+      <div class="brand-text">SoDa Outdoor Designs</div>
+
+      <div class="brand-sub">We build lawns from the soil up</div>
+
+    </div>
+
+    <img src="/logo.PNG" class="brand-logo" id="logoImg" />
+
+  </div>
+
+  <div class="gold-divider"></div>
+
+</header>
+
+<!-- ================= MAIN ================= -->
+
+<main class="page-shell">
+
+<!-- ================= NAV ================= -->
+
+<section class="nav-row">
+
+  <a href="inventory.html" class="nav-btn">Inventory</a>
+
+  <a href="crm.html" class="nav-btn">CRM</a>
+
+  <a href="builder.html" class="nav-btn">Builder</a>
+
+  <button data-action="refresh" class="btn-gold">
+
+    Refresh
+
+  </button>
+
+</section>
+
+<!-- ================= INPUTS ================= -->
+
+<section class="card section-space">
+
+  <div class="card-title">Lawn Estimator</div>
+
+  <div class="card-sub">
+
+    Professional hydroseeding pricing and scheduling system.
+
+  </div>
+
+  <div class="grid-2">
+
+    <div class="field">
+
+      <label>Customer Name</label>
+
+      <input id="customer" type="text">
+
+    </div>
+
+    <div class="field">
+
+      <label>Project Address</label>
+
+      <input id="address" type="text">
+
+    </div>
+
+    <div class="field">
+
+      <label>Quote Date</label>
+
+      <input id="quoteDate" type="date">
+
+    </div>
+
+    <div class="field">
+
+      <label>Project Start</label>
+
+      <input id="projectStart" type="date">
+
+    </div>
+
+    <div class="field">
+
+      <label>Sqft Per House</label>
+
+      <input id="sqft" type="number" value="0">
+
+    </div>
+
+    <div class="field">
+
+      <label>Houses</label>
+
+      <input id="houses" type="number" value="1">
+
+    </div>
+
+    <div class="field">
+
+      <label>Package</label>
+
+      <select id="package">
+
+        <option value="standard">Standard</option>
+
+        <option value="premium">Premium</option>
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>Pricing Mode</label>
+
+      <select id="pricingMode">
+
+        <option value="win">Win Job</option>
+
+        <option value="balanced" selected>Balanced</option>
+
+        <option value="max">Max Profit</option>
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>Target Margin %</label>
+
+      <input id="targetMargin" type="number">
+
+    </div>
+
+    <div class="field">
+
+      <label>Pricing Strategy</label>
+
+      <select id="pricingStrategy">
+
+        <option value="normal">Normal</option>
+
+        <option value="market">Market Rate</option>
+
+        <option value="undercut">Undercut</option>
+
+        <option value="builder">Builder</option>
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>Competitor Price</label>
+
+      <input id="competitorPrice" type="number">
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ================= LABOR ================= -->
+
+<section class="card section-space">
+
+  <div class="card-title">Labor Inputs</div>
+
+  <div class="grid-2">
+
+    <div class="field">
+
+      <label>Hourly Rate</label>
+
+      <input id="hourlyRate" type="number">
+
+    </div>
+
+    <div class="field">
+
+      <label>Hours Per House</label>
+
+      <input id="hoursPerHouse" type="number">
+
+    </div>
+
+    <div class="field">
+
+      <label>Crew Size</label>
+
+      <input id="crewSize" type="number" value="1">
+
+    </div>
+
+    <div class="field">
+
+      <label>Overhead %</label>
+
+      <input id="overhead" type="number">
+
+    </div>
+
+  </div>
+
+</section>
+
+<!-- ================= ADDONS ================= -->
+
+<section class="card section-space">
+
+  <div class="card-title">Add-ons</div>
+
+  <div class="check-grid">
+
+    <label><input type="checkbox" id="aeration"> Aeration</label>
+
+    <label><input type="checkbox" id="compost"> Compost</label>
+
+    <label><input type="checkbox" id="biohum"> Biohum</label>
+
+    <label><input type="checkbox" id="biochar"> Biochar</label>
+
+    <label><input type="checkbox" id="humic"> Humic</label>
+
+    <label><input type="checkbox" id="grow"> Grow System</label>
+
+    <label><input type="checkbox" id="lime"> Lime</label>
+
+    <label><input type="checkbox" id="sulfur"> Sulfur</label>
+
+  </div>
+
+  <div class="nav-row mt-18">
+
+    <button data-action="calculateJob" class="btn-gold">
+
+      Calculate Job
+
+    </button>
+
+    <button data-action="createLead" class="btn-gold">
+
+      Create Lead
+
+    </button>
+
+<button
+
+  class="btn-gold"
+
+  data-action="generateProposal"
+
+>
+
+  Generate Proposal
+
+</button>
+
+    <button data-action="sendProposal" class="btn-gold">
+
+      Send Proposal
+
+    </button>
+
+  </div>
+
+</section>
+
+<!-- ================= TIMELINE ================= -->
+
+<section class="card section-space">
+
+  <div class="card-title">Timeline</div>
+
+  <div class="nav-row">
+
+    <button data-timeline="fast">Fast</button>
+
+    <button data-timeline="standard">Standard</button>
+
+    <button data-timeline="extended">Extended</button>
+
+  </div>
+
+</section>
+
+<!-- ================= RESULTS ================= -->
+
+<section class="section-space">
+
+  <div id="results"></div>
+
+</section>
+
+<!-- ================= SCHEDULE ================= -->
+
+<section class="card section-space">
+
+  <div class="card-title">Schedule Preview</div>
+
+  <div id="schedulePreview"></div>
+
+</section>
+
+<!-- ================= HISTORY ================= -->
+
+<section class="card section-space">
+
+  <div class="card-title">Job History</div>
+
+  <div id="jobHistory"></div>
+
+</section>
+
+</main>
+
+<!-- ================= MODAL ================= -->
+
+<div id="proposalModal" class="modal">
+
+  <div class="modal-content">
+
+    <h2 id="modalCustomer">Proposal</h2>
+
+    <div id="modalAddress" class="card-sub"></div>
+
+    <div id="modalBody"></div>
+
+    <div class="nav-row">
+
+      <button data-action="acceptProposal" class="btn-green">Accept</button>
+
+      <button data-action="pendingProposal">Pending</button>
+
+      <button data-action="loseProposal" class="btn-red">Lost</button>
+
+      <button data-action="closeModal">Close</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+
+<script src="./js/shield.js"></script>
+
+<script src="./js/state.js"></script>
+
+<script src="./js/core.js"></script>
+
+<script src="./js/inventory.js"></script>
+
+<script src="./js/crm.js"></script>
+
+<script src="./js/ui.js"></script>
+
+<script src="./js/app.js"></script>
+
+</body>
+
+</html>
