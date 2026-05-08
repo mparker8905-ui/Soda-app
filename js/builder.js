@@ -735,8 +735,18 @@ window.calculateBuilderUI = function(){
       mobilization,
 
       overheadCost,
+      
+      overhead:
+
+      overheadCost,
 
       totalCost
+
+      price:
+
+      builderPrice,
+
+      pricePerSqft,
 
     };
 

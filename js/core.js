@@ -2642,33 +2642,47 @@ window.generateBuilderProposalData =
 
 function(result = {}) {
 
-  const addons =
+  const addons = [];
 
-    Object.keys(
+document
 
-      window.state?.builder?.addons || {}
+  .querySelectorAll(
 
-    )
+    '[id^="builderAddon_"]:checked'
 
-    .filter(key =>
+  )
 
-      window.state.builder.addons[key]
+  .forEach(el => {
+
+    addons.push(
+
+      el.dataset.label ||
+
+      el.value ||
+
+      el.id.replace(
+
+        "builderAddon_",
+
+        ""
+
+      )
 
     );
+
+  });
+
+    
 
   return {
 
     customer:
 
-      window.state?.builder
+  document.getElementById("builderCustomer")?.value || "",
 
-        ?.customerName || "",
+address:
 
-    address:
-
-      window.state?.builder
-
-        ?.address || "",
+  document.getElementById("builderAddress")?.value || "",
 
     date:
 
@@ -2752,33 +2766,47 @@ window.generateResidentialProposalData =
 
 function(result = {}) {
 
-  const addons =
+const addons = [];
 
-    Object.keys(
+document
 
-      window.state?.job?.addons || {}
+  .querySelectorAll(
 
-    )
+    '[id^="addon_"]:checked'
 
-    .filter(key =>
+  )
 
-      window.state.job.addons[key]
+  .forEach(el => {
+
+    addons.push(
+
+      el.dataset.label ||
+
+      el.value ||
+
+      el.id.replace(
+
+        "addon_",
+
+        ""
+
+      )
 
     );
+
+  });
+
+  
 
   return {
 
     customer:
 
-      window.state?.job
+  document.getElementById("customer")?.value || "",
 
-        ?.customerName || "",
+address:
 
-    address:
-
-      window.state?.job
-
-        ?.address || "",
+  document.getElementById("address")?.value || "",
 
     date:
 
