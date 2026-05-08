@@ -740,7 +740,7 @@ window.calculateBuilderUI = function(){
 
       overheadCost,
 
-      totalCost
+      totalCost,
 
       price:
 
