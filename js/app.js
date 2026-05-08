@@ -1198,6 +1198,63 @@ document.addEventListener(
 
           break;
          
+          case "generateProposal":
+
+  const result =
+
+    window.calculateJob();
+
+  if (!result) {
+
+    alert(
+
+      "Calculate project first."
+
+    );
+
+    return;
+
+  }
+
+  const data =
+
+    window.generateResidentialProposalData(
+
+      result
+
+    );
+
+  const html =
+
+    window.generateProposalHTML(
+
+      data
+
+    );
+
+  const win =
+
+    window.open();
+
+  if (!win) {
+
+    alert(
+
+      "Please allow popups."
+
+    );
+
+    return;
+
+  }
+
+  win.document.open();
+
+  win.document.write(html);
+
+  win.document.close();
+
+break;
 
 case "generateBuilderProposal":
 
