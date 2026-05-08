@@ -690,11 +690,23 @@ window.calculateBuilderUI = function(){
 
   )
 
-  ?.addEventListener(
+document.addEventListener(
 
-    "click",
+  "click",
 
-    () => {
+  e => {
+
+    const action =
+
+      e.target?.dataset?.action;
+
+    if (
+
+      action ===
+
+      "generateBuilderProposal"
+
+    ) {
 
       const result =
 
@@ -714,7 +726,7 @@ window.calculateBuilderUI = function(){
 
       const html =
 
-        window.renderBuilderProposal(
+        window.generateProposalHTML(
 
           data
 
@@ -730,11 +742,18 @@ window.calculateBuilderUI = function(){
 
         );
 
+      win.document.open();
+
       win.document.write(html);
+
+      win.document.close();
 
     }
 
-  );
+  }
+
+);
+
     /* =====================================
 
        SCHEDULE

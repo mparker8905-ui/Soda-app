@@ -1197,6 +1197,46 @@ document.addEventListener(
           }
 
           break;
+         
+         case "generateProposal":
+
+  const result =
+
+    window.calculateJob();
+
+  const data =
+
+    window.generateResidentialProposalData(
+
+      result
+
+    );
+
+  const html =
+
+    window.generateProposalHTML(
+
+      data
+
+    );
+
+  const win =
+
+    window.open(
+
+      "",
+
+      "_blank"
+
+    );
+
+  win.document.open();
+
+  win.document.write(html);
+
+  win.document.close();
+
+  break;
 
         case "acceptProposal":
 
@@ -1371,6 +1411,58 @@ document.addEventListener(
           }
 
           break;
+
+        case "generateBuilderProposal":
+
+  if (
+
+    window.calculateBuilderProject
+
+  ) {
+
+    const result =
+
+      window.calculateBuilderProject(
+
+        window.state.builder
+
+      );
+
+    const data =
+
+      window.generateBuilderProposalData(
+
+        result
+
+      );
+
+    const html =
+
+      window.generateProposalHTML(
+
+        data
+
+      );
+
+    const win =
+
+      window.open(
+
+        "",
+
+        "_blank"
+
+      );
+
+    win.document.open();
+
+    win.document.write(html);
+
+    win.document.close();
+
+  }
+
+  break;
 
         case "saveBuilderCRM":
 

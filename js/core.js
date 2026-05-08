@@ -2506,31 +2506,29 @@ window.calculateBuilderProject =
 
 window.generateBuilderProposalData =
 
-function(result) {
+function(result = {}) {
+
+  const addons =
+
+    Object.keys(
+
+      window.state?.builder?.addons || {}
+
+    )
+
+    .filter(key =>
+
+      window.state.builder.addons[key]
+
+    );
 
   return {
 
-    company:
-
-      "SoDa Outdoor Designs",
-
-    date:
-
-      new Date()
-
-        .toLocaleDateString(),
-
-    projectName:
+    customer:
 
       window.state?.builder
 
-        ?.projectName || "",
-
-    builderName:
-
-      window.state?.builder
-
-        ?.builderName || "",
+        ?.customerName || "",
 
     address:
 
@@ -2538,59 +2536,725 @@ function(result) {
 
         ?.address || "",
 
-    houses:
+    date:
 
-      result.houses,
+      new Date()
 
-    totalSqft:
-
-      result.totalSqft,
+        .toLocaleDateString(),
 
     packageType:
 
-      result.packageType,
+      result.packageType || "",
+
+    totalSqft:
+
+      result.totalSqft || 0,
 
     sprayDays:
 
-      result.sprayDays,
+      result.sprayDays || 0,
 
     productionRate:
 
-      result.productionRate,
+      result.productionRate || 0,
 
     crewSize:
 
-      result.crewSize,
+      result.crewSize || 0,
 
-    materialCost:
+    pricePerSqft:
 
-      result.materialCost,
+      result.pricePerSqft || 0,
 
     laborCost:
 
-      result.laborCost,
+      result.laborCost || 0,
+
+    materialCost:
+
+      result.materialCost || 0,
+
+    equipmentCost:
+
+      result.equipmentCost || 0,
 
     mobilization:
 
-      result.mobilization,
+      result.mobilization || 0,
 
-    totalPrice:
+    overhead:
 
-      result.price,
+      result.overhead || 0,
 
-    pricePerHouse:
+    total:
 
-      result.pricePerHouse,
+      result.price || 0,
 
-    timeline:
+    addons,
 
-      window.buildSchedule(result),
+    needs:
 
-    materials:
+      result.needs || {},
 
-      result.needs || {}
+    schedule:
+
+      window.buildSchedule(result)
 
   };
+
+};
+
+/* =====================================
+
+   RESIDENTIAL PROPOSAL DATA
+
+===================================== */
+
+window.generateResidentialProposalData =
+
+function(result = {}) {
+
+  const addons =
+
+    Object.keys(
+
+      window.state?.job?.addons || {}
+
+    )
+
+    .filter(key =>
+
+      window.state.job.addons[key]
+
+    );
+
+  return {
+
+    customer:
+
+      window.state?.job
+
+        ?.customerName || "",
+
+    address:
+
+      window.state?.job
+
+        ?.address || "",
+
+    date:
+
+      new Date()
+
+        .toLocaleDateString(),
+
+    packageType:
+
+      window.state?.job
+
+        ?.package || "",
+
+    totalSqft:
+
+      result.totalSqft || 0,
+
+    sprayDays:
+
+      result.sprayDays || 0,
+
+    productionRate:
+
+      result.productionRate || 0,
+
+    crewSize:
+
+      result.crewSize || 0,
+
+    pricePerSqft:
+
+      result.price /
+
+      Math.max(
+
+        result.totalSqft,
+
+        1
+
+      ),
+
+    laborCost:
+
+      result.laborCost || 0,
+
+    materialCost:
+
+      result.materialCost || 0,
+
+    equipmentCost:
+
+      result.equipmentCost || 0,
+
+    overhead:
+
+      result.overheadCost || 0,
+
+    total:
+
+      result.price || 0,
+
+    addons,
+
+    needs:
+
+      result.needs || {},
+
+    schedule:
+
+      window.buildSchedule(result)
+
+  };
+
+};
+
+/* =====================================
+
+   MASTER PROPOSAL RENDERER
+
+===================================== */
+
+window.generateProposalHTML = function(data = {}) {
+
+  const materialRows =
+
+    Object.keys(data.needs || {})
+
+      .map(key => {
+
+        return `
+
+          <tr>
+
+            <td>${key.toUpperCase()}</td>
+
+            <td>
+
+              ${
+
+                Number(
+
+                  data.needs[key]
+
+                ).toFixed(1)
+
+              }
+
+            </td>
+
+          </tr>
+
+        `;
+
+      })
+
+      .join("");
+
+  const addonRows =
+
+    (data.addons || [])
+
+      .map(addon => {
+
+        return `
+
+          <li>${addon}</li>
+
+        `;
+
+      })
+
+      .join("");
+
+  const scheduleRows =
+
+    (data.schedule || [])
+
+      .map(item => {
+
+        return `
+
+          <div
+
+            style="
+
+              margin-bottom:16px;
+
+              padding:12px;
+
+              border:1px solid #333;
+
+              border-radius:8px;
+
+            "
+
+          >
+
+            <strong>
+
+              ${item.title}
+
+            </strong>
+
+            <div>
+
+              ${item.date}
+
+            </div>
+
+            <ul>
+
+              ${item.tasks
+
+                .map(task =>
+
+                  `<li>${task}</li>`
+
+                )
+
+                .join("")}
+
+            </ul>
+
+          </div>
+
+        `;
+
+      })
+
+      .join("");
+
+  return `
+
+<html>
+
+<head>
+
+<title>
+
+  Proposal
+
+</title>
+
+<style>
+
+body{
+
+  background:#000;
+
+  color:#d4af37;
+
+  font-family:Arial;
+
+  padding:40px;
+
+  line-height:1.5;
+
+}
+
+.card{
+
+  border:1px solid #333;
+
+  border-radius:12px;
+
+  padding:20px;
+
+  margin-bottom:24px;
+
+}
+
+table{
+
+  width:100%;
+
+  border-collapse:collapse;
+
+}
+
+td{
+
+  padding:10px;
+
+  border-bottom:1px solid #333;
+
+}
+
+.btn{
+
+  width:100%;
+
+  padding:18px;
+
+  border:none;
+
+  margin-top:12px;
+
+  font-size:18px;
+
+  font-weight:bold;
+
+}
+
+.gold{
+
+  background:#d4af37;
+
+  color:#000;
+
+}
+
+.red{
+
+  background:#7a0000;
+
+  color:#fff;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>
+
+  SoDa Outdoor Designs
+
+</h1>
+
+<p>
+
+  We build lawns from the soil up
+
+</p>
+
+<div class="card">
+
+<h2>
+
+  Customer Information
+
+</h2>
+
+<p>
+
+  <strong>Client:</strong>
+
+  ${data.customer || ""}
+
+</p>
+
+<p>
+
+  <strong>Address:</strong>
+
+  ${data.address || ""}
+
+</p>
+
+<p>
+
+  <strong>Date:</strong>
+
+  ${data.date || ""}
+
+</p>
+
+<p>
+
+  <strong>Package:</strong>
+
+  ${data.packageType || ""}
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+  Project Summary
+
+</h2>
+
+<p>
+
+  Total Sqft:
+
+  ${
+
+    Number(
+
+      data.totalSqft || 0
+
+    ).toLocaleString()
+
+  }
+
+</p>
+
+<p>
+
+  Spray Days:
+
+  ${data.sprayDays || 0}
+
+</p>
+
+<p>
+
+  Production Rate:
+
+  ${
+
+    Number(
+
+      data.productionRate || 0
+
+    ).toLocaleString()
+
+  } sqft/day
+
+</p>
+
+<p>
+
+  Crew Size:
+
+  ${data.crewSize || 0}
+
+</p>
+
+<p>
+
+  Price/Sqft:
+
+  $${Number(
+
+    data.pricePerSqft || 0
+
+  ).toFixed(2)}
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+  Financial Breakdown
+
+</h2>
+
+<table>
+
+<tr>
+
+  <td>Material Cost</td>
+
+  <td>
+
+    $${Number(
+
+      data.materialCost || 0
+
+    ).toFixed(2)}
+
+  </td>
+
+</tr>
+
+<tr>
+
+  <td>Labor Cost</td>
+
+  <td>
+
+    $${Number(
+
+      data.laborCost || 0
+
+    ).toFixed(2)}
+
+  </td>
+
+</tr>
+
+<tr>
+
+  <td>Equipment Cost</td>
+
+  <td>
+
+    $${Number(
+
+      data.equipmentCost || 0
+
+    ).toFixed(2)}
+
+  </td>
+
+</tr>
+
+<tr>
+
+  <td>Overhead</td>
+
+  <td>
+
+    $${Number(
+
+      data.overhead || 0
+
+    ).toFixed(2)}
+
+  </td>
+
+</tr>
+
+<tr>
+
+  <td>Mobilization</td>
+
+  <td>
+
+    $${Number(
+
+      data.mobilization || 0
+
+    ).toFixed(2)}
+
+  </td>
+
+</tr>
+
+<tr>
+
+  <td>
+
+    <strong>
+
+      Total Investment
+
+    </strong>
+
+  </td>
+
+  <td>
+
+    <strong>
+
+      $${Number(
+
+        data.total || 0
+
+      ).toFixed(2)}
+
+    </strong>
+
+  </td>
+
+</tr>
+
+</table>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+  Material Usage
+
+</h2>
+
+<table>
+
+${materialRows}
+
+</table>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+  Addons
+
+</h2>
+
+<ul>
+
+${addonRows}
+
+</ul>
+
+</div>
+
+<div class="card">
+
+<h2>
+
+  Project Schedule
+
+</h2>
+
+${scheduleRows}
+
+</div>
+
+<div class="card">
+
+<h2>
+
+  Terms
+
+</h2>
+
+<p>
+
+Proper watering is required
+
+for successful germination.
+
+Weather conditions may
+
+impact timelines.
+
+</p>
+
+</div>
+
+<button
+
+  class="btn gold"
+
+  onclick="window.print()"
+
+>
+
+  Print Proposal
+
+</button>
+
+</body>
+
+</html>
+
+`;
 
 };
 
@@ -2871,6 +3535,11 @@ function(data) {
   window.getSmartPricing =
 
     getSmartPricing;
+  window.generateProposalHTML
+
+window.generateResidentialProposalData
+
+window.generateBuilderProposalData
 
 })();
 
