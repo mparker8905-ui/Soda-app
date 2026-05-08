@@ -794,7 +794,13 @@ const sprayDays =
 
       ) /
 
-      productionRate
+      Math.max(
+
+        productionRate,
+
+        1
+
+      )
 
     )
 
@@ -1420,23 +1426,39 @@ for(let i = 0; i < hydroDays; i++){
 
       `Production Rate: ${
 
-        (
+    (
 
-          result?.productionRate || 6000
+      result?.productionRate || 6000
 
-        ).toLocaleString()
+    ).toLocaleString()
 
-      } sqft/day`,
+  } sqft/day`,
 
-      "Hydroseed lawn",
+  `Crew Size: ${
 
-      ...(grow && i === 0
+    result?.crewSize || 2
 
-        ? ["Install Grow System"]
+  }`,
 
-        : [])
+  `Labor Hours: ${
 
-    ]
+    Math.round(
+
+      result?.totalHours || 0
+
+    )
+
+  } hrs`,
+
+  "Hydroseed lawn",
+
+  ...(grow && i === 0
+
+    ? ["Install Grow System"]
+
+    : [])
+
+]
 
   });
 
@@ -1592,25 +1614,41 @@ for(let i = 0; i < hydroDays; i++){
 
     tasks: [
 
-      `Production Rate: ${
+    `Production Rate: ${
 
-        (
+    (
 
-          result?.productionRate || 6000
+      result?.productionRate || 6000
 
-        ).toLocaleString()
+    ).toLocaleString()
 
-      } sqft/day`,
+  } sqft/day`,
 
-      "Hydroseed lawn",
+  `Crew Size: ${
 
-      ...(grow && i === 0
+    result?.crewSize || 2
 
-        ? ["Install Grow System"]
+  }`,
 
-        : [])
+  `Labor Hours: ${
 
-    ]
+    Math.round(
+
+      result?.totalHours || 0
+
+    )
+
+  } hrs`,
+
+  "Hydroseed lawn",
+
+  ...(grow && i === 0
+
+    ? ["Install Grow System"]
+
+    : [])
+
+]
 
   });
 
@@ -1731,6 +1769,22 @@ const hydroDays =
     ).toLocaleString()
 
   } sqft/day`,
+
+  `Crew Size: ${
+
+    result?.crewSize || 2
+
+  }`,
+
+  `Labor Hours: ${
+
+    Math.round(
+
+      result?.totalHours || 0
+
+    )
+
+  } hrs`,
 
   "Hydroseed lawn",
 
@@ -2034,21 +2088,31 @@ function calculateBuilderProject(input = {}) {
 
   6000;
 
-    const sprayDays =
+  const sprayDays =
+
+  Math.max(
+
+    1,
+
+    Math.ceil(
+
+      (
+
+        totalSqft * 1.08
+
+      ) /
 
       Math.max(
 
-        1,
+        productionRate,
 
-       Math.ceil(
+        1
 
-  (
+      )
 
-    totalSqft * 1.08
+    )
 
-  ) / productionRate
-
-)
+  );
 
       );
 
@@ -2084,37 +2148,73 @@ const laborCost =
 
   hourlyRate;
 
-    /* =========================
+  /* =========================
 
-       MATERIAL COSTS
+   MATERIAL COSTS
 
-    ========================= */
+========================= */
 
-    let materialRate =
+const inventory =
 
-      packageType === "premium"
+  window.getInventoryCache?.(true) || {};
 
-        ? 0.16
+const needs =
 
-        : 0.11;
+  getMaterialNeedsCore(
 
-    /* bulk efficiency */
+    {
 
-    if(totalSqft > 50000){
+      totalSqft
 
-      materialRate *= 0.92;
+    },
 
-    }
+    packageType,
 
-    if(totalSqft > 100000){
+    {}
 
-      materialRate *= 0.88;
+  );
 
-    }
+let materialCost = 0;
 
-    const materialCost =
+Object.keys(needs)
 
-      totalSqft * materialRate;
+  .forEach(type => {
+
+    materialCost +=
+
+      needs[type] *
+
+      getAvgCostFromInventory(
+
+        type,
+
+        inventory
+
+      );
+
+  });
+
+/* minimum material floor */
+
+if(materialCost < 500){
+
+  materialCost = 500;
+
+}
+
+/* bulk efficiency */
+
+if(totalSqft > 50000){
+
+  materialCost *= 0.92;
+
+}
+
+if(totalSqft > 100000){
+
+  materialCost *= 0.88;
+
+}
 
     /* =========================
 
@@ -2305,6 +2405,8 @@ const totalCost =
       houses,
 
       totalSqft,
+
+      needs,
 
       sprayDays,
 
