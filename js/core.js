@@ -1084,6 +1084,8 @@ const equipmentCost =
 
         laborCost,
 
+        materialCost,
+
         overheadCost,
       
         equipmentCost,
@@ -2498,6 +2500,138 @@ window.calculateBuilderProject =
 
   calculateBuilderProject;
 
+//===========================
+//RENDER BUILDER SCHEDULE
+//===========================
+
+window.renderBuilderScheduleData =
+
+function(result = {}) {
+
+  const list = [];
+
+  const start = new Date();
+
+  function addDays(base, days) {
+
+    const d = new Date(base);
+
+    d.setDate(d.getDate() + days);
+
+    return d;
+
+  }
+
+  function fmt(d) {
+
+    return d.toLocaleDateString(
+
+      undefined,
+
+      {
+
+        month: "short",
+
+        day: "numeric",
+
+        year: "numeric"
+
+      }
+
+    );
+
+  }
+
+  list.push({
+
+    title: "Soil Preparation",
+
+    date: fmt(start),
+
+    tasks: [
+
+      "Site prep",
+
+      "Final grading",
+
+      "Surface conditioning"
+
+    ]
+
+  });
+
+  for (
+
+    let i = 0;
+
+    i < (result.sprayDays || 1);
+
+    i++
+
+  ) {
+
+    list.push({
+
+      title: `Hydroseeding Day ${i + 1}`,
+
+      date: fmt(addDays(start, i + 1)),
+
+      tasks: [
+
+        `Production Rate: ${
+
+          (
+
+            result.productionRate || 6000
+
+          ).toLocaleString()
+
+        } sqft/day`,
+
+        `Crew Size: ${
+
+          result.crewSize || 2
+
+        }`,
+
+        "Hydroseeding application"
+
+      ]
+
+    });
+
+  }
+
+  list.push({
+
+    title: "Final Inspection",
+
+    date: fmt(
+
+      addDays(
+
+        start,
+
+        (result.sprayDays || 1) + 14
+
+      )
+
+    ),
+
+    tasks: [
+
+      "Final walkthrough",
+
+      "Project completion review"
+
+    ]
+
+  });
+
+  return list;
+
+};
+
 /* =====================================
 
    BUILDER PROPOSAL DATA
@@ -2596,9 +2730,13 @@ function(result = {}) {
 
       result.needs || {},
 
-    schedule:
+   schedule:
 
-      window.buildSchedule(result)
+  window.renderBuilderScheduleData
+
+    ? window.renderBuilderScheduleData(result)
+
+    : []
 
   };
 
@@ -3535,11 +3673,6 @@ function(data) {
   window.getSmartPricing =
 
     getSmartPricing;
-  window.generateProposalHTML
-
-window.generateResidentialProposalData
-
-window.generateBuilderProposalData
 
 })();
 

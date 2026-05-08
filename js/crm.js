@@ -406,13 +406,43 @@
 
       rerender();
 
-      openProposalWindow(
+     const data =
 
-        proposal,
+  window.generateResidentialProposalData(
 
-        r
+    r
 
-      );
+  );
+
+const html =
+
+  window.generateProposalHTML(
+
+    data
+
+  );
+
+const win =
+
+  window.open();
+
+if (!win) {
+
+  alert(
+
+    "Please allow popups."
+
+  );
+
+  return;
+
+}
+
+win.document.open();
+
+win.document.write(html);
+
+win.document.close();
 
     } catch (e) {
 
@@ -1140,6 +1170,10 @@
 
         Number(p.houses || 0);
 
+      const snapshot =
+
+      p.snapshot || {};
+
       const pricePerLot =
 
         houses > 0
@@ -1313,6 +1347,79 @@
                 </span>
 
               </div>
+            <div class="row">
+
+  <b>Spray Days:</b>
+
+  <span>
+
+    ${snapshot.sprayDays || 0}
+
+  </span>
+
+</div>
+
+<div class="row">
+
+  <b>Production Rate:</b>
+
+  <span>
+
+    ${(snapshot.productionRate || 0)
+
+      .toLocaleString()} sqft/day
+
+  </span>
+
+</div>
+
+<div class="row">
+
+  <b>Labor Cost:</b>
+
+  <span>
+
+    $${Number(
+
+      snapshot.laborCost || 0
+
+    ).toFixed(2)}
+
+  </span>
+
+</div>
+
+<div class="row">
+
+  <b>Material Cost:</b>
+
+  <span>
+
+    $${Number(
+
+      snapshot.materialCost || 0
+
+    ).toFixed(2)}
+
+  </span>
+
+</div>
+
+<div class="row">
+
+  <b>Margin:</b>
+
+  <span>
+
+    ${Number(
+
+      snapshot.margin || 0
+
+    ).toFixed(1)}%
+
+  </span>
+
+</div>
 
             </div>
 
@@ -1609,6 +1716,102 @@
     }
 
   }
+
+//======================
+//SAVE BUILDER TO CRM
+//======================
+
+window.saveBuilderToCRM = function () {
+
+  try {
+
+    const r = window.lastBuilderResult;
+
+    if (!r) {
+
+      alert(
+
+        "Calculate builder project first."
+
+      );
+
+      return;
+
+    }
+
+    const proposal = {
+
+      id: Date.now(),
+
+      type: "builder",
+
+      customer:
+
+        document.getElementById(
+
+          "builderCustomer"
+
+        )?.value || "Builder Client",
+
+      address:
+
+        document.getElementById(
+
+          "builderAddress"
+
+        )?.value || "",
+
+      stage: "builder",
+
+      status: "Proposal Sent",
+
+      createdAt: Date.now(),
+
+      houses: r.houses || 0,
+
+      sqft: r.totalSqft || 0,
+
+      total: r.price || 0,
+
+      cost: r.totalCost || 0,
+
+      needs: r.needs || {},
+
+      snapshot: r
+
+    };
+
+    const list = readCRM();
+
+    list.push(proposal);
+
+    writeCRM(list);
+
+    rerender();
+
+    toast(
+
+      "Builder proposal saved",
+
+      "success"
+
+    );
+
+  } catch (e) {
+
+    console.error(e);
+
+    toast(
+
+      "Builder CRM save failed",
+
+      "error"
+
+    );
+
+  }
+
+};
 
   /* =====================================
 

@@ -236,9 +236,9 @@ window.calculateBuilderUI = function(){
 
     ===================================== */
 
-    const inventory =
+   const inventory =
 
-      window.getInventoryCache?.(true) || {};
+  window.getInventoryCache?.() || {};
 
     /* =====================================
 
