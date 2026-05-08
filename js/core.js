@@ -2180,17 +2180,33 @@ let materialCost = 0;
 
 Object.keys(needs).forEach(type => {
 
-  materialCost +=
+  const avgCost =
 
-    needs[type] *
+  getAvgCostFromInventory(
 
-    getAvgCostFromInventory(
+    type,
 
-      type,
+    inventory
 
-      inventory
+  );
 
-    );
+const fallbackCost =
+
+  COSTS[type] || 0;
+
+materialCost +=
+
+  needs[type] *
+
+  (
+
+    avgCost > 0
+
+      ? avgCost
+
+      : fallbackCost
+
+  );
 
 });
 
@@ -2481,6 +2497,346 @@ pricePerSqft:
 window.calculateBuilderProject =
 
   calculateBuilderProject;
+
+/* =====================================
+
+   BUILDER PROPOSAL DATA
+
+===================================== */
+
+window.generateBuilderProposalData =
+
+function(result) {
+
+  return {
+
+    company:
+
+      "SoDa Outdoor Designs",
+
+    date:
+
+      new Date()
+
+        .toLocaleDateString(),
+
+    projectName:
+
+      window.state?.builder
+
+        ?.projectName || "",
+
+    builderName:
+
+      window.state?.builder
+
+        ?.builderName || "",
+
+    address:
+
+      window.state?.builder
+
+        ?.address || "",
+
+    houses:
+
+      result.houses,
+
+    totalSqft:
+
+      result.totalSqft,
+
+    packageType:
+
+      result.packageType,
+
+    sprayDays:
+
+      result.sprayDays,
+
+    productionRate:
+
+      result.productionRate,
+
+    crewSize:
+
+      result.crewSize,
+
+    materialCost:
+
+      result.materialCost,
+
+    laborCost:
+
+      result.laborCost,
+
+    mobilization:
+
+      result.mobilization,
+
+    totalPrice:
+
+      result.price,
+
+    pricePerHouse:
+
+      result.pricePerHouse,
+
+    timeline:
+
+      window.buildSchedule(result),
+
+    materials:
+
+      result.needs || {}
+
+  };
+
+};
+
+/* =====================================
+
+   BUILDER PROPOSAL HTML
+
+===================================== */
+
+window.renderBuilderProposal =
+
+function(data) {
+
+  return `
+
+  <div class="proposal-wrap">
+
+    <h1>
+
+      SoDa Outdoor Designs
+
+    </h1>
+
+    <h2>
+
+      Builder Hydroseeding Proposal
+
+    </h2>
+
+    <hr>
+
+    <p>
+
+      <strong>Builder:</strong>
+
+      ${data.builderName}
+
+    </p>
+
+    <p>
+
+      <strong>Project:</strong>
+
+      ${data.projectName}
+
+    </p>
+
+    <p>
+
+      <strong>Address:</strong>
+
+      ${data.address}
+
+    </p>
+
+    <p>
+
+      <strong>Date:</strong>
+
+      ${data.date}
+
+    </p>
+
+    <hr>
+
+    <h3>
+
+      Project Scope
+
+    </h3>
+
+    <ul>
+
+      <li>
+
+        Professional hydroseeding
+
+      </li>
+
+      <li>
+
+        Seed installation
+
+      </li>
+
+      <li>
+
+        Fertilizer application
+
+      </li>
+
+      <li>
+
+        Mulch stabilization
+
+      </li>
+
+      <li>
+
+        Erosion control
+
+      </li>
+
+    </ul>
+
+    <hr>
+
+    <h3>
+
+      Production Metrics
+
+    </h3>
+
+    <p>
+
+      Houses:
+
+      ${data.houses}
+
+    </p>
+
+    <p>
+
+      Total Sqft:
+
+      ${data.totalSqft.toLocaleString()}
+
+    </p>
+
+    <p>
+
+      Spray Days:
+
+      ${data.sprayDays}
+
+    </p>
+
+    <p>
+
+      Production Rate:
+
+      ${data.productionRate.toLocaleString()}
+
+      sqft/day
+
+    </p>
+
+    <p>
+
+      Crew Size:
+
+      ${data.crewSize}
+
+    </p>
+
+    <hr>
+
+    <h3>
+
+      Pricing Summary
+
+    </h3>
+
+    <p>
+
+      Total Investment:
+
+      $${data.totalPrice.toFixed(2)}
+
+    </p>
+
+    <p>
+
+      Price Per Home:
+
+      $${data.pricePerHouse.toFixed(2)}
+
+    </p>
+
+    <hr>
+
+    <h3>
+
+      Material Usage
+
+    </h3>
+
+    ${Object.keys(data.materials)
+
+      .map(key => {
+
+        return `
+
+        <p>
+
+          ${key.toUpperCase()}:
+
+          ${Number(
+
+            data.materials[key]
+
+          ).toFixed(1)}
+
+        </p>
+
+        `;
+
+      })
+
+      .join("")}
+
+    <hr>
+
+    <h3>
+
+      Terms
+
+    </h3>
+
+    <ul>
+
+      <li>
+
+        50% deposit required
+
+      </li>
+
+      <li>
+
+        Weather delays may affect schedule
+
+      </li>
+
+      <li>
+
+        Irrigation required after application
+
+      </li>
+
+    </ul>
+
+  </div>
+
+  `;
+
+};
 
   /* =====================================
 

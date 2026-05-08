@@ -682,6 +682,59 @@ window.calculateBuilderUI = function(){
 
     `;
 
+     document
+
+  .getElementById(
+
+    "generateBuilderProposal"
+
+  )
+
+  ?.addEventListener(
+
+    "click",
+
+    () => {
+
+      const result =
+
+        window.calculateBuilderProject(
+
+          window.state.builder
+
+        );
+
+      const data =
+
+        window.generateBuilderProposalData(
+
+          result
+
+        );
+
+      const html =
+
+        window.renderBuilderProposal(
+
+          data
+
+        );
+
+      const win =
+
+        window.open(
+
+          "",
+
+          "_blank"
+
+        );
+
+      win.document.write(html);
+
+    }
+
+  );
     /* =====================================
 
        SCHEDULE
