@@ -1198,45 +1198,61 @@ document.addEventListener(
 
           break;
          
-         case "generateProposal":
+ case "generateProposal":
 
-  const result =
+  if (
 
-    window.calculateJob();
+    typeof window.generateProposalHTML ===
 
-  const data =
+    "function"
 
-    window.generateResidentialProposalData(
+  ) {
 
-      result
+    const result =
 
-    );
+      window.calculateJob();
 
-  const html =
+    const data =
 
-    window.generateProposalHTML(
+      window.generateResidentialProposalData(
 
-      data
+        result
 
-    );
+      );
 
-  const win =
+    const html =
 
-    window.open(
+      window.generateProposalHTML(
 
-      "",
+        data
 
-      "_blank"
+      );
 
-    );
+    const win =
 
-  win.document.open();
+      window.open();
 
-  win.document.write(html);
+    if (!win) {
 
-  win.document.close();
+      alert(
 
-  break;
+        "Enable popups to view proposal."
+
+      );
+
+      return;
+
+    }
+
+    win.document.open();
+
+    win.document.write(html);
+
+    win.document.close();
+
+  }
+
+break;
 
         case "acceptProposal":
 
@@ -1422,11 +1438,77 @@ document.addEventListener(
 
     const result =
 
-      window.calculateBuilderProject(
+  window.calculateBuilderProject({
 
-        window.state.builder
+    sqft:
 
-      );
+      Number(
+
+        document.getElementById("sqft")?.value
+
+      ) || 0,
+
+    houses:
+
+      Number(
+
+        document.getElementById("houses")?.value
+
+      ) || 1,
+
+    package:
+
+      document.getElementById("package")?.value ||
+
+      "standard",
+
+    pricingMode:
+
+      document.getElementById("pricingMode")?.value ||
+
+      "balanced",
+
+    competitorPrice:
+
+      Number(
+
+        document.getElementById("competitorPrice")?.value
+
+      ) || 0,
+
+    productionRate:
+
+      Number(
+
+        document.getElementById("productionRate")?.value
+
+      ) || 6000,
+
+    crewSize:
+
+      Number(
+
+        document.getElementById("crewSize")?.value
+
+      ) || 2,
+
+    hourlyRate:
+
+      Number(
+
+        document.getElementById("hourlyRate")?.value
+
+      ) || 50,
+
+    hoursPerDay:
+
+      Number(
+
+        document.getElementById("hoursPerDay")?.value
+
+      ) || 10
+
+  });
 
     const data =
 
@@ -1444,21 +1526,25 @@ document.addEventListener(
 
       );
 
-    const win =
+  const win = window.open();
 
-      window.open(
+if (!win) {
 
-        "",
+  alert(
 
-        "_blank"
+    "Please allow popups for proposals."
 
-      );
+  );
 
-    win.document.open();
+  return;
 
-    win.document.write(html);
+}
 
-    win.document.close();
+win.document.open();
+
+win.document.write(html);
+
+win.document.close();
 
   }
 
