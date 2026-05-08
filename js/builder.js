@@ -48,7 +48,7 @@ window.calculateBuilderUI = function(){
 
     /* =====================================
 
-       INPUTS
+       BASIC INPUTS
 
     ===================================== */
 
@@ -100,7 +100,7 @@ window.calculateBuilderUI = function(){
 
     /* =====================================
 
-       NEW LABOR INPUTS
+       LABOR INPUTS
 
     ===================================== */
 
@@ -108,7 +108,7 @@ window.calculateBuilderUI = function(){
 
       n(
 
-        document.getElementById("builderCrewSize")?.value,
+        document.getElementById("crewSize")?.value,
 
         3
 
@@ -118,7 +118,7 @@ window.calculateBuilderUI = function(){
 
       n(
 
-        document.getElementById("builderHourlyRate")?.value,
+        document.getElementById("hourlyRate")?.value,
 
         25
 
@@ -128,7 +128,7 @@ window.calculateBuilderUI = function(){
 
       n(
 
-        document.getElementById("builderProductionRate")?.value,
+        document.getElementById("productionRate")?.value,
 
         10000
 
@@ -138,7 +138,7 @@ window.calculateBuilderUI = function(){
 
       n(
 
-        document.getElementById("builderHoursPerDay")?.value,
+        document.getElementById("hoursPerDay")?.value,
 
         8
 
@@ -148,7 +148,7 @@ window.calculateBuilderUI = function(){
 
       n(
 
-        document.getElementById("builderOverhead")?.value,
+        document.getElementById("overhead")?.value,
 
         12
 
@@ -158,7 +158,7 @@ window.calculateBuilderUI = function(){
 
       n(
 
-        document.getElementById("builderMobilization")?.value,
+        document.getElementById("mobilization")?.value,
 
         750
 
@@ -168,81 +168,31 @@ window.calculateBuilderUI = function(){
 
       n(
 
-        document.getElementById("builderTargetMargin")?.value,
+        document.getElementById("targetMargin")?.value,
 
         30
 
       ) / 100;
 
+    /* =====================================
+
+       TOTAL SQFT
+
+    ===================================== */
+
     const totalSqft =
 
-      Math.max(1, sqft * houses);
+      Math.max(
 
-    /* =====================================
+        1,
 
-       INVENTORY
-
-    ===================================== */
-
-    const inventory =
-
-      window.getInventoryCache?.(true) || {};
-
-    /* =====================================
-
-       MATERIAL NEEDS
-
-    ===================================== */
-
-    const needs =
-
-      window.getMaterialNeedsCore(
-
-        {
-
-          totalSqft
-
-        },
-
-        pkg,
-
-        {}
+        sqft * houses
 
       );
 
     /* =====================================
 
-       MATERIAL COST
-
-    ===================================== */
-
-    let materialCost = 0;
-
-    Object.keys(needs).forEach(type => {
-
-      const qty =
-
-        n(needs[type]);
-
-      const avgCost =
-
-        window.getAvgCostFromInventory?.(
-
-          type,
-
-          inventory
-
-        ) || 0;
-
-      materialCost +=
-
-        qty * avgCost;
-
-    });
-
-    /* =====================================
-
-       PRODUCTION CALCULATIONS
+       SPRAY DAYS
 
     ===================================== */
 
@@ -260,7 +210,13 @@ window.calculateBuilderUI = function(){
 
       );
 
-    const laborHours =
+    /* =====================================
+
+       LABOR HOURS
+
+    ===================================== */
+
+    const totalLaborHours =
 
       sprayDays *
 
@@ -270,9 +226,69 @@ window.calculateBuilderUI = function(){
 
     const laborCost =
 
-      laborHours *
+      totalLaborHours *
 
       hourlyRate;
+
+    /* =====================================
+
+       INVENTORY
+
+    ===================================== */
+
+    const inventory =
+
+      window.getInventoryCache?.(true) || {};
+
+    /* =====================================
+
+       CORE CALC
+
+    ===================================== */
+
+    const result =
+
+      window.calculateJobCore({
+
+        inventory,
+
+        job:{
+
+          sqft,
+
+          houses,
+
+          package: pkg,
+
+          pricingMode,
+
+          competitorPrice: competitor,
+
+          labor:{
+
+            hourlyRate,
+
+            crewSize,
+
+            overhead: overheadPct
+
+          },
+
+          addons:{}
+
+        }
+
+      });
+
+    /* =====================================
+
+       MATERIAL COST
+
+    ===================================== */
+
+    const materialCost =
+
+      n(result.materialCost);
 
     /* =====================================
 
@@ -284,9 +300,9 @@ window.calculateBuilderUI = function(){
 
       (
 
-        materialCost +
-
         laborCost +
+
+        materialCost +
 
         mobilization
 
@@ -302,9 +318,9 @@ window.calculateBuilderUI = function(){
 
     const totalCost =
 
-      materialCost +
-
       laborCost +
+
+      materialCost +
 
       mobilization +
 
@@ -316,61 +332,11 @@ window.calculateBuilderUI = function(){
 
     ===================================== */
 
-    let builderPrice =
+    const builderPrice =
 
-      totalCost / (1 - targetMargin);
+      totalCost /
 
-    /* =====================================
-
-       COMPETITOR ADJUSTMENT
-
-    ===================================== */
-
-    if(competitor > 0){
-
-      builderPrice =
-
-        Math.max(
-
-          builderPrice,
-
-          competitor * 0.97
-
-        );
-
-    }
-
-    /* =====================================
-
-       BUILDER MULTIPLIER
-
-    ===================================== */
-
-    const builderMultiplier =
-
-      window.getBuilderMultiplier?.(houses) || 1;
-
-    builderPrice *= builderMultiplier;
-
-    /* =====================================
-
-       SAFETY FLOOR
-
-    ===================================== */
-
-    if(builderPrice < totalCost * 1.1){
-
-      builderPrice =
-
-        totalCost * 1.1;
-
-    }
-
-    /* =====================================
-
-       PROFITS
-
-    ===================================== */
+      (1 - targetMargin);
 
     const profit =
 
@@ -383,6 +349,12 @@ window.calculateBuilderUI = function(){
         ? (profit / builderPrice) * 100
 
         : 0;
+
+    /* =====================================
+
+       METRICS
+
+    ===================================== */
 
     const pricePerHouse =
 
@@ -402,17 +374,23 @@ window.calculateBuilderUI = function(){
 
     const builderDiscount =
 
-      (1 - builderMultiplier) * 100;
+      (
+
+        1 -
+
+        window.getBuilderMultiplier(houses)
+
+      ) * 100;
 
     /* =====================================
 
-       MATERIAL USAGE
+       MATERIALS
 
     ===================================== */
 
     const materialsHTML =
 
-      Object.entries(needs || {})
+      Object.entries(result.needs || {})
 
         .map(([key,val]) => {
 
@@ -460,7 +438,7 @@ window.calculateBuilderUI = function(){
 
       window.compareInventory?.(
 
-        needs,
+        result.needs,
 
         inventoryTotals
 
@@ -598,9 +576,17 @@ window.calculateBuilderUI = function(){
 
         <div>
 
-          Labor Hours:
+          Production Rate:
 
-          ${laborHours.toFixed(1)}
+          ${productionRate.toLocaleString()} sqft/day
+
+        </div>
+
+        <div>
+
+          Total Labor Hours:
+
+          ${totalLaborHours.toFixed(1)}
 
         </div>
 
@@ -706,7 +692,9 @@ window.calculateBuilderUI = function(){
 
       start,
 
-      houses
+      totalSqft,
+
+      productionRate
 
     );
 
@@ -718,23 +706,9 @@ window.calculateBuilderUI = function(){
 
     window.lastBuilderResult = {
 
+      ...result,
+
       totalSqft,
-
-      houses,
-
-      packageType: pkg,
-
-      needs,
-
-      materialCost,
-
-      laborCost,
-
-      overheadCost,
-
-      mobilization,
-
-      cost: totalCost,
 
       builderPrice,
 
@@ -742,15 +716,25 @@ window.calculateBuilderUI = function(){
 
       margin,
 
+      houses,
+
+      packageType: pkg,
+
       sprayDays,
 
-      laborHours,
+      productionRate,
 
-      crewSize,
+      totalLaborHours,
 
-      hourlyRate,
+      laborCost,
 
-      productionRate
+      materialCost,
+
+      mobilization,
+
+      overheadCost,
+
+      totalCost
 
     };
 
@@ -788,7 +772,9 @@ window.renderBuilderSchedule = function(
 
   startDate,
 
-  houses
+  totalSqft,
+
+  productionRate
 
 ){
 
@@ -858,15 +844,17 @@ window.renderBuilderSchedule = function(
 
     const hydroDays =
 
-      houses > 10
+      Math.max(
 
-        ? 3
+        1,
 
-        : houses > 5
+        Math.ceil(
 
-        ? 2
+          totalSqft / productionRate
 
-        : 1;
+        )
+
+      );
 
     const html = [];
 
@@ -943,147 +931,3 @@ window.renderBuilderSchedule = function(
 };
 
 })();
-
-/* =====================================
-
-   SAVE BUILDER TO CRM
-
-===================================== */
-
-window.saveBuilderToCRM = function(){
-
-  try{
-
-    if(!window.lastBuilderResult){
-
-      showToast(
-
-        "Calculate builder project first",
-
-        "warning"
-
-      );
-
-      return;
-
-    }
-
-    const customer =
-
-      prompt("Builder / Project Name:");
-
-    if(!customer) return;
-
-    const address =
-
-      prompt("Project Location:");
-
-    const result =
-
-      window.lastBuilderResult;
-
-    const proposal = {
-
-      id: Date.now(),
-
-      type: "builder",
-
-      customer,
-
-      address,
-
-      sqft: result.totalSqft,
-
-      houses: result.houses,
-
-      packageType:
-
-        result.packageType,
-
-      total:
-
-        result.builderPrice,
-
-      cost:
-
-        result.cost,
-
-      laborCost:
-
-        result.laborCost,
-
-      materialCost:
-
-        result.materialCost,
-
-      overheadCost:
-
-        result.overheadCost,
-
-      mobilization:
-
-        result.mobilization,
-
-      needs:
-
-        result.needs,
-
-      status:
-
-        "Proposal Sent",
-
-      stage:
-
-        "proposal",
-
-      inventoryDeducted:
-
-        false,
-
-      createdAt:
-
-        Date.now()
-
-    };
-
-    let list = JSON.parse(
-
-      localStorage.getItem(
-
-        "soda_proposals"
-
-      ) || "[]"
-
-    );
-
-    list.push(proposal);
-
-    localStorage.setItem(
-
-      "soda_proposals",
-
-      JSON.stringify(list)
-
-    );
-
-    if(window.renderPipeline){
-
-      window.renderPipeline();
-
-    }
-
-    showToast(
-
-      "Builder project added to CRM",
-
-      "success"
-
-    );
-
-  }catch(e){
-
-    console.error(e);
-
-  }
-
-};

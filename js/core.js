@@ -730,65 +730,105 @@
 
         );
 
-      const hourlyRate =
+     const hourlyRate =
 
-        n(
+  n(
 
-          state.job?.labor?.hourlyRate
+    state.job?.labor?.hourlyRate,
 
-        );
+    50
 
-      const hoursPerHouse =
+  );
 
-        n(
+const crewSize =
 
-          state.job?.labor?.hoursPerHouse
+  n(
 
-        );
+    state.job?.labor?.crewSize,
 
-      const crewSize =
+    2
 
-        n(
+  );
 
-          state.job?.labor?.crewSize,
+const overheadPct =
 
-          1
+  n(
 
-        );
+    state.job?.labor?.overhead,
 
-      const overheadPct =
+    12
 
-        n(
+  );
 
-          state.job?.labor?.overhead
+const productionRate =
 
-        );
+  n(
 
-      const laborEfficiency =
+    state.job?.productionRate,
 
-        1 -
+    6000
 
-        (
+  );
 
-          (1 - builderMult) * 0.5
+const hoursPerDay =
 
-        );
+  n(
 
-      const totalHours =
+    state.job?.hoursPerDay,
 
-        hoursPerHouse *
+    10
 
-        houses *
+  );
 
-        laborEfficiency;
+const sprayDays =
 
-      const laborCost =
+  Math.max(
 
-        totalHours *
+    1,
 
-        hourlyRate *
+    Math.ceil(
 
-        crewSize;
+      (
+
+        totalSqft * 1.08
+
+      ) /
+
+      productionRate
+
+    )
+
+  );
+
+const laborEfficiency =
+
+  1 -
+
+  (
+
+    (1 - builderMult) * 0.5
+
+  );
+
+const totalHours =
+
+  sprayDays *
+
+  hoursPerDay *
+
+  crewSize *
+
+  laborEfficiency;
+
+const laborCost =
+
+  totalHours *
+
+  hourlyRate;
+
+const equipmentCost =
+
+  sprayDays * 250;
 
       const addons =
 
@@ -912,13 +952,15 @@
 
         );
 
-      const totalCost =
+ const totalCost =
 
-        materialCost +
+  materialCost +
 
-        laborCost +
+  laborCost +
 
-        overheadCost;
+  equipmentCost +
+
+  overheadCost;
 
       let pricing =
 
@@ -1037,8 +1079,20 @@
         laborCost,
 
         overheadCost,
+      
+        equipmentCost,
 
         totalHours,
+        
+        sprayDays,
+
+        productionRate,
+
+        hoursPerDay,
+ 
+        crewSize,
+
+        hourlyRate,
 
         needs,
 
@@ -1334,41 +1388,59 @@
 
           });
 
-          list.push({
+ const hydroDays =
 
-            day: 2,
+  result?.sprayDays || 1;
 
-            title:
+for(let i = 0; i < hydroDays; i++){
 
-              "Hydroseeding Day",
+  list.push({
 
-            date:
+    day: i + 2,
 
-              fmt(
+    title:
 
-                addDays(
+      "Hydroseeding Day",
 
-                  start,
+    date:
 
-                  1
+      fmt(
 
-                )
+        addDays(
 
-              ),
+          start,
 
-            tasks: [
+          1 + i
 
-              "Hydroseed lawn",
+        )
 
-              ...(grow
+      ),
 
-                ? ["Install Grow System"]
+    tasks: [
 
-                : [])
+      `Production Rate: ${
 
-            ]
+        (
 
-          });
+          result?.productionRate || 6000
+
+        ).toLocaleString()
+
+      } sqft/day`,
+
+      "Hydroseed lawn",
+
+      ...(grow && i === 0
+
+        ? ["Install Grow System"]
+
+        : [])
+
+    ]
+
+  });
+
+}
 
           list.push({
 
@@ -1488,41 +1560,61 @@
 
           });
 
-          list.push({
+const hydroDays =
 
-            day: 3,
+  result?.sprayDays || 1;
 
-            title:
+for(let i = 0; i < hydroDays; i++){
 
-              "Hydroseeding Day",
+  list.push({
 
-            date:
+    day:
 
-              fmt(
+      list.length + 1,
 
-                addDays(
+    title:
 
-                  start,
+      "Hydroseeding Day",
 
-                  6
+    date:
 
-                )
+      fmt(
 
-              ),
+        addDays(
 
-            tasks: [
+          start,
 
-              "Hydroseed lawn",
+          6 + i
 
-              ...(grow
+        )
 
-                ? ["Install Grow System"]
+      ),
 
-                : [])
+    tasks: [
 
-            ]
+      `Production Rate: ${
 
-          });
+        (
+
+          result?.productionRate || 6000
+
+        ).toLocaleString()
+
+      } sqft/day`,
+
+      "Hydroseed lawn",
+
+      ...(grow && i === 0
+
+        ? ["Install Grow System"]
+
+        : [])
+
+    ]
+
+  });
+
+}
 
           list.push({
 
@@ -1584,15 +1676,15 @@
 
         });
 
-        const hydroDays =
+      const productionRate =
 
-          sqft > 6000 ||
+  result?.productionRate ||
 
-          houses > 1
+  6000;
 
-            ? 2
+const hydroDays =
 
-            : 1;
+  result?.sprayDays || 1;
 
         for (
 
@@ -1628,17 +1720,27 @@
 
               ),
 
-            tasks: [
+        tasks: [
 
-              "Hydroseed lawn",
+  `Production Rate: ${
 
-              ...(grow && i === 0
+    (
 
-                ? ["Install Grow System"]
+      result?.productionRate || 6000
 
-                : [])
+    ).toLocaleString()
 
-            ]
+  } sqft/day`,
+
+  "Hydroseed lawn",
+
+  ...(grow && i === 0
+
+    ? ["Install Grow System"]
+
+    : [])
+
+]
 
           });
 
@@ -1926,13 +2028,11 @@ function calculateBuilderProject(input = {}) {
 
     ========================= */
 
-    const productionRate =
+   const productionRate =
 
-      packageType === "premium"
+  Number(input.productionRate) ||
 
-        ? 6500
-
-        : 8500;
+  6000;
 
     const sprayDays =
 
@@ -1940,7 +2040,15 @@ function calculateBuilderProject(input = {}) {
 
         1,
 
-        Math.ceil(totalSqft / productionRate)
+       Math.ceil(
+
+  (
+
+    totalSqft * 1.08
+
+  ) / productionRate
+
+)
 
       );
 
@@ -1950,17 +2058,31 @@ function calculateBuilderProject(input = {}) {
 
     ========================= */
 
-    const crewDayCost =
+   const crewSize =
 
-      packageType === "premium"
+  Number(input.crewSize) || 2;
 
-        ? 1800
+const hourlyRate =
 
-        : 1500;
+  Number(input.hourlyRate) || 50;
 
-    const laborCost =
+const hoursPerDay =
 
-      sprayDays * crewDayCost;
+  Number(input.hoursPerDay) || 10;
+
+const laborHours =
+
+  sprayDays *
+
+  hoursPerDay *
+
+  crewSize;
+
+const laborCost =
+
+  laborHours *
+
+  hourlyRate;
 
     /* =========================
 
@@ -2016,31 +2138,45 @@ function calculateBuilderProject(input = {}) {
 
     }
 
-    /* =========================
+/* =========================
 
-       EQUIPMENT / OVERHEAD
+   EQUIPMENT / OVERHEAD
 
-    ========================= */
+========================= */
 
-    const overhead =
+const equipmentCost =
 
-      (laborCost + materialCost) * 0.18;
+  sprayDays * 250;
 
-    /* =========================
+const overhead =
 
-       TOTAL COST
+  (
 
-    ========================= */
+    laborCost +
 
-    const totalCost =
+    materialCost +
 
-      laborCost +
+    equipmentCost
 
-      materialCost +
+  ) * 0.18;
 
-      overhead +
+/* =========================
 
-      mobilization;
+   TOTAL COST
+
+========================= */
+
+const totalCost =
+
+  laborCost +
+
+  materialCost +
+
+  equipmentCost +
+
+  overhead +
+
+  mobilization;
 
     /* =========================
 
@@ -2154,9 +2290,13 @@ function calculateBuilderProject(input = {}) {
 
       price - totalCost;
 
-    const margin =
+ const margin =
 
-      (profit / price) * 100;
+  price > 0
+
+    ? (profit / price) * 100
+
+    : 0;
 
     return {
 
@@ -2176,6 +2316,8 @@ function calculateBuilderProject(input = {}) {
 
       mobilization,
 
+      equipmentCost,
+
       totalCost,
 
       price,
@@ -2183,14 +2325,32 @@ function calculateBuilderProject(input = {}) {
       profit,
 
       margin,
+      
+      productionRate,
 
-      pricePerHouse:
+      hoursPerDay,
 
-        price / houses,
+      laborHours,
 
-      pricePerSqft:
+      crewSize,
+  
+      hourlyRate,
 
-        price / totalSqft,
+     pricePerHouse:
+
+  houses > 0
+
+    ? price / houses
+
+    : 0,
+
+pricePerSqft:
+
+  totalSqft > 0
+
+    ? price / totalSqft
+
+    : 0,
 
       builderDiscount:
 
@@ -2255,3 +2415,4 @@ window.calculateBuilderProject =
     getSmartPricing;
 
 })();
+
