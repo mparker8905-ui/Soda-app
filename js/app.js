@@ -1198,7 +1198,7 @@ document.addEventListener(
 
           break;
          
-          case "generateProposal":
+          case "generateProposal": {
 
   const result =
 
@@ -1256,7 +1256,9 @@ document.addEventListener(
 
 break;
 
-case "generateBuilderProposal":
+}
+
+case "generateBuilderProposal": {
 
   const result =
 
@@ -1313,6 +1315,8 @@ case "generateBuilderProposal":
   win.document.close();
 
 break;
+
+}
 
         case "acceptProposal":
 
