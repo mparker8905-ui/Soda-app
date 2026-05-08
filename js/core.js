@@ -2678,11 +2678,11 @@ document
 
     customer:
 
-  document.getElementById("builderCustomer")?.value || "",
+  document.getElementById("builderName")?.value || "",
 
 address:
 
-  document.getElementById("builderAddress")?.value || "",
+  document.getElementById("builderProject")?.value || "",
 
     date:
 
@@ -2859,6 +2859,10 @@ address:
     equipmentCost:
 
       result.equipmentCost || 0,
+    
+    mobilization:
+
+      result.mobilization || 0,
 
     overhead:
 
