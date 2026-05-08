@@ -682,77 +682,7 @@ window.calculateBuilderUI = function(){
 
     `;
 
-     document
-
-  .getElementById(
-
-    "generateBuilderProposal"
-
-  )
-
-document.addEventListener(
-
-  "click",
-
-  e => {
-
-    const action =
-
-      e.target?.dataset?.action;
-
-    if (
-
-      action ===
-
-      "generateBuilderProposal"
-
-    ) {
-
-      const result =
-
-        window.calculateBuilderProject(
-
-          window.state.builder
-
-        );
-
-      const data =
-
-        window.generateBuilderProposalData(
-
-          result
-
-        );
-
-      const html =
-
-        window.generateProposalHTML(
-
-          data
-
-        );
-
-      const win =
-
-        window.open(
-
-          "",
-
-          "_blank"
-
-        );
-
-      win.document.open();
-
-      win.document.write(html);
-
-      win.document.close();
-
-    }
-
-  }
-
-);
+   
 
     /* =====================================
 

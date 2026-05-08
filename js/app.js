@@ -1198,59 +1198,62 @@ document.addEventListener(
 
           break;
          
- case "generateProposal":
 
-  if (
+case "generateBuilderProposal":
 
-    typeof window.generateProposalHTML ===
+  const result =
 
-    "function"
+    window.lastBuilderResult;
 
-  ) {
+  if (!result) {
 
-    const result =
+    alert(
 
-      window.calculateJob();
+      "Calculate builder project first."
 
-    const data =
+    );
 
-      window.generateResidentialProposalData(
-
-        result
-
-      );
-
-    const html =
-
-      window.generateProposalHTML(
-
-        data
-
-      );
-
-    const win =
-
-      window.open();
-
-    if (!win) {
-
-      alert(
-
-        "Enable popups to view proposal."
-
-      );
-
-      return;
-
-    }
-
-    win.document.open();
-
-    win.document.write(html);
-
-    win.document.close();
+    return;
 
   }
+
+  const data =
+
+    window.generateBuilderProposalData(
+
+      result
+
+    );
+
+  const html =
+
+    window.generateProposalHTML(
+
+      data
+
+    );
+
+  const win =
+
+    window.open();
+
+  if (!win) {
+
+    alert(
+
+      "Enable popups for proposals."
+
+    );
+
+    return;
+
+  }
+
+  win.document.open();
+
+  win.document.write(html);
+
+  win.document.close();
 
 break;
 
