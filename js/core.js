@@ -2114,8 +2114,6 @@ function calculateBuilderProject(input = {}) {
 
   );
 
-      );
-
     /* =========================
 
        CREW COSTS
