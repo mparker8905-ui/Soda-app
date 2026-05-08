@@ -2148,7 +2148,7 @@ const laborCost =
 
   hourlyRate;
 
-  /* =========================
+/* =========================
 
    MATERIAL COSTS
 
@@ -2156,7 +2156,11 @@ const laborCost =
 
 const inventory =
 
-  window.getInventoryCache?.(true) || {};
+  typeof window.getInventoryCache === "function"
+
+    ? window.getInventoryCache()
+
+    : {};
 
 const needs =
 
@@ -2176,27 +2180,25 @@ const needs =
 
 let materialCost = 0;
 
-Object.keys(needs)
+Object.keys(needs).forEach(type => {
 
-  .forEach(type => {
+  materialCost +=
 
-    materialCost +=
+    needs[type] *
 
-      needs[type] *
+    getAvgCostFromInventory(
 
-      getAvgCostFromInventory(
+      type,
 
-        type,
+      inventory
 
-        inventory
+    );
 
-      );
-
-  });
+});
 
 /* minimum material floor */
 
-if(materialCost < 500){
+if (materialCost < 500) {
 
   materialCost = 500;
 
@@ -2204,13 +2206,13 @@ if(materialCost < 500){
 
 /* bulk efficiency */
 
-if(totalSqft > 50000){
+if (totalSqft > 50000) {
 
   materialCost *= 0.92;
 
 }
 
-if(totalSqft > 100000){
+if (totalSqft > 100000) {
 
   materialCost *= 0.88;
 
