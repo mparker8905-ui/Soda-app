@@ -3148,31 +3148,51 @@ window.generateProposalHTML = function(data = {}) {
 
       .join("");
 
-  const addonRows =
+const addonRows =
 
-  Object.entries(
+  Object.keys(
 
     data.addonCosts || {}
 
-  )
+  ).length
 
-  .map(([key,val]) => {
+    ? Object.entries(
 
-    return `
+        data.addonCosts || {}
 
-      <li>
+      )
 
-        ${key} —
+      .map(([key,val]) => {
 
-        $${Number(val).toFixed(2)}
+        return `
 
-      </li>
+          <li>
 
-    `;
+            ${key} —
 
-  })
+            $${Number(val).toFixed(2)}
 
-  .join("");
+          </li>
+
+        `;
+
+      })
+
+      .join("")
+
+    : (data.addons || [])
+
+      .map(addon => {
+
+        return `
+
+          <li>${addon}</li>
+
+        `;
+
+      })
+
+      .join("");
 
   const scheduleRows =
 
