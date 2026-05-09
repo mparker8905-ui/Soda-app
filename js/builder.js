@@ -539,6 +539,20 @@ window.calculateBuilderUI = function(){
 
     ===================================== */
 
+const addonTotal =
+
+  Object.values(
+
+    result.addonCosts || {}
+
+  ).reduce(
+
+    (a,b) => a + b,
+
+    0
+
+  );
+
     document.getElementById(
 
       "builderResults"
@@ -617,15 +631,7 @@ window.calculateBuilderUI = function(){
 
   Add-ons:
 
-  ${money(
-
-    Object.values(
-
-      result.addonCosts || {}
-
-    ).reduce((a,b)=>a+b,0)
-
-  )}
+  ${money(addonTotal)}
 
 </div>
 
