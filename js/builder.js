@@ -72,6 +72,73 @@ window.calculateBuilderUI = function(){
 
       );
 
+    const addons = {
+
+  aeration:
+
+    !!document.getElementById(
+
+      "builderAddon_aeration"
+
+    )?.checked,
+
+  compost:
+
+    !!document.getElementById(
+
+      "builderAddon_compost"
+
+    )?.checked,
+
+  biohum:
+
+    !!document.getElementById(
+
+      "builderAddon_biohum"
+
+    )?.checked,
+
+  biochar:
+
+    !!document.getElementById(
+
+      "builderAddon_biochar"
+
+    )?.checked,
+
+  humic:
+
+    !!document.getElementById(
+
+      "builderAddon_humic"
+
+    )?.checked,
+
+  grow:
+
+    !!document.getElementById(
+
+      "builderAddon_grow"
+
+    )?.checked,
+
+  lime:
+
+    !!document.getElementById(
+
+      "builderAddon_lime"
+
+    )?.checked,
+
+  sulfur:
+
+    !!document.getElementById(
+
+      "builderAddon_sulfur"
+
+    )?.checked
+
+};
     const start =
 
       document.getElementById("builderStart")?.value || "";
@@ -246,39 +313,33 @@ window.calculateBuilderUI = function(){
 
     ===================================== */
 
-    const result =
+   const result =
 
-      window.calculateJobCore({
+  window.calculateBuilderProject({
 
-        inventory,
+    sqft,
 
-        job:{
+    houses,
 
-          sqft,
+    package: pkg,
 
-          houses,
+    pricingMode,
 
-          package: pkg,
+    competitorPrice:
 
-          pricingMode,
+      competitor,
 
-          competitorPrice: competitor,
+    productionRate,
 
-          labor:{
+    crewSize,
 
-            hourlyRate,
+    hourlyRate,
 
-            crewSize,
+    hoursPerDay,
 
-            overhead: overheadPct
+    addons
 
-          },
-
-          addons:{}
-
-        }
-
-      });
+  });
 
     /* =====================================
 
@@ -527,6 +588,46 @@ window.calculateBuilderUI = function(){
           ${money(totalCost)}
 
         </div>
+        
+        <div>
+
+  Equipment:
+
+  ${money(result.equipmentCost)}
+
+</div>
+
+<div>
+
+  Mobilization:
+
+  ${money(result.mobilization)}
+
+</div>
+
+<div>
+
+  Overhead:
+
+  ${money(result.overhead)}
+
+</div>
+
+<div>
+
+  Add-ons:
+
+  ${money(
+
+    Object.values(
+
+      result.addonCosts || {}
+
+    ).reduce((a,b)=>a+b,0)
+
+  )}
+
+</div>
 
         <div>
 
@@ -601,13 +702,33 @@ window.calculateBuilderUI = function(){
         <div>
 
           Material Cost:
+          const addonHTML =
 
+  Object.entries(
+
+    result.addonCosts || {}
+
+  )
+
+  .map(([key,val]) => `
+
+    <div>
+
+      Add-on (${key}):
+
+      ${money(val)}
+
+    </div>
+
+  `)
+
+  .join("");
           ${money(materialCost)}
 
         </div>
 
-        <div>
-
+    ${addonHTML}
+     
           Mobilization:
 
           ${money(mobilization)}
@@ -709,6 +830,10 @@ window.calculateBuilderUI = function(){
     window.lastBuilderResult = {
 
       ...result,
+
+      addonCosts:
+
+      result.addonCosts || {},
 
       totalSqft,
 

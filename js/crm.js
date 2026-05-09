@@ -210,6 +210,14 @@
 
         sqft: 0,
 
+        proposalSnapshot:
+
+  window.lastBuilderResult ||
+
+  window.lastResult ||
+
+  null,
+
         createdAt: Date.now()
 
       };

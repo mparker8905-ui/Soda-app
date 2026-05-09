@@ -417,6 +417,30 @@
           MATERIAL_RATES.sulfur.rate;
 
       }
+   
+      if (addons.biohum) {
+
+  needs.biohum =
+
+    (sqft / 1000) * 2;
+
+}
+
+if (addons.aeration) {
+
+  needs.aeration =
+
+    sqft;
+
+}
+
+if (addons.grow) {
+
+  needs.grow =
+
+    input.houses || 1;
+
+}
 
       if (addons.biochar) {
 
@@ -2078,6 +2102,10 @@ function calculateBuilderProject(input = {}) {
 
       sqft * houses;
 
+    const addons =
+
+    input.addons || {};
+
     /* =========================
 
        PRODUCTION RATES
@@ -2217,6 +2245,118 @@ materialCost +=
 if (materialCost < 500) {
 
   materialCost = 500;
+
+}
+
+const addonCosts = {};
+
+/* =========================
+
+   ADDONS
+
+========================= */
+
+if (addons.aeration) {
+
+  addonCosts.aeration =
+
+    totalSqft * 0.04;
+
+  materialCost +=
+
+    addonCosts.aeration;
+
+}
+
+if (addons.compost) {
+
+  addonCosts.compost =
+
+    totalSqft * 0.10;
+
+  materialCost +=
+
+    addonCosts.compost;
+
+}
+
+if (addons.biohum) {
+
+  addonCosts.biohum =
+
+    totalSqft * 0.12;
+
+  materialCost +=
+
+    addonCosts.biohum;
+
+}
+
+if (addons.biochar) {
+
+  addonCosts.biochar =
+
+    totalSqft * 0.20;
+
+  materialCost +=
+
+    addonCosts.biochar;
+
+}
+
+if (addons.humic) {
+
+  addonCosts.humic =
+
+    totalSqft * 0.01;
+
+  materialCost +=
+
+    addonCosts.humic;
+
+}
+
+if (addons.lime) {
+
+  addonCosts.lime =
+
+    totalSqft * 0.004;
+
+  materialCost +=
+
+    addonCosts.lime;
+
+}
+
+if (addons.sulfur) {
+
+  addonCosts.sulfur =
+
+    totalSqft * 0.008;
+
+  materialCost +=
+
+    addonCosts.sulfur;
+
+}
+
+if (addons.grow) {
+
+  const weekly =
+
+    50 * 3 * houses;
+
+  const install =
+
+    totalSqft * 0.03;
+
+  addonCosts.grow =
+
+    weekly + install;
+
+  materialCost +=
+
+    addonCosts.grow;
 
 }
 
@@ -2421,6 +2561,10 @@ const totalCost =
       sqft,
 
       houses,
+
+      addonCosts,
+
+      addons,
 
       totalSqft,
 
@@ -2740,6 +2884,10 @@ address:
 
     addons,
 
+    addonCosts:
+
+    result.addonCosts || {},
+
     needs:
 
       result.needs || {},
@@ -2930,19 +3078,29 @@ window.generateProposalHTML = function(data = {}) {
 
   const addonRows =
 
-    (data.addons || [])
+  Object.entries(
 
-      .map(addon => {
+    data.addonCosts || {}
 
-        return `
+  )
 
-          <li>${addon}</li>
+  .map(([key,val]) => {
 
-        `;
+    return `
 
-      })
+      <li>
 
-      .join("");
+        ${key} —
+
+        $${Number(val).toFixed(2)}
+
+      </li>
+
+    `;
+
+  })
+
+  .join("");
 
   const scheduleRows =
 
@@ -3425,250 +3583,6 @@ impact timelines.
 </html>
 
 `;
-
-};
-
-/* =====================================
-
-   BUILDER PROPOSAL HTML
-
-===================================== */
-
-window.renderBuilderProposal =
-
-function(data) {
-
-  return `
-
-  <div class="proposal-wrap">
-
-    <h1>
-
-      SoDa Outdoor Designs
-
-    </h1>
-
-    <h2>
-
-      Builder Hydroseeding Proposal
-
-    </h2>
-
-    <hr>
-
-    <p>
-
-      <strong>Builder:</strong>
-
-      ${data.builderName}
-
-    </p>
-
-    <p>
-
-      <strong>Project:</strong>
-
-      ${data.projectName}
-
-    </p>
-
-    <p>
-
-      <strong>Address:</strong>
-
-      ${data.address}
-
-    </p>
-
-    <p>
-
-      <strong>Date:</strong>
-
-      ${data.date}
-
-    </p>
-
-    <hr>
-
-    <h3>
-
-      Project Scope
-
-    </h3>
-
-    <ul>
-
-      <li>
-
-        Professional hydroseeding
-
-      </li>
-
-      <li>
-
-        Seed installation
-
-      </li>
-
-      <li>
-
-        Fertilizer application
-
-      </li>
-
-      <li>
-
-        Mulch stabilization
-
-      </li>
-
-      <li>
-
-        Erosion control
-
-      </li>
-
-    </ul>
-
-    <hr>
-
-    <h3>
-
-      Production Metrics
-
-    </h3>
-
-    <p>
-
-      Houses:
-
-      ${data.houses}
-
-    </p>
-
-    <p>
-
-      Total Sqft:
-
-      ${data.totalSqft.toLocaleString()}
-
-    </p>
-
-    <p>
-
-      Spray Days:
-
-      ${data.sprayDays}
-
-    </p>
-
-    <p>
-
-      Production Rate:
-
-      ${data.productionRate.toLocaleString()}
-
-      sqft/day
-
-    </p>
-
-    <p>
-
-      Crew Size:
-
-      ${data.crewSize}
-
-    </p>
-
-    <hr>
-
-    <h3>
-
-      Pricing Summary
-
-    </h3>
-
-    <p>
-
-      Total Investment:
-
-      $${data.totalPrice.toFixed(2)}
-
-    </p>
-
-    <p>
-
-      Price Per Home:
-
-      $${data.pricePerHouse.toFixed(2)}
-
-    </p>
-
-    <hr>
-
-    <h3>
-
-      Material Usage
-
-    </h3>
-
-    ${Object.keys(data.materials)
-
-      .map(key => {
-
-        return `
-
-        <p>
-
-          ${key.toUpperCase()}:
-
-          ${Number(
-
-            data.materials[key]
-
-          ).toFixed(1)}
-
-        </p>
-
-        `;
-
-      })
-
-      .join("")}
-
-    <hr>
-
-    <h3>
-
-      Terms
-
-    </h3>
-
-    <ul>
-
-      <li>
-
-        50% deposit required
-
-      </li>
-
-      <li>
-
-        Weather delays may affect schedule
-
-      </li>
-
-      <li>
-
-        Irrigation required after application
-
-      </li>
-
-    </ul>
-
-  </div>
-
-  `;
 
 };
 
