@@ -872,6 +872,8 @@ const mobilization =
 
         state.job?.addons || {};
 
+     const addonCosts = {};
+
       const needs =
 
         getMaterialNeedsCore(
@@ -914,65 +916,117 @@ const mobilization =
 
       }
 
-      if (addons.aeration)
+if (addons.aeration) {
 
-        materialCost += totalSqft * 0.04;
+  addonCosts.aeration =
 
-      if (
+    totalSqft * 0.04;
 
-        addons.compost &&
+  materialCost +=
 
-        packageType !== "premium"
+    addonCosts.aeration;
 
-      ) {
+}
 
-        materialCost += totalSqft * 0.10;
+if (addons.compost) {
 
-      }
+  addonCosts.compost =
 
-      if (addons.biohum)
+    totalSqft * 0.10;
 
-        materialCost += totalSqft * 0.12;
+  materialCost +=
 
-      if (addons.biochar)
+    addonCosts.compost;
 
-        materialCost += totalSqft * 0.20;
+}
 
-      if (addons.humic)
+if (addons.biohum) {
 
-        materialCost += totalSqft * 0.01;
+  addonCosts.biohum =
 
-      if (addons.lime)
+    totalSqft * 0.12;
 
-        materialCost += totalSqft * 0.004;
+  materialCost +=
 
-      if (addons.sulfur)
+    addonCosts.biohum;
 
-        materialCost += totalSqft * 0.008;
+}
 
-      if (addons.grow) {
+if (addons.biochar) {
 
-        const weekly =
+  addonCosts.biochar =
 
-          50 * 3 * houses;
+    totalSqft * 0.20;
 
-        const install =
+  materialCost +=
 
-          packageType === "standard"
+    addonCosts.biochar;
 
-            ? houses <= 1
+}
 
-              ? totalSqft * 0.05
+if (addons.humic) {
 
-              : totalSqft * 0.03
+  addonCosts.humic =
 
-            : 0;
+    totalSqft * 0.01;
 
-        materialCost +=
+  materialCost +=
 
-          weekly + install;
+    addonCosts.humic;
 
-      }
+}
+
+if (addons.lime) {
+
+  addonCosts.lime =
+
+    totalSqft * 0.004;
+
+  materialCost +=
+
+    addonCosts.lime;
+
+}
+
+if (addons.sulfur) {
+
+  addonCosts.sulfur =
+
+    totalSqft * 0.008;
+
+  materialCost +=
+
+    addonCosts.sulfur;
+
+}
+
+if (addons.grow) {
+
+  const weekly =
+
+    50 * 3 * houses;
+
+  const install =
+
+    packageType === "standard"
+
+      ? houses <= 1
+
+        ? totalSqft * 0.05
+
+        : totalSqft * 0.03
+
+      : 0;
+
+  addonCosts.grow =
+
+    weekly + install;
+
+  materialCost +=
+
+    addonCosts.grow;
+
+}
 
       const overheadCost =
 
@@ -1119,6 +1173,8 @@ const mobilization =
         laborCost,
 
         materialCost,
+
+        addonCosts,
 
         overheadCost,
       
@@ -3033,6 +3089,10 @@ address:
       result.price || 0,
 
     addons,
+
+   addonCosts:
+
+  result.addonCosts || {},
 
     needs:
 
