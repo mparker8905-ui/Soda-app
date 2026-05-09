@@ -860,6 +860,14 @@ const equipmentCost =
 
   sprayDays * 250;
 
+const mobilization =
+
+  totalSqft >= 10000
+
+    ? 750
+
+    : 0;
+
       const addons =
 
         state.job?.addons || {};
@@ -990,6 +998,8 @@ const equipmentCost =
 
   equipmentCost +
 
+  mobilization +
+
   overheadCost;
 
       let pricing =
@@ -1113,6 +1123,8 @@ const equipmentCost =
         overheadCost,
       
         equipmentCost,
+
+        mobilization,
 
         totalHours,
         
@@ -2920,7 +2932,7 @@ document
 
   .querySelectorAll(
 
-    '[id^="addon_"]:checked'
+    'input[type="checkbox"]:checked'
 
   )
 
