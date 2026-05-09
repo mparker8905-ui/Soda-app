@@ -553,6 +553,28 @@ const addonTotal =
 
   );
 
+const addonHTML =
+
+  Object.entries(
+
+    result.addonCosts || {}
+
+  )
+
+  .map(([key,val]) => `
+
+    <div>
+
+      Add-on (${key}):
+
+      ${money(val)}
+
+    </div>
+
+  `)
+
+  .join("");
+
     document.getElementById(
 
       "builderResults"
@@ -708,32 +730,14 @@ const addonTotal =
         <div>
 
           Material Cost:
-          const addonHTML =
-
-  Object.entries(
-
-    result.addonCosts || {}
-
-  )
-
-  .map(([key,val]) => `
-
-    <div>
-
-      Add-on (${key}):
-
-      ${money(val)}
-
-    </div>
-
-  `)
-
-  .join("");
+  
           ${money(materialCost)}
 
         </div>
 
     ${addonHTML}
+     
+        <div>
      
           Mobilization:
 
