@@ -2978,6 +2978,9 @@ address:
 
 ===================================== */
 
+const result = window.calculateJob();
+
+const data = 
 window.generateResidentialProposalData =
 
 function(result = {}) {
