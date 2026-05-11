@@ -764,15 +764,43 @@ if (addons.grow) {
 
   );
 
-const crewSize =
+let crewSize =
 
   n(
 
     state.job?.labor?.crewSize,
 
-    2
+    0
 
   );
+
+if (!crewSize || crewSize <= 0) {
+
+  if (totalSqft < 15000) {
+
+    crewSize = 2;
+
+  }
+
+  else if (totalSqft < 50000) {
+
+    crewSize = 3;
+
+  }
+
+  else if (totalSqft < 100000) {
+
+    crewSize = 4;
+
+  }
+
+  else {
+
+    crewSize = 5;
+
+  }
+
+}
 
 const overheadPct =
 
@@ -784,15 +812,35 @@ const overheadPct =
 
   );
 
-const productionRate =
+let productionRate =
 
   n(
 
     state.job?.productionRate,
 
-    6000
+    0
 
   );
+
+if (!productionRate || productionRate <= 0) {
+
+  productionRate =
+
+    crewSize * 3500;
+
+  if (totalSqft > 75000) {
+
+    productionRate *= 1.10;
+
+  }
+
+  if (totalSqft > 150000) {
+
+    productionRate *= 1.15;
+
+  }
+
+}
 
 const hoursPerDay =
 
@@ -2180,11 +2228,29 @@ function calculateBuilderProject(input = {}) {
 
     ========================= */
 
-   const productionRate =
+ let productionRate =
 
-  Number(input.productionRate) ||
+  Number(input.productionRate) || 0;
 
-  6000;
+if (!productionRate || productionRate <= 0) {
+
+  productionRate =
+
+    crewSize * 3500;
+
+  if (totalSqft > 75000) {
+
+    productionRate *= 1.10;
+
+  }
+
+  if (totalSqft > 150000) {
+
+    productionRate *= 1.15;
+
+  }
+
+}
 
   const sprayDays =
 
@@ -2218,9 +2284,37 @@ function calculateBuilderProject(input = {}) {
 
     ========================= */
 
-   const crewSize =
+  let crewSize =
 
-  Number(input.crewSize) || 2;
+  Number(input.crewSize) || 0;
+
+if (!crewSize || crewSize <= 0) {
+
+  if (totalSqft < 15000) {
+
+    crewSize = 2;
+
+  }
+
+  else if (totalSqft < 50000) {
+
+    crewSize = 3;
+
+  }
+
+  else if (totalSqft < 100000) {
+
+    crewSize = 4;
+
+  }
+
+  else {
+
+    crewSize = 5;
+
+  }
+
+}
 
 const hourlyRate =
 
@@ -2724,11 +2818,19 @@ function(result = {}) {
 
   const start = new Date();
 
+  const rollingMode =
+
+    (result.houses || 0) >= 10;
+
   function addDays(base, days) {
 
     const d = new Date(base);
 
-    d.setDate(d.getDate() + days);
+    d.setDate(
+
+      d.getDate() + days
+
+    );
 
     return d;
 
@@ -2753,6 +2855,174 @@ function(result = {}) {
     );
 
   }
+
+  /* =========================
+
+     ROLLING SUBDIVISION MODE
+
+  ========================= */
+
+  if (rollingMode) {
+
+    const lotsPerPhase = 5;
+
+    const phases =
+
+      Math.ceil(
+
+        result.houses /
+
+        lotsPerPhase
+
+      );
+
+    for (
+
+      let i = 0;
+
+      i < phases;
+
+      i++
+
+    ) {
+
+      const startLot =
+
+        (i * lotsPerPhase) + 1;
+
+      const endLot =
+
+        Math.min(
+
+          result.houses,
+
+          startLot +
+
+          lotsPerPhase - 1
+
+        );
+
+      list.push({
+
+        title:
+
+          `Prep Lots ${startLot}-${endLot}`,
+
+        date:
+
+          fmt(
+
+            addDays(
+
+              start,
+
+              i
+
+            )
+
+          ),
+
+        tasks: [
+
+          "Rough grading",
+
+          "Soil conditioning",
+
+          "Prep irrigation zones"
+
+        ]
+
+      });
+
+      list.push({
+
+        title:
+
+          `Hydroseed Lots ${startLot}-${endLot}`,
+
+        date:
+
+          fmt(
+
+            addDays(
+
+              start,
+
+              i + 1
+
+            )
+
+          ),
+
+        tasks: [
+
+          `Production Rate: ${
+
+            (
+
+              result.productionRate ||
+
+              6000
+
+            ).toLocaleString()
+
+          } sqft/day`,
+
+          `Crew Size: ${
+
+            result.crewSize || 2
+
+          }`,
+
+          "Hydroseeding application"
+
+        ]
+
+      });
+
+    }
+
+    list.push({
+
+      title:
+
+        "Subdivision Final Inspection",
+
+      date:
+
+        fmt(
+
+          addDays(
+
+            start,
+
+            phases + 7
+
+          )
+
+        ),
+
+      tasks: [
+
+        "Final walkthrough",
+
+        "Touchups",
+
+        "Builder punch list"
+
+      ]
+
+    });
+
+    return list;
+
+  }
+
+  /* =========================
+
+     STANDARD BUILDER MODE
+
+  ========================= */
 
   list.push({
 
@@ -2784,9 +3054,23 @@ function(result = {}) {
 
     list.push({
 
-      title: `Hydroseeding Day ${i + 1}`,
+      title:
 
-      date: fmt(addDays(start, i + 1)),
+        `Hydroseeding Day ${i + 1}`,
+
+      date:
+
+        fmt(
+
+          addDays(
+
+            start,
+
+            i + 1
+
+          )
+
+        ),
 
       tasks: [
 
@@ -2794,7 +3078,9 @@ function(result = {}) {
 
           (
 
-            result.productionRate || 6000
+            result.productionRate ||
+
+            6000
 
           ).toLocaleString()
 
@@ -2818,17 +3104,19 @@ function(result = {}) {
 
     title: "Final Inspection",
 
-    date: fmt(
+    date:
 
-      addDays(
+      fmt(
 
-        start,
+        addDays(
 
-        (result.sprayDays || 1) + 14
+          start,
 
-      )
+          (result.sprayDays || 1) + 14
 
-    ),
+        )
+
+      ),
 
     tasks: [
 
@@ -2843,6 +3131,8 @@ function(result = {}) {
   return list;
 
 };
+
+ 
 
 /* =====================================
 
