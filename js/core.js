@@ -2978,66 +2978,45 @@ address:
 
 ===================================== */
 
-const result = window.calculateJob();
-
-const data = 
 window.generateResidentialProposalData =
 
 function(result = {}) {
 
-const addons = [];
+  const addons =
 
-document
+    Object.entries(
 
-  .querySelectorAll(
+      result.addonCosts || {}
 
-    'input[type="checkbox"]:checked'
+    ).map(([key,val]) => ({
 
-  )
+      name:
 
-  .forEach(el => {
+        key.charAt(0).toUpperCase() +
 
-    addons.push(
+        key.slice(1),
 
-      el.dataset.label ||
+      cost: val
 
-      el.value ||
-
-      el.id.replace(
-
-        "addon_",
-
-        ""
-
-      )
-
-    );
-
-  });
-
-  
+    }));
 
   return {
 
     customer:
 
-  document.getElementById("customer")?.value || "",
+      document.getElementById("customer")?.value || "",
 
-address:
+    address:
 
-  document.getElementById("address")?.value || "",
+      document.getElementById("address")?.value || "",
 
     date:
 
-      new Date()
-
-        .toLocaleDateString(),
+      new Date().toLocaleDateString(),
 
     packageType:
 
-      window.state?.job
-
-        ?.package || "",
+      window.state?.job?.package || "",
 
     totalSqft:
 
@@ -3078,7 +3057,7 @@ address:
     equipmentCost:
 
       result.equipmentCost || 0,
-    
+
     mobilization:
 
       result.mobilization || 0,
@@ -3093,9 +3072,9 @@ address:
 
     addons,
 
-   addonCosts:
+    addonCosts:
 
-  result.addonCosts || {},
+      result.addonCosts || {},
 
     needs:
 
@@ -3114,6 +3093,7 @@ address:
    MASTER PROPOSAL RENDERER
 
 ===================================== */
+
 
 window.generateProposalHTML = function(data = {}) {
 
@@ -3153,35 +3133,29 @@ window.generateProposalHTML = function(data = {}) {
 
 const addonRows =
 
-  Object.keys(
+  (data.addons || [])
 
-    data.addonCosts || {}
+    .map(item => {
 
-  ).length
+      return `
 
-    ? Object.entries(
+        <li>
 
-        data.addonCosts || {}
+          ${item.name} —
 
-      )
+          $${Number(
 
-      .map(([key,val]) => {
+            item.cost
 
-        return `
+          ).toFixed(2)}
 
-          <li>
+        </li>
 
-            ${key} —
+      `;
 
-            $${Number(val).toFixed(2)}
+    })
 
-          </li>
-
-        `;
-
-      })
-
-      .join("")
+    .join("");
 
     : (data.addons || [])
 
