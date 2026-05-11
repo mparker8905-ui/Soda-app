@@ -3157,20 +3157,6 @@ const addonRows =
 
     .join("");
 
-    : (data.addons || [])
-
-      .map(addon => {
-
-        return `
-
-          <li>${addon}</li>
-
-        `;
-
-      })
-
-      .join("");
-
   const scheduleRows =
 
     (data.schedule || [])
