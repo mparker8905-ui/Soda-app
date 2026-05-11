@@ -2982,23 +2982,43 @@ window.generateResidentialProposalData =
 
 function(result = {}) {
 
+const addonRates = {
+
+  compost: 0.10,
+
+  lime: 0.004,
+
+  sulfur: 0.008,
+
+  biochar: 0.20,
+
+  humic: 0.01,
+
+  biohum: 0.12
+
+};
+
   const addons =
 
-    Object.entries(
+  Object.entries(
 
-      result.addonCosts || {}
+    result.addonCosts || {}
 
-    ).map(([key,val]) => ({
+  ).map(([key,val]) => ({
 
-      name:
+    name:
 
-        key.charAt(0).toUpperCase() +
+      key.charAt(0).toUpperCase() +
 
-        key.slice(1),
+      key.slice(1),
 
-      cost: val
+    cost: val,
 
-    }));
+    rate:
+
+      addonRates[key] || null
+
+  }));
 
   return {
 
@@ -3148,6 +3168,16 @@ const addonRows =
             item.cost
 
           ).toFixed(2)}
+
+          ${
+
+            item.rate
+
+              ? `($${item.rate}/sqft)`
+
+              : ""
+
+          }
 
         </li>
 
