@@ -426,19 +426,29 @@
 
 }
 
-if (addons.aeration) {
-
-  needs.aeration =
-
-    sqft;
-
-}
-
 if (addons.grow) {
 
-  needs.grow =
+  const sprinklers =
 
-    input.houses || 1;
+    Math.ceil(sqft / 1200);
+
+  const timers =
+
+    Math.max(
+
+      1,
+
+      Math.ceil(sprinklers / 4)
+
+    );
+
+  needs.sprinklers =
+
+    sprinklers;
+
+  needs.timers =
+
+    timers;
 
 }
 
@@ -2448,9 +2458,25 @@ const tankSize =
 
   Number(input.tankSize) || 300;
 
+const refillDefaults = {
+
+  300: 20,
+
+  500: 25,
+
+  800: 30,
+
+  1000: 40
+
+};
+
 const refillMinutes =
 
-  Number(input.refillMinutes) || 0;
+  Number(input.refillMinutes) ||
+
+  refillDefaults[tankSize] ||
+
+  20;
 
 const tankCoverageMap = {
 
@@ -3517,35 +3543,41 @@ window.generateBuilderProposalData =
 
 function(result = {}) {
 
-  const addons = [];
+const addonRates = {
 
-document
+  compost: 0.10,
 
-  .querySelectorAll(
+  lime: 0.004,
 
-    '[id^="builderAddon_"]:checked'
+  sulfur: 0.008,
 
-  )
+  biochar: 0.20,
 
-  .forEach(el => {
+  humic: 0.01,
 
-    addons.push(
+  biohum: 0.12,
 
-      el.dataset.label ||
+  aeration: 0.04
 
-      el.value ||
+};
 
-      el.id.replace(
+const addons = Object.entries(
 
-        "builderAddon_",
+  result.addonCosts || {}
 
-        ""
+).map(([key, val]) => ({
 
-      )
+  name:
 
-    );
+    key.charAt(0).toUpperCase() +
 
-  });
+    key.slice(1),
+
+  cost: val,
+
+  rate: addonRates[key] || null
+
+}));
 
     
 
@@ -3802,15 +3834,17 @@ const addonRates = {
 ===================================== */
 
 
-window.generateProposalHTML = function(data = {}) {
+const materialRows =
 
-  const materialRows =
+  Object.keys(data.needs || {})
 
-    Object.keys(data.needs || {})
+    .map(key => {
 
-      .map(key => {
+      const unit =
 
-        return `
+        MATERIAL_RATES[key]?.unit || "";
+
+      return `
 
           <tr>
 
@@ -3828,15 +3862,17 @@ window.generateProposalHTML = function(data = {}) {
 
               }
 
+              ${unit}
+
             </td>
 
           </tr>
 
         `;
 
-      })
+    })
 
-      .join("");
+    .join("");
 
 const addonRows =
 
