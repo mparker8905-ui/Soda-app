@@ -3833,6 +3833,7 @@ const addonRates = {
 
 ===================================== */
 
+window.generateProposalHTML = function(data = {}) {
 
 const materialRows =
 
