@@ -313,7 +313,19 @@ window.calculateBuilderUI = function(){
 
     ===================================== */
 
-   const result =
+const tankSize =
+
+  Number(
+
+    document.getElementById(
+
+      "builderTankSize"
+
+    )?.value
+
+  ) || 300;
+
+const result =
 
   window.calculateBuilderProject({
 
@@ -336,6 +348,20 @@ window.calculateBuilderUI = function(){
     hourlyRate,
 
     hoursPerDay,
+
+    tankSize,
+
+    refillMinutes:
+
+      Number(
+
+        document.getElementById(
+
+          "builderRefillMinutes"
+
+        )?.value
+
+      ) || 0,
 
     addons
 
