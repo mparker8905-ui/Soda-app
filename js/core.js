@@ -812,36 +812,6 @@ const overheadPct =
 
   );
 
-let productionRate =
-
-  n(
-
-    state.job?.productionRate,
-
-    0
-
-  );
-
-if (!productionRate || productionRate <= 0) {
-
-  productionRate =
-
-    crewSize * 3500;
-
-  if (totalSqft > 75000) {
-
-    productionRate *= 1.10;
-
-  }
-
-  if (totalSqft > 150000) {
-
-    productionRate *= 1.15;
-
-  }
-
-}
-
 const hoursPerDay =
 
   n(
@@ -849,6 +819,112 @@ const hoursPerDay =
     state.job?.hoursPerDay,
 
     10
+
+  );
+
+const tankSize =
+
+  n(
+
+    state.job?.tankSize,
+
+    300
+
+  );
+
+const refillMinutes =
+
+  n(
+
+    state.job?.refillMinutes,
+
+    0
+
+  );
+
+const tankCoverageMap = {
+
+  300: 3000,
+
+  500: 5000,
+
+  800: 8000,
+
+  1000: 10000
+
+};
+
+const sprayMinutesPerLoadMap = {
+
+  300: 20,
+
+  500: 25,
+
+  800: 35,
+
+  1000: 45
+
+};
+
+const sprayMinutesPerLoad =
+
+  n(
+
+    state.job?.sprayMinutesPerLoad,
+
+    sprayMinutesPerLoadMap[tankSize] || 20
+
+  );
+
+const loadingMinutes = 15;
+
+const cycleMinutes =
+
+  sprayMinutesPerLoad +
+
+  loadingMinutes +
+
+  refillMinutes;
+
+const loadsPerDay =
+
+  (
+
+    hoursPerDay * 60
+
+  ) / Math.max(cycleMinutes, 1);
+
+const fuelCostPerLoad =
+
+  n(
+
+    state.job?.fuelCostPerLoad,
+
+    12
+
+  );
+
+const tankProductionLimit =
+
+  (
+
+    tankCoverageMap[tankSize] ||
+
+    3000
+
+  ) * loadsPerDay;
+
+const crewProduction =
+
+  crewSize * 3500;
+
+const productionRate =
+
+  Math.min(
+
+    crewProduction,
+
+    tankProductionLimit
 
   );
 
@@ -904,9 +980,23 @@ const laborCost =
 
   hourlyRate;
 
-const equipmentCost =
+const baseEquipmentCost =
 
   sprayDays * 250;
+
+const refillFuelCost =
+
+  loadsPerDay *
+
+  sprayDays *
+
+  fuelCostPerLoad;
+
+const equipmentCost =
+
+  baseEquipmentCost +
+
+  refillFuelCost;
 
 const mobilization =
 
@@ -1188,6 +1278,14 @@ if (addons.grow) {
 
         price - totalCost;
 
+      const margin =
+
+  price > 0
+
+    ? (profit / price) * 100
+
+    : 0;
+
       const inventoryTotals =
 
         window.getInventoryTotals?.() || {};
@@ -1212,11 +1310,13 @@ if (addons.grow) {
 
         cost:
 
-          totalCost,
+        totalCost,
 
         price,
 
         profit,
+
+        margin,
 
         laborCost,
 
@@ -1235,6 +1335,16 @@ if (addons.grow) {
         sprayDays,
 
         productionRate,
+
+        fuelCostPerLoad,
+
+        sprayMinutesPerLoad,
+
+        tankSize,
+
+        refillMinutes,
+
+        loadsPerDay,
 
         hoursPerDay,
  
@@ -1564,9 +1674,9 @@ for(let i = 0; i < hydroDays; i++){
 
       ),
 
-    tasks: [
+tasks: [
 
-      `Production Rate: ${
+  `Production Rate: ${
 
     (
 
@@ -1581,6 +1691,28 @@ for(let i = 0; i < hydroDays; i++){
     result?.crewSize || 2
 
   }`,
+
+  `Tank Size: ${
+
+    result?.tankSize || 300
+
+  } gal`,
+
+  `Loads/Day: ${
+
+    Number(
+
+      result?.loadsPerDay || 0
+
+    ).toFixed(1)
+
+  }`,
+
+  `Refill Time: ${
+
+    result?.refillMinutes || 0
+
+  } min`,
 
   `Labor Hours: ${
 
@@ -1754,9 +1886,9 @@ for(let i = 0; i < hydroDays; i++){
 
       ),
 
-    tasks: [
+tasks: [
 
-    `Production Rate: ${
+  `Production Rate: ${
 
     (
 
@@ -1771,6 +1903,28 @@ for(let i = 0; i < hydroDays; i++){
     result?.crewSize || 2
 
   }`,
+
+  `Tank Size: ${
+
+    result?.tankSize || 300
+
+  } gal`,
+
+  `Loads/Day: ${
+
+    Number(
+
+      result?.loadsPerDay || 0
+
+    ).toFixed(1)
+
+  }`,
+
+  `Refill Time: ${
+
+    result?.refillMinutes || 0
+
+  } min`,
 
   `Labor Hours: ${
 
@@ -1900,7 +2054,7 @@ const hydroDays =
 
               ),
 
-        tasks: [
+tasks: [
 
   `Production Rate: ${
 
@@ -1917,6 +2071,28 @@ const hydroDays =
     result?.crewSize || 2
 
   }`,
+
+  `Tank Size: ${
+
+    result?.tankSize || 300
+
+  } gal`,
+
+  `Loads/Day: ${
+
+    Number(
+
+      result?.loadsPerDay || 0
+
+    ).toFixed(1)
+
+  }`,
+
+  `Refill Time: ${
+
+    result?.refillMinutes || 0
+
+  } min`,
 
   `Labor Hours: ${
 
@@ -2222,37 +2398,165 @@ function calculateBuilderProject(input = {}) {
 
     input.addons || {};
 
-    /* =========================
+/* =========================
 
-       PRODUCTION RATES
+   CREW COSTS
 
-    ========================= */
+========================= */
 
- let productionRate =
+let crewSize = 2;
 
-  Number(input.productionRate) || 0;
+if (totalSqft < 15000) {
 
-if (!productionRate || productionRate <= 0) {
-
-  productionRate =
-
-    crewSize * 3500;
-
-  if (totalSqft > 75000) {
-
-    productionRate *= 1.10;
-
-  }
-
-  if (totalSqft > 150000) {
-
-    productionRate *= 1.15;
-
-  }
+  crewSize = 2;
 
 }
 
-  const sprayDays =
+else if (totalSqft < 50000) {
+
+  crewSize = 3;
+
+}
+
+else if (totalSqft < 100000) {
+
+  crewSize = 4;
+
+}
+
+else {
+
+  crewSize = 5;
+
+}
+
+const hourlyRate =
+
+  Number(input.hourlyRate) || 50;
+
+const hoursPerDay =
+
+  Number(input.hoursPerDay) || 10;
+
+/* =========================
+
+   TANK / PRODUCTION SYSTEM
+
+========================= */
+
+const tankSize =
+
+  Number(input.tankSize) || 300;
+
+const refillMinutes =
+
+  Number(input.refillMinutes) || 0;
+
+const tankCoverageMap = {
+
+  300: 3000,
+
+  500: 5000,
+
+  800: 8000,
+
+  1000: 10000
+
+};
+
+const sprayMinutesPerLoadMap = {
+
+  300: 20,
+
+  500: 25,
+
+  800: 35,
+
+  1000: 45
+
+};
+
+const sprayMinutesPerLoad =
+
+  Number(
+
+    input.sprayMinutesPerLoad
+
+  ) ||
+
+  sprayMinutesPerLoadMap[tankSize] ||
+
+  20;
+
+const loadingMinutes = 15;
+
+const cycleMinutes =
+
+  sprayMinutesPerLoad +
+
+  loadingMinutes +
+
+  refillMinutes;
+
+const loadsPerDay =
+
+  (
+
+    hoursPerDay * 60
+
+  ) / Math.max(cycleMinutes, 1);
+
+const fuelCostPerLoad =
+
+  Number(
+
+    input.fuelCostPerLoad
+
+  ) || 12;
+
+const tankProductionLimit =
+
+  (
+
+    tankCoverageMap[tankSize] ||
+
+    3000
+
+  ) * loadsPerDay;
+
+/* =========================
+
+   CREW PRODUCTION LIMIT
+
+========================= */
+
+const crewProduction =
+
+  crewSize * 3500;
+
+/* =========================
+
+   FINAL DAILY PRODUCTION
+
+========================= */
+
+const productionRate =
+
+  Math.min(
+
+    crewProduction,
+
+    tankProductionLimit
+
+  );
+
+/* =========================
+
+   SPRAY DAYS
+
+========================= */
+
+const sprayDays =
 
   Math.max(
 
@@ -2278,51 +2582,11 @@ if (!productionRate || productionRate <= 0) {
 
   );
 
-    /* =========================
+/* =========================
 
-       CREW COSTS
+   LABOR
 
-    ========================= */
-
-  let crewSize =
-
-  Number(input.crewSize) || 0;
-
-if (!crewSize || crewSize <= 0) {
-
-  if (totalSqft < 15000) {
-
-    crewSize = 2;
-
-  }
-
-  else if (totalSqft < 50000) {
-
-    crewSize = 3;
-
-  }
-
-  else if (totalSqft < 100000) {
-
-    crewSize = 4;
-
-  }
-
-  else {
-
-    crewSize = 5;
-
-  }
-
-}
-
-const hourlyRate =
-
-  Number(input.hourlyRate) || 50;
-
-const hoursPerDay =
-
-  Number(input.hoursPerDay) || 10;
+========================= */
 
 const laborHours =
 
@@ -2364,7 +2628,7 @@ const needs =
 
     packageType,
 
-    {}
+    addons
 
   );
 
@@ -2564,9 +2828,23 @@ if (totalSqft > 100000) {
 
 ========================= */
 
-const equipmentCost =
+const baseEquipmentCost =
 
   sprayDays * 250;
+
+const refillFuelCost =
+
+  loadsPerDay *
+
+  sprayDays *
+
+  fuelCostPerLoad;
+
+const equipmentCost =
+
+  baseEquipmentCost +
+
+  refillFuelCost;
 
 const overhead =
 
@@ -2754,6 +3032,16 @@ const totalCost =
       
       productionRate,
 
+      fuelCostPerLoad,
+
+      sprayMinutesPerLoad,
+
+      tankSize,
+
+      refillMinutes,
+
+      loadsPerDay,
+
       hoursPerDay,
 
       laborHours,
@@ -2864,7 +3152,29 @@ function(result = {}) {
 
   if (rollingMode) {
 
-    const lotsPerPhase = 5;
+    const avgLotSqft =
+
+  result.sqft || 3000;
+
+const lotsPerPhase =
+
+  Math.max(
+
+    1,
+
+    Math.floor(
+
+      (
+
+        result.productionRate ||
+
+        6000
+
+      ) / avgLotSqft
+
+    )
+
+  );
 
     const phases =
 
@@ -2954,29 +3264,60 @@ function(result = {}) {
 
           ),
 
-        tasks: [
+     tasks: [
 
-          `Production Rate: ${
+  `Production Rate: ${
 
-            (
+    (
 
-              result.productionRate ||
+      result.productionRate ||
 
-              6000
+      6000
 
-            ).toLocaleString()
+    ).toLocaleString()
 
-          } sqft/day`,
+  } sqft/day`,
 
-          `Crew Size: ${
+  `Crew Size: ${
 
-            result.crewSize || 2
+    result.crewSize || 2
 
-          }`,
+  }`,
 
-          "Hydroseeding application"
+  `Tank Size: ${
 
-        ]
+    result.tankSize || 300
+
+  } gal`,
+
+  `Loads/Day: ${
+
+    Number(
+
+      result.loadsPerDay || 0
+
+    ).toFixed(1)
+
+  }`,
+
+  `Refill Time: ${
+
+    result.refillMinutes || 0
+
+  } min`,
+
+  `Labor Hours: ${
+
+  Math.round(
+
+    result.laborHours || 0
+
+  )
+
+} hrs`,
+  "Hydroseeding application"
+
+]
 
       });
 
@@ -3072,29 +3413,61 @@ function(result = {}) {
 
         ),
 
-      tasks: [
+tasks: [
 
-        `Production Rate: ${
+  `Production Rate: ${
 
-          (
+    (
 
-            result.productionRate ||
+      result.productionRate ||
 
-            6000
+      6000
 
-          ).toLocaleString()
+    ).toLocaleString()
 
-        } sqft/day`,
+  } sqft/day`,
 
-        `Crew Size: ${
+  `Crew Size: ${
 
-          result.crewSize || 2
+    result.crewSize || 2
 
-        }`,
+  }`,
 
-        "Hydroseeding application"
+  `Tank Size: ${
 
-      ]
+    result.tankSize || 300
+
+  } gal`,
+
+  `Loads/Day: ${
+
+    Number(
+
+      result.loadsPerDay || 0
+
+    ).toFixed(1)
+
+  }`,
+
+  `Refill Time: ${
+
+    result.refillMinutes || 0
+
+  } min`,
+
+  `Labor Hours: ${
+
+  Math.round(
+
+    result.laborHours || 0
+
+  )
+
+} hrs`,
+
+  "Hydroseeding application"
+
+]
 
     });
 
@@ -3207,6 +3580,18 @@ address:
     productionRate:
 
       result.productionRate || 0,
+
+    tankSize:
+
+      result.tankSize || 0,
+
+    loadsPerDay:
+
+      result.loadsPerDay || 0,
+
+    refillMinutes:
+
+      result.refillMinutes || 0,
 
     crewSize:
 
@@ -3339,6 +3724,18 @@ const addonRates = {
     productionRate:
 
       result.productionRate || 0,
+    
+    tankSize:
+
+      result.tankSize || 0,
+
+    loadsPerDay:
+
+      result.loadsPerDay || 0,
+
+    refillMinutes:
+
+      result.refillMinutes || 0,
 
     crewSize:
 
@@ -3736,6 +4133,34 @@ td{
   Crew Size:
 
   ${data.crewSize || 0}
+
+</p>
+
+<p>
+
+  Tank Size:
+
+  ${data.tankSize || 0} gal
+
+</p>
+
+<p>
+
+  Loads Per Day:
+
+  ${Number(
+
+    data.loadsPerDay || 0
+
+  ).toFixed(1)}
+
+</p>
+
+<p>
+
+  Refill Time:
+
+  ${data.refillMinutes || 0} min
 
 </p>
 
