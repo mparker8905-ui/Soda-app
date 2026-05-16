@@ -1303,11 +1303,51 @@ const totalHours =
 
   laborEfficiency;
 
+const regularHours =
+
+  Math.min(
+
+    totalHours,
+
+    sprayDays *
+
+    8 *
+
+    crewSize
+
+  );
+
+const overtimeHours =
+
+  Math.max(
+
+    0,
+
+    totalHours -
+
+    regularHours
+
+  );
+
 const laborCost =
 
-  totalHours *
+  (
 
-  hourlyRate;
+    regularHours *
+
+    hourlyRate
+
+  ) +
+
+  (
+
+    overtimeHours *
+
+    hourlyRate *
+
+    1.5
+
+  );
 
 const baseEquipmentCost =
 
@@ -1518,6 +1558,34 @@ materialCost +=
 
       }
 
+const discountPct =
+
+  n(
+
+    state.job?.discount,
+
+    0
+
+  );
+
+const discountAmount =
+
+  price * (
+
+    discountPct / 100
+
+  );
+
+price =
+
+  Math.max(
+
+    totalCost,
+
+    price - discountAmount
+
+  );
+
       const profit =
 
         price - totalCost;
@@ -1563,6 +1631,10 @@ materialCost +=
         margin,
 
         laborCost,
+
+        regularHours,
+
+        overtimeHours,
 
         materialCost,
 
@@ -2863,11 +2935,51 @@ const laborHours =
 
   crewSize;
 
+const regularHours =
+
+  Math.min(
+
+    laborHours,
+
+    sprayDays *
+
+    8 *
+
+    crewSize
+
+  );
+
+const overtimeHours =
+
+  Math.max(
+
+    0,
+
+    laborHours -
+
+    regularHours
+
+  );
+
 const laborCost =
 
-  laborHours *
+  (
 
-  hourlyRate;
+    regularHours *
+
+    hourlyRate
+
+  ) +
+
+  (
+
+    overtimeHours *
+
+    hourlyRate *
+
+    1.5
+
+  );
 
 /* =========================
 
@@ -3198,6 +3310,10 @@ const totalCost =
       sprayDays,
 
       laborCost,
+
+      regularHours,
+
+      overtimeHours,
 
       materialCost,
 

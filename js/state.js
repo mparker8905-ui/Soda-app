@@ -36,6 +36,8 @@
 
       competitorPrice: 0,
 
+      discount: 0,
+
       rainDays: 0,
 
       hoursPerDay: 10,
@@ -46,7 +48,7 @@
 
       sprayMinutesPerLoad: 20,
 
-      tankSize: 500,
+      tankSize: 300,
 
       labor: {
 
@@ -656,6 +658,16 @@ if (savedState) {
 
         );
 
+      s.job.discount =
+
+  $num(
+
+    "discount",
+
+    s.job.discount
+
+  );
+
       s.job.labor.hourlyRate =
 
         $num(
@@ -939,6 +951,13 @@ s.job.sprayMinutesPerLoad =
 
       );
 
+      setValue(
+
+  "discount",
+
+  s.job.discount
+
+);
       setValue(
 
         "residentialHourlyRate",
