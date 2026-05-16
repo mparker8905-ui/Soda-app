@@ -208,15 +208,7 @@
 
     </div>
 
-    <div class="field">
-
-      <label>Target Margin %</label>
-
-      <input id="targetMargin" type="number">
-
-    </div>
-
-    <div class="field">
+  <div class="field">
 
       <label>Pricing Strategy</label>
 
@@ -236,6 +228,40 @@
 
     <div class="field">
 
+      <label>Target Margin %</label>
+
+      <input id="targetMargin" type="number">
+
+    </div>
+
+ <div class="field-group">
+
+  <label for="discount">
+
+    Discount (%)
+
+  </label>
+
+  <input
+
+    type="number"
+
+    id="discount"
+
+    min="0"
+
+    max="100"
+
+    step="1"
+
+    value="0"
+
+  />
+
+</div>
+
+    <div class="field">
+
       <label>Competitor Price</label>
 
       <input id="competitorPrice" type="number">
@@ -243,6 +269,68 @@
     </div>
 
   </div>
+
+<div class="field-group">
+
+  <label for="tankSize">
+
+    Tank Size
+
+  </label>
+
+  <select id="tankSize">
+
+    <option value="300">
+
+      300 Gallon
+
+    </option>
+
+    <option value="500" selected>
+
+      500 Gallon
+
+    </option>
+
+    <option value="800">
+
+      800 Gallon
+
+    </option>
+
+    <option value="1000">
+
+      1000 Gallon
+
+    </option>
+
+  </select>
+
+</div>
+
+<div class="field-group">
+
+  <label for="refillMinutes">
+
+    Refill Time (minutes)
+
+  </label>
+
+  <input
+
+    type="number"
+
+    id="refillMinutes"
+
+    value="20"
+
+    min="0"
+
+    step="1"
+
+  />
+
+</div>
 
 </section>
 
