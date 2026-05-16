@@ -3011,6 +3011,20 @@ const needs =
 
   );
 
+const inventoryTotals =
+
+  window.getInventoryTotals?.() || {};
+
+const comparison =
+
+  window.compareInventory?.(
+
+    needs,
+
+    inventoryTotals
+
+  ) || {};
+
 let materialCost = 0;
 
 Object.keys(needs).forEach(type => {
@@ -3372,6 +3386,8 @@ pricePerSqft:
       builderDiscount:
 
         builderDiscount * 100,
+     
+      comparison,
 
       packageType
 

@@ -399,19 +399,29 @@ const pricePerSqft =
 
     ===================================== */
 
-    const inventoryTotals =
+ const shortages =
 
-      window.getInventoryTotals?.() || {};
+  result.comparison || {};
 
-    const shortages =
+const dealScore =
 
-      window.compareInventory?.(
+  window.calculateDealScore(
 
-        result.needs,
+    result,
 
-        inventoryTotals
+    result.comparison
 
-      ) || {};
+  );
+
+const insights =
+
+  window.generateAIInsights(
+
+    result,
+
+    result.comparison
+
+  );
 
     const shortageHTML =
 
@@ -688,6 +698,50 @@ const addonHTML =
         }
 
       </div>
+
+      <div class="glass-card">
+
+  <h3>Deal Score</h3>
+
+  <div class="deal-score">
+
+    ${dealScore}/100
+
+  </div>
+
+</div>
+
+<div class="glass-card">
+
+  <h3>AI Insights</h3>
+
+  ${
+
+    insights.length
+
+      ? insights.map(item => `
+
+        <div class="insight ${item.type}">
+
+          ${item.text}
+
+        </div>
+
+      `).join("")
+
+      : `
+
+        <div class="insight success">
+
+          No issues detected.
+
+        </div>
+
+      `
+
+  }
+
+</div>
 
       <div class="glass-card">
 
