@@ -66,13 +66,7 @@
 
   ===================================== */
 
-  function safeNum(v) {
 
-    const n = Number(v);
-
-    return Number.isFinite(n) ? n : 0;
-
-  }
 
   function toast(msg, type = "info") {
 
@@ -88,11 +82,7 @@
 
   }
 
-  function clone(obj) {
-
-    return JSON.parse(JSON.stringify(obj));
-
-  }
+ 
 
   /* =====================================
 
@@ -100,53 +90,69 @@
 
   ===================================== */
 
-  function readInventory() {
+function readInventory() {
 
-    try {
+  try {
 
-      const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed =
 
-      if (!raw) {
+      safeRead(
 
-        return clone(EMPTY_DATA);
+        STORAGE_KEY,
 
-      }
+        EMPTY_DATA
 
-      const parsed = JSON.parse(raw);
+      );
 
-      return {
+    return {
 
-        standard: parsed.standard || [],
+      standard:
 
-        premium: parsed.premium || [],
+        parsed.standard || [],
 
-        addons: parsed.addons || []
+      premium:
 
-      };
+        parsed.premium || [],
 
-    } catch (e) {
+      addons:
 
-      console.error("Inventory read failed:", e);
+        parsed.addons || []
 
-      return clone(EMPTY_DATA);
+    };
 
-    }
+  } catch (e) {
+
+    console.error(
+
+      "Inventory read failed:",
+
+      e
+
+    );
+
+    return safeClone(
+
+      EMPTY_DATA
+
+    );
 
   }
+
+}
 
   function writeInventory(data) {
 
     try {
 
-      localStorage.setItem(
+   safeWrite(
 
-        STORAGE_KEY,
+  STORAGE_KEY,
 
-        JSON.stringify(data)
+  data
 
-      );
+);
 
-      window.inventoryCache = null;
+     window.inventoryCache = safeClone(data);
 
     } catch (e) {
 
@@ -250,15 +256,13 @@
 
           </select>
 
-          <button
+<button
 
-            class="delete-btn"
+  class="delete-btn">
 
-            onclick="deleteRow(this)">
+  ✕
 
-            ✕
-
-          </button>
+</button>
 
         </div>
 
@@ -272,7 +276,7 @@
 
           class="mat-input"
 
-          value="${item.name || ""}"
+         value="${window.escapeHTML?.(item.name || "") || ""}"
 
           placeholder="Material Name">
 
@@ -534,37 +538,41 @@
 
   function getInventoryCache(
 
-    forceRefresh = false
+  forceRefresh = false
 
-  ) {
+) {
 
-    try {
+  try {
 
-      if (
+    if (
 
-        forceRefresh ||
+      forceRefresh ||
 
-        !window.inventoryCache
+      !window.inventoryCache
 
-      ) {
+    ) {
 
-        window.inventoryCache =
+      window.inventoryCache =
 
-          readInventory();
-
-      }
-
-      return window.inventoryCache;
-
-    } catch (e) {
-
-      console.error(e);
-
-      return readInventory();
+        readInventory();
 
     }
 
+    return safeClone(
+
+      window.inventoryCache
+
+    );
+
+  } catch (e) {
+
+    console.error(e);
+
+    return readInventory();
+
   }
+
+}
 
   /* =====================================
 
@@ -824,9 +832,11 @@
 
       if (totalsWrap) {
 
-        const qtyTotals =
+        const data =
 
-          getInventoryTotals();
+  getInventoryCache();
+
+const qtyTotals = {};
 
         const rows =
 
@@ -1130,11 +1140,15 @@
 
       }
 
-      writeInventory(
+   writeInventory(
 
-        clone(EMPTY_DATA)
+  safeClone(
 
-      );
+    EMPTY_DATA
+
+  )
+
+);
 
       loadInventory();
 
@@ -1228,8 +1242,6 @@
 
       loadInventory();
 
-      renderInventory();
-
       toast(
 
         "Inventory refreshed",
@@ -1246,43 +1258,97 @@
 
   };
 
-  /* =====================================
+  /* 
+
+/* =====================================
+
+   DELETE BUTTON EVENTS
+
+===================================== */
+
+document.addEventListener(
+
+  "click",
+
+  function (e) {
+
+    try {
+
+      const btn =
+
+        e.target.closest(
+
+          ".delete-btn"
+
+        );
+
+      if (!btn) return;
+
+      deleteRow(btn);
+
+    } catch (err) {
+
+      console.error(err);
+
+    }
+
+  }
+
+);
+
+=====================================
 
      AUTO SAVE
 
   ===================================== */
 
-  document.addEventListener(
+let inventorySaveTimer = null;
 
-    "input",
+document.addEventListener(
 
-    function (e) {
+  "input",
 
-      try {
+  function (e) {
 
-        if (
+    try {
 
-          e.target.closest(
+      if (
 
-            ".material-row"
+        e.target.closest(
 
-          )
+          ".material-row"
 
-        ) {
+        )
 
-          saveInventory();
+      ) {
 
-        }
+        clearTimeout(
 
-      } catch (err) {
+          inventorySaveTimer
 
-        console.error(err);
+        );
+
+        inventorySaveTimer =
+
+          setTimeout(
+
+            saveInventory,
+
+            300
+
+          );
 
       }
 
+    } catch (err) {
+
+      console.error(err);
+
     }
 
-  );
+  }
+
+);
 
   /* =====================================
 

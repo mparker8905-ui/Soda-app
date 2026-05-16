@@ -37,7 +37,9 @@
         pricingStrategy: "normal",
 
         competitorPrice: 0,
-
+   
+        rainDays: 0,
+      
         labor: {
 
           hourlyRate: 0,
@@ -70,7 +72,7 @@
 
         }
 
-      },
+        },
 
       ui: {
 
@@ -192,100 +194,6 @@
 
   /* =====================================
 
-     STATE SYNC
-
-  ===================================== */
-
-  function syncStateFromUI() {
-
-    try {
-
-      const s = window.state;
-
-      s.job.sqft =
-
-        num("sqft", 0);
-
-      s.job.houses =
-
-        num("houses", 1);
-
-      s.job.package =
-
-        val("package", "standard");
-
-      s.job.pricingMode =
-
-        val("pricingMode", "balanced");
-
-      s.job.targetMargin =
-
-        num("targetMargin", 0);
-
-      s.job.pricingStrategy =
-
-        val("pricingStrategy", "normal");
-
-      s.job.competitorPrice =
-
-        num("competitorPrice", 0);
-
-      s.job.labor.hourlyRate =
-
-        num("hourlyRate", 0);
-
-      s.job.labor.hoursPerHouse =
-
-        num("hoursPerHouse", 0);
-
-      s.job.labor.crewSize =
-
-        num("crewSize", 1);
-
-      s.job.labor.overhead =
-
-        num("overhead", 0);
-
-      s.ui.tankSize =
-
-        num("tankSize", 500);
-
-      s.job.addons = {
-
-    aeration: !!el("addon_aeration")?.checked,
-
-compost: !!el("addon_compost")?.checked,
-
-biohum: !!el("addon_biohum")?.checked,
-
-biochar: !!el("addon_biochar")?.checked,
-
-humic: !!el("addon_humic")?.checked,
-
-grow: !!el("addon_grow")?.checked,
-
-lime: !!el("addon_lime")?.checked,
-
-sulfur: !!el("addon_sulfur")?.checked
-
-      };
-
-    } catch (e) {
-
-      console.error(
-
-        "syncStateFromUI:",
-
-        e
-
-      );
-
-    }
-
-  }
-
-  /* =====================================
-
      RENDER DEBOUNCE
 
   ===================================== */
@@ -332,7 +240,7 @@ sulfur: !!el("addon_sulfur")?.checked
 
       ) return;
 
-      syncStateFromUI();
+     window.syncStateFromUI?.();
 
       const r =
 
@@ -502,7 +410,7 @@ sulfur: !!el("addon_sulfur")?.checked
 
       safe(
 
-        renderSchedulePreview,
+        () => renderSchedulePreview(r),
 
         "renderSchedulePreview"
 
@@ -706,7 +614,7 @@ sulfur: !!el("addon_sulfur")?.checked
 
   ===================================== */
 
-  function renderSchedulePreview() {
+  function renderSchedulePreview(r) {
 
     try {
 
@@ -727,10 +635,6 @@ sulfur: !!el("addon_sulfur")?.checked
         return;
 
       }
-
-      const r =
-
-        window.calculateJob();
 
       const schedule =
 
@@ -847,8 +751,6 @@ sulfur: !!el("addon_sulfur")?.checked
     function (e) {
 
       try {
-
-        syncStateFromUI();
 
         if (
 
@@ -972,17 +874,21 @@ sulfur: !!el("addon_sulfur")?.checked
 
   );
 
-  /* =====================================
+/* =====================================
 
-     WINDOW LOAD
+   WINDOW LOAD
 
-  ===================================== */
+===================================== */
 
-  window.onload = function () {
+window.addEventListener(
+
+  "load",
+
+  function () {
 
     safe(
 
-      syncStateFromUI,
+      () => window.syncStateFromUI?.(),
 
       "syncStateFromUI"
 
@@ -1036,17 +942,15 @@ sulfur: !!el("addon_sulfur")?.checked
 
     );
 
-  };
+  }
+
+);
 
   /* =====================================
 
      EXPORTS
 
   ===================================== */
-
-  window.syncStateFromUI =
-
-    syncStateFromUI;
 
   window.requestRender =
 
@@ -1456,19 +1360,19 @@ break;
 
           loadInventory();
 
-          renderInventoryTotals();
+         renderInventory();
 
           break;
 
         case "exportInventory":
 
-          exportInventoryJSON();
+         exportInventory();
 
           break;
 
         case "clearInventory":
 
-          clearInventoryData();
+         clearInventory();
 
           break;
 
@@ -1562,108 +1466,6 @@ break;
         "Action failed:",
 
         action,
-
-        err
-
-      );
-
-    }
-
-  }
-
-);
-
-/* =====================================
-
-   TIMELINE EVENT SYSTEM
-
-===================================== */
-
-document.addEventListener(
-
-  "click",
-
-  function (e) {
-
-    const btn =
-
-      e.target.closest("[data-timeline]");
-
-    if (!btn) return;
-
-    try {
-
-      const value =
-
-        btn.dataset.timeline;
-
-      document
-
-        .querySelectorAll(
-
-          "[data-timeline]"
-
-        )
-
-        .forEach((b) =>
-
-          b.classList.remove(
-
-            "active"
-
-          )
-
-        );
-
-      btn.classList.add(
-
-        "active"
-
-      );
-
-      if (window.state?.ui) {
-
-        window.state.ui.timeline =
-
-          value;
-
-      }
-
-      if (
-
-        typeof requestRender ===
-
-        "function"
-
-      ) {
-
-        requestRender();
-
-      }
-
-      if (
-
-        typeof showToast ===
-
-        "function"
-
-      ) {
-
-        showToast(
-
-          "Timeline: " + value,
-
-          "success"
-
-        );
-
-      }
-
-    } catch (err) {
-
-      console.error(
-
-        "Timeline failed:",
 
         err
 

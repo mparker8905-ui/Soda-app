@@ -42,49 +42,55 @@
 
     try {
 
-      console.error(
+   console.groupCollapsed(
 
-        "JS ERROR:",
+  "🚨 JS ERROR"
 
-        {
+);
 
-          message,
+console.error(message);
 
-          source,
+console.error(
 
-          line,
+  "Source:",
 
-          col,
+  source
 
-          error
+);
 
-        }
+console.error(
 
-      );
+  "Line:",
 
-      if (
+  line,
 
-        window.APP_DEBUG
+  "Col:",
 
-      ) {
+  col
 
-        alert(
+);
 
-          "App Error:\n" +
+console.error(error);
 
-            message +
+console.groupEnd();
 
-            "\nLine: " +
+   if (window.APP_DEBUG) {
 
-            line
+  console.error(error);
 
-        );
+  showSafeToast(
 
-      }
+    "Application error detected",
+
+    "error"
+
+  );
+
+}
 
     } catch (e) {}
 
-    return true;
+    return false;
 
   };
 
@@ -110,21 +116,19 @@
 
         );
 
-        if (
+  if (window.APP_DEBUG) {
 
-          window.APP_DEBUG
+  console.error(error);
 
-        ) {
+  showSafeToast(
 
-          alert(
+    "Application error detected",
 
-            "Unhandled Error:\n" +
+    "error"
 
-              e.reason
+  );
 
-          );
-
-        }
+}
 
       } catch (err) {}
 
@@ -554,6 +558,61 @@
 
   }
 
+/* ===================================
+
+   SAFE JSON
+
+=================================== */
+
+function safeJSONParse(
+
+  value,
+
+  fallback = null
+
+) {
+
+  try {
+
+    return JSON.parse(
+
+      value
+
+    );
+
+  } catch (e) {
+
+    return fallback;
+
+  }
+
+}
+
+/* ===================================
+
+   SAFE CLONE
+
+=================================== */
+
+function safeClone(obj) {
+
+  try {
+
+    return JSON.parse(
+
+      JSON.stringify(obj)
+
+    );
+
+  } catch (e) {
+
+    return null;
+
+  }
+
+}
+
+
   /* ===================================
 
      EXPORTS
@@ -605,6 +664,14 @@
   window.safeArray =
 
     safeArray;
+
+  window.safeJSONParse =
+
+    safeJSONParse;
+
+  window.safeClone =
+
+    safeClone;
 
 })();
 

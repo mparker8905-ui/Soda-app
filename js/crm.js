@@ -44,45 +44,59 @@
 
   ===================================== */
 
-  function readCRM() {
+ function readCRM() {
 
-    try {
+  try {
 
-      return JSON.parse(
+    return safeRead(
 
-        localStorage.getItem(STORAGE_KEY) || "[]"
+      STORAGE_KEY,
 
-      );
+      []
 
-    } catch (e) {
+    );
 
-      console.error("CRM read failed:", e);
+  } catch (e) {
 
-      return [];
+    console.error(
 
-    }
+      "CRM read failed:",
+
+      e
+
+    );
+
+    return [];
+
+  }
+
+}
+
+function writeCRM(list) {
+
+  try {
+
+    safeWrite(
+
+      STORAGE_KEY,
+
+      list || []
+
+    );
+
+  } catch (e) {
+
+    console.error(
+
+      "CRM write failed:",
+
+      e
+
+    );
 
   }
 
-  function writeCRM(list) {
-
-    try {
-
-      localStorage.setItem(
-
-        STORAGE_KEY,
-
-        JSON.stringify(list || [])
-
-      );
-
-    } catch (e) {
-
-      console.error("CRM write failed:", e);
-
-    }
-
-  }
+}
 
   function val(id, fallback = "") {
 
@@ -92,17 +106,7 @@
 
   }
 
-  function num(v) {
 
-    const n = Number(v);
-
-    return Number.isFinite(n)
-
-      ? n
-
-      : 0;
-
-  }
 
   function toast(msg, type = "info") {
 
@@ -124,27 +128,57 @@
 
   function rerender() {
 
-    try {
+  try {
 
-      if (typeof window.renderPipeline === "function") {
+    if (
 
-        window.renderPipeline();
+      typeof window.requestRender ===
 
-      }
+      "function"
 
-      if (typeof window.render === "function") {
+    ) {
 
-        window.render();
-
-      }
-
-    } catch (e) {
-
-      console.error("rerender failed:", e);
+      window.requestRender();
 
     }
 
+    else if (
+
+      typeof window.render ===
+
+      "function"
+
+    ) {
+
+      window.render();
+
+    }
+
+    if (
+
+      typeof window.renderPipeline ===
+
+      "function"
+
+    ) {
+
+      window.renderPipeline();
+
+    }
+
+  } catch (e) {
+
+    console.error(
+
+      "rerender failed:",
+
+      e
+
+    );
+
   }
+
+}
 
   /* =====================================
 
@@ -360,27 +394,49 @@
 
           Date.now(),
 
-        snapshot: {
+     snapshot: {
 
-          sqft:
+  sqft:
 
-            val("sqft"),
+    val("sqft"),
 
-          houses:
+  houses:
 
-            val("houses"),
+    val("houses"),
 
-          package:
+  package:
 
-            packageType,
+    packageType,
 
-          addons:
+  rainDays:
 
-            window.state?.job
+    window.state?.job?.rainDays || 0,
 
-              ?.addons || {}
+  sprayDays:
 
-        }
+    r.sprayDays || 0,
+
+  productionRate:
+
+    r.productionRate || 0,
+
+  laborCost:
+
+    r.laborCost || 0,
+
+  materialCost:
+
+    r.materialCost || 0,
+
+  margin:
+
+    r.margin || 0,
+
+  addons:
+
+    window.state?.job?.addons || {}
+
+}
 
       };
 
@@ -616,9 +672,25 @@ win.document.close();
 
         <b>Client</b><br>
 
-        ${proposal.customer}<br>
+        ${
 
-        ${proposal.address}
+  escapeHTML(
+
+    proposal.customer || ""
+
+  )
+
+} <br>
+
+       ${
+
+  escapeHTML(
+
+    proposal.address || ""
+
+  )
+
+}
 
       </div>
 
@@ -646,7 +718,7 @@ win.document.close();
 
           <span>
 
-            ${num(r.totalSqft).toFixed(0)}
+            ${safeNum( r.totalSqft).toFixed(0)}
 
           </span>
 
@@ -670,7 +742,7 @@ win.document.close();
 
           <span>
 
-            $${num(r.laborCost).toFixed(2)}
+            $${safeNum( r.laborCost).toFixed(2)}
 
           </span>
 
@@ -684,13 +756,13 @@ win.document.close();
 
         <div class="total">
 
-          $${num(r.price).toFixed(2)}
+          $${safeNum( r.price).toFixed(2)}
 
         </div>
 
       </div>
 
-      <button class="primary"
+      <button class="primary" 
 
         onclick="approveProposal()">
 
@@ -980,11 +1052,19 @@ win.document.close();
 
                   "
 
-                  onclick="openProposal(${p.id})">
+                 data-proposal-id="${p.id}">
 
                   <div>
 
-                    <b>${p.customer}</b>
+                   <b>${
+
+               escapeHTML(
+
+               p.customer || ""
+
+               )
+
+               }</b>
 
                     ${isBuilder
 
@@ -1016,7 +1096,15 @@ win.document.close();
 
                   ">
 
-                    ${p.address || ""}
+                   ${
+
+  escapeHTML(
+
+    p.address || ""
+
+  )
+
+}
 
                   </div>
 
@@ -1429,6 +1517,18 @@ win.document.close();
 
 </div>
 
+<div class="row">
+
+  <b>Rain Delay Buffer:</b>
+
+  <span>
+
+    ${snapshot.rainDays || 0} days
+
+  </span>
+
+</div>
+
             </div>
 
           ` : ""}
@@ -1821,103 +1921,6 @@ window.saveBuilderToCRM = function () {
 
 };
 
-  /* =====================================
-
-     TIMELINE
-
-  ===================================== */
-
-  function setTimeline(
-
-    elOrValue
-
-  ) {
-
-    try {
-
-      const buttons =
-
-        document.querySelectorAll(
-
-          "[data-timeline]"
-
-        );
-
-      let value = "";
-
-      if (
-
-        typeof elOrValue ===
-
-        "string"
-
-      ) {
-
-        value = elOrValue;
-
-      } else {
-
-        value =
-
-          elOrValue?.dataset
-
-            ?.timeline ||
-
-          "standard";
-
-      }
-
-      buttons.forEach(btn => {
-
-        const active =
-
-          btn.dataset.timeline ===
-
-          value;
-
-        btn.classList.toggle(
-
-          "active",
-
-          active
-
-        );
-
-      });
-
-      if (window.state?.ui) {
-
-        window.state.ui.timeline =
-
-          value;
-
-      }
-
-      if (
-
-        typeof render ===
-
-        "function"
-
-      ) {
-
-        render();
-
-      }
-
-    } catch (e) {
-
-      console.error(
-
-        "setTimeline failed:",
-
-        e
-
-      );
-
-    }
-
-  }
 
   /* =====================================
 
@@ -1953,39 +1956,51 @@ window.saveBuilderToCRM = function () {
 
   }
 
-  /* =====================================
+/* =====================================
 
-     TIMELINE INIT
+   PIPELINE CLICK EVENTS
 
-  ===================================== */
+===================================== */
 
-  document.addEventListener(
+document.addEventListener(
 
-    "DOMContentLoaded",
+  "click",
 
-    function () {
+  function (e) {
 
-      try {
+    try {
 
-        setTimeline(
+      const card =
 
-          window.state?.ui
+        e.target.closest(
 
-            ?.timeline ||
-
-          "standard"
+          ".history-card[data-proposal-id]"
 
         );
 
-      } catch (e) {
+      if (!card) return;
 
-        console.error(e);
+      const id =
 
-      }
+        Number(
+
+          card.dataset.proposalId
+
+        );
+
+      if (!id) return;
+
+      openProposal(id);
+
+    } catch (err) {
+
+      console.error(err);
 
     }
 
-  );
+  }
+
+);
 
   /* =====================================
 
@@ -2020,10 +2035,6 @@ window.saveBuilderToCRM = function () {
   window.deleteProposalById =
 
     deleteProposalById;
-
-  window.setTimeline =
-
-    setTimeline;
 
   window.handleModalBackground =
 

@@ -38,10 +38,6 @@
 
       bindQuickActions();
 
-      bindTimelineHandler();
-
-      initThemeHelpers();
-
       setInitialTimelineState();
 
     } catch (e) {
@@ -63,8 +59,6 @@
      TOAST SYSTEM
 
   ===================================== */
-
-  let toastTimer = null;
 
   function showToast(
 
@@ -224,13 +218,7 @@
 
       );
 
-      clearTimeout(
-
-        toastTimer
-
-      );
-
-      toastTimer =
+   
 
         setTimeout(
 
@@ -648,107 +636,60 @@
 
   }
 
+ 
   /* =====================================
 
-     TIMELINE BUTTONS
+     ADDON TOGGLES
 
   ===================================== */
 
-  function bindTimelineHandler() {
+function bindAddonToggles() {
 
-    try {
+  try {
 
-      document.addEventListener(
+    Object.keys(
 
-        "click",
+      window.state?.job?.addons || {}
 
-        function (e) {
+    ).forEach((key) => {
 
-          const el =
+      const box =
 
-            e.target.closest(
+        document.getElementById(
 
-              "[data-timeline]"
+          `addon_${key}`
 
-            );
+        );
 
-          if (!el) return;
+      if (!box) return;
+
+      box.addEventListener(
+
+        "change",
+
+        function () {
 
           try {
 
-            document
+            window.state.job.addons[key] =
 
-              .querySelectorAll(
-
-                "[data-timeline]"
-
-              )
-
-              .forEach(btn => {
-
-                btn.classList.remove(
-
-                  "active"
-
-                );
-
-              });
-
-            el.classList.add(
-
-              "active"
-
-            );
-
-            if (window.state?.ui) {
-
-              window.state.ui.timeline =
-
-                el.dataset.timeline;
-
-            }
+              !!this.checked;
 
             if (
 
-              typeof window.showToast ===
+              typeof window.requestRender ===
 
               "function"
 
             ) {
 
-              showToast(
-
-                "Timeline: " +
-
-                el.dataset.timeline,
-
-                "success"
-
-              );
+              window.requestRender();
 
             }
 
-            if (
+          } catch (e) {
 
-              typeof window.render ===
-
-              "function"
-
-            ) {
-
-              window.render();
-
-            }
-
-          } catch (err) {
-
-            console.error(
-
-              "Timeline failed:",
-
-              err
-
-            );
+            console.error(e);
 
           }
 
@@ -756,187 +697,15 @@
 
       );
 
-    } catch (e) {
+    });
 
-      console.error(
+  } catch (e) {
 
-        "bindTimelineHandler failed:",
-
-        e
-
-      );
-
-    }
+    console.error(e);
 
   }
 
-  function setInitialTimelineState() {
-
-    try {
-
-      const active =
-
-        window.state?.ui?.timeline ||
-
-        "standard";
-
-      document
-
-        .querySelectorAll(
-
-          "[data-timeline]"
-
-        )
-
-        .forEach(btn => {
-
-          btn.classList.remove(
-
-            "active"
-
-          );
-
-        });
-
-      const current =
-
-        document.querySelector(
-
-          `[data-timeline="${active}"]`
-
-        );
-
-      if (current) {
-
-        current.classList.add(
-
-          "active"
-
-        );
-
-      }
-
-    } catch (e) {
-
-      console.error(
-
-        "setInitialTimelineState failed:",
-
-        e
-
-      );
-
-    }
-
-  }
-
-  /* =====================================
-
-     ADDON TOGGLES
-
-  ===================================== */
-
-  function bindAddonToggles() {
-
-    try {
-
-      document
-
-        .querySelectorAll(
-
-          "[data-addon]"
-
-        )
-
-        .forEach((el) => {
-
-          el.addEventListener(
-
-            "click",
-
-            function () {
-
-              try {
-
-                const key =
-
-                  this.dataset
-
-                    .addon;
-
-                if (
-
-                  !window.state
-
-                    ?.job
-
-                    ?.addons
-
-                ) return;
-
-                const addons =
-
-                  window.state
-
-                    .job
-
-                    .addons;
-
-                addons[key] =
-
-                  !addons[
-
-                    key
-
-                  ];
-
-                this.classList.toggle(
-
-                  "active",
-
-                  addons[
-
-                    key
-
-                  ]
-
-                );
-
-                if (
-
-                  typeof window.requestRender ===
-
-                  "function"
-
-                ) {
-
-                  window.requestRender();
-
-                }
-
-              } catch (e) {
-
-                console.error(
-
-                  e
-
-                );
-
-              }
-
-            }
-
-          );
-
-        });
-
-    } catch (e) {
-
-      console.error(e);
-
-    }
-
-  }
+}
 
   /* =====================================
 
@@ -1214,68 +983,7 @@
 
   }
 
-  /* =====================================
-
-     POLISH
-
-  ===================================== */
-
-  function initThemeHelpers() {
-
-    try {
-
-      document
-
-        .querySelectorAll(
-
-          ".card,.glass-card"
-
-        )
-
-        .forEach(
-
-          (card) => {
-
-            card.addEventListener(
-
-              "mouseenter",
-
-              function () {
-
-                this.style.transform =
-
-                  "translateY(-2px)";
-
-              }
-
-            );
-
-            card.addEventListener(
-
-              "mouseleave",
-
-              function () {
-
-                this.style.transform =
-
-                  "";
-
-              }
-
-            );
-
-          }
-
-        );
-
-    } catch (e) {
-
-      console.error(e);
-
-    }
-
-  }
-
+ 
   /* =====================================
 
      CONFIRM WRAPPER

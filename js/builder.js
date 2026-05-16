@@ -171,15 +171,7 @@ window.calculateBuilderUI = function(){
 
     ===================================== */
 
-    const crewSize =
-
-      n(
-
-        document.getElementById("crewSize")?.value,
-
-        3
-
-      );
+  
 
     const hourlyRate =
 
@@ -211,35 +203,7 @@ window.calculateBuilderUI = function(){
 
       );
 
-    const overheadPct =
 
-      n(
-
-        document.getElementById("overhead")?.value,
-
-        12
-
-      );
-
-    const mobilization =
-
-      n(
-
-        document.getElementById("mobilization")?.value,
-
-        750
-
-      );
-
-    const targetMargin =
-
-      n(
-
-        document.getElementById("targetMargin")?.value,
-
-        30
-
-      ) / 100;
 
     /* =====================================
 
@@ -257,55 +221,9 @@ window.calculateBuilderUI = function(){
 
       );
 
-    /* =====================================
 
-       SPRAY DAYS
 
-    ===================================== */
-
-    const sprayDays =
-
-      Math.max(
-
-        1,
-
-        Math.ceil(
-
-          totalSqft / productionRate
-
-        )
-
-      );
-
-    /* =====================================
-
-       LABOR HOURS
-
-    ===================================== */
-
-    const totalLaborHours =
-
-      sprayDays *
-
-      hoursPerDay *
-
-      crewSize;
-
-    const laborCost =
-
-      totalLaborHours *
-
-      hourlyRate;
-
-    /* =====================================
-
-       INVENTORY
-
-    ===================================== */
-
-   const inventory =
-
-  window.getInventoryCache?.() || {};
+   
 
     /* =====================================
 
@@ -341,10 +259,6 @@ const result =
 
       competitor,
 
-    productionRate,
-
-    crewSize,
-
     hourlyRate,
 
     hoursPerDay,
@@ -367,6 +281,46 @@ const result =
 
   });
 
+const sprayDays =
+
+  result.sprayDays || 0;
+
+const totalLaborHours =
+
+  result.laborHours || 0;
+
+const laborCost =
+
+  result.laborCost || 0;
+
+const overheadCost =
+
+  result.overhead || 0;
+
+const totalCost =
+
+  result.totalCost || 0;
+
+const builderPrice =
+
+  result.price || 0;
+
+const profit =
+
+  result.profit || 0;
+
+const margin =
+
+  result.margin || 0;
+
+const pricePerHouse =
+
+  result.pricePerHouse || 0;
+
+const pricePerSqft =
+
+  result.pricePerSqft || 0;
+
     /* =====================================
 
        MATERIAL COST
@@ -377,87 +331,15 @@ const result =
 
       n(result.materialCost);
 
-    /* =====================================
+  
 
-       OVERHEAD
-
-    ===================================== */
-
-    const overheadCost =
-
-      (
-
-        laborCost +
-
-        materialCost +
-
-        mobilization
-
-      ) *
-
-      (overheadPct / 100);
-
-    /* =====================================
-
-       TOTAL COST
-
-    ===================================== */
-
-    const totalCost =
-
-      laborCost +
-
-      materialCost +
-
-      mobilization +
-
-      overheadCost;
-
-    /* =====================================
-
-       BUILDER PRICE
-
-    ===================================== */
-
-    const builderPrice =
-
-      totalCost /
-
-      (1 - targetMargin);
-
-    const profit =
-
-      builderPrice - totalCost;
-
-    const margin =
-
-      builderPrice > 0
-
-        ? (profit / builderPrice) * 100
-
-        : 0;
+  
 
     /* =====================================
 
        METRICS
 
     ===================================== */
-
-    const pricePerHouse =
-
-      houses > 0
-
-        ? builderPrice / houses
-
-        : 0;
-
-    const pricePerSqft =
-
-      totalSqft > 0
-
-        ? builderPrice / totalSqft
-
-        : 0;
 
     const builderDiscount =
 
@@ -725,7 +607,7 @@ const addonHTML =
 
           Crew Size:
 
-          ${crewSize}
+         ${result.crewSize}
 
         </div>
 
@@ -765,9 +647,9 @@ const addonHTML =
      
         <div>
      
-          Mobilization:
+         Mobilization:
 
-          ${money(mobilization)}
+          ${money(result.mobilization)}
 
         </div>
 
@@ -883,6 +765,18 @@ const addonHTML =
 
       packageType: pkg,
 
+      rainDays:
+
+  Number(
+
+    document.getElementById(
+
+      "builderRainDays"
+
+    )?.value
+
+  ) || 0,
+
       sprayDays,
 
       productionRate,
@@ -893,7 +787,9 @@ const addonHTML =
 
       materialCost,
 
-      mobilization,
+     mobilization:
+
+      result.mobilization,
 
       overheadCost,
       
@@ -982,6 +878,18 @@ window.renderBuilderSchedule = function(
     const start =
 
       new Date(startDate);
+  
+    const rainDays =
+
+  Number(
+
+    document.getElementById(
+
+      "builderRainDays"
+
+    )?.value
+
+  ) || 0;
 
     function addDays(d,days){
 
@@ -1061,7 +969,18 @@ window.renderBuilderSchedule = function(
 
           <div>
 
-            ${fmt(addDays(start,3+i))}
+            ${fmt(
+
+  addDays(
+
+    start,
+
+    3 + i + rainDays
+
+  )
+
+
+)}
 
           </div>
 
@@ -1083,7 +1002,17 @@ window.renderBuilderSchedule = function(
 
         <div>
 
-          ${fmt(addDays(start,24))}
+          ${fmt(
+
+  addDays(
+
+    start,
+
+    24 + rainDays
+
+  )
+
+)}
 
         </div>
 
@@ -1104,3 +1033,217 @@ window.renderBuilderSchedule = function(
 };
 
 })();
+
+/* =====================================
+
+   BUILDER PAGE HELPERS
+
+===================================== */
+
+document.addEventListener("DOMContentLoaded",
+
+  function () {
+
+    refreshBuilderPage();
+
+  }
+
+);
+
+function refreshBuilderPage() {
+
+  try {
+
+    if (
+
+      window.renderBuilderCRMPreview
+
+    ) {
+
+      renderBuilderCRMPreview();
+
+    }
+
+    if (window.showToast) {
+
+      showToast(
+
+        "Builder Page Refreshed",
+
+        "success"
+
+      );
+
+    }
+
+  } catch (e) {
+
+    console.error(
+
+      "refreshBuilderPage failed:",
+
+      e
+
+    );
+
+  }
+
+}
+
+/* =====================================
+
+   BUILDER CRM PREVIEW
+
+===================================== */
+
+function renderBuilderCRMPreview() {
+
+  const wrap =
+
+    document.getElementById(
+
+      "builderCRMPreview"
+
+    );
+
+  if (!wrap) return;
+
+  try {
+
+    const list = JSON.parse(
+
+      localStorage.getItem(
+
+        "soda_proposals"
+
+      ) || "[]"
+
+    );
+
+  const builders = list.filter(
+
+  p => p.type === "builder"
+
+);
+
+    if (!builders.length) {
+
+      wrap.innerHTML = `
+
+        <div class="card-sub">
+
+          No builder projects yet.
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+    wrap.innerHTML = builders.map(p => `
+
+      <div class="history-card">
+
+        <div class="history-top">
+
+          <strong>
+
+            ${safeHTML(
+
+              p.customer || "Builder"
+
+            )}
+
+          </strong>
+
+          <span>
+
+            ${p.status || "Proposal"}
+
+          </span>
+
+        </div>
+
+        <div class="history-details">
+
+          ${safeHTML(
+
+            p.address || ""
+
+          )}
+
+        </div>
+
+        <div class="history-date mt-10">
+
+          Houses:
+
+          ${Number(
+
+            p.houses || 0
+
+          )}
+
+        </div>
+
+        <div class="history-date">
+
+          Total:
+
+          $${Number(
+
+            p.total || 0
+
+          ).toFixed(0)}
+
+        </div>
+
+      </div>
+
+    `).join("");
+
+  } catch (e) {
+
+    console.error(e);
+
+  }
+
+}
+
+/* =====================================
+
+   HTML ESCAPE
+
+===================================== */
+
+function safeHTML(str) {
+
+  return String(str || "")
+
+    .replaceAll("&", "&amp;")
+
+    .replaceAll("<", "&lt;")
+
+    .replaceAll(">", "&gt;")
+
+    .replaceAll('"', "&quot;")
+
+    .replaceAll("'", "&#039;");
+
+}
+
+/* =====================================
+
+   EXPORTS
+
+===================================== */
+
+window.refreshBuilderPage =
+
+  refreshBuilderPage;
+
+window.renderBuilderCRMPreview =
+
+  renderBuilderCRMPreview;

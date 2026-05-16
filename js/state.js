@@ -36,6 +36,18 @@
 
       competitorPrice: 0,
 
+      rainDays: 0,
+
+      hoursPerDay: 10,
+
+      refillMinutes: 20,
+
+      fuelCostPerLoad: 12,
+
+      sprayMinutesPerLoad: 20,
+
+      tankSize: 500,
+
       labor: {
 
         hourlyRate: 0,
@@ -72,13 +84,9 @@
 
     ui: {
 
-      tankSize: 500,
-
       timeline: "standard",
 
-      activePage: "calculator",
-
-      renderQueued: false
+      activePage: "calculator"
 
     },
 
@@ -255,6 +263,40 @@
     }
 
   }
+
+/* =====================================
+
+   AUTO SAVE STATE
+
+===================================== */
+
+function persistState() {
+
+  writeStorage(
+
+    "soda_state",
+
+    window.state
+
+  );
+
+}
+
+const savedState =
+
+  readStorage(
+
+    "soda_state"
+
+  );
+
+if (savedState) {
+
+  window.state =
+
+    savedState;
+
+}
 
   /* =====================================
 
@@ -510,7 +552,7 @@
 
     try {
 
-      window.state.ui.tankSize =
+     window.state.job.tankSize =
 
         Number(
 
@@ -618,7 +660,7 @@
 
         $num(
 
-          "hourlyRate",
+          "residentialHourlyRate",
 
           s.job.labor
 
@@ -630,7 +672,7 @@
 
         $num(
 
-          "hoursPerHouse",
+          "residentialHoursPerHouse",
 
           s.job.labor
 
@@ -662,15 +704,66 @@
 
         );
 
-      s.ui.tankSize =
+     s.job.rainDays =
+
+  $num(
+
+    "rainDays",
+
+    s.job.rainDays
+
+  );
+
+s.job.hoursPerDay =
+
+  $num(
+
+    "hoursPerDay",
+
+    s.job.hoursPerDay
+
+  );
+
+s.job.refillMinutes =
+
+  $num(
+
+    "refillMinutes",
+
+    s.job.refillMinutes
+
+  );
+
+s.job.fuelCostPerLoad =
+
+  $num(
+
+    "fuelCostPerLoad",
+
+    s.job.fuelCostPerLoad
+
+  );
+
+s.job.sprayMinutesPerLoad =
+
+  $num(
+
+    "sprayMinutesPerLoad",
+
+    s.job.sprayMinutesPerLoad
+
+  );
+
+      s.job.tankSize =
 
         $num(
 
           "tankSize",
 
-          s.ui.tankSize
+         s.job.tankSize
 
         );
+
 
       /* ================================
 
@@ -686,15 +779,11 @@
 
         (key) => {
 
-          s.job.addons[
+          s.job.addons[key] =
 
-            key
+  $checked(
 
-          ] =
-
-            $checked(
-
-              key,
+    `addon_${key}`,
 
               s.job
 
@@ -731,6 +820,8 @@
           activeTimeline.dataset.timeline;
 
       }
+
+      persistState();
 
       return s;
 
@@ -850,7 +941,7 @@
 
       setValue(
 
-        "hourlyRate",
+        "residentialHourlyRate",
 
         s.job.labor
 
@@ -860,7 +951,7 @@
 
       setValue(
 
-        "hoursPerHouse",
+        "residentialHoursPerHouse",
 
         s.job.labor
 
@@ -892,9 +983,49 @@
 
         "tankSize",
 
-        s.ui.tankSize
+       s.job.tankSize
 
       );
+
+      setValue(
+
+  "rainDays",
+
+  s.job.rainDays
+
+);
+
+setValue(
+
+  "hoursPerDay",
+
+  s.job.hoursPerDay
+
+);
+
+setValue(
+
+  "refillMinutes",
+
+  s.job.refillMinutes
+
+);
+
+setValue(
+
+  "fuelCostPerLoad",
+
+  s.job.fuelCostPerLoad
+
+);
+
+setValue(
+
+  "sprayMinutesPerLoad",
+
+  s.job.sprayMinutesPerLoad
+
+);
 
       /* ================================
 
@@ -910,9 +1041,9 @@
 
         (key) => {
 
-          const box =
+const box =
 
-            $id(key);
+  $id(`addon_${key}`);
 
           if (
 

@@ -40,7 +40,11 @@
 
     humic: 2,
 
-    grow: 50
+    grow: 50,
+
+    sprinklers: 100,
+
+    timers: 45
 
   };
 
@@ -136,9 +140,120 @@
 
   };
 
-  window.COSTS = COSTS;
+/* =====================================
 
-  window.MATERIAL_RATES = MATERIAL_RATES;
+   ADDON RATES
+
+===================================== */
+
+/* =====================================
+
+   ADDON CONFIG
+
+===================================== */
+
+const ADDON_CONFIG = {
+
+  aeration: {
+
+    label: "Aeration",
+
+    rate: 0.04,
+
+    taxable: true,
+
+    category: "soil"
+
+  },
+
+  compost: {
+
+    label: "Compost",
+
+    rate: 0.10,
+
+    taxable: true,
+
+    category: "soil"
+
+  },
+
+  biohum: {
+
+    label: "BioHum",
+
+    rate: 0.12,
+
+    taxable: true,
+
+    category: "soil"
+
+  },
+
+  biochar: {
+
+    label: "Biochar",
+
+    rate: 0.20,
+
+    taxable: true,
+
+    category: "soil"
+
+  },
+
+  humic: {
+
+    label: "Humic Acid",
+
+    rate: 0.01,
+
+    taxable: true,
+
+    category: "soil"
+
+  },
+
+  lime: {
+
+    label: "Lime Treatment",
+
+    rate: 0.004,
+
+    taxable: true,
+
+    category: "soil"
+
+  },
+
+  sulfur: {
+
+    label: "Sulfur Treatment",
+
+    rate: 0.008,
+
+    taxable: true,
+
+    category: "soil"
+
+  },
+
+  grow: {
+
+    label: "Grow System",
+
+    taxable: true,
+
+    category: "irrigation"
+
+  }
+
+};
+
+window.ADDON_CONFIG =
+
+  ADDON_CONFIG;
+ 
 
   /* =====================================
 
@@ -199,6 +314,24 @@
     } catch (e) {}
 
   }
+
+function escapeHTML(str = "") {
+
+  return String(str)
+
+    .replace(/&/g, "&amp;")
+
+    .replace(/</g, "&lt;")
+
+    .replace(/>/g, "&gt;")
+
+    .replace(/"/g, "&quot;")
+
+    .replace(/'/g, "&#39;");
+
+}
+
+window.escapeHTML = escapeHTML;
 
   /* =====================================
 
@@ -452,37 +585,37 @@ if (addons.grow) {
 
 }
 
-      if (addons.biochar) {
+ if (
 
-        needs.biochar =
+  addons.biochar &&
 
-          (needs.biochar || 0) +
+  packageType !== "premium"
 
-          (
+) {
 
-            (sqft / 1000) *
+  needs.biochar =
 
-            MATERIAL_RATES.biochar.rate
+    (sqft / 1000) *
 
-          );
+    MATERIAL_RATES.biochar.rate;
 
-      }
+}
 
-      if (addons.humic) {
+if (
 
-        needs.humic =
+  addons.humic &&
 
-          (needs.humic || 0) +
+  packageType !== "premium"
 
-          (
+) {
 
-            (sqft / 1000) *
+  needs.humic =
 
-            MATERIAL_RATES.humic.rate
+    (sqft / 1000) *
 
-          );
+    MATERIAL_RATES.humic.rate;
 
-      }
+}
 
       return needs;
 
@@ -529,6 +662,182 @@ if (addons.grow) {
     }
 
   }
+
+/* =====================================
+
+   ADDON COST ENGINE
+
+===================================== */
+
+function calculateAddonCosts({
+
+  totalSqft = 0,
+
+  houses = 1,
+
+  addons = {},
+
+  packageType = "standard"
+
+} = {}) {
+
+  try {
+
+    const addonCosts = {};
+
+    const addonDetails = [];
+
+    let total = 0;
+
+    Object.entries(ADDON_CONFIG)
+
+      .forEach(([key, config]) => {
+
+        if (!addons[key]) return;
+
+if (
+
+  packageType === "premium" &&
+
+  [
+
+    "compost",
+
+    "aeration",
+
+    "lime",
+
+    "sulfur",
+
+    "biohum"
+
+  ].includes(key)
+
+) {
+
+  addonCosts[key] = 0;
+
+  addonDetails.push({
+
+    key,
+
+    label: config.label,
+
+    category: config.category,
+
+    taxable: config.taxable,
+
+    rate: config.rate || null,
+
+    cost: 0,
+
+    included: true
+
+  });
+
+  return;
+
+}
+
+        let cost = 0;
+
+        /* =========================
+
+           STANDARD RATE ADDONS
+
+        ========================= */
+
+        if (config.rate) {
+
+          cost =
+
+            totalSqft * config.rate;
+
+        }
+
+        /* =========================
+
+           GROW SYSTEM SPECIAL CASE
+
+        ========================= */
+
+        if (key === "grow") {
+
+          const weekly =
+
+            50 * 3 * houses;
+
+          const install =
+
+            packageType === "standard"
+
+              ? houses <= 1
+
+                ? totalSqft * 0.05
+
+                : totalSqft * 0.03
+
+              : totalSqft * 0.03;
+
+          cost = weekly + install;
+
+        }
+
+        addonCosts[key] = cost;
+
+        total += cost;
+
+        addonDetails.push({
+
+          key,
+
+          label: config.label,
+
+          category: config.category,
+
+          taxable: config.taxable,
+
+          rate: config.rate || null,
+
+          cost
+
+        });
+
+      });
+
+    return {
+
+      addonCosts,
+
+      addonDetails,
+
+      total
+
+    };
+
+  } catch (e) {
+
+    console.error(
+
+      "calculateAddonCosts failed:",
+
+      e
+
+    );
+
+    return {
+
+      addonCosts: {},
+
+      addonDetails: [],
+
+      total: 0
+
+    };
+
+  }
+
+}
 
   /* =====================================
 
@@ -755,6 +1064,16 @@ if (addons.grow) {
       const totalSqft =
 
         sqft * houses;
+
+      const rainDays =
+
+  n(
+
+    state.job?.rainDays,
+
+    0
+
+  );
 
       const builderMult =
 
@@ -1020,7 +1339,7 @@ const mobilization =
 
         state.job?.addons || {};
 
-     const addonCosts = {};
+    
 
       const needs =
 
@@ -1064,117 +1383,32 @@ const mobilization =
 
       }
 
-if (addons.aeration) {
+const addonData =
 
-  addonCosts.aeration =
+  calculateAddonCosts({
 
-    totalSqft * 0.04;
+    totalSqft,
 
-  materialCost +=
+    addons,
 
-    addonCosts.aeration;
+    packageType,
 
-}
+    houses
 
-if (addons.compost) {
+  });
 
-  addonCosts.compost =
+const addonCosts =
 
-    totalSqft * 0.10;
+  addonData.addonCosts;
 
-  materialCost +=
+const addonDetails =
 
-    addonCosts.compost;
+  addonData.addonDetails;
 
-}
+materialCost +=
 
-if (addons.biohum) {
+  addonData.total;
 
-  addonCosts.biohum =
-
-    totalSqft * 0.12;
-
-  materialCost +=
-
-    addonCosts.biohum;
-
-}
-
-if (addons.biochar) {
-
-  addonCosts.biochar =
-
-    totalSqft * 0.20;
-
-  materialCost +=
-
-    addonCosts.biochar;
-
-}
-
-if (addons.humic) {
-
-  addonCosts.humic =
-
-    totalSqft * 0.01;
-
-  materialCost +=
-
-    addonCosts.humic;
-
-}
-
-if (addons.lime) {
-
-  addonCosts.lime =
-
-    totalSqft * 0.004;
-
-  materialCost +=
-
-    addonCosts.lime;
-
-}
-
-if (addons.sulfur) {
-
-  addonCosts.sulfur =
-
-    totalSqft * 0.008;
-
-  materialCost +=
-
-    addonCosts.sulfur;
-
-}
-
-if (addons.grow) {
-
-  const weekly =
-
-    50 * 3 * houses;
-
-  const install =
-
-    packageType === "standard"
-
-      ? houses <= 1
-
-        ? totalSqft * 0.05
-
-        : totalSqft * 0.03
-
-      : 0;
-
-  addonCosts.grow =
-
-    weekly + install;
-
-  materialCost +=
-
-    addonCosts.grow;
-
-}
 
       const overheadCost =
 
@@ -1334,6 +1568,8 @@ if (addons.grow) {
 
         addonCosts,
 
+        addonDetails,
+
         overheadCost,
       
         equipmentCost,
@@ -1343,6 +1579,8 @@ if (addons.grow) {
         totalHours,
         
         sprayDays,
+
+        rainDays,
 
         productionRate,
 
@@ -1530,6 +1768,10 @@ if (addons.grow) {
 
           addons.grow === true;
 
+        const rainDays =
+
+          window.state?.job?.rainDays || 0;
+
         function getStartDate() {
 
           const raw =
@@ -1678,7 +1920,7 @@ for(let i = 0; i < hydroDays; i++){
 
           start,
 
-          1 + i
+  1 + i + rainDays
 
         )
 
@@ -1764,7 +2006,7 @@ tasks: [
 
                   start,
 
-                  22
+                  22 + rainDays
 
                 )
 
@@ -1890,7 +2132,7 @@ for(let i = 0; i < hydroDays; i++){
 
           start,
 
-          6 + i
+          6 + i + rainDays
 
         )
 
@@ -1976,7 +2218,7 @@ tasks: [
 
                   start,
 
-                  34
+                  34 + rainDays
 
                 )
 
@@ -2020,11 +2262,6 @@ tasks: [
 
         });
 
-      const productionRate =
-
-  result?.productionRate ||
-
-  6000;
 
 const hydroDays =
 
@@ -2058,7 +2295,7 @@ const hydroDays =
 
                   start,
 
-                  3 + i
+                  3 + i + rainDays
 
                 )
 
@@ -2146,7 +2383,7 @@ tasks: [
 
                 start,
 
-                24
+                24 + rainDays
 
               )
 
@@ -2524,6 +2761,10 @@ const cycleMinutes =
 
   refillMinutes;
 
+const rainDays =
+
+  Number(input.rainDays) || 0;
+
 const loadsPerDay =
 
   (
@@ -2700,117 +2941,33 @@ if (materialCost < 500) {
 
 }
 
-const addonCosts = {};
 
-/* =========================
 
-   ADDONS
+const addonData =
 
-========================= */
+  calculateAddonCosts({
 
-if (addons.aeration) {
+    totalSqft,
 
-  addonCosts.aeration =
+    addons,
 
-    totalSqft * 0.04;
+    packageType,
 
-  materialCost +=
+    houses
 
-    addonCosts.aeration;
+  });
 
-}
+const addonCosts =
 
-if (addons.compost) {
+  addonData.addonCosts;
 
-  addonCosts.compost =
+const addonDetails =
 
-    totalSqft * 0.10;
+  addonData.addonDetails;
 
-  materialCost +=
+materialCost +=
 
-    addonCosts.compost;
-
-}
-
-if (addons.biohum) {
-
-  addonCosts.biohum =
-
-    totalSqft * 0.12;
-
-  materialCost +=
-
-    addonCosts.biohum;
-
-}
-
-if (addons.biochar) {
-
-  addonCosts.biochar =
-
-    totalSqft * 0.20;
-
-  materialCost +=
-
-    addonCosts.biochar;
-
-}
-
-if (addons.humic) {
-
-  addonCosts.humic =
-
-    totalSqft * 0.01;
-
-  materialCost +=
-
-    addonCosts.humic;
-
-}
-
-if (addons.lime) {
-
-  addonCosts.lime =
-
-    totalSqft * 0.004;
-
-  materialCost +=
-
-    addonCosts.lime;
-
-}
-
-if (addons.sulfur) {
-
-  addonCosts.sulfur =
-
-    totalSqft * 0.008;
-
-  materialCost +=
-
-    addonCosts.sulfur;
-
-}
-
-if (addons.grow) {
-
-  const weekly =
-
-    50 * 3 * houses;
-
-  const install =
-
-    totalSqft * 0.03;
-
-  addonCosts.grow =
-
-    weekly + install;
-
-  materialCost +=
-
-    addonCosts.grow;
-
-}
+  addonData.total;
 
 /* bulk efficiency */
 
@@ -3030,6 +3187,8 @@ const totalCost =
 
       addonCosts,
 
+      addonDetails,
+
       addons,
 
       totalSqft,
@@ -3065,6 +3224,8 @@ const totalCost =
       tankSize,
 
       refillMinutes,
+
+      rainDays,
 
       loadsPerDay,
 
@@ -3131,6 +3292,18 @@ function(result = {}) {
   const list = [];
 
   const start = new Date();
+
+  const rainDays =
+
+  Number(
+
+    document.getElementById(
+
+      "builderRainDays"
+
+    )?.value
+
+  ) || 0;
 
   const rollingMode =
 
@@ -3284,7 +3457,7 @@ const lotsPerPhase =
 
               start,
 
-              i + 1
+             i + 1 + rainDays
 
             )
 
@@ -3433,7 +3606,7 @@ const lotsPerPhase =
 
             start,
 
-            i + 1
+            i + 1 + rainDays
 
           )
 
@@ -3511,7 +3684,7 @@ tasks: [
 
           start,
 
-          (result.sprayDays || 1) + 14
+         (result.sprayDays || 1) + 14 + rainDays
 
         )
 
@@ -3543,43 +3716,9 @@ window.generateBuilderProposalData =
 
 function(result = {}) {
 
-const addonRates = {
+    const addons =
 
-  compost: 0.10,
-
-  lime: 0.004,
-
-  sulfur: 0.008,
-
-  biochar: 0.20,
-
-  humic: 0.01,
-
-  biohum: 0.12,
-
-  aeration: 0.04
-
-};
-
-const addons = Object.entries(
-
-  result.addonCosts || {}
-
-).map(([key, val]) => ({
-
-  name:
-
-    key.charAt(0).toUpperCase() +
-
-    key.slice(1),
-
-  cost: val,
-
-  rate: addonRates[key] || null
-
-}));
-
-    
+  result.addonDetails || [];
 
   return {
 
@@ -3667,6 +3806,10 @@ address:
 
       result.needs || {},
 
+    rainDays:
+
+      result.rainDays || 0,
+
    schedule:
 
   window.renderBuilderScheduleData
@@ -3689,53 +3832,19 @@ window.generateResidentialProposalData =
 
 function(result = {}) {
 
-const addonRates = {
+const addons =
 
-  compost: 0.10,
-
-  lime: 0.004,
-
-  sulfur: 0.008,
-
-  biochar: 0.20,
-
-  humic: 0.01,
-
-  biohum: 0.12
-
-};
-
-  const addons =
-
-  Object.entries(
-
-    result.addonCosts || {}
-
-  ).map(([key,val]) => ({
-
-    name:
-
-      key.charAt(0).toUpperCase() +
-
-      key.slice(1),
-
-    cost: val,
-
-    rate:
-
-      addonRates[key] || null
-
-  }));
+  result.addonDetails || [];
 
   return {
 
     customer:
 
-      document.getElementById("customer")?.value || "",
+      document.getElementById("residentialCustomer")?.value || "",
 
     address:
 
-      document.getElementById("address")?.value || "",
+      document.getElementById("residentialAddress")?.value || "",
 
     date:
 
@@ -3819,6 +3928,10 @@ const addonRates = {
 
       result.needs || {},
 
+    rainDays:
+
+      window.state?.job?.rainDays || 0,
+
     schedule:
 
       window.buildSchedule(result)
@@ -3885,19 +3998,23 @@ const addonRows =
 
         <li>
 
-          ${item.name} —
+         ${item.label} —
 
-          $${Number(
+      ${
 
-            item.cost
+  item.cost > 0
 
-          ).toFixed(2)}
+    ? `$${Number(item.cost).toFixed(2)}`
+
+    : `<strong>Included</strong>`
+
+}
 
           ${
 
             item.rate
 
-              ? `($${item.rate}/sqft)`
+              ? `($${Number(item.rate).toFixed(3)}/sqft) `
 
               : ""
 
@@ -4087,7 +4204,7 @@ td{
 
   <strong>Client:</strong>
 
-  ${data.customer || ""}
+ ${window.escapeHTML?.(data.customer || "") || ""}
 
 </p>
 
@@ -4095,7 +4212,7 @@ td{
 
   <strong>Address:</strong>
 
-  ${data.address || ""}
+ ${window.escapeHTML?.(data.address || "") || ""}
 
 </p>
 
@@ -4111,7 +4228,7 @@ td{
 
   <strong>Package:</strong>
 
-  ${data.packageType || ""}
+ ${window.escapeHTML?.(data.packageType || "") || ""}
 
 </p>
 
@@ -4198,6 +4315,14 @@ td{
   Refill Time:
 
   ${data.refillMinutes || 0} min
+
+</p>
+
+<p>
+
+  Rain Delay Buffer:
+
+  ${data.rainDays || 0} days
 
 </p>
 
@@ -4361,11 +4486,15 @@ ${materialRows}
 
 </h2>
 
-<ul>
+${
 
-${addonRows}
+  addonRows
 
-</ul>
+    ? `<ul>${addonRows}</ul>`
+
+    : `<p>No addons selected.</p>`
+
+}
 
 </div>
 
@@ -4456,6 +4585,10 @@ impact timelines.
   window.getSmartPricing =
 
     getSmartPricing;
+
+  window.calculateAddonCosts =
+
+    calculateAddonCosts;
 
 })();
 
