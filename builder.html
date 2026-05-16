@@ -62,11 +62,13 @@
 
     <img
 
-      src="/logo.PNG"
+     src="./logo.PNG"
 
       class="brand-logo"
 
       id="logoImg"
+
+      loading="lazy"
 
     />
 
@@ -166,6 +168,14 @@
 
   <div class="grid-2">
 
+  <!-- PROJECT INFO -->
+
+  <div class="full-row section-label">
+
+    Project Information
+
+  </div>
+
     <div class="field">
 
       <label>
@@ -174,15 +184,17 @@
 
       </label>
 
-      <input
+  <input
 
-        id="builderName"
+  id="builderName"
 
-        type="text"
+  type="text"
 
-        placeholder="Builder Company"
+  autocomplete="organization"
 
-      />
+  placeholder="Builder Company"
+
+/>
 
     </div>
 
@@ -194,15 +206,17 @@
 
       </label>
 
-      <input
+    <input
 
-        id="builderProject"
+  id="builderProject"
 
-        type="text"
+  type="text"
 
-        placeholder="Subdivision Name"
+  autocomplete="off"
 
-      />
+  placeholder="Subdivision Name"
+
+/>
 
     </div>
 
@@ -214,15 +228,19 @@
 
       </label>
 
-      <input
+    <input
 
-        id="builderSqft"
+  id="builderSqft"
 
-        type="number"
+  type="number"
 
-        placeholder="2000"
+  inputmode="numeric"
 
-      />
+  autocomplete="off"
+
+  placeholder="2000"
+
+/>
 
     </div>
 
@@ -234,15 +252,19 @@
 
       </label>
 
-      <input
+     <input
 
-        id="builderHouses"
+  id="builderHouses"
 
-        type="number"
+  type="number"
 
-        placeholder="10"
+  inputmode="numeric"
 
-      />
+  autocomplete="off"
+
+  placeholder="10"
+
+/>
 
     </div>
 
@@ -290,6 +312,12 @@
 
     </div>
 
+<div class="full-row section-label">
+
+  Pricing Settings
+
+</div>
+
     <div class="field">
 
       <label>
@@ -332,191 +360,229 @@
 
       <input
 
-        id="builderCompetitor"
-
-        type="number"
-
-        placeholder="0"
-
-      />
-
-    </div>
-
-<div class="field">
-
-  <label>Hourly Rate</label>
-
-  <input id="hourlyRate" type="number" value="25">
-
-</div>
-
-<div class="field">
-
-  <label>Hours Per Day</label>
-
-  <input id="hoursPerDay" type="number" value="8">
-
-</div>
-
-<label>Refill Minutes</label>
-
-<input id="builderRefillMinutes" 
+  id="builderCompetitor"
 
   type="number"
 
-  value="0"
+  inputmode="decimal"
 
-  placeholder="Round Trip Refill Minutes"
+  autocomplete="off"
+
+  placeholder="0"
 
 />
 
-<label>Tank Size</label>
+    </div>
 
-<select id="builderTankSize">
+<div class="full-row section-label">
 
-  <option value="300">
-
-    300 Gallon
-
-  </option>
-
-  <option value="500">
-
-    500 Gallon
-
-  </option>
-
-  <option value="800">
-
-    800 Gallon
-
-  </option>
-
-  <option value="1000">
-
-    1000 Gallon
-
-  </option>
-
-</select>
-
-<div class="glass-card">
-
-  <h3>Add-ons</h3>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_aeration"
-
-    >
-
-    Aeration
-
-  </label>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_compost"
-
-    >
-
-    Compost
-
-  </label>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_biohum"
-
-    >
-
-    Biohum
-
-  </label>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_biochar"
-
-    >
-
-    Biochar
-
-  </label>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_humic"
-
-    >
-
-    Humic
-
-  </label>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_grow"
-
-    >
-
-    Grow System
-
-  </label>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_lime"
-
-    >
-
-    Lime
-
-  </label>
-
-  <label>
-
-    <input
-
-      type="checkbox"
-
-      id="builderAddon_sulfur"
-
-    >
-
-    Sulfur
-
-  </label>
+  Production Settings
 
 </div>
+
+<div class="field">
+
+  <label>Builder Hourly Rate</label>
+
+  <input id="builderHourlyRate" type="number" value="25">
+
+</div>
+
+<div class="field">
+
+  <label>Builder Hours Per Day</label>
+
+  <input id="builderHoursPerDay" type="number" value="8">
+
+</div>
+
+<div class="field">
+
+  <label>Refill Minutes</label>
+
+  <input
+
+    id="builderRefillMinutes"
+
+    type="number"
+
+    value="0"
+
+    placeholder="Round Trip Refill Minutes"
+
+  />
+
+</div>
+
+<div class="field">
+
+  <label>Tank Size</label>
+
+  <select id="builderTankSize">
+
+    <option value="300">300 Gallon</option>
+
+    <option value="500">500 Gallon</option>
+
+    <option value="800">800 Gallon</option>
+
+    <option value="1000">1000 Gallon</option>
+
+  </select>
+
+</div>
+
+<div class="field">
+
+  <label for="builderRainDays">
+
+    Rain Delay Days
+
+  </label>
+
+  <input
+
+    id="builderRainDays"
+
+    type="number"
+
+    min="0"
+
+    value="0"
+
+  />
+
+</div>
+
+<div class="full-row section-label">
+
+  Add-ons
+
+</div>
+
+<div class="full-row">
+
+  <div class="glass-card">
+
+    <h3>Add-ons</h3>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_aeration"
+
+      >
+
+      Aeration
+
+    </label>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_compost"
+
+      >
+
+      Compost
+
+    </label>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_biohum"
+
+      >
+
+      Biohum
+
+    </label>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_biochar"
+
+      >
+
+      Biochar
+
+    </label>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_humic"
+
+      >
+
+      Humic
+
+    </label>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_grow"
+
+      >
+
+      Grow System
+
+    </label>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_lime"
+
+      >
+
+      Lime
+
+    </label>
+
+    <label>
+
+      <input
+
+        type="checkbox"
+
+        id="builderAddon_sulfur"
+
+      >
+
+      Sulfur
+
+    </label>
+
+  </div>
+
+</div>
+
+<div class="full-row">
 
  <div class="nav-row mt-18">
 
@@ -555,6 +621,8 @@
     Save to CRM
 
   </button>
+
+</div>
 
 </div>
 
@@ -618,143 +686,7 @@
 
 </main>
 
-<!-- =====================================
 
-     BUILDER HELPERS
-
-===================================== -->
-
-<script>
-
-window.addEventListener("load", function () {
-
-  refreshBuilderPage();
-
-});
-
-function refreshBuilderPage() {
-
-  try {
-
-    if (window.renderBuilderCRMPreview) {
-
-      renderBuilderCRMPreview();
-
-    }
-
-    if (window.showToast) {
-
-      showToast("Builder Page Refreshed", "success");
-
-    }
-
-  } catch (e) {
-
-    console.error("refreshBuilderPage failed:", e);
-
-  }
-
-}
-
-function renderBuilderCRMPreview() {
-
-  const wrap =
-
-    document.getElementById("builderCRMPreview");
-
-  if (!wrap) return;
-
-  try {
-
-    const list = JSON.parse(
-
-      localStorage.getItem("soda_proposals") || "[]"
-
-    );
-
-    const builders = list.filter(
-
-      p => p.isBuilderProject
-
-    );
-
-    if (!builders.length) {
-
-      wrap.innerHTML =
-
-        `<div class="card-sub">No builder projects yet.</div>`;
-
-      return;
-
-    }
-
-    wrap.innerHTML = builders.map(p => `
-
-      <div class="history-card">
-
-        <div class="history-top">
-
-          <strong>
-
-            ${safe(p.customer || "Builder")}
-
-          </strong>
-
-          <span>
-
-            ${p.status || "Proposal"}
-
-          </span>
-
-        </div>
-
-        <div class="history-details">
-
-          ${safe(p.projectName || "")}
-
-        </div>
-
-        <div class="history-date mt-10">
-
-          Houses:
-
-          ${Number(p.houses || 0)}
-
-        </div>
-
-        <div class="history-date">
-
-          Total:
-
-          $${Number(p.total || 0).toFixed(0)}
-
-        </div>
-
-      </div>
-
-    `).join("");
-
-  } catch (e) {
-
-    console.error(e);
-
-  }
-
-}
-
-function safe(str) {
-
-  return String(str || "")
-
-    .replaceAll("&", "&amp;")
-
-    .replaceAll("<", "&lt;")
-
-    .replaceAll(">", "&gt;");
-
-}
-
-</script>
 
 <!-- =====================================
 

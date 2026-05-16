@@ -34,7 +34,17 @@
 
     </div>
 
-    <img src="/logo.PNG" class="brand-logo" id="logoImg" />
+   <img
+
+  src="./logo.PNG"
+
+  class="brand-logo"
+
+  id="logoImg"
+
+  loading="lazy"
+
+/>
 
   </div>
 
@@ -80,17 +90,37 @@
 
     <div class="field">
 
-      <label>Customer Name</label>
+      <label>Residential Customer Name</label>
 
-      <input id="customer" type="text">
+  <input
+
+  id="residentialCustomer"
+
+  type="text"
+
+  placeholder="Residential Customer Name"
+
+  autocomplete="name"
+
+/>
 
     </div>
 
     <div class="field">
 
-      <label>Project Address</label>
+      <label>Residential Project Address</label>
 
-      <input id="address" type="text">
+ <input
+
+  id="residentialAddress"
+
+  type="text"
+
+  placeholder="Residential Address"
+
+  autocomplete="street-address"
+
+/>
 
     </div>
 
@@ -109,6 +139,28 @@
       <input id="projectStart" type="date">
 
     </div>
+
+<div class="field-group">
+
+  <label for="rainDays">
+
+    Rain Delay Days
+
+  </label>
+
+  <input
+
+    id="rainDays"
+
+    type="number"
+
+    min="0"
+
+    value="0"
+
+  />
+
+</div>
 
     <div class="field">
 
@@ -204,17 +256,17 @@
 
     <div class="field">
 
-      <label>Hourly Rate</label>
+      <label>Residential Hourly Rate</label>
 
-      <input id="hourlyRate" type="number">
+      <input id="residentialHourlyRate" type="number">
 
     </div>
 
     <div class="field">
 
-      <label>Hours Per House</label>
+      <label>Residential Hours Per House</label>
 
-      <input id="hoursPerHouse" type="number">
+      <input id="residentialHoursPerHouse" type="number">
 
     </div>
 
@@ -394,31 +446,59 @@
 
   <div class="nav-row mt-18">
 
-    <button data-action="calculateJob" class="btn-gold">
+   <button
+
+  type="button"
+
+  data-action="calculateJob"
+
+  class="btn-gold"
+
+>
 
       Calculate Job
 
     </button>
 
-    <button data-action="createLead" class="btn-gold">
+  <button
+
+  type="button"
+
+  data-action="createLead"
+
+  class="btn-gold"
+
+>
 
       Create Lead
 
     </button>
 
-<button
 
-  class="btn-gold"
+ <button
+
+  type="button"
 
   data-action="generateProposal"
 
+  class="btn-gold"
+
 >
+
 
   Generate Proposal
 
 </button>
 
-    <button data-action="sendProposal" class="btn-gold">
+   <button
+
+  type="button"
+
+  data-action="sendProposal"
+
+  class="btn-gold"
+
+>
 
       Send Proposal
 
@@ -450,7 +530,15 @@
 
 <section class="section-space">
 
-  <div id="results"></div>
+ <div id="results">
+
+  <div class="muted">
+
+    Waiting for calculation...
+
+  </div>
+
+</div>
 
 </section>
 
@@ -460,7 +548,15 @@
 
   <div class="card-title">Schedule Preview</div>
 
-  <div id="schedulePreview"></div>
+ <div id="schedulePreview">
+
+  <div class="muted">
+
+    No schedule generated yet.
+
+  </div>
+
+</div>
 
 </section>
 
@@ -470,7 +566,15 @@
 
   <div class="card-title">Job History</div>
 
-  <div id="jobHistory"></div>
+  <div id="jobHistory">
+
+<div class="muted">
+
+  Loading history...
+
+</div>
+
+</div>
 
 </section>
 
