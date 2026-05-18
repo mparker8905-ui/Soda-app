@@ -288,45 +288,49 @@
 
           : [];
 
-      const scoreColor =
+ const scoreColor =
 
-        dealScore >= 80
+  dealScore >= 80
 
-          ? "#4cff9a"
+    ? "#4cff9a"
 
-          : dealScore >= 60
+    : dealScore >= 60
 
-          ? "#ffd24d"
+    ? "#ffd24d"
 
-          : "#ff4d4d";
+    : "#ff4d4d";
 
-   
+const insightsHTML =
 
-              .map(
+  insights.length
 
-                (i) => `
+    ? insights
 
-                <div class="insight-row">
+        .map(
 
-                  ${i.text}
+          (i) => `
 
-                </div>
+            <div class="insight-row">
 
-              `
-
-              )
-
-              .join("")
-
-          : `
-
-            <div class="muted">
-
-              No issues detected.
+              ${i.text}
 
             </div>
 
-          `;
+          `
+
+        )
+
+        .join("")
+
+    : `
+
+        <div class="muted">
+
+          No issues detected.
+
+        </div>
+
+      `;
 
 html(
 
