@@ -300,11 +300,7 @@
 
           : "#ff4d4d";
 
-      const insightsHTML =
-
-        insights.length
-
-          ? insights
+   
 
               .map(
 
@@ -332,81 +328,33 @@
 
           `;
 
-      html(
+html(
 
-        "results",
+  "results",
 
-        `
+  `
 
-        <div class="glass-card">
+    ${window.renderFinancialCard(r)}
 
-          <h3>Job Pricing</h3>
+    ${window.renderProductionCard(r)}
 
-          <div>
+    ${window.renderDealScoreCard(
 
-            Total Cost:
+      dealScore,
 
-            $${Number(r.cost).toFixed(2)}
+      scoreColor
 
-          </div>
+    )}
 
-          <div>
+    ${window.renderInsightsCard(
 
-            Sell Price:
+      insights
 
-            $${Number(r.price).toFixed(2)}
+    )}
 
-          </div>
+  `
 
-          <div>
-
-            Profit:
-
-            $${Number(r.profit).toFixed(2)}
-
-          </div>
-
-          <div>
-
-            Margin:
-
-            ${margin.toFixed(1)}%
-
-          </div>
-
-        </div>
-
-        <div class="glass-card">
-
-          <h3>Deal Score</h3>
-
-          <div style="
-
-            font-size:58px;
-
-            font-weight:800;
-
-            color:${scoreColor};
-
-          ">
-
-            ${dealScore}/100
-
-          </div>
-
-        </div>
-
-        <div class="glass-card">
-
-          <h3>Insights</h3>
-
-          ${insightsHTML}
-
-        </div>
-
-      `
-
-      );
+);
 
       safe(
 
@@ -946,6 +894,294 @@ window.addEventListener(
 
 );
 
+/* =====================================
+
+   SHARED CARD RENDERERS
+
+===================================== */
+
+function renderFinancialCard(r) {
+
+  return `
+
+    <div class="glass-card">
+
+      <h3>Financial Breakdown</h3>
+
+      <div>
+
+        Total Cost:
+
+        $${Number(r.cost || r.totalCost || 0).toFixed(2)}
+
+      </div>
+
+      <div>
+
+        Sell Price:
+
+        $${Number(r.price || 0).toFixed(2)}
+
+      </div>
+
+      <div>
+
+        Profit:
+
+        $${Number(r.profit || 0).toFixed(2)}
+
+      </div>
+
+      <div>
+
+        Margin:
+
+        ${Number(r.margin || 0).toFixed(1)}%
+
+      </div>
+
+      <hr>
+
+      <div>
+
+        Labor:
+
+        $${Number(r.laborCost || 0).toFixed(2)}
+
+      </div>
+
+      <div>
+
+        Material:
+
+        $${Number(r.materialCost || 0).toFixed(2)}
+
+      </div>
+
+      <div>
+
+        Equipment:
+
+        $${Number(r.equipmentCost || 0).toFixed(2)}
+
+      </div>
+
+      <div>
+
+        Mobilization:
+
+        $${Number(r.mobilization || 0).toFixed(2)}
+
+      </div>
+
+      <div>
+
+        Overhead:
+
+        $${Number(
+
+          r.overheadCost ||
+
+          r.overhead ||
+
+          0
+
+        ).toFixed(2)}
+
+      </div>
+
+      <hr>
+
+      <div>
+
+        Regular Hours:
+
+        ${Number(
+
+          r.regularHours || 0
+
+        ).toFixed(1)}
+
+      </div>
+
+      <div>
+
+        Overtime Hours:
+
+        ${Number(
+
+          r.overtimeHours || 0
+
+        ).toFixed(1)}
+
+      </div>
+
+      <div>
+
+        Overtime Pay:
+
+        $${Number(
+
+          r.overtimePay || 0
+
+        ).toFixed(2)}
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+function renderProductionCard(r) {
+
+  return `
+
+    <div class="glass-card">
+
+      <h3>Production Metrics</h3>
+
+      <div>
+
+        Spray Days:
+
+        ${r.sprayDays || 0}
+
+      </div>
+
+      <div>
+
+        Production Rate:
+
+        ${Number(
+
+          r.productionRate || 0
+
+        ).toLocaleString()} sqft/day
+
+      </div>
+
+      <div>
+
+        Crew Size:
+
+        ${r.crewSize || 0}
+
+      </div>
+
+      <div>
+
+        Tank Size:
+
+        ${r.tankSize || 0} gal
+
+      </div>
+
+      <div>
+
+        Loads/Day:
+
+        ${Number(
+
+          r.loadsPerDay || 0
+
+        ).toFixed(1)}
+
+      </div>
+
+      <div>
+
+        Refill Time:
+
+        ${r.refillMinutes || 0} min
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+function renderDealScoreCard(
+
+  score,
+
+  color
+
+) {
+
+  return `
+
+    <div class="glass-card">
+
+      <h3>Deal Score</h3>
+
+      <div style="
+
+        font-size:58px;
+
+        font-weight:800;
+
+        color:${color};
+
+      ">
+
+        ${score}/100
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+function renderInsightsCard(
+
+  insights = []
+
+) {
+
+  return `
+
+    <div class="glass-card">
+
+      <h3>Insights</h3>
+
+      ${
+
+        insights.length
+
+          ? insights.map(i => `
+
+              <div class="insight-row">
+
+                ${i.text}
+
+              </div>
+
+            `).join("")
+
+          : `
+
+            <div class="muted">
+
+              No issues detected.
+
+            </div>
+
+          `
+
+      }
+
+    </div>
+
+  `;
+
+}
+
   /* =====================================
 
      EXPORTS
@@ -971,6 +1207,22 @@ window.addEventListener(
   window.resetToasts =
 
     resetToasts;
+
+  window.renderFinancialCard =
+
+  renderFinancialCard;
+
+window.renderProductionCard =
+
+  renderProductionCard;
+
+window.renderDealScoreCard =
+
+  renderDealScoreCard;
+
+window.renderInsightsCard =
+
+  renderInsightsCard;
 
 })();
 

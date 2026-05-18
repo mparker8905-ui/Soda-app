@@ -399,381 +399,187 @@ const pricePerSqft =
 
     ===================================== */
 
- const shortages =
+const shortages =
 
   result.comparison || {};
 
 const dealScore =
 
-  window.calculateDealScore(
+  window.calculateDealScore?.(
 
     result,
 
-    result.comparison
+    result.comparison || {}
 
-  );
+  ) || 75;
 
 const insights =
 
-  window.generateAIInsights(
+  window.generateAIInsights?.(
 
     result,
 
-    result.comparison
+    result.comparison || {}
 
-  );
+  ) || [];
 
-    const shortageHTML =
+const scoreColor =
 
-      Object.entries(shortages)
+  dealScore >= 80
 
-        .filter(([_,v]) => v.shortage > 0)
+    ? "#4cff9a"
 
-        .map(([key,v]) => `
+    : dealScore >= 60
 
-          <div class="metric">
+    ? "#ffd24d"
 
-            <div class="metric-label">
+    : "#ff4d4d";
 
-              ${key.toUpperCase()}
+const shortageHTML =
 
-            </div>
+  Object.entries(shortages)
 
-            <div class="metric-value bad">
+    .filter(([_,v]) => v.shortage > 0)
 
-              Short ${v.shortage.toFixed(1)}
+    .map(([key,v]) => `
 
-            </div>
+      <div class="metric">
 
-          </div>
+        <div class="metric-label">
 
-        `)
+          ${key.toUpperCase()}
 
-        .join("");
+        </div>
 
-    /* =====================================
+        <div class="metric-value bad">
 
-       RENDER
+          Short ${v.shortage.toFixed(1)}
 
-    ===================================== */
+        </div>
 
-const addonTotal =
+      </div>
 
-  Object.values(
+    `)
 
-    result.addonCosts || {}
+    .join("");
 
-  ).reduce(
+document.getElementById(
 
-    (a,b) => a + b,
+  "builderResults"
 
-    0
+).innerHTML = `
 
-  );
+  <div class="glass-card">
 
-const addonHTML =
-
-  Object.entries(
-
-    result.addonCosts || {}
-
-  )
-
-  .map(([key,val]) => `
+    <h3>Builder Summary</h3>
 
     <div>
 
-      Add-on (${key}):
-
-      ${money(val)}
+      Houses: ${houses}
 
     </div>
 
-  `)
+    <div>
 
-  .join("");
+      Total Sqft:
 
-    document.getElementById(
+      ${totalSqft.toLocaleString()}
 
-      "builderResults"
+    </div>
 
-    ).innerHTML = `
+    <div>
 
-      <div class="glass-card">
+      Estimated Spray Days:
 
-        <h3>Builder Summary</h3>
+      ${sprayDays}
 
-        <div>Houses: ${houses}</div>
+    </div>
 
-        <div>
+    <div>
 
-          Total Sqft:
+      Package:
 
-          ${totalSqft.toLocaleString()}
+      ${pkg}
 
-        </div>
-
-        <div>
-
-          Estimated Spray Days:
-
-          ${sprayDays}
-
-        </div>
-
-        <div>
-
-          Package:
-
-          ${pkg}
-
-        </div>
-
-      </div>
-
-      <div class="glass-card">
-
-        <h3>Financials</h3>
-
-        <div>
-
-          Total Cost:
-
-          ${money(totalCost)}
-
-        </div>
-        
-        <div>
-
-  Equipment:
-
-  ${money(result.equipmentCost)}
-
-</div>
-
-<div>
-
-  Mobilization:
-
-  ${money(result.mobilization)}
-
-</div>
-
-<div>
-
-  Overhead:
-
-  ${money(result.overhead)}
-
-</div>
-
-<div>
-
-  Add-ons:
-
-  ${money(addonTotal)}
-
-</div>
-
-        <div>
-
-          Builder Price:
-
-          ${money(builderPrice)}
-
-        </div>
-
-        <div>
-
-          Profit:
-
-          ${money(profit)}
-
-        </div>
-
-        <div>
-
-          Margin:
-
-          ${margin.toFixed(1)}%
-
-        </div>
-
-      </div>
-
-      <div class="glass-card">
-
-        <h3>Production Metrics</h3>
-
-        <div>
-
-          Spray Days:
-
-          ${sprayDays}
-
-        </div>
-
-        <div>
-
-          Crew Size:
-
-         ${result.crewSize}
-
-        </div>
-
-        <div>
-
-          Production Rate:
-
-          ${productionRate.toLocaleString()} sqft/day
-
-        </div>
-
-        <div>
-
-          Total Labor Hours:
-
-          ${totalLaborHours.toFixed(1)}
-
-        </div>
-
-        <div>
-
-          Labor Cost:
-
-          ${money(laborCost)}
-
-        </div>
-
-        <div>
-
-          Material Cost:
-  
-          ${money(materialCost)}
-
-        </div>
-
-    ${addonHTML}
-     
-        <div>
-     
-         Mobilization:
-
-          ${money(result.mobilization)}
-
-        </div>
-
-        <div>
-
-          Overhead:
-
-          ${money(overheadCost)}
-
-        </div>
-
-      </div>
-
-      <div class="glass-card">
-
-        <h3>Material Usage</h3>
-
-        ${materialsHTML}
-
-      </div>
-
-      <div class="glass-card">
-
-        <h3>Inventory Shortages</h3>
-
-        ${
-
-          shortageHTML ||
-
-          `<div class="good">
-
-            Inventory levels sufficient
-
-          </div>`
-
-        }
-
-      </div>
-
-      <div class="glass-card">
-
-  <h3>Deal Score</h3>
-
-  <div class="deal-score">
-
-    ${dealScore}/100
+    </div>
 
   </div>
 
-</div>
+  ${window.renderFinancialCard(result)}
 
-<div class="glass-card">
+  ${window.renderProductionCard(result)}
 
-  <h3>AI Insights</h3>
+  ${window.renderDealScoreCard(
 
-  ${
+    dealScore,
 
-    insights.length
+    scoreColor
 
-      ? insights.map(item => `
+  )}
 
-        <div class="insight ${item.type}">
+  ${window.renderInsightsCard(
 
-          ${item.text}
+    insights
 
-        </div>
+  )}
 
-      `).join("")
+  <div class="glass-card">
 
-      : `
+    <h3>Material Usage</h3>
 
-        <div class="insight success">
+    ${materialsHTML}
 
-          No issues detected.
+  </div>
 
-        </div>
+  <div class="glass-card">
 
-      `
+    <h3>Inventory Shortages</h3>
 
-  }
+    ${
 
-</div>
+      shortageHTML ||
 
-      <div class="glass-card">
+      `<div class="good">
 
-        <h3>Builder Metrics</h3>
+        Inventory levels sufficient
 
-        <div>
+      </div>`
 
-          Price Per House:
+    }
 
-          ${money(pricePerHouse)}
+  </div>
 
-        </div>
+  <div class="glass-card">
 
-        <div>
+    <h3>Builder Metrics</h3>
 
-          Price Per Sqft:
+    <div>
 
-          ${money(pricePerSqft)}
+      Price Per House:
 
-        </div>
+      ${money(pricePerHouse)}
 
-        <div>
+    </div>
 
-          Builder Discount:
+    <div>
 
-          ${builderDiscount.toFixed(1)}%
+      Price Per Sqft:
 
-        </div>
+      ${money(pricePerSqft)}
 
-      </div>
+    </div>
 
-    `;
+    <div>
+
+      Builder Discount:
+
+      ${builderDiscount.toFixed(1)}%
+
+    </div>
+
+  </div>
+
+`;
 
    
 
@@ -839,9 +645,21 @@ const addonHTML =
 
       laborCost,
 
+      regularHours:
+
+      result.regularHours || 0,
+
+        overtimeHours:
+
+      result.overtimeHours || 0,
+
+        overtimePay:
+
+      result.overtimePay || 0,
+
       materialCost,
 
-     mobilization:
+      mobilization:
 
       result.mobilization,
 

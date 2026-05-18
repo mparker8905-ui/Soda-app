@@ -1634,7 +1634,21 @@ price =
 
         regularHours,
 
+        regularPay:
+
+        regularHours *
+
+        hourlyRate,
+
         overtimeHours,
+
+        overtimePay:
+
+        overtimeHours *
+
+        hourlyRate *
+
+        1.5,
 
         materialCost,
 
@@ -3327,7 +3341,21 @@ const totalCost =
 
       regularHours,
 
+      regularPay:
+
+      regularHours *
+
+      hourlyRate,
+
       overtimeHours,
+
+      overtimePay:
+
+      overtimeHours *
+
+      hourlyRate *
+
+      1.5,
 
       materialCost,
 
